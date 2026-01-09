@@ -1,0 +1,22 @@
+<resources>
+    <string name="app_name">Zatiaras POS</string>
+    
+    <!-- Home Screen -->
+    <string name="home_greeting">Selamat Datang! 👋</string>
+    <string name="home_main_menu">Menu Utama</string>
+    <string name="home_logout">Logout</string>
+    <string name="home_user_fallback">User</string>
+    
+    <!-- Menu Items -->
+    <string name="menu_pos">POS</string>
+    <string name="menu_pos_subtitle">Mulai Transaksi</string>
+    <string name="menu_inventory">Inventori</string>
+    <string name="menu_inventory_subtitle">Kelola Produk</string>
+    <string name="menu_transactions">Transaksi</string>
+    <string name="menu_transactions_subtitle">Riwayat Penjualan</string>
+    <string name="menu_reports">Laporan</string>
+    <string name="menu_reports_subtitle">Analisis Bisnis</string>
+    <string name="menu_settings">Pengaturan</string>
+    <string name="menu_settings_subtitle">Konfigurasi App</string>
+    <string name="menu_coming_soon">Segera Hadir</string>
+</resources>

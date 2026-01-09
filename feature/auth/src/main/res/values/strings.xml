@@ -1,0 +1,8 @@
+<resources>
+    <!-- Auth Screen -->
+    <string name="auth_title">Zatiaras POS</string>
+    <string name="auth_email_label">Email</string>
+    <string name="auth_password_label">Password</string>
+    <string name="auth_login_button">Masuk</string>
+    <string name="auth_error_empty_fields">Email dan password harus diisi</string>
+</resources>

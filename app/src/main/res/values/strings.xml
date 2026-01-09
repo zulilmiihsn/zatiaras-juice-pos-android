@@ -1,0 +1,35 @@
+<resources>
+    <string name="app_name">Zatiaras POS</string>
+    
+    <!-- Auth Screen -->
+    <string name="auth_title">Zatiaras POS</string>
+    <string name="auth_email_label">Email</string>
+    <string name="auth_password_label">Password</string>
+    <string name="auth_login_button">Masuk</string>
+    <string name="auth_error_empty_fields">Email dan password harus diisi</string>
+    
+    <!-- Home Screen -->
+    <string name="home_greeting">Selamat Datang! 👋</string>
+    <string name="home_main_menu">Menu Utama</string>
+    <string name="home_logout">Logout</string>
+    <string name="home_user_fallback">User</string>
+    
+    <!-- Menu Items -->
+    <string name="menu_pos">POS</string>
+    <string name="menu_pos_subtitle">Mulai Transaksi</string>
+    <string name="menu_inventory">Inventori</string>
+    <string name="menu_inventory_subtitle">Kelola Produk</string>
+    <string name="menu_transactions">Transaksi</string>
+    <string name="menu_transactions_subtitle">Riwayat Penjualan</string>
+    <string name="menu_reports">Laporan</string>
+    <string name="menu_reports_subtitle">Analisis Bisnis</string>
+    <string name="menu_settings">Pengaturan</string>
+    <string name="menu_settings_subtitle">Konfigurasi App</string>
+    <string name="menu_coming_soon">Segera Hadir</string>
+    
+    <!-- Common -->
+    <string name="error_generic">Terjadi kesalahan</string>
+    <string name="retry">Coba Lagi</string>
+    <string name="loading">Memuat...</string>
+    <string name="no_data">Tidak ada data</string>
+</resources>
