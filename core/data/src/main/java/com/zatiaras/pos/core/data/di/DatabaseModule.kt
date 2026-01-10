@@ -3,8 +3,10 @@ package com.zatiaras.pos.core.data.di
 import android.content.Context
 import androidx.room.Room
 import com.zatiaras.pos.core.data.local.ZatiarasDatabase
+import com.zatiaras.pos.core.data.local.dao.CashRecordDao
 import com.zatiaras.pos.core.data.local.dao.CategoryDao
 import com.zatiaras.pos.core.data.local.dao.ProductDao
+import com.zatiaras.pos.core.data.local.dao.TransactionDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -48,5 +50,17 @@ object DatabaseModule {
     @Singleton
     fun provideProductDao(database: ZatiarasDatabase): ProductDao {
         return database.productDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideTransactionDao(database: ZatiarasDatabase): TransactionDao {
+        return database.transactionDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideCashRecordDao(database: ZatiarasDatabase): CashRecordDao {
+        return database.cashRecordDao()
     }
 }

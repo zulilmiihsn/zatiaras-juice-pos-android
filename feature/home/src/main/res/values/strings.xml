@@ -12,8 +12,8 @@
     <string name="menu_pos_subtitle">Mulai Transaksi</string>
     <string name="menu_inventory">Inventori</string>
     <string name="menu_inventory_subtitle">Kelola Produk</string>
-    <string name="menu_transactions">Transaksi</string>
-    <string name="menu_transactions_subtitle">Riwayat Penjualan</string>
+    <string name="menu_transactions">Buku Kas</string>
+    <string name="menu_transactions_subtitle">Catat Pemasukan/Pengeluaran</string>
     <string name="menu_reports">Laporan</string>
     <string name="menu_reports_subtitle">Analisis Bisnis</string>
     <string name="menu_settings">Pengaturan</string>

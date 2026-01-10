@@ -1,8 +1,8 @@
 # 🗺️ Product Roadmap: Zatiaras POS (Android Native)
 
 > **Status**: 🟢 Active Development
-> **Phase**: Phase 3 - Inventory Management
-> **Last Updated**: 2026-01-09
+> **Phase**: Phase 6 IN PROGRESS - Reports Dashboard Implemented
+> **Last Updated**: 2026-01-10
 
 ---
 
@@ -11,14 +11,14 @@
 | Layer | Progress | Notes |
 |-------|----------|-------|
 | **Project Scaffolding** | 100% | Multi-module, Gradle, Compose setup complete |
-| **Documentation** | 90% | All specs, plans, templates ready |
+| **Documentation** | 95% | All specs, plans, templates ready |
 | **Core Modules** | 100% | Room Database + DAOs + Supabase fully working |
-| **Authentication** | 60% | Login + Home done, PIN/Biometric pending |
+| **Authentication** | 100% | ✅ COMPLETE - Biometric + PIN + Settings |
 | **Inventory** | 100% | ✅ COMPLETE - CRUD, Image Upload, Sync |
-| **POS Feature** | 0% | Not started |
-| **Reports** | 0% | Not started |
-| **Sync Engine** | 50% | Basic sync implemented in Inventory |
-| **Overall** | **~45%** | Phase 3 COMPLETE! Ready for Phase 4 |
+| **POS Feature** | 100% | ✅ COMPLETE - Full POS + Buku Kas |
+| **Reports** | 60% | 🟡 Dashboard + Chart + Best Sellers done |
+| **Sync Engine** | 100% | ✅ COMPLETE - WorkManager + Background Sync |
+| **Overall** | **~90%** | Phase 6 in progress! |
 
 ---
 
@@ -31,14 +31,23 @@
 
 ---
 
-## 🔐 Phase 2: Authentication & Settings (Sprints 3-4) 🟡 IN PROGRESS
+## 🔐 Phase 2: Authentication & Settings (Sprints 3-4) ✅ COMPLETE
 
 - [x] **Supabase Auth**: Login Screen with Email/Password.
 - [x] **Home Dashboard**: Main menu with navigation grid.
 - [x] **Session Management**: `EncryptedDataStore` for secure token storage.
-- [ ] **Account Settings**: Separate screens for `Cashier` vs `Owner` profiles.
-- [ ] **Biometric Lock**: Fingerprint/FaceID integration for app unlock.
-- [ ] **PIN System**: Fallback PIN for sensitive actions.
+- [x] **Account Settings**: Full settings screen with profile, security, sync controls
+  - `SettingsScreen` with profile card and role display
+  - Sync controls (manual sync, force full sync)
+  - App version and branch info
+- [x] **Biometric Lock**: Fingerprint/FaceID integration for app unlock
+  - `AppBiometricManager` with BiometricPrompt
+  - `AppLockScreen` with biometric button
+  - Auto-prompt on app resume
+- [x] **PIN System**: Fallback PIN for when biometric unavailable
+  - `AppLockPreferences` with SHA-256 hashed PIN storage
+  - `PinSetupScreen` for create/change PIN
+  - 4-digit PIN keypad UI
 
 ---
 
@@ -58,35 +67,92 @@
 
 ---
 
-## 🛒 Phase 4: Point of Sales (POS) - "The Cashier" (Sprints 7-9)
+## 🛒 Phase 4: Point of Sales (POS) - "The Cashier" (Sprints 7-9) ✅ COMPLETE
 
-- [ ] **Catalog Grid**: Performance-optimized LazyVerticalGrid for products.
-- [ ] **Cart Logic**: Local state management for transaction checking.
-- [ ] **Add-Ons & Variants**: Topping, sugar level, ice level.
-- [ ] **Checkout UI**: Bottom Sheet implementation (replacing `/pos/bayar` page).
-- [ ] **Manual Record**: "Buku Kas" feature for non-POS income/expense (`/catat`).
-- [ ] **Transaction Engine**: Calculation logic (Tax, Discount) - *Offline Safe*.
-- [ ] **Checkout & Payment**: Cash, QRIS (Placeholder), Print Receipt (Bluetooth).
+### Sprint 7: Core POS UI
+- [x] **POS Module Setup**: Created `feature/pos` module with build config
+- [x] **Cart Domain Models**: `Cart`, `CartItem`, `PaymentMethod`, `Transaction`
+- [x] **Transaction Entities**: Room entities for transactions + items
+- [x] **TransactionDao**: DAO with all CRUD + sync operations
+- [x] **Catalog Grid**: LazyVerticalGrid with `PosProductCard`
+- [x] **Cart Logic**: In-memory cart with add/remove/update operations
+- [x] **Cart Sidebar**: Animated sidebar with `CartItemRow` components
+- [x] **POS Navigation**: Routes and NavGraphBuilder extensions
+
+### Sprint 8: Transaction Flow ✅ COMPLETE
+- [x] **Checkout UI**: Full-screen checkout with payment method selection
+- [x] **TransactionRepository**: `TransactionRepositoryImpl` with Room persistence
+- [x] **Payment Confirmation**: Process and save transaction with calculations
+- [x] **Receipt Preview**: `ReceiptScreen` with transaction summary
+- [x] **Entity Mappers**: Transaction entity ↔ domain model mappers
+- [x] **CartHolder**: Singleton for sharing cart between screens
+
+### Sprint 9: Polish & Extras ✅ COMPLETE
+- [ ] **Add-Ons & Variants**: ⏸️ Deferred (requires Product model changes)
+- [x] **Manual Record (Buku Kas)**: Income/expense tracking outside POS
+  - CashRecord domain model + CashRecordEntity
+  - CashRecordDao with full CRUD operations
+  - CashRecordRepository + implementation
+  - CashRecordScreen with summary card, swipe-to-delete
+  - Add form via Modal Bottom Sheet
+- [ ] **Transaction Sync**: ⏸️ Moved to Phase 5
 
 ---
 
-## 🔄 Phase 5: Sync Engine & Cloud (Sprint 10)
+## 🔄 Phase 5: Sync Engine & Cloud (Sprint 10) ✅ COMPLETE
 
-- [ ] **WorkManager Setup**: Background workers for upload.
-- [ ] **Delta Sync**: Logic to fetch only *changed* data.
-- [ ] **Conflict Resolution**: "Last Write Wins" logic.
-- [ ] **Offline Queue**: Pending transactions management.
+- [x] **WorkManager Setup**: Background workers for upload
+  - `SyncWorker` with HiltWorker for dependency injection
+  - Periodic sync every 15 minutes with network constraint
+  - Exponential backoff on failure
+  - `WorkManagerModule` for Hilt DI
+- [x] **Delta Sync**: Logic to fetch only changed data
+  - `SyncPreferences` extended for all entity types
+  - Timestamp tracking for transactions, cash records, products, categories
+- [x] **Conflict Resolution**: "Last Write Wins" logic
+  - Based on `updatedAt` timestamp
+  - Soft delete with `isDeleted` flag for remote sync
+- [x] **Offline Queue**: Pending changes management
+  - `SyncManager` facade for all sync operations
+  - `SyncStatus` sealed class for UI state
+  - `TransactionRemoteDataSource` for transactions sync
+  - `CashRecordRemoteDataSource` for cash records sync
+  - Application-level sync initialization
 
 ---
 
-## 📊 Phase 6: Reports & AI (Sprint 11+)
+## 📊 Phase 6: Reports & AI (Sprint 11+) 🟡 IN PROGRESS
 
-- [ ] **Dashboard Stats**: Omzet, Transaksi, Item Terjual widgets.
-- [ ] **Weekly Chart**: Compose Canvas/Charts for 7-day revenue.
-- [ ] **Best Sellers**: Top products list.
-- [ ] **P&L Report**: Profit/Loss analysis.
-- [ ] **AI Assistant**: BFF Integration (Android → Supabase Edge Function → OpenAI).
-- [ ] **Smart Input**: Natural language transaction parsing.
+### Sprint 11: Reports Dashboard ✅ COMPLETE
+- [x] **Dashboard Stats**: Omzet, Transaksi, Item Terjual widgets
+  - `StatCard` component with gradient backgrounds
+  - Animated appearance effects
+  - Trend indicator (+/-% vs previous period)
+- [x] **Weekly Chart**: Compose Canvas for 7-day revenue
+  - `RevenueLineChart` with animated line drawing
+  - Gradient fill under the line
+  - Day labels (Senin, Selasa, etc.)
+- [x] **Best Sellers**: Top 5 products list
+  - `TopProductsList` with progress bars
+  - Medal badges for top 3 (Gold/Silver/Bronze)
+  - Revenue per product display
+- [x] **Report Repository**: Data aggregation layer
+  - `ReportRepository` interface
+  - `ReportRepositoryImpl` with DAO queries
+  - Date range calculations
+- [x] **Navigation**: Home menu integration
+  - `reportsScreen` NavGraphBuilder extension
+  - `navigateToReports` NavController extension
+
+### Sprint 12: Advanced Reports (TODO)
+- [ ] **P&L Report**: Profit/Loss analysis screen
+- [ ] **Date Range Picker**: Custom period selection
+- [ ] **Export Reports**: PDF/Excel export
+
+### Sprint 13: AI Features (TODO)
+- [ ] **AI Assistant**: BFF Integration (Android → Supabase Edge Function → OpenAI)
+- [ ] **Smart Input**: Natural language transaction parsing
+- [ ] **Insights**: AI-powered business recommendations
 
 ---
 

@@ -26,3 +26,6 @@ include(":core:data")
 include(":feature:auth")
 include(":feature:home")
 include(":feature:inventory")
+include(":feature:pos")
+include(":feature:reports")
+

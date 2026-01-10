@@ -98,8 +98,8 @@ fun HomeScreen(
                 titleResId = R.string.menu_transactions,
                 subtitleResId = R.string.menu_transactions_subtitle,
                 icon = Icons.Filled.Receipt,
-                gradientColors = listOf(Color(0xFFf093fb), Color(0xFFf5576c)),
-                enabled = false // Coming soon
+                gradientColors = listOf(Color(0xFFf093fb), Color(0xFFf5576c))
+                // Now enabled - Buku Kas feature
             ),
             HomeMenuItem(
                 id = "reports",
@@ -115,7 +115,7 @@ fun HomeScreen(
                 subtitleResId = R.string.menu_settings_subtitle,
                 icon = Icons.Filled.Settings,
                 gradientColors = listOf(Color(0xFF636363), Color(0xFFa2ab58)),
-                enabled = false // Coming soon
+                enabled = true // Now available!
             )
         )
     }

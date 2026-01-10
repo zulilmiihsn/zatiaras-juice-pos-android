@@ -78,10 +78,10 @@ dependencies {
     // Timber
     implementation(libs.timber)
 
-    // Supabase
-    implementation(libs.supabase.gotrue)
-    implementation(libs.supabase.postgrest)
-    implementation(libs.supabase.storage)
+    // Supabase - used by features, so using api
+    api(libs.supabase.gotrue)
+    api(libs.supabase.postgrest)
+    api(libs.supabase.storage)
     implementation(libs.ktor.client.cio)
     implementation(libs.ktor.client.core)
 
@@ -93,4 +93,9 @@ dependencies {
 
     // Serialization
     implementation(libs.kotlinx.serialization.json)
+
+    // WorkManager (Background Sync)
+    implementation(libs.androidx.work.runtime.ktx)
+    implementation(libs.androidx.hilt.work)
+    ksp(libs.androidx.hilt.compiler)
 }
