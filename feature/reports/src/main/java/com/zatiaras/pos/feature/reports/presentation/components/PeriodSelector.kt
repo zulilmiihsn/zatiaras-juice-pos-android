@@ -1,0 +1,98 @@
+package com.zatiaras.pos.feature.reports.presentation.components
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import com.zatiaras.pos.feature.reports.domain.model.ReportPeriod
+
+/**
+ * Horizontal scrollable period selector chips.
+ */
+@Composable
+fun PeriodSelector(
+    selectedPeriod: ReportPeriod,
+    onPeriodSelected: (ReportPeriod) -> Unit,
+    modifier: Modifier = Modifier,
+    showCustomOption: Boolean = true
+) {
+    val periods = if (showCustomOption) {
+        ReportPeriod.entries
+    } else {
+        ReportPeriod.entries.filter { it != ReportPeriod.CUSTOM }
+    }
+    
+    Row(
+        modifier = modifier
+            .horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        periods.forEach { period ->
+            PeriodChip(
+                label = period.toDisplayName(),
+                isSelected = period == selectedPeriod,
+                onClick = { onPeriodSelected(period) }
+            )
+        }
+    }
+}
+
+@Composable
+private fun PeriodChip(
+    label: String,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    val backgroundColor = if (isSelected) {
+        MaterialTheme.colorScheme.primary
+    } else {
+        MaterialTheme.colorScheme.surfaceVariant
+    }
+    
+    val textColor = if (isSelected) {
+        MaterialTheme.colorScheme.onPrimary
+    } else {
+        MaterialTheme.colorScheme.onSurfaceVariant
+    }
+    
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(20.dp))
+            .background(backgroundColor)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelMedium,
+            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+            color = textColor
+        )
+    }
+}
+
+/**
+ * Convert ReportPeriod enum to Indonesian display name.
+ */
+fun ReportPeriod.toDisplayName(): String = when (this) {
+    ReportPeriod.TODAY -> "Hari Ini"
+    ReportPeriod.THIS_WEEK -> "Minggu Ini"
+    ReportPeriod.THIS_MONTH -> "Bulan Ini"
+    ReportPeriod.LAST_7_DAYS -> "7 Hari Terakhir"
+    ReportPeriod.LAST_30_DAYS -> "30 Hari Terakhir"
+    ReportPeriod.CUSTOM -> "Kustom"
+}

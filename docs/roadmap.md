@@ -16,9 +16,9 @@
 | **Authentication** | 100% | ✅ COMPLETE - Biometric + PIN + Settings |
 | **Inventory** | 100% | ✅ COMPLETE - CRUD, Image Upload, Sync |
 | **POS Feature** | 100% | ✅ COMPLETE - Full POS + Buku Kas |
-| **Reports** | 60% | 🟡 Dashboard + Chart + Best Sellers done |
+| **Reports** | 100% | ✅ COMPLETE - Dashboard + P&L + Export |
 | **Sync Engine** | 100% | ✅ COMPLETE - WorkManager + Background Sync |
-| **Overall** | **~90%** | Phase 6 in progress! |
+| **Overall** | **~95%** | Phase 6 COMPLETE! Ready for Phase 7 |
 
 ---
 
@@ -144,10 +144,21 @@
   - `reportsScreen` NavGraphBuilder extension
   - `navigateToReports` NavController extension
 
-### Sprint 12: Advanced Reports (TODO)
-- [ ] **P&L Report**: Profit/Loss analysis screen
-- [ ] **Date Range Picker**: Custom period selection
-- [ ] **Export Reports**: PDF/Excel export
+### Sprint 12: Advanced Reports ✅ COMPLETE
+- [x] **P&L Report**: Profit/Loss analysis screen
+  - `PnlReportScreen` with period selector
+  - `PnlBreakdownCard` with revenue breakdown
+  - Gross Revenue, Discounts, Net Revenue, Tax sections
+  - Grand Total and Profit indicators
+- [x] **Date Range Picker**: Custom period selection
+  - `PeriodSelector` chip component
+  - Material3 `DatePickerDialog` integration
+  - Support for Today, This Week, This Month, Last 7/30 Days, Custom
+- [x] **Export Reports**: PDF/Excel export
+  - `PdfExportService` using Android PdfDocument API
+  - `CsvExportService` for Excel-compatible CSV
+  - FileProvider for secure file sharing
+  - Share Intent for sending to other apps
 
 ### Sprint 13: AI Features (TODO)
 - [ ] **AI Assistant**: BFF Integration (Android → Supabase Edge Function → OpenAI)

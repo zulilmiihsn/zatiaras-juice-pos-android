@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- Cache directory for exported files -->
+    <cache-path
+        name="exports"
+        path="." />
+    
+    <!-- External cache for larger files if needed -->
+    <external-cache-path
+        name="external_exports"
+        path="." />
+</paths>

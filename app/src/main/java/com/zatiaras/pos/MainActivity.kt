@@ -38,7 +38,9 @@ import com.zatiaras.pos.feature.pos.navigation.navigateToCheckout
 import com.zatiaras.pos.feature.pos.navigation.navigateToPos
 import com.zatiaras.pos.feature.pos.navigation.posScreen
 import com.zatiaras.pos.feature.pos.presentation.receipt.ReceiptScreen
+import com.zatiaras.pos.feature.reports.navigation.navigateToPnlReport
 import com.zatiaras.pos.feature.reports.navigation.navigateToReports
+import com.zatiaras.pos.feature.reports.navigation.pnlReportScreen
 import com.zatiaras.pos.feature.reports.navigation.reportsScreen
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -151,9 +153,18 @@ class MainActivity : ComponentActivity() {
                             }
                         )
                         
-                        // PIN Setup screen
                         // Reports Dashboard
                         reportsScreen(
+                            onNavigateBack = {
+                                navController.popBackStack()
+                            },
+                            onNavigateToPnl = {
+                                navController.navigateToPnlReport()
+                            }
+                        )
+                        
+                        // P&L Report screen
+                        pnlReportScreen(
                             onNavigateBack = {
                                 navController.popBackStack()
                             }
