@@ -129,6 +129,7 @@ class LocalAuthRepository @Inject constructor(
         return when (val result = createUser(username, password, displayName, "pemilik")) {
             is Result.Success -> Result.Success(Unit)
             is Result.Error -> result
+            is Result.Loading -> Result.Loading
         }
     }
 }

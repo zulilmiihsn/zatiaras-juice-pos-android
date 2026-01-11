@@ -109,14 +109,6 @@ fun PosScreen(
                         fontWeight = FontWeight.Bold
                     )
                 },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Kembali"
-                        )
-                    }
-                },
                 actions = {
                     // Cart button with badge
                     IconButton(onClick = { isCartVisible = !isCartVisible }) {
