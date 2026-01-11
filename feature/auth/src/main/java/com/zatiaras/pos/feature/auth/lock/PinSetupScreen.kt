@@ -65,7 +65,7 @@ fun PinSetupScreen(
 ) {
     Scaffold(
         topBar = {
-            TopAppBar(
+            CenterAlignedTopAppBar(
                 title = { 
                     Text(
                         when (uiState.step) {

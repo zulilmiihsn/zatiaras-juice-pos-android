@@ -64,7 +64,7 @@ fun SettingsScreen(
 ) {
     Scaffold(
         topBar = {
-            TopAppBar(
+            CenterAlignedTopAppBar(
                 title = { Text("Pengaturan") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
