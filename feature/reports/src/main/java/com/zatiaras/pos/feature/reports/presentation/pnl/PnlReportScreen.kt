@@ -78,6 +78,13 @@ fun PnlReportRoute(
     LaunchedEffect(Unit) {
         viewModel.exportEvent.collect { event ->
             when (event) {
+                is ExportEvent.SavedToDownloads -> {
+                    Toast.makeText(
+                        context, 
+                        "✅ File tersimpan: ${event.fileName}", 
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
                 is ExportEvent.ShareFile -> {
                     val chooserIntent = android.content.Intent.createChooser(
                         event.intent,
@@ -497,7 +504,7 @@ private fun ExportSection(
         Spacer(modifier = Modifier.height(8.dp))
         
         Text(
-            text = "File akan dibagikan melalui aplikasi pilihan Anda",
+            text = "File akan tersimpan di folder aplikasi",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
         )

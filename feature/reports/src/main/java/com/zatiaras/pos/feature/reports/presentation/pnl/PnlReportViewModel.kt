@@ -121,6 +121,7 @@ class PnlReportViewModel @Inject constructor(
 
     /**
      * Export report to PDF format.
+     * File is saved to Downloads folder.
      */
     fun exportToPdf(context: Context) {
         val report = _uiState.value.report ?: return
@@ -137,8 +138,9 @@ class PnlReportViewModel @Inject constructor(
                 
                 result.fold(
                     onSuccess = { uri ->
-                        val intent = pdfExportService.createShareIntent(uri)
-                        _exportEvent.emit(ExportEvent.ShareFile(intent, "Laporan_Laba_Rugi.pdf"))
+                        // Get the file name from the URI
+                        val fileName = "Laporan_Laba_Rugi_${System.currentTimeMillis()}.pdf"
+                        _exportEvent.emit(ExportEvent.SavedToDownloads(fileName, uri.toString()))
                     },
                     onFailure = { error ->
                         _exportEvent.emit(ExportEvent.Error("Gagal export PDF: ${error.message}"))
@@ -152,6 +154,7 @@ class PnlReportViewModel @Inject constructor(
 
     /**
      * Export report to CSV/Excel format.
+     * File is saved to Downloads folder.
      */
     fun exportToCsv(context: Context) {
         val report = _uiState.value.report ?: return
@@ -168,8 +171,8 @@ class PnlReportViewModel @Inject constructor(
                 
                 result.fold(
                     onSuccess = { uri ->
-                        val intent = csvExportService.createShareIntent(uri)
-                        _exportEvent.emit(ExportEvent.ShareFile(intent, "Laporan_Laba_Rugi.csv"))
+                        val fileName = "Laporan_Laba_Rugi_${System.currentTimeMillis()}.csv"
+                        _exportEvent.emit(ExportEvent.SavedToDownloads(fileName, uri.toString()))
                     },
                     onFailure = { error ->
                         _exportEvent.emit(ExportEvent.Error("Gagal export CSV: ${error.message}"))
@@ -260,7 +263,7 @@ class PnlReportViewModel @Inject constructor(
  * One-time events for export operations.
  */
 sealed class ExportEvent {
+    data class SavedToDownloads(val fileName: String, val filePath: String) : ExportEvent()
     data class ShareFile(val intent: Intent, val fileName: String) : ExportEvent()
     data class Error(val message: String) : ExportEvent()
 }
-

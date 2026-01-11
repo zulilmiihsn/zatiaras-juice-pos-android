@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -52,11 +53,15 @@ fun PosProductCard(
         modifier = modifier
             .fillMaxWidth()
             .clickable { onAddToCart() },
-        shape = RoundedCornerShape(12.dp),
+        shape = MaterialTheme.shapes.medium, // ShadCN Medium (8dp)
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        border = androidx.compose.foundation.BorderStroke(
+            width = 1.dp,
+            color = MaterialTheme.colorScheme.outline
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp) // Flat design
     ) {
         Box {
             Column {
@@ -65,8 +70,7 @@ fun PosProductCard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .aspectRatio(1f)
-                        .clip(RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp))
-                        .background(MaterialTheme.colorScheme.surfaceVariant),
+                        .background(MaterialTheme.colorScheme.surfaceVariant), // Placeholder bg
                     contentAlignment = Alignment.Center
                 ) {
                     if (product.imageUrl != null) {
@@ -80,8 +84,8 @@ fun PosProductCard(
                         Icon(
                             imageVector = Icons.Default.Image,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-                            modifier = Modifier.padding(24.dp)
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f),
+                            modifier = Modifier.size(32.dp)
                         )
                     }
                 }
@@ -91,60 +95,61 @@ fun PosProductCard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     Text(
                         text = product.name,
                         style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
                     )
                     
                     Text(
                         text = priceFormatter.format(product.price),
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.primary,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface, // Text should be dark, not primary colored usually
                         fontWeight = FontWeight.Bold
                     )
                 }
             }
             
-            // Add to Cart FAB
-            FloatingActionButton(
+            // Add Command (Mini Button)
+            // Replaced FAB with a sleek icon button or kept FAB but cleaner
+            androidx.compose.material3.Surface(
                 onClick = onAddToCart,
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .padding(8.dp),
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary,
-                elevation = FloatingActionButtonDefaults.elevation(
-                    defaultElevation = 2.dp
-                )
+                    .padding(8.dp)
+                    .size(32.dp),
+                shape = MaterialTheme.shapes.small, // Square with radius
+                color = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
             ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = "Tambah ke keranjang"
-                )
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Tambah",
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
             }
             
-            // Quantity Badge (if in cart)
+            // Quantity Badge
             if (quantityInCart > 0) {
-                Box(
+                androidx.compose.material3.Surface(
                     modifier = Modifier
                         .align(Alignment.TopStart)
-                        .padding(8.dp)
-                        .background(
-                            color = MaterialTheme.colorScheme.tertiary,
-                            shape = RoundedCornerShape(50)
-                        )
-                        .padding(horizontal = 10.dp, vertical = 4.dp)
+                        .padding(8.dp),
+                    shape = MaterialTheme.shapes.extraSmall,
+                    color = MaterialTheme.colorScheme.secondary,
+                    contentColor = MaterialTheme.colorScheme.onSecondary
                 ) {
                     Text(
-                        text = quantityInCart.toString(),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onTertiary,
-                        fontWeight = FontWeight.Bold
+                        text = "${quantityInCart}x",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                     )
                 }
             }

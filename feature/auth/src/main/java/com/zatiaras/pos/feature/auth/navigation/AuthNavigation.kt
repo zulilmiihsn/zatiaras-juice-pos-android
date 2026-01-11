@@ -47,12 +47,14 @@ fun NavGraphBuilder.appLockScreen(
 fun NavGraphBuilder.settingsScreen(
     onNavigateBack: () -> Unit,
     onNavigateToPinSetup: () -> Unit,
+    onNavigateToPrinter: () -> Unit = {},
     onLogout: () -> Unit
 ) {
     composable(AuthRoutes.SETTINGS) {
         SettingsRoute(
             onNavigateBack = onNavigateBack,
             onNavigateToPinSetup = onNavigateToPinSetup,
+            onNavigateToPrinter = onNavigateToPrinter,
             onLogout = onLogout
         )
     }

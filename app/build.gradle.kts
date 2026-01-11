@@ -8,7 +8,7 @@ plugins {
 }
 
 android {
-    namespace = "com.zatiaras.pos"
+    namespace = "com.zatiaras"
     compileSdk = 34
 
     defaultConfig {
@@ -63,6 +63,7 @@ dependencies {
     implementation(project(":feature:inventory"))
     implementation(project(":feature:pos"))
     implementation(project(":feature:reports"))
+    implementation(project(":feature:printer"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -73,6 +74,7 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.compose.material.icons.extended)
 
     // Hilt
     implementation(libs.hilt.android)

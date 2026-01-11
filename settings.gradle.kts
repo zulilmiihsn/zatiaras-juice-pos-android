@@ -28,4 +28,5 @@ include(":feature:home")
 include(":feature:inventory")
 include(":feature:pos")
 include(":feature:reports")
+include(":feature:printer")
 

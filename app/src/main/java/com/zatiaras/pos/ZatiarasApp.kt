@@ -3,6 +3,7 @@ package com.zatiaras.pos
 import android.app.Application
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
+import com.zatiaras.BuildConfig
 import com.zatiaras.pos.core.data.sync.SyncManager
 import dagger.hilt.android.HiltAndroidApp
 import timber.log.Timber
@@ -47,4 +48,3 @@ class ZatiarasApp : Application(), Configuration.Provider {
             )
             .build()
 }
-

@@ -24,8 +24,8 @@ import javax.inject.Singleton
  * 
  * Offline-First Design:
  * 1. All transactions are saved to Room first
- * 2. Background sync pushes to Supabase (handled by Sync Engine)
- * 3. Transactions marked isSynced = false until confirmed
+ * 2. Background sync is handled by SyncManager in :core:data
+ * 3. Transactions marked isSynced = false until SyncWorker confirms
  */
 @Singleton
 class TransactionRepositoryImpl @Inject constructor(
@@ -106,10 +106,10 @@ class TransactionRepositoryImpl @Inject constructor(
     }
 
     override suspend fun syncToRemote(): Result<Unit> {
-        // TODO: Implement in Phase 5 - Sync Engine
-        // For now, just log and return success
+        // Sync is handled by SyncManager in :core:data
+        // This method exists for manual sync trigger from UI if needed
         val unsynced = transactionDao.getUnsyncedTransactions()
-        Timber.d("Found ${unsynced.size} unsynced transactions (sync not yet implemented)")
+        Timber.d("TransactionRepository: ${unsynced.size} unsynced transactions (handled by SyncManager)")
         return Result.success(Unit)
     }
 

@@ -24,6 +24,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 fun SettingsRoute(
     onNavigateBack: () -> Unit,
     onNavigateToPinSetup: () -> Unit,
+    onNavigateToPrinter: () -> Unit = {},
     onLogout: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
@@ -41,6 +42,7 @@ fun SettingsRoute(
         onLockEnabledChange = viewModel::setLockEnabled,
         onBiometricEnabledChange = viewModel::setBiometricEnabled,
         onChangePinClick = onNavigateToPinSetup,
+        onPrinterClick = onNavigateToPrinter,
         onSyncNowClick = viewModel::syncNow,
         onForceFullSyncClick = viewModel::forceFullSync,
         onLogoutClick = viewModel::logout
@@ -55,6 +57,7 @@ fun SettingsScreen(
     onLockEnabledChange: (Boolean) -> Unit,
     onBiometricEnabledChange: (Boolean) -> Unit,
     onChangePinClick: () -> Unit,
+    onPrinterClick: () -> Unit,
     onSyncNowClick: () -> Unit,
     onForceFullSyncClick: () -> Unit,
     onLogoutClick: () -> Unit
@@ -122,6 +125,18 @@ fun SettingsScreen(
                         onClick = onChangePinClick
                     )
                 }
+            }
+
+            HorizontalDivider()
+
+            // Hardware Section
+            SettingsSection(title = "Perangkat") {
+                ClickableSettingItem(
+                    icon = Icons.Outlined.Print,
+                    title = "Printer",
+                    subtitle = "Atur printer thermal Bluetooth",
+                    onClick = onPrinterClick
+                )
             }
 
             HorizontalDivider()

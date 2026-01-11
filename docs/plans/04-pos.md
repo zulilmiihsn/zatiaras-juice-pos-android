@@ -1,7 +1,7 @@
 # 📝 Feature Plan: Point of Sales (POS) Module
 
 **Feature Name**: Point of Sales (POS)
-**Status**: In-Progress
+**Status**: 🟢 Core Complete (Sync Pending)
 **Related Roadmap Item**: Phase 4
 
 ---
@@ -79,27 +79,27 @@ feature/pos/
 
 ## 4. Implementation Steps
 
-### Sprint 7: Core POS UI
+### Sprint 7: Core POS UI ✅ Complete
 
 1. [x] Create `feature/pos` module structure
-2. [ ] Create Cart domain models (`Cart`, `CartItem`)
-3. [ ] Create Transaction entities (Room)
-4. [ ] Create POS Catalog Screen (product grid)
-5. [ ] Create Cart UI component (sidebar/bottom sheet)
-6. [ ] Implement CartViewModel with state management
+2. [x] Create Cart domain models (`Cart`, `CartItem`, `CartHolder`)
+3. [x] Create Transaction entities (Room) + mappers
+4. [x] Create POS Catalog Screen (product grid)
+5. [x] Create Cart UI component (bottom sheet)
+6. [x] Implement PosViewModel with state management
 
-### Sprint 8: Transaction Flow
+### Sprint 8: Transaction Flow ✅ Complete
 
-7. [ ] Create Checkout UI (payment method selection)
-8. [ ] Create TransactionRepository (save to Room)
-9. [ ] Implement payment confirmation flow
-10. [ ] Create Transaction receipt preview
+7. [x] Create Checkout UI (payment method selection: Cash, QRIS, Transfer)
+8. [x] Create TransactionRepository (save to Room)
+9. [x] Implement payment confirmation flow with validation
+10. [x] Create Transaction receipt preview
 
-### Sprint 9: Polish & Sync
+### Sprint 9: Polish & Sync ✅ Complete
 
-11. [ ] Create TransactionRemoteDataSource (Supabase)
-12. [ ] Implement transaction sync (push completed transactions)
-13. [ ] Add "Manual Record" feature (Buku Kas)
+11. [x] Create TransactionRemoteDataSource (Supabase) - in `:core:data`
+12. [x] Implement transaction sync via SyncManager (push completed transactions)
+13. [x] Add "Manual Record" feature (Buku Kas) - Integrated with CashRecord
 14. [ ] Performance optimization for catalog
 
 ---

@@ -20,6 +20,8 @@
             <option value="$PROJECT_DIR$/feature/home" />
             <option value="$PROJECT_DIR$/feature/inventory" />
             <option value="$PROJECT_DIR$/feature/pos" />
+            <option value="$PROJECT_DIR$/feature/printer" />
+            <option value="$PROJECT_DIR$/feature/reports" />
           </set>
         </option>
       </GradleProjectSettings>

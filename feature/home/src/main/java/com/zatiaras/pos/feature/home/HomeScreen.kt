@@ -107,7 +107,7 @@ fun HomeScreen(
                 subtitleResId = R.string.menu_reports_subtitle,
                 icon = Icons.Filled.Analytics,
                 gradientColors = listOf(Color(0xFF4facfe), Color(0xFF00f2fe)),
-                enabled = false // Coming soon
+                enabled = true // Reports feature is ready!
             ),
             HomeMenuItem(
                 id = "settings",

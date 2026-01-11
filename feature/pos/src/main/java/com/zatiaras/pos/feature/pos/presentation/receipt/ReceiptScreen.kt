@@ -19,12 +19,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Print
+import androidx.compose.material.icons.filled.PrintDisabled
 import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -35,6 +37,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -54,6 +57,9 @@ fun ReceiptScreen(
     transaction: Transaction,
     onNewTransaction: () -> Unit,
     onPrintReceipt: () -> Unit,
+    isPrinting: Boolean = false,
+    isPrinterConnected: Boolean = false,
+    printerName: String? = null,
     modifier: Modifier = Modifier
 ) {
     val priceFormatter = NumberFormat.getCurrencyInstance(Locale("id", "ID")).apply {
@@ -248,6 +254,29 @@ fun ReceiptScreen(
             
             // Action Buttons
             item {
+                // Printer Status Indicator
+                if (isPrinterConnected && printerName != null) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 8.dp),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(8.dp)
+                                .background(Color(0xFF4CAF50), RoundedCornerShape(4.dp))
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Printer: $printerName",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+                
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -255,15 +284,27 @@ fun ReceiptScreen(
                     OutlinedButton(
                         onClick = onPrintReceipt,
                         modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(12.dp),
+                        enabled = !isPrinting
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Print,
-                            contentDescription = null,
-                            modifier = Modifier.size(20.dp)
-                        )
+                        if (isPrinting) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Icon(
+                                imageVector = if (isPrinterConnected) Icons.Default.Print else Icons.Default.PrintDisabled,
+                                contentDescription = null,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Cetak Struk")
+                        Text(
+                            if (isPrinting) "Mencetak..." 
+                            else if (isPrinterConnected) "Cetak Struk" 
+                            else "Setup Printer"
+                        )
                     }
                     
                     Button(

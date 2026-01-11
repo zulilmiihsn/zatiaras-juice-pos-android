@@ -58,7 +58,7 @@ import com.zatiaras.pos.feature.reports.presentation.components.formatRupiah
 
 @Composable
 fun ReportDashboardRoute(
-    onNavigateBack: () -> Unit,
+    onNavigateBack: (() -> Unit)?,
     onNavigateToPnl: () -> Unit = {},
     viewModel: ReportDashboardViewModel = hiltViewModel()
 ) {
@@ -77,7 +77,7 @@ fun ReportDashboardRoute(
 fun ReportDashboardScreen(
     uiState: ReportDashboardUiState,
     onRefresh: () -> Unit,
-    onNavigateBack: () -> Unit,
+    onNavigateBack: (() -> Unit)?,
     onNavigateToPnl: () -> Unit
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
@@ -94,11 +94,13 @@ fun ReportDashboardScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Kembali"
-                        )
+                    if (onNavigateBack != null) {
+                        IconButton(onClick = onNavigateBack) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Kembali"
+                            )
+                        }
                     }
                 },
                 actions = {
@@ -380,4 +382,3 @@ private fun QuickAccessCard(
         }
     }
 }
-
