@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Authentication Error Messages -->
+    <string name="error_invalid_credentials">Email atau password salah</string>
+    <string name="error_email_not_verified">Email belum diverifikasi. Cek inbox email.</string>
+    <string name="error_no_internet">Tidak ada koneksi internet</string>
+    <string name="error_login_failed">Login gagal</string>
+    
+    <!-- General Errors -->
+    <string name="error_unknown">Terjadi kesalahan</string>
+    <string name="error_cart_empty">Keranjang kosong</string>
+</resources>

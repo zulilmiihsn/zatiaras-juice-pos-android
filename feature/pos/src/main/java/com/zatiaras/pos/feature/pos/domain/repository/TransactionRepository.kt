@@ -1,5 +1,6 @@
 package com.zatiaras.pos.feature.pos.domain.repository
 
+import com.zatiaras.pos.core.domain.Result
 import com.zatiaras.pos.feature.pos.domain.model.Cart
 import com.zatiaras.pos.feature.pos.domain.model.PaymentMethod
 import com.zatiaras.pos.feature.pos.domain.model.Transaction

@@ -7,6 +7,7 @@ import androidx.room.Query
 import androidx.room.Transaction
 import com.zatiaras.pos.core.data.local.entity.TransactionEntity
 import com.zatiaras.pos.core.data.local.entity.TransactionItemEntity
+import com.zatiaras.pos.core.data.local.entity.TransactionWithItems
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -67,6 +68,21 @@ interface TransactionDao {
         ORDER BY createdAt DESC
     """)
     fun getTransactionsByDateRange(startOfDay: Long, endOfDay: Long): Flow<List<TransactionEntity>>
+
+    /**
+     * Get transactions with items in a single query.
+     * Uses @Relation to avoid N+1 query problem.
+     * Room will fetch all transactions and their items in optimized queries.
+     */
+    @Transaction
+    @Query("""
+        SELECT * FROM transactions 
+        WHERE createdAt >= :startOfDay 
+        AND createdAt < :endOfDay 
+        AND isDeleted = 0
+        ORDER BY createdAt DESC
+    """)
+    fun getTransactionsWithItems(startOfDay: Long, endOfDay: Long): Flow<List<TransactionWithItems>>
 
     /**
      * Get today's transaction count (for generating transaction number).

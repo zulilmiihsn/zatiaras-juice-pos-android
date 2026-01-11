@@ -3,6 +3,7 @@ package com.zatiaras.pos.core.data.di
 import android.content.Context
 import androidx.room.Room
 import com.zatiaras.pos.core.data.local.ZatiarasDatabase
+import com.zatiaras.pos.core.data.local.Migrations
 import com.zatiaras.pos.core.data.local.dao.CashRecordDao
 import com.zatiaras.pos.core.data.local.dao.CategoryDao
 import com.zatiaras.pos.core.data.local.dao.ProductDao
@@ -34,9 +35,8 @@ object DatabaseModule {
             ZatiarasDatabase::class.java,
             ZatiarasDatabase.DATABASE_NAME
         )
-            // For development: destroy and recreate on schema change
-            // TODO: Replace with proper migrations before production
-            .fallbackToDestructiveMigration()
+            // Use proper migrations to preserve user data
+            .addMigrations(*Migrations.ALL_MIGRATIONS)
             .build()
     }
 

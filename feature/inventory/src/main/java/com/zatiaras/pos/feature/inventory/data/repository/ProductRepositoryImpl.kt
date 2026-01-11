@@ -1,5 +1,6 @@
 package com.zatiaras.pos.feature.inventory.data.repository
 
+import com.zatiaras.pos.core.data.di.ApplicationScope
 import com.zatiaras.pos.core.data.local.SyncPreferences
 import com.zatiaras.pos.core.data.local.dao.CategoryDao
 import com.zatiaras.pos.core.data.local.dao.ProductDao
@@ -12,7 +13,6 @@ import com.zatiaras.pos.feature.inventory.data.mapper.toEntity
 import com.zatiaras.pos.feature.inventory.domain.repository.ProductRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
@@ -35,11 +35,9 @@ class ProductRepositoryImpl @Inject constructor(
     private val productDao: ProductDao,
     private val categoryDao: CategoryDao,
     private val remoteDataSource: InventoryRemoteDataSource,
-    private val syncPreferences: SyncPreferences
+    private val syncPreferences: SyncPreferences,
+    @ApplicationScope private val applicationScope: CoroutineScope
 ) : ProductRepository {
-
-    // Background scope for sync operations (won't block UI)
-    private val syncScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     // ==================== PRODUCTS ====================
 
@@ -94,7 +92,7 @@ class ProductRepositoryImpl @Inject constructor(
             Timber.d("Product created locally: ${newProduct.id}")
             
             // Attempt sync in background (non-blocking)
-            syncScope.launch {
+            applicationScope.launch {
                 syncProductToRemote(newProduct.toEntity(isSynced = false))
             }
             
@@ -115,7 +113,7 @@ class ProductRepositoryImpl @Inject constructor(
             Timber.d("Product updated locally: ${product.id}")
             
             // Attempt sync in background
-            syncScope.launch {
+            applicationScope.launch {
                 syncProductToRemote(updatedProduct.toEntity(isSynced = false))
             }
             
@@ -132,7 +130,7 @@ class ProductRepositoryImpl @Inject constructor(
             Timber.d("Product soft-deleted: $id")
             
             // Sync deletion in background
-            syncScope.launch {
+            applicationScope.launch {
                 remoteDataSource.deleteProduct(id)
                     .onSuccess { Timber.d("Product deletion synced: $id") }
                     .onFailure { Timber.w("Failed to sync deletion, will retry: $id") }

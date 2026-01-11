@@ -25,6 +25,11 @@ navigationCompose = "2.7.7"
 workManager = "2.9.0"
 hiltWork = "1.1.0"
 biometric = "1.1.0"
+# Testing
+mockk = "1.13.9"
+turbine = "1.0.0"
+coroutinesTest = "1.7.3"
+archCore = "2.2.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -89,6 +94,16 @@ androidx-hilt-compiler = { group = "androidx.hilt", name = "hilt-compiler", vers
 
 # Biometric
 androidx-biometric = { group = "androidx.biometric", name = "biometric", version.ref = "biometric" }
+
+# Testing
+test-mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
+test-mockk-android = { group = "io.mockk", name = "mockk-android", version.ref = "mockk" }
+test-turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine" }
+test-coroutines = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutinesTest" }
+test-arch-core = { group = "androidx.arch.core", name = "core-testing", version.ref = "archCore" }
+hilt-testing = { group = "com.google.dagger", name = "hilt-android-testing", version.ref = "hilt" }
+androidx-room-testing = { group = "androidx.room", name = "room-testing", version.ref = "room" }
+
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

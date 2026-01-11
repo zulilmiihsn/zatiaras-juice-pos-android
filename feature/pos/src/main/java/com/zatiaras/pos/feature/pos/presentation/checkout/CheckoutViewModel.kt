@@ -3,6 +3,9 @@ package com.zatiaras.pos.feature.pos.presentation.checkout
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.zatiaras.pos.core.domain.Result
+import com.zatiaras.pos.core.domain.onFailure
+import com.zatiaras.pos.core.domain.onSuccess
 import com.zatiaras.pos.feature.pos.domain.model.Cart
 import com.zatiaras.pos.feature.pos.domain.model.PaymentMethod
 import com.zatiaras.pos.feature.pos.domain.repository.TransactionRepository
@@ -143,7 +146,7 @@ class CheckoutViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = state.copy(isProcessing = true, paymentError = null)
             
-            val amountPaid = when (state.selectedPaymentMethod) {
+            val amountPaidValue = when (state.selectedPaymentMethod) {
                 PaymentMethod.CASH -> state.amountPaidValue
                 else -> state.grandTotal // Exact amount for non-cash
             }
@@ -151,7 +154,7 @@ class CheckoutViewModel @Inject constructor(
             transactionRepository.createTransaction(
                 cart = cart,
                 paymentMethod = state.selectedPaymentMethod,
-                amountPaid = amountPaid,
+                amountPaid = amountPaidValue,
                 discountPercent = state.discountPercent,
                 taxPercent = state.taxPercent,
                 notes = state.notes.ifBlank { null }
@@ -162,7 +165,7 @@ class CheckoutViewModel @Inject constructor(
                 Timber.e(error, "Failed to complete transaction")
                 _uiState.value = state.copy(
                     isProcessing = false,
-                    paymentError = error.message ?: "Gagal menyimpan transaksi"
+                    paymentError = error?.message ?: "Gagal menyimpan transaksi"
                 )
             }
         }

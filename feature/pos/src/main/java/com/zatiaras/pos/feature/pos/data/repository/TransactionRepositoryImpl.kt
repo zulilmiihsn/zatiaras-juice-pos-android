@@ -1,6 +1,7 @@
 package com.zatiaras.pos.feature.pos.data.repository
 
 import com.zatiaras.pos.core.data.local.dao.TransactionDao
+import com.zatiaras.pos.core.domain.Result
 import com.zatiaras.pos.feature.pos.data.mapper.createTransactionEntity
 import com.zatiaras.pos.feature.pos.data.mapper.toDomain
 import com.zatiaras.pos.feature.pos.data.mapper.toItemEntities
@@ -42,7 +43,7 @@ class TransactionRepositoryImpl @Inject constructor(
     ): Result<Transaction> {
         return try {
             if (cart.isEmpty()) {
-                return Result.failure(IllegalStateException("Keranjang kosong"))
+                return Result.Error(IllegalStateException("Keranjang kosong"))
             }
             
             val transactionId = UUID.randomUUID().toString()
@@ -70,11 +71,11 @@ class TransactionRepositoryImpl @Inject constructor(
             
             // Return domain model
             val transaction = transactionEntity.toDomain(itemEntities)
-            Result.success(transaction)
+            Result.Success(transaction)
             
         } catch (e: Exception) {
             Timber.e(e, "Failed to create transaction")
-            Result.failure(e)
+            Result.Error(e)
         }
     }
 
@@ -110,7 +111,7 @@ class TransactionRepositoryImpl @Inject constructor(
         // This method exists for manual sync trigger from UI if needed
         val unsynced = transactionDao.getUnsyncedTransactions()
         Timber.d("TransactionRepository: ${unsynced.size} unsynced transactions (handled by SyncManager)")
-        return Result.success(Unit)
+        return Result.Success(Unit)
     }
 
     override suspend fun generateTransactionNumber(): String {

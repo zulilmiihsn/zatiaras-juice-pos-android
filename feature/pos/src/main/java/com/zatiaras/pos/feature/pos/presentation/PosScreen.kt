@@ -64,6 +64,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.zatiaras.pos.feature.pos.presentation.components.CartItemRow
+import com.zatiaras.pos.feature.pos.presentation.components.CartSidebar
 import com.zatiaras.pos.feature.pos.presentation.components.PosProductCard
 import java.text.NumberFormat
 import java.util.Locale
@@ -85,8 +86,10 @@ fun PosScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     var isCartVisible by remember { mutableStateOf(false) }
     
-    val priceFormatter = NumberFormat.getCurrencyInstance(Locale("id", "ID")).apply {
-        maximumFractionDigits = 0
+    val priceFormatter = remember {
+        NumberFormat.getCurrencyInstance(Locale("id", "ID")).apply {
+            maximumFractionDigits = 0
+        }
     }
     
     // Show error snackbar
@@ -299,127 +302,8 @@ fun PosScreen(
                         viewModel.onEvent(PosEvent.ClearCart)
                     },
                     onCheckout = onProceedToCheckout,
-                    priceFormatter = priceFormatter,
                     modifier = Modifier.width(320.dp)
                 )
-            }
-        }
-    }
-}
-
-@Composable
-private fun CartSidebar(
-    cart: com.zatiaras.pos.feature.pos.domain.model.Cart,
-    onIncrement: (String) -> Unit,
-    onDecrement: (String) -> Unit,
-    onRemove: (String) -> Unit,
-    onClearCart: () -> Unit,
-    onCheckout: () -> Unit,
-    priceFormatter: NumberFormat,
-    modifier: Modifier = Modifier
-) {
-    Surface(
-        modifier = modifier.fillMaxHeight(),
-        color = MaterialTheme.colorScheme.surfaceContainer,
-        shape = RoundedCornerShape(topStart = 16.dp, bottomStart = 16.dp)
-    ) {
-        Column(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            // Header
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Keranjang (${cart.itemCount})",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-                
-                IconButton(
-                    onClick = onClearCart,
-                    modifier = Modifier.size(32.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Clear,
-                        contentDescription = "Kosongkan",
-                        tint = MaterialTheme.colorScheme.error
-                    )
-                }
-            }
-            
-            HorizontalDivider()
-            
-            // Cart Items
-            LazyColumn(
-                modifier = Modifier.weight(1f),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(
-                    items = cart.items,
-                    key = { it.product.id }
-                ) { cartItem ->
-                    CartItemRow(
-                        cartItem = cartItem,
-                        onIncrement = { onIncrement(cartItem.product.id) },
-                        onDecrement = { onDecrement(cartItem.product.id) },
-                        onRemove = { onRemove(cartItem.product.id) }
-                    )
-                }
-            }
-            
-            HorizontalDivider()
-            
-            // Footer with Total and Checkout
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.surface)
-                    .padding(16.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = "Subtotal",
-                        style = MaterialTheme.typography.bodyLarge
-                    )
-                    Text(
-                        text = priceFormatter.format(cart.subtotal),
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
-                
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                Button(
-                    onClick = onCheckout,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary
-                    )
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.ShoppingCart,
-                        contentDescription = null,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Bayar",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
             }
         }
     }
