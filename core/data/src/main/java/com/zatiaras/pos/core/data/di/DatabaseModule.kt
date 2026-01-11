@@ -8,6 +8,7 @@ import com.zatiaras.pos.core.data.local.dao.CashRecordDao
 import com.zatiaras.pos.core.data.local.dao.CategoryDao
 import com.zatiaras.pos.core.data.local.dao.ProductDao
 import com.zatiaras.pos.core.data.local.dao.TransactionDao
+import com.zatiaras.pos.core.data.local.dao.UserDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -62,5 +63,11 @@ object DatabaseModule {
     @Singleton
     fun provideCashRecordDao(database: ZatiarasDatabase): CashRecordDao {
         return database.cashRecordDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideUserDao(database: ZatiarasDatabase): UserDao {
+        return database.userDao()
     }
 }

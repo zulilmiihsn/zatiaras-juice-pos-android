@@ -1,6 +1,6 @@
 package com.zatiaras.pos.core.data.di
 
-import com.zatiaras.pos.core.data.repository.SupabaseAuthRepository
+import com.zatiaras.pos.core.data.repository.LocalAuthRepository
 import com.zatiaras.pos.core.domain.AuthRepository
 import dagger.Binds
 import dagger.Module
@@ -13,6 +13,6 @@ abstract class RepositoryModule {
 
     @Binds
     abstract fun bindAuthRepository(
-        implementation: SupabaseAuthRepository
+        implementation: LocalAuthRepository
     ): AuthRepository
 }

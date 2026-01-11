@@ -64,7 +64,7 @@ fun LoginScreen(
     onLoginClick: (String, String) -> Unit,
     snackbarHostState: SnackbarHostState
 ) {
-    var email by remember { mutableStateOf("") }
+    var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
     Scaffold(
@@ -87,11 +87,12 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(48.dp))
 
             OutlinedTextField(
-                value = email,
-                onValueChange = { email = it },
-                label = { Text(stringResource(R.string.auth_email_label)) },
+                value = username,
+                onValueChange = { username = it },
+                label = { Text("Username") },
                 modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+                singleLine = true
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -111,9 +112,9 @@ fun LoginScreen(
                 CircularProgressIndicator()
             } else {
                 Button(
-                    onClick = { onLoginClick(email, password) },
+                    onClick = { onLoginClick(username, password) },
                     modifier = Modifier.fillMaxWidth().height(50.dp),
-                    enabled = email.isNotEmpty() && password.isNotEmpty()
+                    enabled = username.isNotEmpty() && password.isNotEmpty()
                 ) {
                     Text(stringResource(R.string.auth_login_button))
                 }

@@ -99,11 +99,37 @@ object Migrations {
     }
 
     /**
+     * Migration from version 3 to 4.
+     * Adds users table for offline authentication.
+     */
+    val MIGRATION_3_4 = object : Migration(3, 4) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            // Create users table
+            db.execSQL("""
+                CREATE TABLE IF NOT EXISTS `users` (
+                    `id` TEXT NOT NULL PRIMARY KEY,
+                    `username` TEXT NOT NULL,
+                    `passwordHash` TEXT NOT NULL,
+                    `displayName` TEXT NOT NULL,
+                    `role` TEXT NOT NULL DEFAULT 'kasir',
+                    `createdAt` INTEGER NOT NULL,
+                    `updatedAt` INTEGER NOT NULL,
+                    `isActive` INTEGER NOT NULL DEFAULT 1
+                )
+            """.trimIndent())
+
+            // Create unique index for username
+            db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_users_username` ON `users` (`username`)")
+        }
+    }
+
+    /**
      * Get all migrations in order.
      * Add new migrations to this list.
      */
     val ALL_MIGRATIONS = arrayOf(
         MIGRATION_1_2,
-        MIGRATION_2_3
+        MIGRATION_2_3,
+        MIGRATION_3_4
     )
 }

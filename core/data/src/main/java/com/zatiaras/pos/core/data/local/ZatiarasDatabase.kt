@@ -6,12 +6,14 @@ import com.zatiaras.pos.core.data.local.dao.CashRecordDao
 import com.zatiaras.pos.core.data.local.dao.CategoryDao
 import com.zatiaras.pos.core.data.local.dao.ProductDao
 import com.zatiaras.pos.core.data.local.dao.TransactionDao
+import com.zatiaras.pos.core.data.local.dao.UserDao
 import com.zatiaras.pos.core.data.local.entity.CashRecordEntity
 import com.zatiaras.pos.core.data.local.entity.CategoryEntity
 import com.zatiaras.pos.core.data.local.entity.ProductEntity
 import com.zatiaras.pos.core.data.local.entity.ProductFtsEntity
 import com.zatiaras.pos.core.data.local.entity.TransactionEntity
 import com.zatiaras.pos.core.data.local.entity.TransactionItemEntity
+import com.zatiaras.pos.core.data.local.entity.UserEntity
 
 /**
  * Main Room Database for Zatiaras POS.
@@ -31,6 +33,7 @@ import com.zatiaras.pos.core.data.local.entity.TransactionItemEntity
  * - v1: Initial (Categories, Products, ProductFts)
  * - v2: Added Transactions and TransactionItems
  * - v3: Added CashRecords (Buku Kas)
+ * - v4: Added Users (Offline Auth)
  */
 @Database(
     entities = [
@@ -39,9 +42,10 @@ import com.zatiaras.pos.core.data.local.entity.TransactionItemEntity
         ProductFtsEntity::class,
         TransactionEntity::class,
         TransactionItemEntity::class,
-        CashRecordEntity::class
+        CashRecordEntity::class,
+        UserEntity::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = true
 )
 abstract class ZatiarasDatabase : RoomDatabase() {
@@ -50,6 +54,7 @@ abstract class ZatiarasDatabase : RoomDatabase() {
     abstract fun productDao(): ProductDao
     abstract fun transactionDao(): TransactionDao
     abstract fun cashRecordDao(): CashRecordDao
+    abstract fun userDao(): UserDao
 
     companion object {
         const val DATABASE_NAME = "zatiaras_pos.db"
