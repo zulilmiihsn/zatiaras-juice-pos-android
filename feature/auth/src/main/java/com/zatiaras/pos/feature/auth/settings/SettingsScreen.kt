@@ -25,6 +25,7 @@ fun SettingsRoute(
     onNavigateBack: () -> Unit,
     onNavigateToPinSetup: () -> Unit,
     onNavigateToPrinter: () -> Unit = {},
+    onNavigateToInventory: () -> Unit = {},
     onLogout: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
@@ -43,6 +44,7 @@ fun SettingsRoute(
         onBiometricEnabledChange = viewModel::setBiometricEnabled,
         onChangePinClick = onNavigateToPinSetup,
         onPrinterClick = onNavigateToPrinter,
+        onInventoryClick = onNavigateToInventory,
         onSyncNowClick = viewModel::syncNow,
         onForceFullSyncClick = viewModel::forceFullSync,
         onLogoutClick = viewModel::logout
@@ -58,6 +60,7 @@ fun SettingsScreen(
     onBiometricEnabledChange: (Boolean) -> Unit,
     onChangePinClick: () -> Unit,
     onPrinterClick: () -> Unit,
+    onInventoryClick: () -> Unit,
     onSyncNowClick: () -> Unit,
     onForceFullSyncClick: () -> Unit,
     onLogoutClick: () -> Unit
@@ -136,6 +139,18 @@ fun SettingsScreen(
                     title = "Printer",
                     subtitle = "Atur printer thermal Bluetooth",
                     onClick = onPrinterClick
+                )
+            }
+
+            HorizontalDivider()
+
+            // Inventory/Menu Section
+            SettingsSection(title = "Manajemen") {
+                ClickableSettingItem(
+                    icon = Icons.Outlined.Restaurant,
+                    title = "Kelola Menu",
+                    subtitle = "Tambah, edit, atau hapus produk",
+                    onClick = onInventoryClick
                 )
             }
 

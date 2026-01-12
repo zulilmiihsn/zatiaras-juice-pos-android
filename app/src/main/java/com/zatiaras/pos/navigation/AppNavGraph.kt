@@ -26,6 +26,7 @@ import com.zatiaras.pos.feature.auth.navigation.AuthRoutes
 import com.zatiaras.pos.feature.auth.navigation.pinSetupScreen
 import com.zatiaras.pos.feature.auth.navigation.settingsScreen
 import com.zatiaras.pos.feature.inventory.navigation.inventoryNavGraph
+import com.zatiaras.pos.feature.inventory.navigation.navigateToInventory
 import com.zatiaras.pos.feature.pos.domain.model.CartHolder
 import com.zatiaras.pos.feature.pos.domain.model.Transaction
 import com.zatiaras.pos.feature.pos.domain.model.TransactionHolder
@@ -116,6 +117,9 @@ fun AppNavGraph(
             },
             onNavigateToPrinter = {
                 navController.navigateToPrinterSettings()
+            },
+            onNavigateToInventory = {
+                navController.navigateToInventory()
             },
             onLogout = {
                 navController.navigate(NavRoutes.LOGIN) {

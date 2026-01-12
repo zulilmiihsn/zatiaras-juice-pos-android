@@ -65,3 +65,10 @@ fun NavGraphBuilder.inventoryNavGraph(navController: NavController) {
         )
     }
 }
+
+/**
+ * Navigate to Inventory list screen.
+ */
+fun NavController.navigateToInventory() {
+    navigate(InventoryNavigation.INVENTORY_ROUTE)
+}

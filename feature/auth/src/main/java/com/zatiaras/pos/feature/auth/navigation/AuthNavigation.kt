@@ -48,6 +48,7 @@ fun NavGraphBuilder.settingsScreen(
     onNavigateBack: () -> Unit,
     onNavigateToPinSetup: () -> Unit,
     onNavigateToPrinter: () -> Unit = {},
+    onNavigateToInventory: () -> Unit = {},
     onLogout: () -> Unit
 ) {
     composable(AuthRoutes.SETTINGS) {
@@ -55,6 +56,7 @@ fun NavGraphBuilder.settingsScreen(
             onNavigateBack = onNavigateBack,
             onNavigateToPinSetup = onNavigateToPinSetup,
             onNavigateToPrinter = onNavigateToPrinter,
+            onNavigateToInventory = onNavigateToInventory,
             onLogout = onLogout
         )
     }
