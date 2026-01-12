@@ -33,21 +33,25 @@ androidx-security-crypto = { group = "androidx.security", name = "security-crypt
     *   `fun isUserLoggedIn(): Flow<Boolean>`
 
 ### `:core:data`
-*   **DI**: `NetworkModule` (Provides SupabaseClient).
-*   `SupabaseAuthRepository`: Implements `AuthRepository`.
-    *   Uses `supabase.gotrue.loginWith(Email)`
-*   **Security**: Do NOT hardcode API Keys in git. Use `local.properties` or `BuildConfig`.
+*   **DI**: `DatabaseModule` (Provides DAOs), `NetworkModule` (Provides Postgrest).
+*   `LocalAuthRepository`: Implements `AuthRepository`.
+    *   **Login**: Verifies password against local `users` table (PBKDF2/SHA-256).
+    *   **Sync**: `UserRemoteDataSource` fetches users from remote `users` table.
+*   **Data Sources**:
+    *   `UserDao`: Local Room access.
+    *   `UserRemoteDataSource`: Supabase Postgrest access.
 
 ### `:feature:auth`
 *   `LoginScreen.kt`
-    *   TextFields for email/pass.
+    *   TextFields for username/pass.
+    *   Sync status indicator.
     *   `AuthViewModel`.
 
 ## 3. Data Flow
 1.  **User** enters credentials.
 2.  **ViewModel** calls `loginUseCase(email, pass)`.
-3.  **Repository** calls Supabase Auth.
-4.  **Supabase** returns JWT.
+3.  **Repository** checks credentials against local `users` table.
+4.  **Verification** uses `PasswordHasher` (PBKDF2/SHA-256).
 5.  **Session** is saved via `EncryptedSessionManager` (AES256-GCM encrypted at rest).
     *   **Implementation**: Custom `SessionManager` injected into Supabase client using `AndroidX Security Crypto`.
 

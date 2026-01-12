@@ -57,14 +57,19 @@ sealed class ApiResult<out T> {
 
 ## 3. Database Schema (Supabase Tables)
 
-### 3.1 `profil` (User Profiles)
+### 3.1 `users` (User Accounts & Profiles)
+
+> **Note**: This table replaces the standard `auth.users` + `profil` pattern to support **Offline Authentication**. It stores hashed passwords directly in the public schema to allow syncing to local devices.
 
 | Column | Type | Description |
 |--------|------|-------------|
-| `id` | UUID (PK, FK users) | User ID from auth.users |
-| `username` | TEXT | Display name |
+| `id` | UUID (PK) | User ID |
+| `username` | TEXT (Unique) | Username for login |
+| `password_hash` | TEXT | **PBKDF2** hash (`salt:hash` format) or legacy SHA-256 |
+| `display_name` | TEXT | Full name of the user |
 | `role` | TEXT | `kasir` \| `pemilik` |
-| `avatar_url` | TEXT | Profile picture URL |
+| `is_active` | BOOLEAN | Account status |
+| `avatar_url` | TEXT | Profile picture URL (Optional) |
 | `created_at` | TIMESTAMP | Account creation date |
 | `updated_at` | TIMESTAMP | Last update |
 
