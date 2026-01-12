@@ -17,8 +17,8 @@ import javax.inject.Inject
 sealed interface AuthUiState {
     data object Idle : AuthUiState
     data object Loading : AuthUiState
+    data object Syncing : AuthUiState // Syncing users from Supabase
     data object Success : AuthUiState
-    data object FirstRun : AuthUiState // New state for first-time setup
     data class Error(val message: String) : AuthUiState
 }
 
@@ -30,24 +30,54 @@ class AuthViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow<AuthUiState>(AuthUiState.Idle)
     val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
+    
+    private val _syncStatus = MutableStateFlow<String?>(null)
+    val syncStatus: StateFlow<String?> = _syncStatus.asStateFlow()
 
     init {
-        checkFirstRun()
+        syncUsersOnStartup()
     }
 
-    private fun checkFirstRun() {
+    /**
+     * Sync users from Supabase on app startup.
+     * If sync fails (offline), we can still login with cached local users.
+     */
+    private fun syncUsersOnStartup() {
         viewModelScope.launch {
-            if (localAuthRepository.isFirstRun()) {
-                Timber.d("First run detected, setting up default admin user")
-                // Auto-create default admin for first run
-                localAuthRepository.setupDefaultAdmin(
-                    username = "admin",
-                    password = "admin123",
-                    displayName = "Administrator"
-                )
-                Timber.d("Default admin created: admin / admin123")
+            _uiState.update { AuthUiState.Syncing }
+            _syncStatus.value = "Menyinkronkan data..."
+            
+            try {
+                val syncedCount = localAuthRepository.syncUsersFromRemote()
+                
+                if (syncedCount >= 0) {
+                    Timber.d("User sync successful: $syncedCount users")
+                    _syncStatus.value = "Tersinkronkan: $syncedCount user"
+                } else {
+                    // Sync failed (offline) - check if we have local users
+                    val localUsers = localAuthRepository.getAllUsers()
+                    if (localUsers.isEmpty()) {
+                        _syncStatus.value = "Tidak ada koneksi. Belum ada data user."
+                        Timber.w("No network and no local users available")
+                    } else {
+                        _syncStatus.value = "Mode offline (${localUsers.size} user tersedia)"
+                        Timber.d("Offline mode with ${localUsers.size} local users")
+                    }
+                }
+            } catch (e: Exception) {
+                Timber.e(e, "Sync error: ${e.message}")
+                _syncStatus.value = "Mode offline"
             }
+            
+            _uiState.update { AuthUiState.Idle }
         }
+    }
+    
+    /**
+     * Manual sync triggered by user.
+     */
+    fun resync() {
+        syncUsersOnStartup()
     }
 
     fun login(username: String, password: String) {

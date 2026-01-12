@@ -2,12 +2,13 @@ package com.zatiaras.pos.core.data.repository
 
 import com.zatiaras.pos.core.data.local.dao.UserDao
 import com.zatiaras.pos.core.data.local.entity.UserEntity
+import com.zatiaras.pos.core.data.remote.UserRemoteDataSource
+import com.zatiaras.pos.core.data.remote.dto.UserDto
 import com.zatiaras.pos.core.domain.AuthRepository
 import com.zatiaras.pos.core.domain.Result
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import timber.log.Timber
-import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -17,11 +18,13 @@ import javax.inject.Singleton
  * Supports offline-first authentication:
  * - Login with username/password
  * - Credentials stored locally in Room
- * - No internet required for authentication
+ * - Users synced from Supabase when online
+ * - No internet required for authentication (after initial sync)
  */
 @Singleton
 class LocalAuthRepository @Inject constructor(
-    private val userDao: UserDao
+    private val userDao: UserDao,
+    private val userRemoteDataSource: UserRemoteDataSource
 ) : AuthRepository {
 
     // Session state - tracks if user is logged in
@@ -40,6 +43,11 @@ class LocalAuthRepository @Inject constructor(
             if (user == null) {
                 Timber.w("User not found: $username")
                 return Result.Error(Exception("Username tidak ditemukan"))
+            }
+            
+            if (!user.isActive) {
+                Timber.w("User is inactive: $username")
+                return Result.Error(Exception("Akun tidak aktif"))
             }
             
             if (!UserEntity.verifyPassword(password, user.passwordHash)) {
@@ -73,63 +81,82 @@ class LocalAuthRepository @Inject constructor(
     fun getCurrentUser(): UserEntity? = _currentUser
 
     /**
-     * Create a new user account.
-     * Used for initial setup or adding new staff.
+     * Sync users from Supabase to local Room database.
+     * Call this on app start when online.
+     * 
+     * @return Number of users synced, or -1 if failed
      */
-    suspend fun createUser(
-        username: String,
-        password: String,
-        displayName: String,
-        role: String = "kasir"
-    ): Result<UserEntity> {
+    suspend fun syncUsersFromRemote(): Int {
         return try {
-            // Check if username already exists
-            val existing = userDao.getUserByUsername(username)
-            if (existing != null) {
-                return Result.Error(Exception("Username sudah digunakan"))
-            }
-
-            val user = UserEntity(
-                id = UUID.randomUUID().toString(),
-                username = username,
-                passwordHash = UserEntity.hashPassword(password),
-                displayName = displayName,
-                role = role
-            )
-
-            userDao.insertUser(user)
-            Timber.d("User created: $username ($displayName)")
+            Timber.d("Starting user sync from Supabase...")
             
-            Result.Success(user)
+            when (val result = userRemoteDataSource.fetchActiveUsers()) {
+                is Result.Success -> {
+                    val remoteUsers = result.data
+                    Timber.d("Fetched ${remoteUsers.size} users from Supabase")
+                    
+                    // Sync each user to local database
+                    var syncedCount = 0
+                    for (dto in remoteUsers) {
+                        syncUserToLocal(dto)
+                        syncedCount++
+                    }
+                    
+                    Timber.d("User sync completed: $syncedCount users")
+                    syncedCount
+                }
+                is Result.Error -> {
+                    Timber.e(result.exception, "Failed to sync users: ${result.exception?.message}")
+                    -1
+                }
+                is Result.Loading -> -1
+            }
         } catch (e: Exception) {
-            Timber.e(e, "Failed to create user: ${e.message}")
-            Result.Error(Exception("Gagal membuat akun: ${e.message}"))
+            Timber.e(e, "User sync failed: ${e.message}")
+            -1
+        }
+    }
+    
+    /**
+     * Sync a single user from Supabase DTO to local Room.
+     * If user exists, update; otherwise insert.
+     */
+    private suspend fun syncUserToLocal(dto: UserDto) {
+        val existing = userDao.getUserByUsername(dto.username)
+        
+        val user = UserEntity(
+            id = dto.id,
+            username = dto.username,
+            passwordHash = dto.passwordHash, // Already hashed from Supabase
+            displayName = dto.displayName,
+            role = dto.role,
+            isActive = dto.isActive,
+            createdAt = existing?.createdAt ?: System.currentTimeMillis(),
+            updatedAt = System.currentTimeMillis()
+        )
+        
+        if (existing != null) {
+            // Update existing user
+            userDao.insertUser(user) // REPLACE strategy
+            Timber.d("Updated user: ${user.username}")
+        } else {
+            // Insert new user
+            userDao.insertUser(user)
+            Timber.d("Inserted new user: ${user.username}")
         }
     }
 
     /**
-     * Check if this is a first-run setup (no users exist).
+     * Check if this is a first-run setup (no users exist locally).
      */
     suspend fun isFirstRun(): Boolean {
         return userDao.getUserCount() == 0
     }
 
     /**
-     * Setup default admin user for first run.
+     * Get all local users.
      */
-    suspend fun setupDefaultAdmin(
-        username: String = "admin",
-        password: String = "admin123",
-        displayName: String = "Administrator"
-    ): Result<Unit> {
-        if (!isFirstRun()) {
-            return Result.Error(Exception("Users already exist"))
-        }
-        
-        return when (val result = createUser(username, password, displayName, "pemilik")) {
-            is Result.Success -> Result.Success(Unit)
-            is Result.Error -> result
-            is Result.Loading -> Result.Loading
-        }
+    suspend fun getAllUsers(): List<UserEntity> {
+        return userDao.getAllUsers()
     }
 }
