@@ -53,6 +53,7 @@ class MainActivity : ComponentActivity() {
  * Type-safe navigation will be implemented when more routes are added.
  */
 object NavRoutes {
+    const val STARTUP = "startup"
     const val LOGIN = "login"
     const val HOME = "home"
     const val POS = "pos"

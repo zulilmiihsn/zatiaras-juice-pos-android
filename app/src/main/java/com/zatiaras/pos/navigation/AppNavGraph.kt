@@ -58,9 +58,41 @@ fun AppNavGraph(
     
     NavHost(
         navController = navController,
-        startDestination = NavRoutes.LOGIN,
+        startDestination = NavRoutes.STARTUP,
         modifier = modifier
     ) {
+        // Startup screen - checks for saved session
+        composable(NavRoutes.STARTUP) {
+            val viewModel: StartupViewModel = hiltViewModel()
+            val state by viewModel.state.collectAsStateWithLifecycle()
+            
+            LaunchedEffect(state) {
+                when (state) {
+                    is StartupState.SessionRestored -> {
+                        navController.navigate(NavRoutes.HOME) {
+                            popUpTo(NavRoutes.STARTUP) { inclusive = true }
+                        }
+                    }
+                    is StartupState.NeedsLogin -> {
+                        navController.navigate(NavRoutes.LOGIN) {
+                            popUpTo(NavRoutes.STARTUP) { inclusive = true }
+                        }
+                    }
+                    is StartupState.Loading -> {
+                        // Stay on splash screen
+                    }
+                }
+            }
+            
+            // Simple loading indicator
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        }
+        
         composable(NavRoutes.LOGIN) {
             LoginRoute(
                 onLoginSuccess = {

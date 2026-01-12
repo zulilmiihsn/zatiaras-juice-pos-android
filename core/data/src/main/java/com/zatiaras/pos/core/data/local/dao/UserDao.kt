@@ -56,4 +56,10 @@ interface UserDao {
      */
     @Query("UPDATE users SET isActive = 0, updatedAt = :timestamp WHERE id = :userId")
     suspend fun deactivateUser(userId: String, timestamp: Long = System.currentTimeMillis())
+
+    /**
+     * Get all users as a list (for sync operations).
+     */
+    @Query("SELECT * FROM users ORDER BY displayName ASC")
+    suspend fun getAllUsersList(): List<UserEntity>
 }

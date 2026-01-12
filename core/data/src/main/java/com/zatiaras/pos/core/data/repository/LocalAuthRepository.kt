@@ -4,6 +4,7 @@ import com.zatiaras.pos.core.data.local.dao.UserDao
 import com.zatiaras.pos.core.data.local.entity.UserEntity
 import com.zatiaras.pos.core.data.remote.UserRemoteDataSource
 import com.zatiaras.pos.core.data.remote.dto.UserDto
+import com.zatiaras.pos.core.data.session.SessionPreferences
 import com.zatiaras.pos.core.domain.AuthRepository
 import com.zatiaras.pos.core.domain.Result
 import kotlinx.coroutines.flow.Flow
@@ -19,12 +20,14 @@ import javax.inject.Singleton
  * - Login with username/password
  * - Credentials stored locally in Room
  * - Users synced from Supabase when online
+ * - Session persists across app restarts
  * - No internet required for authentication (after initial sync)
  */
 @Singleton
 class LocalAuthRepository @Inject constructor(
     private val userDao: UserDao,
-    private val userRemoteDataSource: UserRemoteDataSource
+    private val userRemoteDataSource: UserRemoteDataSource,
+    private val sessionPreferences: SessionPreferences
 ) : AuthRepository {
 
     // Session state - tracks if user is logged in
@@ -55,9 +58,15 @@ class LocalAuthRepository @Inject constructor(
                 return Result.Error(Exception("Password salah"))
             }
             
-            // Login successful
+            // Login successful - save session
             _currentUser = user
             _isLoggedIn.value = true
+            sessionPreferences.saveSession(
+                userId = user.id,
+                username = user.username,
+                displayName = user.displayName,
+                role = user.role
+            )
             Timber.d("Login successful for: $username (${user.displayName})")
             
             Result.Success(Unit)
@@ -73,6 +82,42 @@ class LocalAuthRepository @Inject constructor(
         Timber.d("User logged out: ${_currentUser?.username}")
         _currentUser = null
         _isLoggedIn.value = false
+        sessionPreferences.clearSession()
+    }
+
+    /**
+     * Restore session from saved preferences.
+     * Call this on app startup before showing login screen.
+     * 
+     * @return true if session was restored, false if user needs to login
+     */
+    suspend fun restoreSession(): Boolean {
+        if (!sessionPreferences.isLoggedIn()) {
+            Timber.d("No saved session found")
+            return false
+        }
+        
+        val userId = sessionPreferences.getUserId() ?: return false
+        val user = userDao.getUserById(userId)
+        
+        if (user == null || !user.isActive) {
+            Timber.w("Saved session user not found or inactive, clearing session")
+            sessionPreferences.clearSession()
+            return false
+        }
+        
+        // Restore session
+        _currentUser = user
+        _isLoggedIn.value = true
+        Timber.d("Session restored for: ${user.username} (${user.displayName})")
+        return true
+    }
+
+    /**
+     * Check if there's a saved session (without fully restoring).
+     */
+    fun hasSavedSession(): Boolean {
+        return sessionPreferences.isLoggedIn()
     }
 
     /**
@@ -157,6 +202,6 @@ class LocalAuthRepository @Inject constructor(
      * Get all local users.
      */
     suspend fun getAllUsers(): List<UserEntity> {
-        return userDao.getAllUsers()
+        return userDao.getAllUsersList()
     }
 }
