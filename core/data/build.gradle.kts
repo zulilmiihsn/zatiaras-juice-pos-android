@@ -61,7 +61,7 @@ ksp {
 }
 
 dependencies {
-    implementation(project(":core:domain"))
+    api(project(":core:domain"))
 
     // Hilt
     implementation(libs.hilt.android)
