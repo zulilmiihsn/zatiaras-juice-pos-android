@@ -1,0 +1,233 @@
+package com.zatiaras.pos.feature.pos.presentation.components
+
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import com.zatiaras.pos.core.domain.model.Category
+import com.zatiaras.pos.core.domain.model.Product
+import com.zatiaras.pos.feature.pos.domain.model.Cart
+
+/**
+ * Product catalog component with search, category filter, and product grid.
+ * 
+ * Extracted from PosScreen for better separation of concerns.
+ */
+@Composable
+fun ProductCatalog(
+    products: List<Product>,
+    categories: List<Category>,
+    cart: Cart,
+    selectedCategoryId: String?,
+    searchQuery: String,
+    isLoading: Boolean,
+    showEmptyState: Boolean,
+    onSearchChange: (String) -> Unit,
+    onCategorySelect: (String?) -> Unit,
+    onProductClick: (Product) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier) {
+        // Search Bar
+        SearchBar(
+            query = searchQuery,
+            onQueryChange = onSearchChange,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+        )
+        
+        // Category Filter Chips
+        CategoryChips(
+            categories = categories,
+            selectedCategoryId = selectedCategoryId,
+            onCategorySelect = onCategorySelect,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+        )
+        
+        Spacer(modifier = Modifier.height(8.dp))
+        
+        // Product Grid
+        ProductGrid(
+            products = products,
+            cart = cart,
+            isLoading = isLoading,
+            showEmptyState = showEmptyState,
+            onProductClick = onProductClick,
+            modifier = Modifier.weight(1f)
+        )
+    }
+}
+
+@Composable
+private fun SearchBar(
+    query: String,
+    onQueryChange: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    OutlinedTextField(
+        value = query,
+        onValueChange = onQueryChange,
+        modifier = modifier,
+        placeholder = { Text("Cari produk...") },
+        leadingIcon = {
+            Icon(
+                imageVector = Icons.Default.Search,
+                contentDescription = null
+            )
+        },
+        trailingIcon = {
+            if (query.isNotEmpty()) {
+                IconButton(onClick = { onQueryChange("") }) {
+                    Icon(
+                        imageVector = Icons.Default.Clear,
+                        contentDescription = "Hapus"
+                    )
+                }
+            }
+        },
+        singleLine = true,
+        shape = RoundedCornerShape(12.dp)
+    )
+}
+
+@Composable
+private fun CategoryChips(
+    categories: List<Category>,
+    selectedCategoryId: String?,
+    onCategorySelect: (String?) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier.horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        FilterChip(
+            selected = selectedCategoryId == null,
+            onClick = { onCategorySelect(null) },
+            label = { Text("Semua") },
+            colors = FilterChipDefaults.filterChipColors(
+                selectedContainerColor = MaterialTheme.colorScheme.primary,
+                selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+            )
+        )
+        
+        categories.forEach { category ->
+            FilterChip(
+                selected = selectedCategoryId == category.id,
+                onClick = { onCategorySelect(category.id) },
+                label = { Text(category.name) },
+                colors = FilterChipDefaults.filterChipColors(
+                    selectedContainerColor = MaterialTheme.colorScheme.primary,
+                    selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                )
+            )
+        }
+    }
+}
+
+@Composable
+private fun ProductGrid(
+    products: List<Product>,
+    cart: Cart,
+    isLoading: Boolean,
+    showEmptyState: Boolean,
+    onProductClick: (Product) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Box(modifier = modifier) {
+        when {
+            isLoading -> {
+                CircularProgressIndicator(
+                    modifier = Modifier.align(Alignment.Center)
+                )
+            }
+            
+            showEmptyState -> {
+                EmptyState(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(32.dp)
+                )
+            }
+            
+            else -> {
+                LazyVerticalGrid(
+                    columns = GridCells.Adaptive(minSize = 150.dp),
+                    contentPadding = PaddingValues(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(
+                        items = products,
+                        key = { it.id }
+                    ) { product ->
+                        PosProductCard(
+                            product = product,
+                            quantityInCart = cart.getQuantity(product.id),
+                            onAddToCart = { onProductClick(product) }
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun EmptyState(
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text(
+            text = "😔",
+            style = MaterialTheme.typography.displayMedium
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = "Tidak ada produk",
+            style = MaterialTheme.typography.titleMedium,
+            textAlign = TextAlign.Center
+        )
+        Text(
+            text = "Coba ubah kata kunci atau kategori",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center
+        )
+    }
+}

@@ -3,13 +3,18 @@ package com.zatiaras.pos.core.data.local.entity
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import java.security.MessageDigest
+import com.zatiaras.pos.core.data.util.PasswordHasher
 
 /**
  * Local user entity for offline authentication.
  * 
  * Stores user credentials locally in Room database,
  * allowing login without internet connection.
+ * 
+ * Password Security:
+ * - Uses PBKDF2WithHmacSHA256 with 120,000 iterations
+ * - Random salt per password
+ * - Backward compatible with legacy SHA-256 hashes
  */
 @Entity(
     tableName = "users",
@@ -30,20 +35,26 @@ data class UserEntity(
 ) {
     companion object {
         /**
-         * Hash password using SHA-256.
-         * For production, consider using bcrypt or Argon2.
+         * Hash password using PBKDF2WithHmacSHA256.
+         * Returns format: "salt:hash"
          */
         fun hashPassword(password: String): String {
-            val bytes = MessageDigest.getInstance("SHA-256")
-                .digest(password.toByteArray())
-            return bytes.joinToString("") { "%02x".format(it) }
+            return PasswordHasher.hash(password)
         }
         
         /**
          * Verify password against stored hash.
+         * Supports both PBKDF2 and legacy SHA-256 formats.
          */
         fun verifyPassword(password: String, hash: String): Boolean {
-            return hashPassword(password) == hash
+            return PasswordHasher.verify(password, hash)
+        }
+        
+        /**
+         * Check if password hash needs upgrading to new format.
+         */
+        fun needsRehash(hash: String): Boolean {
+            return PasswordHasher.needsRehash(hash)
         }
     }
 }

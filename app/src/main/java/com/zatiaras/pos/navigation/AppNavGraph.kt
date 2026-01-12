@@ -73,7 +73,8 @@ fun AppNavGraph(
                             popUpTo(NavRoutes.STARTUP) { inclusive = true }
                         }
                     }
-                    is StartupState.NeedsLogin -> {
+                    is StartupState.NeedsLogin,
+                    is StartupState.SessionExpired -> {
                         navController.navigate(NavRoutes.LOGIN) {
                             popUpTo(NavRoutes.STARTUP) { inclusive = true }
                         }

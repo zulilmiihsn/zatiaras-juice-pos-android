@@ -1,5 +1,6 @@
 package com.zatiaras.pos.feature.auth
 
+import com.zatiaras.pos.core.data.repository.LocalAuthRepository
 import com.zatiaras.pos.core.domain.Result
 import com.zatiaras.pos.core.domain.usecase.LoginUseCase
 import io.mockk.coEvery
@@ -7,7 +8,6 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -23,23 +23,31 @@ import org.junit.Test
  * Unit tests for AuthViewModel.
  * 
  * Tests:
- * - Initial state is Idle
+ * - Initial state starts with Syncing then goes to Idle
  * - Login success navigates to Success state
  * - Login failure shows Error state
  * - Reset state returns to Idle
+ * - Sync users on startup
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class AuthViewModelTest {
 
     private val testDispatcher = StandardTestDispatcher()
     private lateinit var loginUseCase: LoginUseCase
+    private lateinit var localAuthRepository: LocalAuthRepository
     private lateinit var viewModel: AuthViewModel
 
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
         loginUseCase = mockk()
-        viewModel = AuthViewModel(loginUseCase)
+        localAuthRepository = mockk(relaxed = true)
+        
+        // Mock sync-related methods
+        coEvery { localAuthRepository.syncUsersFromRemote() } returns 1
+        coEvery { localAuthRepository.getAllUsers() } returns emptyList()
+        
+        viewModel = AuthViewModel(loginUseCase, localAuthRepository)
     }
 
     @After
@@ -48,12 +56,26 @@ class AuthViewModelTest {
     }
 
     @Test
-    fun `initial state is Idle`() = runTest {
+    fun `initial state is Syncing then Idle`() = runTest {
+        // Initially should be Syncing
+        assertEquals(AuthUiState.Syncing, viewModel.uiState.value)
+        
+        // After sync completes, should be Idle
+        advanceUntilIdle()
         assertEquals(AuthUiState.Idle, viewModel.uiState.value)
     }
 
     @Test
+    fun `syncUsersFromRemote is called on startup`() = runTest {
+        advanceUntilIdle()
+        coVerify { localAuthRepository.syncUsersFromRemote() }
+    }
+
+    @Test
     fun `login success updates state to Success`() = runTest {
+        // Wait for initial sync
+        advanceUntilIdle()
+        
         // Given
         coEvery { loginUseCase(any(), any()) } returns Result.Success(Unit)
         
@@ -68,6 +90,9 @@ class AuthViewModelTest {
 
     @Test
     fun `login failure updates state to Error with message`() = runTest {
+        // Wait for initial sync
+        advanceUntilIdle()
+        
         // Given
         val errorMessage = "Email atau password salah"
         coEvery { loginUseCase(any(), any()) } returns Result.Error(Exception(errorMessage))
@@ -84,6 +109,9 @@ class AuthViewModelTest {
 
     @Test
     fun `login shows Loading state before result`() = runTest {
+        // Wait for initial sync
+        advanceUntilIdle()
+        
         // Given
         coEvery { loginUseCase(any(), any()) } returns Result.Success(Unit)
         
@@ -101,6 +129,9 @@ class AuthViewModelTest {
 
     @Test
     fun `resetState returns to Idle`() = runTest {
+        // Wait for initial sync
+        advanceUntilIdle()
+        
         // Given - login success first
         coEvery { loginUseCase(any(), any()) } returns Result.Success(Unit)
         viewModel.login("test@test.com", "password")

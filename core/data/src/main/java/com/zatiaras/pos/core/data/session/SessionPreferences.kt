@@ -12,7 +12,9 @@ import javax.inject.Singleton
  * Manages user login session persistence.
  * 
  * Uses EncryptedSharedPreferences to securely store session data.
- * Session persists across app restarts until user logs out.
+ * Session persists across app restarts until user logs out or session expires.
+ * 
+ * Session timeout: 8 hours (configurable via companion object)
  */
 @Singleton
 class SessionPreferences @Inject constructor(
@@ -51,6 +53,32 @@ class SessionPreferences @Inject constructor(
      */
     fun isLoggedIn(): Boolean {
         return prefs.getBoolean(KEY_IS_LOGGED_IN, false)
+    }
+
+    /**
+     * Check if session has expired based on SESSION_TIMEOUT_MS.
+     * 
+     * @return true if session is expired and user needs to re-login
+     */
+    fun isSessionExpired(): Boolean {
+        if (!isLoggedIn()) return true
+        
+        val loginTime = getLoginTime()
+        val currentTime = System.currentTimeMillis()
+        val elapsed = currentTime - loginTime
+        
+        val isExpired = elapsed > SESSION_TIMEOUT_MS
+        if (isExpired) {
+            Timber.d("Session expired. Elapsed: ${elapsed / 1000 / 60} minutes")
+        }
+        return isExpired
+    }
+
+    /**
+     * Check if session is valid (logged in and not expired).
+     */
+    fun isSessionValid(): Boolean {
+        return isLoggedIn() && !isSessionExpired()
     }
 
     /**
@@ -96,6 +124,17 @@ class SessionPreferences @Inject constructor(
         Timber.d("Session cleared")
     }
 
+    /**
+     * Refresh session timestamp (extend session on activity).
+     * Call this periodically to keep session alive for active users.
+     */
+    fun refreshSession() {
+        if (isLoggedIn()) {
+            prefs.edit().putLong(KEY_LOGIN_TIME, System.currentTimeMillis()).apply()
+            Timber.d("Session refreshed")
+        }
+    }
+
     companion object {
         private const val KEY_USER_ID = "user_id"
         private const val KEY_USERNAME = "username"
@@ -103,5 +142,11 @@ class SessionPreferences @Inject constructor(
         private const val KEY_ROLE = "role"
         private const val KEY_LOGIN_TIME = "login_time"
         private const val KEY_IS_LOGGED_IN = "is_logged_in"
+        
+        /**
+         * Session timeout duration.
+         * Default: 8 hours (reasonable for a full work shift)
+         */
+        const val SESSION_TIMEOUT_MS = 8 * 60 * 60 * 1000L // 8 hours
     }
 }
