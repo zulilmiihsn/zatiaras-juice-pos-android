@@ -132,6 +132,17 @@ class LocalAuthRepository @Inject constructor(
      * @return Number of users synced, or -1 if failed
      */
     suspend fun syncUsersFromRemote(): Int {
+        return when (val result = syncUsersWithResult()) {
+            is Result.Success -> result.data
+            is Result.Error -> -1
+            is Result.Loading -> -1
+        }
+    }
+    
+    /**
+     * Sync users with detailed result for error handling.
+     */
+    suspend fun syncUsersWithResult(): Result<Int> {
         return try {
             Timber.d("Starting user sync from Supabase...")
             
@@ -148,17 +159,17 @@ class LocalAuthRepository @Inject constructor(
                     }
                     
                     Timber.d("User sync completed: $syncedCount users")
-                    syncedCount
+                    Result.Success(syncedCount)
                 }
                 is Result.Error -> {
                     Timber.e(result.exception, "Failed to sync users: ${result.exception?.message}")
-                    -1
+                    Result.Error(result.exception ?: Exception("Unknown sync error"))
                 }
-                is Result.Loading -> -1
+                is Result.Loading -> Result.Loading
             }
         } catch (e: Exception) {
             Timber.e(e, "User sync failed: ${e.message}")
-            -1
+            Result.Error(e)
         }
     }
     

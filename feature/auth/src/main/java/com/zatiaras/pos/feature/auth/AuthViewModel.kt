@@ -47,26 +47,26 @@ class AuthViewModel @Inject constructor(
             _uiState.update { AuthUiState.Syncing }
             _syncStatus.value = "Menyinkronkan data..."
             
-            try {
-                val syncedCount = localAuthRepository.syncUsersFromRemote()
-                
-                if (syncedCount >= 0) {
+            when (val result = localAuthRepository.syncUsersWithResult()) {
+                is Result.Success -> {
+                    val syncedCount = result.data
                     Timber.d("User sync successful: $syncedCount users")
-                    _syncStatus.value = "Tersinkronkan: $syncedCount user"
-                } else {
-                    // Sync failed (offline) - check if we have local users
+                    _syncStatus.value = "Tersinkronkan ($syncedCount user)"
+                }
+                is Result.Error -> {
+                    Timber.e(result.exception, "Sync failed: ${result.exception?.message}")
+                    
+                    // Check if we have local users for offline mode
                     val localUsers = localAuthRepository.getAllUsers()
                     if (localUsers.isEmpty()) {
-                        _syncStatus.value = "Tidak ada koneksi. Belum ada data user."
-                        Timber.w("No network and no local users available")
+                        _syncStatus.value = "Tidak ada koneksi. Hubungkan ke internet."
                     } else {
                         _syncStatus.value = "Mode offline (${localUsers.size} user tersedia)"
-                        Timber.d("Offline mode with ${localUsers.size} local users")
                     }
                 }
-            } catch (e: Exception) {
-                Timber.e(e, "Sync error: ${e.message}")
-                _syncStatus.value = "Mode offline"
+                is Result.Loading -> {
+                    // Should not happen
+                }
             }
             
             _uiState.update { AuthUiState.Idle }

@@ -31,6 +31,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.zatiaras.pos.core.domain.model.Product
+import com.zatiaras.pos.core.ui.theme.LocalDimensions
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -45,6 +46,7 @@ fun PosProductCard(
     onAddToCart: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val dimensions = LocalDimensions.current
     val priceFormatter = NumberFormat.getCurrencyInstance(Locale("id", "ID")).apply {
         maximumFractionDigits = 0
     }

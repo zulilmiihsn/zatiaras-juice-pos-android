@@ -2,7 +2,7 @@
     <string name="app_name">Zatiaras POS</string>
     
     <!-- Home Screen -->
-    <string name="home_greeting">Selamat Datang! 👋</string>
+    <string name="home_greeting">Selamat Datang</string>
     <string name="home_main_menu">Menu Utama</string>
     <string name="home_logout">Logout</string>
     <string name="home_user_fallback">User</string>

@@ -29,19 +29,52 @@ object InventoryNavigation {
  * }
  * ```
  */
-fun NavGraphBuilder.inventoryNavGraph(navController: NavController) {
+/**
+ * Extension function to add Inventory navigation graph.
+ * 
+ * Usage in MainActivity:
+ * ```
+ * NavHost(...) {
+ *     inventoryNavGraph(navController, accessControlManager)
+ * }
+ * ```
+ */
+fun NavGraphBuilder.inventoryNavGraph(
+    navController: NavController,
+    accessControlManager: com.zatiaras.pos.core.data.access.AccessControlManager? = null
+) {
     // Inventory List Screen
     composable(InventoryNavigation.INVENTORY_ROUTE) {
-        InventoryScreen(
-            onNavigateBack = { navController.popBackStack() },
-            onNavigateToDetail = { productId ->
-                if (productId != null) {
-                    navController.navigate(InventoryNavigation.productDetailRoute(productId))
-                } else {
-                    navController.navigate(InventoryNavigation.PRODUCT_CREATE_ROUTE)
-                }
+        if (accessControlManager != null) {
+            com.zatiaras.pos.core.ui.components.AccessControlGate(
+                accessControlManager = accessControlManager,
+                route = com.zatiaras.pos.core.data.access.LockableRoute.INVENTORY.route,
+                screenName = "Inventaris",
+                onAccessDenied = { navController.popBackStack() }
+            ) {
+                InventoryScreen(
+                    onNavigateBack = { navController.popBackStack() },
+                    onNavigateToDetail = { productId ->
+                        if (productId != null) {
+                            navController.navigate(InventoryNavigation.productDetailRoute(productId))
+                        } else {
+                            navController.navigate(InventoryNavigation.PRODUCT_CREATE_ROUTE)
+                        }
+                    }
+                )
             }
-        )
+        } else {
+            InventoryScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToDetail = { productId ->
+                    if (productId != null) {
+                        navController.navigate(InventoryNavigation.productDetailRoute(productId))
+                    } else {
+                        navController.navigate(InventoryNavigation.PRODUCT_CREATE_ROUTE)
+                    }
+                }
+            )
+        }
     }
     
     // Product Detail Screen (Edit mode)

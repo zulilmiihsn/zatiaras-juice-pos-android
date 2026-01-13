@@ -23,6 +23,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.zatiaras.pos.core.ui.theme.AppShapes
+import com.zatiaras.pos.core.ui.theme.LocalDimensions
 import com.zatiaras.pos.feature.home.R
 
 data class HomeMenuItem(
@@ -143,11 +145,12 @@ fun HomeScreen(
             )
         }
     ) { padding ->
+        val dimensions = LocalDimensions.current
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(16.dp)
+                .padding(dimensions.paddingM)
         ) {
             // Greeting Card
             Card(
@@ -155,12 +158,12 @@ fun HomeScreen(
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer
                 ),
-                shape = RoundedCornerShape(16.dp)
+                shape = AppShapes.L
             ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(20.dp),
+                        .padding(dimensions.paddingL),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
@@ -179,26 +182,26 @@ fun HomeScreen(
                     Icon(
                         imageVector = Icons.Filled.Person,
                         contentDescription = null,
-                        modifier = Modifier.size(48.dp),
+                        modifier = Modifier.size(dimensions.iconSizeXL),
                         tint = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(dimensions.spacingL))
 
             Text(
                 text = stringResource(R.string.home_main_menu),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.padding(bottom = 12.dp)
+                modifier = Modifier.padding(bottom = dimensions.spacingS)
             )
 
             // Menu Grid
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(dimensions.spacingS),
+                verticalArrangement = Arrangement.spacedBy(dimensions.spacingS),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 items(menuItems) { item ->
@@ -217,6 +220,7 @@ private fun MenuCard(
     item: HomeMenuItem,
     onClick: () -> Unit
 ) {
+    val dimensions = LocalDimensions.current
     val alpha = if (item.enabled) 1f else 0.5f
     val title = stringResource(item.titleResId)
     val subtitle = if (item.enabled) {
@@ -229,9 +233,9 @@ private fun MenuCard(
         modifier = Modifier
             .fillMaxWidth()
             .aspectRatio(1.1f)
-            .clip(RoundedCornerShape(16.dp))
+            .clip(AppShapes.L)
             .clickable(enabled = item.enabled, onClick = onClick),
-        shape = RoundedCornerShape(16.dp),
+        shape = AppShapes.L,
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Box(
@@ -242,7 +246,7 @@ private fun MenuCard(
                         colors = item.gradientColors.map { it.copy(alpha = alpha) }
                     )
                 )
-                .padding(16.dp)
+                .padding(dimensions.paddingM)
         ) {
             Column(
                 modifier = Modifier.fillMaxSize(),

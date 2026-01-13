@@ -38,6 +38,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.zatiaras.pos.core.ui.theme.AppShapes
+import com.zatiaras.pos.core.ui.theme.LocalDimensions
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -68,10 +70,12 @@ fun StatCard(
         animationPlayed = true
     }
     
+    val dimensions = LocalDimensions.current
+    
     Card(
         modifier = modifier
             .animateContentSize(),
-        shape = RoundedCornerShape(16.dp),
+        shape = AppShapes.L,
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Box(
@@ -80,7 +84,7 @@ fun StatCard(
                 .background(
                     brush = Brush.linearGradient(gradientColors)
                 )
-                .padding(16.dp)
+                .padding(dimensions.paddingM)
         ) {
             Column {
                 Row(
@@ -95,7 +99,7 @@ fun StatCard(
                             color = Color.White.copy(alpha = 0.8f)
                         )
                         
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(dimensions.spacingXS))
                         
                         Text(
                             text = value,
@@ -146,7 +150,7 @@ fun StatCard(
                         
                         Box(
                             modifier = Modifier
-                                .clip(RoundedCornerShape(4.dp))
+                                .clip(AppShapes.XS)
                                 .background(trendColor.copy(alpha = 0.2f))
                                 .padding(horizontal = 6.dp, vertical = 2.dp)
                         ) {

@@ -2,6 +2,10 @@ package com.zatiaras.pos.feature.auth.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.zatiaras.pos.core.data.access.AccessControlManager
+import com.zatiaras.pos.core.data.access.LockableRoute
+import com.zatiaras.pos.core.data.access.UserRole
+import com.zatiaras.pos.core.data.session.SessionPreferences
 import com.zatiaras.pos.core.data.sync.SyncManager
 import com.zatiaras.pos.feature.auth.lock.AppBiometricManager
 import com.zatiaras.pos.feature.auth.lock.AppLockPreferences
@@ -30,6 +34,11 @@ data class SettingsUiState(
     val biometricAvailable: Boolean = false,
     val pinSet: Boolean = false,
     
+    // Access Control (Owner only)
+    val isOwner: Boolean = false,
+    val ownerPinSet: Boolean = false,
+    val lockableRoutes: List<Pair<LockableRoute, Boolean>> = emptyList(),
+    
     // Sync
     val lastSyncInfo: String = "Belum pernah sync",
     val pendingCount: Int = 0,
@@ -45,7 +54,9 @@ class SettingsViewModel @Inject constructor(
     private val auth: Auth,
     private val appLockPreferences: AppLockPreferences,
     private val biometricManager: AppBiometricManager,
-    private val syncManager: SyncManager
+    private val syncManager: SyncManager,
+    private val accessControlManager: AccessControlManager,
+    private val sessionPreferences: SessionPreferences
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SettingsUiState())
@@ -53,6 +64,7 @@ class SettingsViewModel @Inject constructor(
 
     init {
         loadSettings()
+        observeAccessControl()
     }
 
     private fun loadSettings() {
@@ -68,11 +80,20 @@ class SettingsViewModel @Inject constructor(
                 }
             }
 
+            // Load role info
+            val role = UserRole.fromString(sessionPreferences.getRole())
+            val isOwner = role.isOwner()
+            val userRoleDisplay = if (isOwner) "Pemilik" else "Kasir"
+
             // Load lock settings
             val lockEnabled = appLockPreferences.isLockEnabledNow()
             val biometricEnabled = appLockPreferences.isBiometricEnabledNow()
             val biometricAvailable = biometricManager.isBiometricAvailable()
             val pinSet = appLockPreferences.isPinSetNow()
+
+            // Load access control settings (for owner)
+            val ownerPinSet = accessControlManager.isOwnerPinSetNow()
+            val lockableRoutes = accessControlManager.getLockableRoutesWithStatus().first()
 
             // Load sync info
             val pendingCount = syncManager.getPendingCount()
@@ -81,10 +102,14 @@ class SettingsViewModel @Inject constructor(
 
             _uiState.update { state ->
                 state.copy(
+                    userRole = userRoleDisplay,
+                    isOwner = isOwner,
                     lockEnabled = lockEnabled,
                     biometricEnabled = biometricEnabled,
                     biometricAvailable = biometricAvailable,
                     pinSet = pinSet,
+                    ownerPinSet = ownerPinSet,
+                    lockableRoutes = lockableRoutes,
                     pendingCount = pendingCount,
                     lastSyncInfo = lastSyncInfo
                 )
@@ -92,6 +117,19 @@ class SettingsViewModel @Inject constructor(
 
             // Observe sync in progress
             observeSyncStatus()
+        }
+    }
+
+    private fun observeAccessControl() {
+        viewModelScope.launch {
+            accessControlManager.getLockableRoutesWithStatus().collect { routes ->
+                _uiState.update { it.copy(lockableRoutes = routes) }
+            }
+        }
+        viewModelScope.launch {
+            accessControlManager.isOwnerPinSet().collect { isSet ->
+                _uiState.update { it.copy(ownerPinSet = isSet) }
+            }
         }
     }
 
@@ -199,11 +237,46 @@ class SettingsViewModel @Inject constructor(
                 auth.signOut()
                 // Clear lock settings on logout
                 appLockPreferences.resetAllSettings()
+                // Clear session
+                sessionPreferences.clearSession()
                 _uiState.update { it.copy(isLoggedOut = true) }
                 Timber.d("User logged out")
             } catch (e: Exception) {
                 Timber.e(e, "Logout failed")
             }
+        }
+    }
+
+    // ==================== ACCESS CONTROL (Owner only) ====================
+
+    /**
+     * Toggle lock status for a route.
+     * Only owner can call this.
+     */
+    fun toggleRouteLock(route: LockableRoute) {
+        viewModelScope.launch {
+            if (!_uiState.value.isOwner) {
+                Timber.w("Non-owner tried to toggle route lock")
+                return@launch
+            }
+            accessControlManager.toggleRouteLock(route)
+            Timber.d("Toggled lock for route: ${route.displayName}")
+        }
+    }
+
+    /**
+     * Set owner PIN for access control.
+     * Only owner can call this.
+     */
+    fun setOwnerPin(pin: String) {
+        viewModelScope.launch {
+            if (!_uiState.value.isOwner) {
+                Timber.w("Non-owner tried to set owner PIN")
+                return@launch
+            }
+            accessControlManager.setOwnerPin(pin)
+            _uiState.update { it.copy(ownerPinSet = true) }
+            Timber.d("Owner PIN set")
         }
     }
 }

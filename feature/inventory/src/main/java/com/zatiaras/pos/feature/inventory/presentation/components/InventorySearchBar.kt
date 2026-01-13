@@ -15,6 +15,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.zatiaras.pos.core.ui.theme.AppShapes
+import com.zatiaras.pos.core.ui.theme.LocalDimensions
 
 /**
  * Search bar component for filtering products.
@@ -31,12 +33,13 @@ fun InventorySearchBar(
     modifier: Modifier = Modifier,
     placeholder: String = "Cari produk..."
 ) {
+    val dimensions = LocalDimensions.current
     OutlinedTextField(
         value = query,
         onValueChange = onQueryChange,
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp),
+            .padding(horizontal = dimensions.paddingM),
         placeholder = { Text(placeholder) },
         leadingIcon = {
             Icon(
@@ -55,7 +58,7 @@ fun InventorySearchBar(
             }
         },
         singleLine = true,
-        shape = RoundedCornerShape(12.dp),
+        shape = AppShapes.M,
         colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = MaterialTheme.colorScheme.primary,
             unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)

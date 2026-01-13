@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.zatiaras.pos.core.domain.model.Category
+import com.zatiaras.pos.core.ui.theme.LocalDimensions
 
 /**
  * Horizontal scrollable row of category filter chips.
@@ -29,11 +30,12 @@ fun CategoryFilterRow(
     onCategorySelected: (String?) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val dimensions = LocalDimensions.current
     Row(
         modifier = modifier
             .horizontalScroll(rememberScrollState())
-            .padding(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+            .padding(horizontal = dimensions.paddingM),
+        horizontalArrangement = Arrangement.spacedBy(dimensions.spacingXS)
     ) {
         // "Semua" chip (All)
         FilterChip(

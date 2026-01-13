@@ -33,6 +33,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.zatiaras.pos.feature.pos.domain.model.CartItem
+import com.zatiaras.pos.core.ui.theme.AppShapes
+import com.zatiaras.pos.core.ui.theme.LocalDimensions
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -48,6 +50,7 @@ fun CartItemRow(
     onRemove: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val dimensions = LocalDimensions.current
     val priceFormatter = NumberFormat.getCurrencyInstance(Locale("id", "ID")).apply {
         maximumFractionDigits = 0
     }
@@ -55,19 +58,19 @@ fun CartItemRow(
     Surface(
         modifier = modifier.fillMaxWidth(),
         color = MaterialTheme.colorScheme.surface,
-        shape = RoundedCornerShape(12.dp)
+        shape = AppShapes.M
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
+                .padding(dimensions.paddingS),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Product Image (small thumbnail)
             Box(
                 modifier = Modifier
                     .size(56.dp)
-                    .clip(RoundedCornerShape(8.dp))
+                    .clip(AppShapes.S)
                     .background(MaterialTheme.colorScheme.surfaceVariant),
                 contentAlignment = Alignment.Center
             ) {
@@ -88,7 +91,7 @@ fun CartItemRow(
                 }
             }
             
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(dimensions.spacingS))
             
             // Product Info
             Column(

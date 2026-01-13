@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.rememberNavController
+import com.zatiaras.pos.core.data.access.AccessControlManager
 import com.zatiaras.pos.core.ui.theme.ZatiarasPOSTheme
 import com.zatiaras.pos.feature.pos.domain.model.CartHolder
 import com.zatiaras.pos.feature.pos.domain.model.TransactionHolder
@@ -29,6 +30,9 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var transactionHolder: TransactionHolder
     
+    @Inject
+    lateinit var accessControlManager: AccessControlManager
+    
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -40,6 +44,7 @@ class MainActivity : ComponentActivity() {
                         navController = navController,
                         cartHolder = cartHolder,
                         transactionHolder = transactionHolder,
+                        accessControlManager = accessControlManager,
                         modifier = Modifier.padding(innerPadding)
                     )
                 }

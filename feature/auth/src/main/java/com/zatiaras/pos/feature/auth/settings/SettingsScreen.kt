@@ -18,6 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.zatiaras.pos.core.data.access.LockableRoute
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -47,7 +48,9 @@ fun SettingsRoute(
         onInventoryClick = onNavigateToInventory,
         onSyncNowClick = viewModel::syncNow,
         onForceFullSyncClick = viewModel::forceFullSync,
-        onLogoutClick = viewModel::logout
+        onLogoutClick = viewModel::logout,
+        onToggleRouteLock = viewModel::toggleRouteLock,
+        onSetOwnerPin = viewModel::setOwnerPin
     )
 }
 
@@ -63,8 +66,16 @@ fun SettingsScreen(
     onInventoryClick: () -> Unit,
     onSyncNowClick: () -> Unit,
     onForceFullSyncClick: () -> Unit,
-    onLogoutClick: () -> Unit
+    onLogoutClick: () -> Unit,
+    onToggleRouteLock: (LockableRoute) -> Unit = {},
+    onSetOwnerPin: (String) -> Unit = {}
 ) {
+    // State for owner PIN setup dialog
+    var showOwnerPinDialog by remember { mutableStateOf(false) }
+    var ownerPin by remember { mutableStateOf("") }
+    var ownerPinConfirm by remember { mutableStateOf("") }
+    var ownerPinError by remember { mutableStateOf<String?>(null) }
+
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
@@ -127,6 +138,48 @@ fun SettingsScreen(
                         subtitle = if (uiState.pinSet) "PIN sudah diatur" else "Atur PIN sebagai cadangan",
                         onClick = onChangePinClick
                     )
+                }
+            }
+
+            // Access Control Section (Owner only)
+            if (uiState.isOwner) {
+                HorizontalDivider()
+
+                SettingsSection(title = "Kunci Menu (Kontrol Akses)") {
+                    // Owner PIN Setup
+                    ClickableSettingItem(
+                        icon = Icons.Outlined.Key,
+                        title = if (uiState.ownerPinSet) "Ubah PIN Pemilik" else "Atur PIN Pemilik",
+                        subtitle = if (uiState.ownerPinSet) {
+                            "PIN untuk akses menu terkunci"
+                        } else {
+                            "Atur PIN agar kasir bisa akses menu terkunci"
+                        },
+                        onClick = { showOwnerPinDialog = true }
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Description
+                    Text(
+                        text = "Menu yang dikunci akan meminta PIN pemilik saat diakses oleh kasir:",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Lockable routes toggles
+                    uiState.lockableRoutes.forEach { (route, isLocked) ->
+                        SwitchSettingItem(
+                            icon = if (isLocked) Icons.Outlined.Lock else Icons.Outlined.LockOpen,
+                            title = route.displayName,
+                            subtitle = if (isLocked) "Dikunci - Kasir perlu PIN" else "Tidak dikunci",
+                            checked = isLocked,
+                            onCheckedChange = { onToggleRouteLock(route) }
+                        )
+                    }
                 }
             }
 
@@ -242,6 +295,108 @@ fun SettingsScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
         }
+    }
+
+    // Owner PIN Setup Dialog
+    if (showOwnerPinDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                showOwnerPinDialog = false
+                ownerPin = ""
+                ownerPinConfirm = ""
+                ownerPinError = null
+            },
+            title = {
+                Text(
+                    text = if (uiState.ownerPinSet) "Ubah PIN Pemilik" else "Atur PIN Pemilik",
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Column {
+                    Text(
+                        text = "PIN ini akan diminta saat kasir mengakses menu yang dikunci.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    OutlinedTextField(
+                        value = ownerPin,
+                        onValueChange = { 
+                            if (it.length <= 4 && it.all { c -> c.isDigit() }) {
+                                ownerPin = it
+                                ownerPinError = null
+                            }
+                        },
+                        label = { Text("PIN Baru (4 digit)") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    OutlinedTextField(
+                        value = ownerPinConfirm,
+                        onValueChange = { 
+                            if (it.length <= 4 && it.all { c -> c.isDigit() }) {
+                                ownerPinConfirm = it
+                                ownerPinError = null
+                            }
+                        },
+                        label = { Text("Konfirmasi PIN") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        isError = ownerPinError != null
+                    )
+
+                    if (ownerPinError != null) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = ownerPinError!!,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        when {
+                            ownerPin.length != 4 -> {
+                                ownerPinError = "PIN harus 4 digit"
+                            }
+                            ownerPin != ownerPinConfirm -> {
+                                ownerPinError = "PIN tidak cocok"
+                            }
+                            else -> {
+                                onSetOwnerPin(ownerPin)
+                                showOwnerPinDialog = false
+                                ownerPin = ""
+                                ownerPinConfirm = ""
+                                ownerPinError = null
+                            }
+                        }
+                    }
+                ) {
+                    Text("Simpan")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showOwnerPinDialog = false
+                        ownerPin = ""
+                        ownerPinConfirm = ""
+                        ownerPinError = null
+                    }
+                ) {
+                    Text("Batal")
+                }
+            }
+        )
     }
 }
 

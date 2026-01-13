@@ -21,6 +21,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.zatiaras.pos.NavRoutes
 import com.zatiaras.pos.app.MainScreen
+import com.zatiaras.pos.core.data.access.AccessControlManager
 import com.zatiaras.pos.feature.auth.LoginRoute
 import com.zatiaras.pos.feature.auth.navigation.AuthRoutes
 import com.zatiaras.pos.feature.auth.navigation.pinSetupScreen
@@ -52,6 +53,7 @@ fun AppNavGraph(
     navController: NavHostController,
     cartHolder: CartHolder,
     transactionHolder: TransactionHolder,
+    accessControlManager: AccessControlManager,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -119,12 +121,13 @@ fun AppNavGraph(
                 },
                 onNavigateToSettings = {
                     navController.navigate(AuthRoutes.SETTINGS)
-                }
+                },
+                accessControlManager = accessControlManager
             )
         }
         
         // Inventory feature navigation graph
-        inventoryNavGraph(navController)
+        inventoryNavGraph(navController, accessControlManager)
         
         // Checkout (Full Screen)
         checkoutScreen(
@@ -158,14 +161,16 @@ fun AppNavGraph(
                 navController.navigate(NavRoutes.LOGIN) {
                     popUpTo(0) { inclusive = true }
                 }
-            }
+            },
+            accessControlManager = accessControlManager
         )
         
-        // Reports P&L (Full Screen)
+        // Reports P&L (Full Screen) - Protected by Access Control
         pnlReportScreen(
             onNavigateBack = {
                 navController.popBackStack()
-            }
+            },
+            accessControlManager = accessControlManager
         )
         
         // Pin Setup
@@ -178,11 +183,12 @@ fun AppNavGraph(
             }
         )
         
-        // Printer Settings
+        // Printer Settings - Protected by Access Control
         printerSettingsScreen(
             onNavigateBack = {
                 navController.popBackStack()
-            }
+            },
+            accessControlManager = accessControlManager
         )
         
         // Receipt screen

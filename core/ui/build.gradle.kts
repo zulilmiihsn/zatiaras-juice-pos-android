@@ -26,6 +26,8 @@ android {
 }
 
 dependencies {
+    implementation(project(":core:data"))
+    
     implementation(libs.androidx.core.ktx)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)
@@ -33,5 +35,7 @@ dependencies {
     implementation(libs.androidx.ui.text.google.fonts)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    // Material Icons Extended for consistent icon set across the app
+    api(libs.androidx.compose.material.icons.extended)
     debugImplementation(libs.androidx.ui.tooling)
 }

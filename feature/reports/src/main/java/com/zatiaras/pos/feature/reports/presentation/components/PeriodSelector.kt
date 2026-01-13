@@ -17,6 +17,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.zatiaras.pos.core.ui.theme.AppShapes
+import com.zatiaras.pos.core.ui.theme.LocalDimensions
 import com.zatiaras.pos.feature.reports.domain.model.ReportPeriod
 
 /**
@@ -29,6 +31,7 @@ fun PeriodSelector(
     modifier: Modifier = Modifier,
     showCustomOption: Boolean = true
 ) {
+    val dimensions = LocalDimensions.current
     val periods = if (showCustomOption) {
         ReportPeriod.entries
     } else {
@@ -38,7 +41,7 @@ fun PeriodSelector(
     Row(
         modifier = modifier
             .horizontalScroll(rememberScrollState()),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        horizontalArrangement = Arrangement.spacedBy(dimensions.spacingXS)
     ) {
         periods.forEach { period ->
             PeriodChip(
@@ -70,7 +73,7 @@ private fun PeriodChip(
     
     Box(
         modifier = Modifier
-            .clip(RoundedCornerShape(20.dp))
+            .clip(AppShapes.XL)
             .background(backgroundColor)
             .clickable(onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 8.dp),

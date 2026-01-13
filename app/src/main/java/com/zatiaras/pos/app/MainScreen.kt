@@ -50,7 +50,8 @@ fun MainScreen(
     onNavigateBackFromMain: () -> Unit,
     onNavigateToCheckout: () -> Unit,
     onNavigateToPnl: () -> Unit,
-    onNavigateToSettings: () -> Unit = {}
+    onNavigateToSettings: () -> Unit = {},
+    accessControlManager: com.zatiaras.pos.core.data.access.AccessControlManager? = null
 ) {
     val items = listOf(
         BottomNavItem.Home,
@@ -120,16 +121,34 @@ fun MainScreen(
                 onNavigateToCheckout = onNavigateToCheckout
             )
             
-            // Tab 3: Cash Record (Buku Kas)
+            // Tab 3: Cash Record (Buku Kas) - Protected by Access Control
             cashRecordScreen(
-                onNavigateBack = { /* No back action for tab */ }
+                onNavigateBack = { 
+                    // Navigate to Home when access denied
+                    navController.navigate(NavRoutes.HOME) {
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                    }
+                },
+                accessControlManager = accessControlManager
             )
             
-            // Tab 4: Reports (Detailed Reports with Charts & P&L)
+            // Tab 4: Reports (Detailed Reports with Charts & P&L) - Protected by Access Control
             reportsScreen(
                 route = NavRoutes.REPORTS,
-                onNavigateBack = null, // No back button for tab
-                onNavigateToPnl = onNavigateToPnl
+                onNavigateBack = { 
+                    // Navigate to Home when access denied
+                    navController.navigate(NavRoutes.HOME) {
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                    }
+                },
+                onNavigateToPnl = onNavigateToPnl,
+                accessControlManager = accessControlManager
             )
         }
     }

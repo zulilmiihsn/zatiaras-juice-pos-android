@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.ShoppingCart
@@ -34,6 +33,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.zatiaras.pos.feature.pos.domain.model.Cart
+import com.zatiaras.pos.core.ui.theme.AppShapes
+import com.zatiaras.pos.core.ui.theme.LocalDimensions
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -60,10 +61,12 @@ fun CartSidebar(
         }
     }
     
+    val dimensions = LocalDimensions.current
+    
     Surface(
         modifier = modifier.fillMaxHeight(),
         color = MaterialTheme.colorScheme.surfaceContainer,
-        shape = RoundedCornerShape(topStart = 16.dp, bottomStart = 16.dp)
+        shape = AppShapes.CartSidebar
     ) {
         Column(
             modifier = Modifier.fillMaxSize()
@@ -79,8 +82,8 @@ fun CartSidebar(
             // Cart Items
             LazyColumn(
                 modifier = Modifier.weight(1f),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                contentPadding = PaddingValues(dimensions.paddingM),
+                verticalArrangement = Arrangement.spacedBy(dimensions.spacingXS)
             ) {
                 items(
                     items = cart.items,
@@ -112,10 +115,11 @@ private fun CartHeader(
     itemCount: Int,
     onClearCart: () -> Unit
 ) {
+    val dimensions = LocalDimensions.current
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
+            .padding(dimensions.paddingM),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -144,11 +148,12 @@ private fun CartFooter(
     priceFormatter: NumberFormat,
     onCheckout: () -> Unit
 ) {
+    val dimensions = LocalDimensions.current
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.surface)
-            .padding(16.dp)
+            .padding(dimensions.paddingM)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -166,12 +171,12 @@ private fun CartFooter(
             )
         }
         
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(dimensions.spacingM))
         
         Button(
             onClick = onCheckout,
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
+            shape = AppShapes.M,
             colors = ButtonDefaults.buttonColors(
                 containerColor = MaterialTheme.colorScheme.primary
             )
@@ -181,7 +186,7 @@ private fun CartFooter(
                 contentDescription = null,
                 modifier = Modifier.size(20.dp)
             )
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(dimensions.spacingXS))
             Text(
                 text = "Bayar",
                 style = MaterialTheme.typography.titleMedium,

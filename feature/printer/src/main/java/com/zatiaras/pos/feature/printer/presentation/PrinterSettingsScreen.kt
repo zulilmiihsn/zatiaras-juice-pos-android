@@ -66,6 +66,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.zatiaras.pos.feature.printer.domain.model.PaperWidth
 import com.zatiaras.pos.feature.printer.domain.model.PrinterDevice
 import com.zatiaras.pos.feature.printer.domain.model.PrinterStatus
+import com.zatiaras.pos.core.ui.theme.LocalDimensions
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -186,12 +187,13 @@ private fun PrinterSettingsScreen(
             )
         }
     ) { padding ->
+        val dimensions = LocalDimensions.current
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            contentPadding = PaddingValues(dimensions.paddingM),
+            verticalArrangement = Arrangement.spacedBy(dimensions.spacingM)
         ) {
             // Connection Status Card
             item {

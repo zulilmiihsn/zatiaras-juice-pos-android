@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.sp
 import androidx.fragment.app.FragmentActivity
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.zatiaras.pos.core.ui.theme.LocalDimensions
 
 @Composable
 fun AppLockRoute(
@@ -74,14 +75,15 @@ fun AppLockScreen(
                 )
             )
     ) {
+        val dimensions = LocalDimensions.current
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(24.dp),
+                .padding(dimensions.paddingXL),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            Spacer(modifier = Modifier.height(48.dp))
+            Spacer(modifier = Modifier.height(dimensions.iconSizeXL))
 
             // Lock Icon and Title
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -100,7 +102,7 @@ fun AppLockScreen(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(dimensions.spacingL))
 
                 Text(
                     text = "Zatiaras POS",
@@ -109,7 +111,7 @@ fun AppLockScreen(
                     color = MaterialTheme.colorScheme.onBackground
                 )
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(dimensions.spacingXS))
 
                 Text(
                     text = if (uiState.showPinInput) "Masukkan PIN" else "Buka Kunci Aplikasi",
@@ -123,8 +125,8 @@ fun AppLockScreen(
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     // PIN Dots
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(16.dp),
-                        modifier = Modifier.padding(vertical = 32.dp)
+                        horizontalArrangement = Arrangement.spacedBy(dimensions.spacingM),
+                        modifier = Modifier.padding(vertical = dimensions.paddingXXL)
                     ) {
                         repeat(4) { index ->
                             PinDot(
@@ -172,7 +174,7 @@ fun AppLockScreen(
                             )
                         }
 
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(dimensions.spacingM))
 
                         Text(
                             text = "Sentuh untuk membuka",
@@ -183,7 +185,7 @@ fun AppLockScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(48.dp))
+            Spacer(modifier = Modifier.height(dimensions.iconSizeXL))
         }
     }
 }

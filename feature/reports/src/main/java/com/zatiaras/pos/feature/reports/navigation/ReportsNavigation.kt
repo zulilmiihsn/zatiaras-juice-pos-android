@@ -4,6 +4,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
+import com.zatiaras.pos.core.data.access.AccessControlManager
 import com.zatiaras.pos.feature.reports.presentation.dashboard.ReportDashboardRoute
 import com.zatiaras.pos.feature.reports.presentation.home.HomeDashboardRoute
 import com.zatiaras.pos.feature.reports.presentation.pnl.PnlReportRoute
@@ -38,27 +39,55 @@ fun NavGraphBuilder.homeDashboardScreen(
 
 /**
  * Reports Dashboard Screen (Tab "Laporan")
- * Detailed reports with charts and P&L access
+ * Detailed reports with charts and P&L access.
+ * Protected by Access Control if manager is provided.
  */
 fun NavGraphBuilder.reportsScreen(
     route: String = REPORT_DASHBOARD_ROUTE,
     onNavigateBack: (() -> Unit)?,
-    onNavigateToPnl: () -> Unit = {}
+    onNavigateToPnl: () -> Unit = {},
+    accessControlManager: com.zatiaras.pos.core.data.access.AccessControlManager? = null
 ) {
     composable(route = route) {
-        ReportDashboardRoute(
-            onNavigateBack = onNavigateBack,
-            onNavigateToPnl = onNavigateToPnl
-        )
+        if (accessControlManager != null) {
+            com.zatiaras.pos.core.ui.components.AccessControlGate(
+                accessControlManager = accessControlManager,
+                route = com.zatiaras.pos.core.data.access.LockableRoute.REPORTS_TAB.route,
+                screenName = "Laporan",
+                onAccessDenied = { onNavigateBack?.invoke() }
+            ) {
+                ReportDashboardRoute(
+                    onNavigateBack = onNavigateBack,
+                    onNavigateToPnl = onNavigateToPnl
+                )
+            }
+        } else {
+            ReportDashboardRoute(
+                onNavigateBack = onNavigateBack,
+                onNavigateToPnl = onNavigateToPnl
+            )
+        }
     }
 }
 
+/**
+ * P&L Report Screen with access control.
+ * If accessControlManager is provided, kasir will need to enter owner PIN if locked.
+ */
 fun NavGraphBuilder.pnlReportScreen(
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    accessControlManager: AccessControlManager? = null
 ) {
     composable(route = PNL_REPORT_ROUTE) {
-        PnlReportRoute(
-            onNavigateBack = onNavigateBack
-        )
+        if (accessControlManager != null) {
+            PnlReportRoute(
+                onNavigateBack = onNavigateBack,
+                accessControlManager = accessControlManager
+            )
+        } else {
+            PnlReportRoute(
+                onNavigateBack = onNavigateBack
+            )
+        }
     }
 }

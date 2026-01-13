@@ -38,6 +38,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.zatiaras.pos.core.ui.theme.LocalDimensions
 import com.zatiaras.pos.feature.auth.R
 
 @Composable
@@ -64,6 +65,7 @@ fun LoginRoute(
         uiState = uiState,
         syncStatus = syncStatus,
         onLoginClick = viewModel::login,
+        onResyncClick = viewModel::resync,
         snackbarHostState = snackbarHostState
     )
 }
@@ -73,6 +75,7 @@ fun LoginScreen(
     uiState: AuthUiState,
     syncStatus: String?,
     onLoginClick: (String, String) -> Unit,
+    onResyncClick: () -> Unit = {},
     snackbarHostState: SnackbarHostState
 ) {
     var username by remember { mutableStateOf("") }
@@ -81,11 +84,12 @@ fun LoginScreen(
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
+        val dimensions = LocalDimensions.current
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(24.dp),
+                .padding(dimensions.paddingXL),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -95,49 +99,73 @@ fun LoginScreen(
                 color = MaterialTheme.colorScheme.primary
             )
             
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(dimensions.spacingM))
             
             // Sync Status Indicator
             syncStatus?.let { status ->
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    val icon = when {
-                        uiState is AuthUiState.Syncing -> Icons.Default.Sync
-                        status.contains("offline", ignoreCase = true) -> Icons.Default.CloudOff
-                        else -> Icons.Default.CloudDone
-                    }
-                    val color = when {
-                        uiState is AuthUiState.Syncing -> MaterialTheme.colorScheme.primary
-                        status.contains("offline", ignoreCase = true) -> MaterialTheme.colorScheme.error
-                        else -> MaterialTheme.colorScheme.tertiary
-                    }
-                    
-                    if (uiState is AuthUiState.Syncing) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(16.dp),
-                            strokeWidth = 2.dp,
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        val isOffline = status.contains("offline", ignoreCase = true) || 
+                                        status.contains("koneksi", ignoreCase = true)
+                        val icon = when {
+                            uiState is AuthUiState.Syncing -> Icons.Default.Sync
+                            isOffline -> Icons.Default.CloudOff
+                            else -> Icons.Default.CloudDone
+                        }
+                        val color = when {
+                            uiState is AuthUiState.Syncing -> MaterialTheme.colorScheme.primary
+                            isOffline -> MaterialTheme.colorScheme.onSurfaceVariant
+                            else -> MaterialTheme.colorScheme.tertiary
+                        }
+                        
+                        if (uiState is AuthUiState.Syncing) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(dimensions.iconSizeXS),
+                                strokeWidth = 2.dp,
+                                color = color
+                            )
+                        } else {
+                            Icon(
+                                imageVector = icon,
+                                contentDescription = null,
+                                tint = color,
+                                modifier = Modifier.size(dimensions.iconSizeXS)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(dimensions.spacingXS))
+                        Text(
+                            text = status,
+                            style = MaterialTheme.typography.bodySmall,
                             color = color
                         )
-                    } else {
-                        Icon(
-                            imageVector = icon,
-                            contentDescription = null,
-                            tint = color,
-                            modifier = Modifier.size(16.dp)
-                        )
                     }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = status,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = color
-                    )
+
+                    // Show refresh button only when offline
+                    val isOffline = status.contains("offline", ignoreCase = true) || 
+                                    status.contains("koneksi", ignoreCase = true)
+                    if (isOffline && uiState !is AuthUiState.Syncing) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        androidx.compose.material3.TextButton(
+                            onClick = onResyncClick
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Sync,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Sync Ulang", style = MaterialTheme.typography.labelMedium)
+                        }
+                    }
                 }
             }
             
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(dimensions.paddingXXL))
 
             OutlinedTextField(
                 value = username,
@@ -149,7 +177,7 @@ fun LoginScreen(
                 enabled = uiState !is AuthUiState.Syncing
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(dimensions.spacingM))
 
             OutlinedTextField(
                 value = password,
@@ -161,7 +189,7 @@ fun LoginScreen(
                 enabled = uiState !is AuthUiState.Syncing
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(dimensions.spacingL))
 
             when (uiState) {
                 is AuthUiState.Loading, is AuthUiState.Syncing -> {

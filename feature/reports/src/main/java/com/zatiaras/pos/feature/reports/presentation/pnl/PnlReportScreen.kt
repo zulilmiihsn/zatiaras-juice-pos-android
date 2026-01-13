@@ -58,6 +58,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.zatiaras.pos.core.data.access.AccessControlManager
+import com.zatiaras.pos.core.data.access.LockableRoute
+import com.zatiaras.pos.core.ui.components.AccessControlGate
 import com.zatiaras.pos.feature.reports.domain.model.ReportPeriod
 import com.zatiaras.pos.feature.reports.presentation.components.PeriodSelector
 import com.zatiaras.pos.feature.reports.presentation.components.PnlBreakdownCard
@@ -69,7 +72,41 @@ import java.util.Locale
 @Composable
 fun PnlReportRoute(
     onNavigateBack: () -> Unit,
+    accessControlManager: AccessControlManager,
     viewModel: PnlReportViewModel = hiltViewModel()
+) {
+    // Wrap with access control gate
+    AccessControlGate(
+        accessControlManager = accessControlManager,
+        route = LockableRoute.PNL_REPORT.route,
+        screenName = "Laporan Laba Rugi",
+        onAccessDenied = onNavigateBack
+    ) {
+        PnlReportContent(
+            onNavigateBack = onNavigateBack,
+            viewModel = viewModel
+        )
+    }
+}
+
+/**
+ * Overload for backward compatibility when access control is not needed.
+ */
+@Composable
+fun PnlReportRoute(
+    onNavigateBack: () -> Unit,
+    viewModel: PnlReportViewModel = hiltViewModel()
+) {
+    PnlReportContent(
+        onNavigateBack = onNavigateBack,
+        viewModel = viewModel
+    )
+}
+
+@Composable
+private fun PnlReportContent(
+    onNavigateBack: () -> Unit,
+    viewModel: PnlReportViewModel
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -81,7 +118,7 @@ fun PnlReportRoute(
                 is ExportEvent.SavedToDownloads -> {
                     Toast.makeText(
                         context, 
-                        "✅ File tersimpan: ${event.fileName}", 
+                        "File tersimpan: ${event.fileName}", 
                         Toast.LENGTH_LONG
                     ).show()
                 }

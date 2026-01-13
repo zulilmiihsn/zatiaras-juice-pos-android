@@ -16,9 +16,10 @@ import kotlinx.coroutines.flow.Flow
 interface UserDao {
 
     /**
-     * Insert a new user.
+     * Insert or update a user (upsert).
+     * Uses REPLACE strategy for sync operations.
      */
-    @Insert(onConflict = OnConflictStrategy.ABORT)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertUser(user: UserEntity)
 
     /**

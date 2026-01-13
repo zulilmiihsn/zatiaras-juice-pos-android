@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.zatiaras.pos.core.ui.theme.LocalDimensions
 
 enum class PinSetupStep {
     ENTER_NEW_PIN,
@@ -86,14 +87,15 @@ fun PinSetupScreen(
             )
         }
     ) { padding ->
+        val dimensions = LocalDimensions.current
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(24.dp),
+                .padding(dimensions.paddingXL),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(dimensions.paddingXXL))
 
             // Instruction Text
             Text(
@@ -107,12 +109,12 @@ fun PinSetupScreen(
                 textAlign = TextAlign.Center
             )
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(dimensions.paddingXXL))
 
             // PIN Dots
             Row(
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                modifier = Modifier.padding(vertical = 16.dp)
+                horizontalArrangement = Arrangement.spacedBy(dimensions.spacingM),
+                modifier = Modifier.padding(vertical = dimensions.spacingM)
             ) {
                 repeat(4) { index ->
                     PinSetupDot(
@@ -164,7 +166,7 @@ fun PinSetupScreen(
                 onBackspaceClick = onBackspaceClick
             )
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(dimensions.paddingXXL))
         }
     }
 }

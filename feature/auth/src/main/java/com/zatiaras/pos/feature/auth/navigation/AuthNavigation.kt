@@ -44,21 +44,43 @@ fun NavGraphBuilder.appLockScreen(
 /**
  * Add Settings screen to navigation graph.
  */
+/**
+ * Add Settings screen to navigation graph.
+ * Protected by Access Control.
+ */
 fun NavGraphBuilder.settingsScreen(
     onNavigateBack: () -> Unit,
     onNavigateToPinSetup: () -> Unit,
     onNavigateToPrinter: () -> Unit = {},
     onNavigateToInventory: () -> Unit = {},
-    onLogout: () -> Unit
+    onLogout: () -> Unit,
+    accessControlManager: com.zatiaras.pos.core.data.access.AccessControlManager? = null
 ) {
     composable(AuthRoutes.SETTINGS) {
-        SettingsRoute(
-            onNavigateBack = onNavigateBack,
-            onNavigateToPinSetup = onNavigateToPinSetup,
-            onNavigateToPrinter = onNavigateToPrinter,
-            onNavigateToInventory = onNavigateToInventory,
-            onLogout = onLogout
-        )
+        if (accessControlManager != null) {
+            com.zatiaras.pos.core.ui.components.AccessControlGate(
+                accessControlManager = accessControlManager,
+                route = com.zatiaras.pos.core.data.access.LockableRoute.SETTINGS.route,
+                screenName = "Pengaturan",
+                onAccessDenied = onNavigateBack
+            ) {
+                SettingsRoute(
+                    onNavigateBack = onNavigateBack,
+                    onNavigateToPinSetup = onNavigateToPinSetup,
+                    onNavigateToPrinter = onNavigateToPrinter,
+                    onNavigateToInventory = onNavigateToInventory,
+                    onLogout = onLogout
+                )
+            }
+        } else {
+            SettingsRoute(
+                onNavigateBack = onNavigateBack,
+                onNavigateToPinSetup = onNavigateToPinSetup,
+                onNavigateToPrinter = onNavigateToPrinter,
+                onNavigateToInventory = onNavigateToInventory,
+                onLogout = onLogout
+            )
+        }
     }
 }
 

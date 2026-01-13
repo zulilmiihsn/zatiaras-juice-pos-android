@@ -108,14 +108,29 @@ fun NavGraphBuilder.checkoutScreen(
 
 /**
  * Add Cash Record (Buku Kas) screen to NavGraph.
+ * Protected by Access Control if manager is provided.
  */
 fun NavGraphBuilder.cashRecordScreen(
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    accessControlManager: com.zatiaras.pos.core.data.access.AccessControlManager? = null
 ) {
     composable(route = PosRoutes.CASH_RECORD) {
-        CashRecordScreen(
-            onNavigateBack = onNavigateBack
-        )
+        if (accessControlManager != null) {
+            com.zatiaras.pos.core.ui.components.AccessControlGate(
+                accessControlManager = accessControlManager,
+                route = com.zatiaras.pos.core.data.access.LockableRoute.CASH_RECORD_TAB.route,
+                screenName = "Buku Kas",
+                onAccessDenied = onNavigateBack
+            ) {
+                CashRecordScreen(
+                    onNavigateBack = onNavigateBack
+                )
+            }
+        } else {
+            CashRecordScreen(
+                onNavigateBack = onNavigateBack
+            )
+        }
     }
 }
 
