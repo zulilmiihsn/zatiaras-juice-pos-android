@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- POS Screen -->
+    <string name="pos_title">Kasir</string>
+    <string name="pos_search_placeholder">Cari produk…</string>
+    <string name="pos_category_all">Semua</string>
+    <string name="pos_add_to_cart">Tambah</string>
+    <string name="pos_empty_products">Tidak ada produk</string>
+    <string name="pos_empty_products_hint">Coba ubah kata kunci atau kategori</string>
+    <string name="pos_cart">Keranjang</string>
+    <string name="pos_clear_search">Hapus</string>
+    
+    <!-- Cart -->
+    <string name="cart_title">Keranjang</string>
+    <string name="cart_empty">Keranjang kosong</string>
+    <string name="cart_empty_hint">Tambahkan produk untuk memulai transaksi</string>
+    <string name="cart_clear">Hapus Semua</string>
+    <string name="cart_item_remove">Hapus</string>
+    <string name="cart_item_decrease">Kurangi</string>
+    <string name="cart_item_increase">Tambah</string>
+    <string name="cart_total">Total</string>
+    <string name="cart_item_count">%d item</string>
+    <string name="cart_item_count_plural">%d items</string>
+    
+    <!-- Checkout -->
+    <string name="checkout_title">Checkout</string>
+    <string name="checkout_button">Bayar</string>
+    <string name="checkout_payment_method">Metode Pembayaran</string>
+    <string name="checkout_payment_cash">Tunai</string>
+    <string name="checkout_payment_qris">QRIS</string>
+    <string name="checkout_payment_transfer">Transfer Bank</string>
+    <string name="checkout_customer_payment">Uang Diterima</string>
+    <string name="checkout_change">Kembalian</string>
+    <string name="checkout_success">Transaksi Berhasil!</string>
+    <string name="checkout_print_receipt">Cetak Struk</string>
+    <string name="checkout_new_transaction">Transaksi Baru</string>
+    <string name="checkout_processing">Memproses...</string>
+    
+    <!-- Validation -->
+    <string name="checkout_error_payment_required">Pilih metode pembayaran</string>
+    <string name="checkout_error_cash_insufficient">Pembayaran kurang dari total</string>
+    <string name="checkout_error_empty_cart">Keranjang kosong</string>
+    
+    <!-- Transaction -->
+    <string name="transaction_id">No. Transaksi: %s</string>
+    <string name="transaction_date">Tanggal: %s</string>
+    <string name="transaction_cashier">Kasir: %s</string>
+    
+    <!-- Errors -->
+    <string name="pos_error_load_products">Gagal memuat produk</string>
+    <string name="pos_error_checkout">Gagal memproses transaksi</string>
+    <string name="pos_error_generic">Terjadi kesalahan</string>
+    <string name="pos_retry">Coba Lagi</string>
+    
+    <!-- Confirmation Dialogs -->
+    <string name="dialog_clear_cart_title">Hapus Keranjang?</string>
+    <string name="dialog_clear_cart_message">Semua item akan dihapus dari keranjang.</string>
+    <string name="dialog_confirm">Ya</string>
+    <string name="dialog_cancel">Batal</string>
+</resources>

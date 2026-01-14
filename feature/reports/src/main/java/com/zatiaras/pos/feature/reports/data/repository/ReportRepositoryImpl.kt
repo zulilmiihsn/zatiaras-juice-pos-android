@@ -1,6 +1,7 @@
 package com.zatiaras.pos.feature.reports.data.repository
 
 import com.zatiaras.pos.core.data.local.dao.TransactionDao
+import com.zatiaras.pos.core.domain.util.DateUtils
 import com.zatiaras.pos.feature.reports.domain.model.DailyRevenue
 import com.zatiaras.pos.feature.reports.domain.model.DashboardStats
 import com.zatiaras.pos.feature.reports.domain.model.ProfitLossReport
@@ -21,27 +22,18 @@ class ReportRepositoryImpl @Inject constructor(
 ) : ReportRepository {
 
     override suspend fun getDashboardStats(): DashboardStats {
-        val calendar = Calendar.getInstance()
-        
         // Today's range
-        val todayStart = getStartOfDay(calendar.timeInMillis)
-        val todayEnd = getEndOfDay(calendar.timeInMillis)
+        val todayStart = DateUtils.getStartOfDay()
+        val todayEnd = DateUtils.getEndOfDay()
         
         // This week's range (Monday to today)
-        calendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
-        val weekStart = getStartOfDay(calendar.timeInMillis)
-        calendar.timeInMillis = System.currentTimeMillis()
-        val weekEnd = todayEnd
+        val (weekStart, weekEnd) = DateUtils.getThisWeekRange()
         
         // This month's range
-        calendar.set(Calendar.DAY_OF_MONTH, 1)
-        val monthStart = getStartOfDay(calendar.timeInMillis)
-        calendar.timeInMillis = System.currentTimeMillis()
+        val (monthStart, _) = DateUtils.getThisMonthRange()
         
         // Previous week for comparison
-        calendar.add(Calendar.DAY_OF_YEAR, -7)
-        val prevWeekStart = getStartOfDay(calendar.timeInMillis)
-        val prevWeekEnd = getEndOfDay(calendar.timeInMillis)
+        val (prevWeekStart, prevWeekEnd) = DateUtils.getPreviousWeekRange()
         
         try {
             val todayRevenue = transactionDao.getTotalRevenueForDay(todayStart, todayEnd)
@@ -75,11 +67,7 @@ class ReportRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getDailyRevenueHistory(days: Int): List<DailyRevenue> {
-        val calendar = Calendar.getInstance()
-        val endDate = getEndOfDay(calendar.timeInMillis)
-        
-        calendar.add(Calendar.DAY_OF_YEAR, -(days - 1))
-        val startDate = getStartOfDay(calendar.timeInMillis)
+        val (startDate, endDate) = DateUtils.getLastNDaysRange(days)
         
         try {
             val entities = transactionDao.getDailyRevenue(startDate, endDate)
@@ -92,7 +80,7 @@ class ReportRepositoryImpl @Inject constructor(
             iterCalendar.timeInMillis = startDate
             
             repeat(days) {
-                val dayStart = getStartOfDay(iterCalendar.timeInMillis)
+                val dayStart = DateUtils.getStartOfDay(iterCalendar.timeInMillis)
                 val entity = entityMap[dayStart]
                 
                 result.add(
@@ -173,25 +161,5 @@ class ReportRepositoryImpl @Inject constructor(
                 transactionCount = 0
             )
         }
-    }
-
-    private fun getStartOfDay(timestamp: Long): Long {
-        return Calendar.getInstance().apply {
-            timeInMillis = timestamp
-            set(Calendar.HOUR_OF_DAY, 0)
-            set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-        }.timeInMillis
-    }
-
-    private fun getEndOfDay(timestamp: Long): Long {
-        return Calendar.getInstance().apply {
-            timeInMillis = timestamp
-            set(Calendar.HOUR_OF_DAY, 23)
-            set(Calendar.MINUTE, 59)
-            set(Calendar.SECOND, 59)
-            set(Calendar.MILLISECOND, 999)
-        }.timeInMillis
     }
 }

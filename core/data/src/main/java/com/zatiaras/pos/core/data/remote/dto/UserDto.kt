@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 
 /**
  * DTO for user data from Supabase.
- * Maps to the 'users' table in Supabase.
+ * Maps to the 'pengguna' table in Supabase.
  */
 @Serializable
 data class UserDto(

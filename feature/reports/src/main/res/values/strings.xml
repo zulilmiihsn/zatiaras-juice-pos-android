@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Reports Screen -->
+    <string name="reports_title">Laporan</string>
+    <string name="reports_dashboard">Dashboard</string>
+    <string name="reports_pnl">Laba Rugi</string>
+    
+    <!-- Dashboard Stats -->
+    <string name="stat_today_revenue">Pendapatan Hari Ini</string>
+    <string name="stat_transactions">Transaksi</string>
+    <string name="stat_average_order">Rata-rata Order</string>
+    <string name="stat_revenue_growth">Pertumbuhan</string>
+    <string name="stat_products_sold">Produk Terjual</string>
+    <string name="stat_top_products">Produk Terlaris</string>
+    
+    <!-- Time Periods -->
+    <string name="period_today">Hari Ini</string>
+    <string name="period_this_week">Minggu Ini</string>
+    <string name="period_this_month">Bulan Ini</string>
+    <string name="period_custom">Kustom</string>
+    <string name="period_select_date">Pilih Tanggal</string>
+    <string name="period_start_date">Tanggal Mulai</string>
+    <string name="period_end_date">Tanggal Akhir</string>
+    
+    <!-- P&L Report -->
+    <string name="pnl_title">Laporan Laba Rugi</string>
+    <string name="pnl_revenue">Pendapatan</string>
+    <string name="pnl_cogs">Harga Pokok</string>
+    <string name="pnl_gross_profit">Laba Kotor</string>
+    <string name="pnl_expenses">Biaya</string>
+    <string name="pnl_net_profit">Laba Bersih</string>
+    <string name="pnl_margin">Margin</string>
+    
+    <!-- Export -->
+    <string name="export_title">Ekspor Laporan</string>
+    <string name="export_pdf">Ekspor PDF</string>
+    <string name="export_csv">Ekspor CSV</string>
+    <string name="export_success">Laporan berhasil diekspor</string>
+    <string name="export_error">Gagal mengekspor laporan</string>
+    
+    <!-- Chart -->
+    <string name="chart_revenue">Pendapatan</string>
+    <string name="chart_transactions">Transaksi</string>
+    <string name="chart_profit">Laba</string>
+    <string name="chart_no_data">Tidak ada data untuk periode ini</string>
+    
+    <!-- Errors -->
+    <string name="reports_error_load">Gagal memuat laporan</string>
+    <string name="reports_retry">Coba Lagi</string>
+</resources>

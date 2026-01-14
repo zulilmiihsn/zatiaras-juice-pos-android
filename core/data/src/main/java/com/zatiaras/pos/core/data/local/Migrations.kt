@@ -13,6 +13,8 @@ import androidx.sqlite.db.SupportSQLiteDatabase
  * - Version 1: Initial schema with products, categories, FTS
  * - Version 2: Added transactions and transaction_items tables
  * - Version 3: Added cash_records table for Buku Kas
+ * - Version 4: Added users table for offline authentication
+ * - Version 5: Added app_settings and add_ons tables
  */
 object Migrations {
 
@@ -124,12 +126,66 @@ object Migrations {
     }
 
     /**
+     * Migration from version 4 to 5.
+     * Adds app_settings table for settings sync and add_ons table for toppings.
+     */
+    val MIGRATION_4_5 = object : Migration(4, 5) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            // Create app_settings table (singleton - one row)
+            db.execSQL("""
+                CREATE TABLE IF NOT EXISTS `app_settings` (
+                    `id` TEXT NOT NULL PRIMARY KEY,
+                    `ownerPinHash` TEXT,
+                    `lockedRoutes` TEXT NOT NULL DEFAULT '',
+                    `storeName` TEXT NOT NULL DEFAULT 'ZATIARAS',
+                    `storeAddress` TEXT,
+                    `storePhone` TEXT,
+                    `defaultPaperWidth` INTEGER NOT NULL DEFAULT 58,
+                    `receiptFooter` TEXT DEFAULT 'Terima kasih atas kunjungan Anda!',
+                    `showLogoOnReceipt` INTEGER NOT NULL DEFAULT 1,
+                    `updatedAt` INTEGER NOT NULL,
+                    `isSynced` INTEGER NOT NULL DEFAULT 0
+                )
+            """.trimIndent())
+            
+            // Insert default settings row
+            db.execSQL("""
+                INSERT OR IGNORE INTO `app_settings` (id, storeName, defaultPaperWidth, updatedAt, isSynced)
+                VALUES ('default', 'ZATIARAS', 58, ${System.currentTimeMillis()}, 0)
+            """.trimIndent())
+
+            // Create add_ons table
+            db.execSQL("""
+                CREATE TABLE IF NOT EXISTS `add_ons` (
+                    `id` TEXT NOT NULL PRIMARY KEY,
+                    `name` TEXT NOT NULL,
+                    `price` INTEGER NOT NULL,
+                    `category` TEXT,
+                    `sortOrder` INTEGER NOT NULL DEFAULT 0,
+                    `icon` TEXT,
+                    `isActive` INTEGER NOT NULL DEFAULT 1,
+                    `createdAt` INTEGER NOT NULL,
+                    `updatedAt` INTEGER NOT NULL,
+                    `isSynced` INTEGER NOT NULL DEFAULT 0,
+                    `isDeleted` INTEGER NOT NULL DEFAULT 0
+                )
+            """.trimIndent())
+
+            // Create indexes for add_ons
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_add_ons_category` ON `add_ons` (`category`)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_add_ons_isActive` ON `add_ons` (`isActive`)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_add_ons_isSynced` ON `add_ons` (`isSynced`)")
+        }
+    }
+
+    /**
      * Get all migrations in order.
      * Add new migrations to this list.
      */
     val ALL_MIGRATIONS = arrayOf(
         MIGRATION_1_2,
         MIGRATION_2_3,
-        MIGRATION_3_4
+        MIGRATION_3_4,
+        MIGRATION_4_5
     )
 }

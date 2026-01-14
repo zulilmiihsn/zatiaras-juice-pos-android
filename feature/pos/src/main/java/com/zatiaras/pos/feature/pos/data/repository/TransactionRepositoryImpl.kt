@@ -2,9 +2,11 @@ package com.zatiaras.pos.feature.pos.data.repository
 
 import com.zatiaras.pos.core.data.local.dao.TransactionDao
 import com.zatiaras.pos.core.domain.Result
+import com.zatiaras.pos.core.domain.util.DateUtils
 import com.zatiaras.pos.feature.pos.data.mapper.createTransactionEntity
 import com.zatiaras.pos.feature.pos.data.mapper.toDomain
 import com.zatiaras.pos.feature.pos.data.mapper.toItemEntities
+import com.zatiaras.pos.core.data.local.entity.TransactionEntity
 import com.zatiaras.pos.feature.pos.domain.model.Cart
 import com.zatiaras.pos.feature.pos.domain.model.PaymentMethod
 import com.zatiaras.pos.feature.pos.domain.model.Transaction
@@ -13,9 +15,6 @@ import com.zatiaras.pos.feature.pos.domain.repository.TransactionStats
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import timber.log.Timber
-import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.Locale
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -86,23 +85,19 @@ class TransactionRepositoryImpl @Inject constructor(
     }
 
     override fun getTodayTransactions(): Flow<List<Transaction>> {
-        val (startOfDay, endOfDay) = getTodayRange()
-        return transactionDao.getTransactionsByDateRange(startOfDay, endOfDay)
-            .map { entities ->
-                entities.map { entity ->
-                    val items = transactionDao.getTransactionItems(entity.id)
-                    entity.toDomain(items)
-                }
+        val (startOfDay, endOfDay) = DateUtils.getTodayRange()
+        // Use @Relation-based query to avoid N+1 problem
+        return transactionDao.getTransactionsWithItems(startOfDay, endOfDay)
+            .map { transactionsWithItems ->
+                transactionsWithItems.map { it.toDomain() }
             }
     }
 
     override fun getTransactionsByDateRange(startDate: Long, endDate: Long): Flow<List<Transaction>> {
-        return transactionDao.getTransactionsByDateRange(startDate, endDate)
-            .map { entities ->
-                entities.map { entity ->
-                    val items = transactionDao.getTransactionItems(entity.id)
-                    entity.toDomain(items)
-                }
+        // Use @Relation-based query to avoid N+1 problem
+        return transactionDao.getTransactionsWithItems(startDate, endDate)
+            .map { transactionsWithItems ->
+                transactionsWithItems.map { it.toDomain() }
             }
     }
 
@@ -115,16 +110,15 @@ class TransactionRepositoryImpl @Inject constructor(
     }
 
     override suspend fun generateTransactionNumber(): String {
-        val (startOfDay, endOfDay) = getTodayRange()
+        val (startOfDay, endOfDay) = DateUtils.getTodayRange()
         val count = transactionDao.getTransactionCountForDay(startOfDay, endOfDay)
-        val dateFormat = SimpleDateFormat("yyyyMMdd", Locale.getDefault())
-        val dateStr = dateFormat.format(System.currentTimeMillis())
+        val dateStr = DateUtils.formatDateCompact()
         val sequence = String.format("%04d", count + 1)
         return "TRX-$dateStr-$sequence"
     }
 
     override suspend fun getTodayStats(): TransactionStats {
-        val (startOfDay, endOfDay) = getTodayRange()
+        val (startOfDay, endOfDay) = DateUtils.getTodayRange()
         
         val totalTransactions = transactionDao.getTransactionCountForDay(startOfDay, endOfDay)
         val totalRevenue = transactionDao.getTotalRevenueForDay(startOfDay, endOfDay)
@@ -135,23 +129,5 @@ class TransactionRepositoryImpl @Inject constructor(
             totalRevenue = totalRevenue,
             totalItemsSold = totalItemsSold
         )
-    }
-    
-    /**
-     * Get start and end timestamps for today.
-     */
-    private fun getTodayRange(): Pair<Long, Long> {
-        val calendar = Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, 0)
-            set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-        }
-        val startOfDay = calendar.timeInMillis
-        
-        calendar.add(Calendar.DAY_OF_MONTH, 1)
-        val endOfDay = calendar.timeInMillis
-        
-        return startOfDay to endOfDay
     }
 }

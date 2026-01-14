@@ -6,42 +6,16 @@ import com.zatiaras.pos.feature.pos.domain.model.Cart
 
 /**
  * UI State for the main POS screen (Catalog + Cart).
+ * 
+ * Note: Products are exposed separately as Flow<PagingData<Product>>
+ * for efficient memory management with large catalogs.
  */
 data class PosUiState(
-    val products: List<Product> = emptyList(),
     val categories: List<Category> = emptyList(),
     val selectedCategoryId: String? = null,
     val searchQuery: String = "",
     val cart: Cart = Cart(),
     val isLoading: Boolean = true,
+    val productCount: Int = 0,
     val error: String? = null
-) {
-    /**
-     * Filtered products based on search query and selected category.
-     */
-    val filteredProducts: List<Product>
-        get() {
-            var result = products
-            
-            // Filter by category if selected
-            if (selectedCategoryId != null) {
-                result = result.filter { it.category?.id == selectedCategoryId }
-            }
-            
-            // Filter by search query
-            if (searchQuery.isNotBlank()) {
-                val query = searchQuery.lowercase()
-                result = result.filter { 
-                    it.name.lowercase().contains(query) 
-                }
-            }
-            
-            return result
-        }
-    
-    /**
-     * Show empty state when no products match filters.
-     */
-    val showEmptyState: Boolean
-        get() = !isLoading && filteredProducts.isEmpty()
-}
+)

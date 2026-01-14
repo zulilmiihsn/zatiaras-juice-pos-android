@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.room.Room
 import com.zatiaras.pos.core.data.local.ZatiarasDatabase
 import com.zatiaras.pos.core.data.local.Migrations
+import com.zatiaras.pos.core.data.local.dao.AddOnDao
+import com.zatiaras.pos.core.data.local.dao.AppSettingsDao
 import com.zatiaras.pos.core.data.local.dao.CashRecordDao
 import com.zatiaras.pos.core.data.local.dao.CategoryDao
 import com.zatiaras.pos.core.data.local.dao.ProductDao
@@ -70,6 +72,18 @@ object DatabaseModule {
     @Singleton
     fun provideUserDao(database: ZatiarasDatabase): UserDao {
         return database.userDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideAppSettingsDao(database: ZatiarasDatabase): AppSettingsDao {
+        return database.appSettingsDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideAddOnDao(database: ZatiarasDatabase): AddOnDao {
+        return database.addOnDao()
     }
 
     @Provides

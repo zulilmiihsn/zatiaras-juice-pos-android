@@ -57,7 +57,7 @@ sealed class ApiResult<out T> {
 
 ## 3. Database Schema (Supabase Tables)
 
-### 3.1 `users` (User Accounts & Profiles)
+### 3.1 `pengguna` (User Accounts & Profiles) ✅ IMPLEMENTED
 
 > **Note**: This table replaces the standard `auth.users` + `profil` pattern to support **Offline Authentication**. It stores hashed passwords directly in the public schema to allow syncing to local devices.
 
@@ -69,7 +69,6 @@ sealed class ApiResult<out T> {
 | `display_name` | TEXT | Full name of the user |
 | `role` | TEXT | `kasir` \| `pemilik` |
 | `is_active` | BOOLEAN | Account status |
-| `avatar_url` | TEXT | Profile picture URL (Optional) |
 | `created_at` | TIMESTAMP | Account creation date |
 | `updated_at` | TIMESTAMP | Last update |
 
@@ -123,30 +122,50 @@ sealed class ApiResult<out T> {
 | `waktu` | TIMESTAMP | Transaction time |
 | `created_at` | TIMESTAMP | Record creation time |
 
-### 3.6 `transaksi_kasir` (POS Transaction Items)
+### 3.6 `transaksi_item` (POS Transaction Items) ✅ IMPLEMENTED
 
 | Column | Type | Description |
 |--------|------|-------------|
 | `id` | UUID (PK) | Item ID |
-| `buku_kas_id` | UUID (FK) | Reference to buku_kas |
-| `transaction_id` | TEXT | Grouping ID |
+| `transaksi_id` | UUID (FK) | Reference to transaksi |
 | `produk_id` | UUID (FK) | Product reference |
-| `custom_name` | TEXT | Custom item name (optional) |
-| `qty` | INT | Quantity |
-| `amount` | BIGINT | Line item total |
-| `add_ons` | JSONB | Array of add-ons `[{id, name, price}]` |
+| `produk_name` | TEXT | Product name (snapshot) |
+| `produk_price` | BIGINT | Product price (snapshot) |
+| `quantity` | INT | Quantity |
+| `subtotal` | BIGINT | Line item total |
 | `notes` | TEXT | Special instructions |
 | `created_at` | TIMESTAMP | Creation time |
 
-### 3.7 `pengaturan` (Settings)
+### 3.7 `pengaturan` (Settings) ✅ IMPLEMENTED
+
+> **Note**: This table syncs across all devices for consistent settings.
 
 | Column | Type | Description |
 |--------|------|-------------|
-| `id` | INT (PK) | Always 1 (singleton) |
-| `pin` | TEXT | Security PIN (hashed) |
-| `locked_pages` | TEXT[] | Pages requiring PIN |
-| `printer_address` | TEXT | Bluetooth printer MAC |
-| `updated_at` | TIMESTAMP | Last update |
+| `id` | TEXT (PK) | Branch ID or "default" (singleton) |
+| `owner_pin` | TEXT | Owner PIN hash (SHA-256) for kasir access control |
+| `locked_routes` | TEXT[] | Routes that require owner PIN for kasir |
+| `store_name` | TEXT | Store name for receipt header |
+| `store_address` | TEXT | Store address for receipt |
+| `store_phone` | TEXT | Store phone for receipt |
+| `default_paper_width` | INT | Default thermal paper width (58 or 80 mm) |
+| `receipt_footer` | TEXT | Custom receipt footer message |
+| `show_logo_on_receipt` | BOOLEAN | Whether to show logo on receipt |
+| `updated_at` | BIGINT | Unix timestamp for sync |
+
+### 3.8 `tambahan` (Add-Ons/Toppings) ✅ IMPLEMENTED
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | UUID (PK) | Add-on ID |
+| `nama` | TEXT | Add-on name (e.g., "Extra Cheese") |
+| `harga` | BIGINT | Additional price in IDR |
+| `kategori` | TEXT | Category (e.g., "Topping", "Size") |
+| `sort_order` | INT | Display order |
+| `icon` | TEXT | Icon identifier (optional) |
+| `is_active` | BOOLEAN | Is add-on available |
+| `created_at` | TIMESTAMP | Creation date |
+| `updated_at` | BIGINT | Unix timestamp for sync |
 
 ---
 

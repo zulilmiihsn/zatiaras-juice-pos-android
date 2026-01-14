@@ -1,5 +1,12 @@
 package com.zatiaras.pos.feature.pos.presentation.components
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -11,7 +18,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
@@ -29,6 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
@@ -41,6 +48,8 @@ import java.util.Locale
 /**
  * Cart item row for displaying items in the shopping cart.
  * Shows product info, quantity controls, and subtotal.
+ * 
+ * Features animated quantity counter for smooth micro-interactions.
  */
 @Composable
 fun CartItemRow(
@@ -115,12 +124,29 @@ fun CartItemRow(
                 
                 Spacer(modifier = Modifier.height(4.dp))
                 
-                Text(
-                    text = priceFormatter.format(cartItem.subtotal),
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Bold
-                )
+                // Animated subtotal with slide animation
+                AnimatedContent(
+                    targetState = cartItem.subtotal,
+                    transitionSpec = {
+                        if (targetState > initialState) {
+                            // Sliding up when increasing
+                            (slideInVertically { height -> height } + fadeIn())
+                                .togetherWith(slideOutVertically { height -> -height } + fadeOut())
+                        } else {
+                            // Sliding down when decreasing  
+                            (slideInVertically { height -> -height } + fadeIn())
+                                .togetherWith(slideOutVertically { height -> height } + fadeOut())
+                        }.using(SizeTransform(clip = false))
+                    },
+                    label = "subtotal_animation"
+                ) { subtotal ->
+                    Text(
+                        text = priceFormatter.format(subtotal),
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
             
             Spacer(modifier = Modifier.width(8.dp))
@@ -142,30 +168,52 @@ fun CartItemRow(
                         }
                     )
                 ) {
-                    Icon(
-                        imageVector = if (cartItem.quantity == 1) {
-                            Icons.Default.Delete
-                        } else {
-                            Icons.Default.Remove
-                        },
-                        contentDescription = if (cartItem.quantity == 1) "Hapus" else "Kurangi",
-                        modifier = Modifier.size(18.dp),
-                        tint = if (cartItem.quantity == 1) {
-                            MaterialTheme.colorScheme.error
-                        } else {
-                            MaterialTheme.colorScheme.onSurfaceVariant
-                        }
-                    )
+                    // Animated icon transition between delete and minus
+                    AnimatedContent(
+                        targetState = cartItem.quantity == 1,
+                        label = "delete_icon_animation"
+                    ) { isLastItem ->
+                        Icon(
+                            imageVector = if (isLastItem) {
+                                Icons.Default.Delete
+                            } else {
+                                Icons.Default.Remove
+                            },
+                            contentDescription = if (isLastItem) "Hapus" else "Kurangi",
+                            modifier = Modifier.size(18.dp),
+                            tint = if (isLastItem) {
+                                MaterialTheme.colorScheme.error
+                            } else {
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                            }
+                        )
+                    }
                 }
                 
-                // Quantity display
-                Text(
-                    text = cartItem.quantity.toString(),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.width(32.dp),
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                )
+                // Animated quantity display
+                AnimatedContent(
+                    targetState = cartItem.quantity,
+                    transitionSpec = {
+                        if (targetState > initialState) {
+                            // Sliding up when increasing
+                            (slideInVertically { height -> height } + fadeIn())
+                                .togetherWith(slideOutVertically { height -> -height } + fadeOut())
+                        } else {
+                            // Sliding down when decreasing  
+                            (slideInVertically { height -> -height } + fadeIn())
+                                .togetherWith(slideOutVertically { height -> height } + fadeOut())
+                        }.using(SizeTransform(clip = false))
+                    },
+                    label = "quantity_animation"
+                ) { quantity ->
+                    Text(
+                        text = quantity.toString(),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.width(32.dp),
+                        textAlign = TextAlign.Center
+                    )
+                }
                 
                 // Increment button
                 IconButton(

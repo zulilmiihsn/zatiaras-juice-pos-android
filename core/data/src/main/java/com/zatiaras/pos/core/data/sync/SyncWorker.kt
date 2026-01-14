@@ -13,10 +13,6 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.zatiaras.pos.core.data.local.SyncPreferences
-import com.zatiaras.pos.core.data.local.dao.CashRecordDao
-import com.zatiaras.pos.core.data.local.dao.TransactionDao
-import com.zatiaras.pos.core.data.remote.CashRecordRemoteDataSource
-import com.zatiaras.pos.core.data.remote.TransactionRemoteDataSource
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import timber.log.Timber
@@ -25,24 +21,29 @@ import java.util.concurrent.TimeUnit
 /**
  * WorkManager Worker for background sync operations.
  * 
- * Syncs all local unsynced data to Supabase:
- * - Transactions
- * - Transaction Items
- * - Cash Records (Buku Kas)
+ * Syncs all local unsynced data to Supabase using EntitySyncer implementations:
+ * - TransactionSyncer: Transactions and Transaction Items
+ * - CashRecordSyncer: Cash Records (Buku Kas)
  * 
  * Uses "Last Write Wins" conflict resolution based on updatedAt timestamp.
  * Runs with network constraint and exponential backoff on failure.
+ * 
+ * Follows Single Responsibility Principle by delegating sync logic to EntitySyncer.
  */
 @HiltWorker
 class SyncWorker @AssistedInject constructor(
     @Assisted context: Context,
     @Assisted params: WorkerParameters,
-    private val transactionDao: TransactionDao,
-    private val cashRecordDao: CashRecordDao,
-    private val transactionRemoteDataSource: TransactionRemoteDataSource,
-    private val cashRecordRemoteDataSource: CashRecordRemoteDataSource,
+    private val transactionSyncer: TransactionSyncer,
+    private val cashRecordSyncer: CashRecordSyncer,
     private val syncPreferences: SyncPreferences
 ) : CoroutineWorker(context, params) {
+
+    // List of all syncers
+    private val syncers: List<EntitySyncer> = listOf(
+        transactionSyncer,
+        cashRecordSyncer
+    )
 
     companion object {
         const val WORK_NAME_PERIODIC = "sync_periodic"
@@ -117,15 +118,14 @@ class SyncWorker @AssistedInject constructor(
             var totalUploaded = 0
             var hasErrors = false
 
-            // Sync transactions
-            val transactionResult = syncTransactions()
-            totalUploaded += transactionResult.first
-            if (transactionResult.second) hasErrors = true
-
-            // Sync cash records
-            val cashRecordResult = syncCashRecords()
-            totalUploaded += cashRecordResult.first
-            if (cashRecordResult.second) hasErrors = true
+            // Run all syncers
+            for (syncer in syncers) {
+                val result = syncer.sync()
+                totalUploaded += result.totalSynced
+                if (result.failed > 0) {
+                    hasErrors = true
+                }
+            }
 
             // Update last sync timestamp
             if (totalUploaded > 0) {
@@ -146,77 +146,5 @@ class SyncWorker @AssistedInject constructor(
             syncPreferences.setSyncInProgress(false)
             Result.retry()
         }
-    }
-
-    /**
-     * Sync unsynced transactions to Supabase.
-     * 
-     * @return Pair of (uploadedCount, hasErrors)
-     */
-    private suspend fun syncTransactions(): Pair<Int, Boolean> {
-        val unsyncedTransactions = transactionDao.getUnsyncedTransactions()
-        if (unsyncedTransactions.isEmpty()) {
-            Timber.d("No unsynced transactions")
-            return Pair(0, false)
-        }
-
-        Timber.d("Found ${unsyncedTransactions.size} unsynced transactions")
-        var uploadedCount = 0
-        var hasErrors = false
-
-        for (transaction in unsyncedTransactions) {
-            val items = transactionDao.getTransactionItems(transaction.id)
-            
-            transactionRemoteDataSource.uploadTransaction(transaction, items).fold(
-                onSuccess = {
-                    transactionDao.markAsSynced(transaction.id)
-                    uploadedCount++
-                    Timber.d("Synced transaction: ${transaction.transactionNumber}")
-                },
-                onFailure = { error ->
-                    Timber.e(error, "Failed to sync transaction: ${transaction.id}")
-                    hasErrors = true
-                }
-            )
-        }
-
-        if (uploadedCount > 0) {
-            syncPreferences.updateLastTransactionsSyncTimestamp()
-        }
-
-        return Pair(uploadedCount, hasErrors)
-    }
-
-    /**
-     * Sync unsynced cash records to Supabase.
-     * 
-     * @return Pair of (uploadedCount, hasErrors)
-     */
-    private suspend fun syncCashRecords(): Pair<Int, Boolean> {
-        val unsyncedRecords = cashRecordDao.getUnsynced()
-        if (unsyncedRecords.isEmpty()) {
-            Timber.d("No unsynced cash records")
-            return Pair(0, false)
-        }
-
-        Timber.d("Found ${unsyncedRecords.size} unsynced cash records")
-
-        val result = cashRecordRemoteDataSource.uploadCashRecords(unsyncedRecords)
-        
-        return result.fold(
-            onSuccess = { uploadedCount ->
-                // Mark all as synced
-                unsyncedRecords.forEach { record ->
-                    cashRecordDao.markAsSynced(record.id)
-                }
-                syncPreferences.updateLastCashRecordsSyncTimestamp()
-                Timber.d("Synced $uploadedCount cash records")
-                Pair(uploadedCount, false)
-            },
-            onFailure = { error ->
-                Timber.e(error, "Failed to sync cash records")
-                Pair(0, true)
-            }
-        )
     }
 }

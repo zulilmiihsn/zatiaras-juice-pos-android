@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Inventory Screen -->
+    <string name="inventory_title">Inventaris</string>
+    <string name="inventory_search_placeholder">Cari produk…</string>
+    <string name="inventory_add_product">Tambah Produk</string>
+    <string name="inventory_empty">Belum ada produk</string>
+    <string name="inventory_empty_hint">Tambahkan produk pertama Anda</string>
+    
+    <!-- Product Categories -->
+    <string name="category_all">Semua</string>
+    <string name="category_food">Makanan</string>
+    <string name="category_drink">Minuman</string>
+    <string name="category_snack">Snack</string>
+    
+    <!-- Product Form -->
+    <string name="product_name">Nama Produk</string>
+    <string name="product_price">Harga</string>
+    <string name="product_category">Kategori</string>
+    <string name="product_description">Deskripsi</string>
+    <string name="product_image">Foto Produk</string>
+    <string name="product_image_add">Tambah Foto</string>
+    <string name="product_image_change">Ubah Foto</string>
+    <string name="product_save">Simpan</string>
+    <string name="product_update">Perbarui</string>
+    <string name="product_delete">Hapus</string>
+    <string name="product_active">Aktif</string>
+    <string name="product_inactive">Nonaktif</string>
+    
+    <!-- Validation -->
+    <string name="validation_name_required">Nama produk wajib diisi</string>
+    <string name="validation_price_required">Harga wajib diisi</string>
+    <string name="validation_price_invalid">Harga tidak valid</string>
+    <string name="validation_category_required">Pilih kategori</string>
+    
+    <!-- Success Messages -->
+    <string name="product_created">Produk berhasil ditambahkan</string>
+    <string name="product_updated">Produk berhasil diperbarui</string>
+    <string name="product_deleted">Produk berhasil dihapus</string>
+    
+    <!-- Error Messages -->
+    <string name="inventory_error_load">Gagal memuat produk</string>
+    <string name="inventory_error_save">Gagal menyimpan produk</string>
+    <string name="inventory_error_delete">Gagal menghapus produk</string>
+    
+    <!-- Dialogs -->
+    <string name="dialog_delete_title">Hapus Produk?</string>
+    <string name="dialog_delete_message">Produk "%s" akan dihapus.</string>
+    <string name="dialog_yes">Ya, Hapus</string>
+    <string name="dialog_no">Batal</string>
+    
+    <!-- Sync -->
+    <string name="sync_in_progress">Menyinkronkan…</string>
+    <string name="sync_success">Sinkronisasi selesai</string>
+    <string name="sync_error">Gagal sinkronisasi</string>
+</resources>

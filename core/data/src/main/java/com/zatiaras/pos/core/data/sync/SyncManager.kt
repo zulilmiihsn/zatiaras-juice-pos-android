@@ -2,10 +2,6 @@ package com.zatiaras.pos.core.data.sync
 
 import android.content.Context
 import com.zatiaras.pos.core.data.local.SyncPreferences
-import com.zatiaras.pos.core.data.local.dao.CashRecordDao
-import com.zatiaras.pos.core.data.local.dao.TransactionDao
-import com.zatiaras.pos.core.data.remote.CashRecordRemoteDataSource
-import com.zatiaras.pos.core.data.remote.TransactionRemoteDataSource
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -13,7 +9,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import javax.inject.Inject
@@ -29,18 +24,25 @@ import javax.inject.Singleton
  * - Last sync info
  * 
  * This is the main entry point for UI layer to interact with sync functionality.
+ * 
+ * Follows Single Responsibility Principle by delegating actual sync logic
+ * to dedicated EntitySyncer implementations.
  */
 @Singleton
 class SyncManager @Inject constructor(
     @ApplicationContext private val context: Context,
     private val syncPreferences: SyncPreferences,
-    private val transactionDao: TransactionDao,
-    private val cashRecordDao: CashRecordDao,
-    private val transactionRemoteDataSource: TransactionRemoteDataSource,
-    private val cashRecordRemoteDataSource: CashRecordRemoteDataSource
+    private val transactionSyncer: TransactionSyncer,
+    private val cashRecordSyncer: CashRecordSyncer
 ) {
     private val _syncStatus = MutableStateFlow<SyncStatus>(SyncStatus.Idle)
     val syncStatus: StateFlow<SyncStatus> = _syncStatus.asStateFlow()
+
+    // List of all syncers for iteration
+    private val syncers: List<EntitySyncer> = listOf(
+        transactionSyncer,
+        cashRecordSyncer
+    )
 
     /**
      * Initialize sync - schedule periodic background sync.
@@ -67,25 +69,23 @@ class SyncManager @Inject constructor(
     suspend fun syncNow(): List<SyncResult> = withContext(Dispatchers.IO) {
         val results = mutableListOf<SyncResult>()
         
-        _syncStatus.value = SyncStatus.Syncing(message = "Syncing transactions...")
-        
         try {
             syncPreferences.setSyncInProgress(true)
             
-            // 1. Sync Transactions
-            val transactionResult = syncTransactions()
-            results.add(transactionResult)
+            val totalSyncers = syncers.size
             
-            _syncStatus.value = SyncStatus.Syncing(
-                progress = 50,
-                message = "Syncing cash records..."
-            )
+            syncers.forEachIndexed { index, syncer ->
+                val progress = ((index + 1) * 100) / totalSyncers
+                _syncStatus.value = SyncStatus.Syncing(
+                    progress = progress,
+                    message = "Syncing ${syncer.syncType.name.lowercase().replace('_', ' ')}..."
+                )
+                
+                val result = syncer.sync()
+                results.add(result)
+            }
             
-            // 2. Sync Cash Records
-            val cashRecordResult = syncCashRecords()
-            results.add(cashRecordResult)
-            
-            // 3. Update timestamps
+            // Update timestamps
             syncPreferences.updateLastFullSyncTimestamp()
             
             val totalSynced = results.sumOf { it.totalSynced }
@@ -119,9 +119,7 @@ class SyncManager @Inject constructor(
      * Get count of pending (unsynced) items.
      */
     suspend fun getPendingCount(): Int = withContext(Dispatchers.IO) {
-        val unsyncedTransactions = transactionDao.getUnsyncedTransactions().size
-        val unsyncedCashRecords = cashRecordDao.getUnsynced().size
-        unsyncedTransactions + unsyncedCashRecords
+        syncers.sumOf { it.getPendingCount() }
     }
 
     /**
@@ -164,68 +162,6 @@ class SyncManager @Inject constructor(
     fun cancelSync() {
         SyncWorker.cancelAllSync(context)
         _syncStatus.value = SyncStatus.Idle
-    }
-
-    // ==================== Private Sync Methods ====================
-
-    private suspend fun syncTransactions(): SyncResult {
-        val unsyncedTransactions = transactionDao.getUnsyncedTransactions()
-        
-        if (unsyncedTransactions.isEmpty()) {
-            return SyncResult(type = SyncType.TRANSACTIONS)
-        }
-
-        var uploaded = 0
-        var failed = 0
-
-        for (transaction in unsyncedTransactions) {
-            val items = transactionDao.getTransactionItems(transaction.id)
-            
-            transactionRemoteDataSource.uploadTransaction(transaction, items).fold(
-                onSuccess = {
-                    transactionDao.markAsSynced(transaction.id)
-                    uploaded++
-                },
-                onFailure = { failed++ }
-            )
-        }
-
-        if (uploaded > 0) {
-            syncPreferences.updateLastTransactionsSyncTimestamp()
-        }
-
-        return SyncResult(
-            type = SyncType.TRANSACTIONS,
-            uploaded = uploaded,
-            failed = failed
-        )
-    }
-
-    private suspend fun syncCashRecords(): SyncResult {
-        val unsyncedRecords = cashRecordDao.getUnsynced()
-        
-        if (unsyncedRecords.isEmpty()) {
-            return SyncResult(type = SyncType.CASH_RECORDS)
-        }
-
-        return cashRecordRemoteDataSource.uploadCashRecords(unsyncedRecords).fold(
-            onSuccess = { uploadedCount ->
-                unsyncedRecords.forEach { record ->
-                    cashRecordDao.markAsSynced(record.id)
-                }
-                syncPreferences.updateLastCashRecordsSyncTimestamp()
-                SyncResult(
-                    type = SyncType.CASH_RECORDS,
-                    uploaded = uploadedCount
-                )
-            },
-            onFailure = {
-                SyncResult(
-                    type = SyncType.CASH_RECORDS,
-                    failed = unsyncedRecords.size
-                )
-            }
-        )
     }
 }
 

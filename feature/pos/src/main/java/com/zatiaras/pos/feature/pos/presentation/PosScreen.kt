@@ -33,8 +33,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.paging.compose.collectAsLazyPagingItems
 import com.zatiaras.pos.feature.pos.presentation.components.CartSidebar
-import com.zatiaras.pos.feature.pos.presentation.components.ProductCatalog
+import com.zatiaras.pos.feature.pos.presentation.components.PagedProductCatalog
 
 /**
  * Main POS Screen with product catalog and cart sidebar.
@@ -42,8 +43,10 @@ import com.zatiaras.pos.feature.pos.presentation.components.ProductCatalog
  * On tablet/landscape: Side-by-side layout (catalog | cart)
  * On phone/portrait: Catalog with floating cart button
  * 
+ * Uses Paging 3 for efficient memory management with large product catalogs.
+ * 
  * Refactored to use extracted components:
- * - ProductCatalog: Search, categories, product grid
+ * - PagedProductCatalog: Search, categories, paginated product grid
  * - CartSidebar: Cart items, checkout button
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -54,6 +57,7 @@ fun PosScreen(
     viewModel: PosViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val pagedProducts = viewModel.pagedProducts.collectAsLazyPagingItems()
     val snackbarHostState = remember { SnackbarHostState() }
     var isCartVisible by remember { mutableStateOf(false) }
     
@@ -92,15 +96,13 @@ fun PosScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            // Main Catalog Area
-            ProductCatalog(
-                products = uiState.filteredProducts,
+            // Main Catalog Area (now paginated)
+            PagedProductCatalog(
+                products = pagedProducts,
                 categories = uiState.categories,
                 cart = uiState.cart,
                 selectedCategoryId = uiState.selectedCategoryId,
                 searchQuery = uiState.searchQuery,
-                isLoading = uiState.isLoading,
-                showEmptyState = uiState.showEmptyState,
                 onSearchChange = { viewModel.onEvent(PosEvent.SearchQueryChanged(it)) },
                 onCategorySelect = { viewModel.onEvent(PosEvent.CategorySelected(it)) },
                 onProductClick = { viewModel.onEvent(PosEvent.AddToCart(it)) },
@@ -154,4 +156,3 @@ private fun CartButton(
         }
     }
 }
-

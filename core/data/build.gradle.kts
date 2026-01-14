@@ -71,6 +71,10 @@ dependencies {
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
+    api(libs.androidx.room.paging)
+
+    // Paging
+    api(libs.androidx.paging.runtime)
 
     // Coroutines
     implementation(libs.kotlinx.coroutines.android)

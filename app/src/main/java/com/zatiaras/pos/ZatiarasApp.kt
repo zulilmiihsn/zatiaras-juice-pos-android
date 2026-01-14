@@ -4,8 +4,13 @@ import android.app.Application
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import com.zatiaras.BuildConfig
+import com.zatiaras.pos.core.data.repository.AppSettingsRepository
 import com.zatiaras.pos.core.data.sync.SyncManager
 import dagger.hilt.android.HiltAndroidApp
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -16,6 +21,7 @@ import javax.inject.Inject
  * Initializes:
  * - Timber for logging
  * - SyncManager for background sync
+ * - AppSettingsRepository for settings
  */
 @HiltAndroidApp
 class ZatiarasApp : Application(), Configuration.Provider {
@@ -26,12 +32,27 @@ class ZatiarasApp : Application(), Configuration.Provider {
     @Inject
     lateinit var syncManager: SyncManager
 
+    @Inject
+    lateinit var appSettingsRepository: AppSettingsRepository
+
+    private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+
     override fun onCreate() {
         super.onCreate()
         
         // Initialize Timber for logging
         if (BuildConfig.DEBUG) {
             Timber.plant(Timber.DebugTree())
+        }
+
+        // Initialize settings (creates default row if not exists)
+        applicationScope.launch(Dispatchers.IO) {
+            try {
+                appSettingsRepository.initializeIfNeeded()
+                Timber.d("AppSettings initialized")
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to initialize AppSettings")
+            }
         }
 
         // Initialize background sync
@@ -48,3 +69,4 @@ class ZatiarasApp : Application(), Configuration.Provider {
             )
             .build()
 }
+

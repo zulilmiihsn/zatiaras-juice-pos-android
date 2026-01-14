@@ -65,6 +65,9 @@ dependencies {
     // Coroutines
     implementation(libs.kotlinx.coroutines.android)
 
+    // Paging (Compose)
+    implementation(libs.androidx.paging.compose)
+
     // Timber
     implementation(libs.timber)
 

@@ -126,7 +126,7 @@ class TransactionRemoteDataSource @Inject constructor(
             try {
                 val response = postgrest.from(TABLE_TRANSAKSI_ITEM)
                     .select {
-                        filter { eq("transaction_id", transactionId) }
+                        filter { eq("transaksi_id", transactionId) }
                     }
                     .decodeList<TransaksiItemDto>()
 
@@ -201,13 +201,13 @@ data class TransaksiDto(
 @Serializable
 data class TransaksiItemDto(
     val id: String,
-    @SerialName("transaction_id")
+    @SerialName("transaksi_id")
     val transactionId: String,
-    @SerialName("product_id")
-    val productId: String,
-    @SerialName("product_name")
+    @SerialName("produk_id")
+    val productId: String? = null,
+    @SerialName("produk_name")
     val productName: String,
-    @SerialName("product_price")
+    @SerialName("produk_price")
     val productPrice: Long,
     val quantity: Int,
     val subtotal: Long,
@@ -216,7 +216,7 @@ data class TransaksiItemDto(
     fun toEntity(): TransactionItemEntity = TransactionItemEntity(
         id = id,
         transactionId = transactionId,
-        productId = productId,
+        productId = productId ?: "",
         productName = productName,
         productPrice = productPrice,
         quantity = quantity,

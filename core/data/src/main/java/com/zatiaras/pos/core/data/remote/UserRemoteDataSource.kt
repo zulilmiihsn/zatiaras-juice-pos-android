@@ -10,12 +10,16 @@ import javax.inject.Singleton
 /**
  * Remote data source for user operations via Supabase.
  * 
- * Handles fetching users from the remote 'users' table for sync.
+ * Handles fetching users from the remote 'pengguna' table for sync.
  */
 @Singleton
 class UserRemoteDataSource @Inject constructor(
     private val postgrest: Postgrest
 ) {
+    
+    companion object {
+        private const val TABLE_PENGGUNA = "pengguna"
+    }
     
     /**
      * Fetch all active users from Supabase.
@@ -23,11 +27,11 @@ class UserRemoteDataSource @Inject constructor(
      */
     suspend fun fetchAllUsers(): Result<List<UserDto>> {
         return try {
-            val users = postgrest.from("users")
+            val users = postgrest.from(TABLE_PENGGUNA)
                 .select()
                 .decodeList<UserDto>()
             
-            Timber.d("Fetched ${users.size} users from Supabase")
+            Timber.d("Fetched ${users.size} users from Supabase (pengguna)")
             Result.Success(users)
         } catch (e: Exception) {
             Timber.e(e, "Failed to fetch users from Supabase")
@@ -40,7 +44,7 @@ class UserRemoteDataSource @Inject constructor(
      */
     suspend fun fetchActiveUsers(): Result<List<UserDto>> {
         return try {
-            val users = postgrest.from("users")
+            val users = postgrest.from(TABLE_PENGGUNA)
                 .select {
                     filter {
                         eq("is_active", true)
@@ -48,7 +52,7 @@ class UserRemoteDataSource @Inject constructor(
                 }
                 .decodeList<UserDto>()
             
-            Timber.d("Fetched ${users.size} active users from Supabase")
+            Timber.d("Fetched ${users.size} active users from Supabase (pengguna)")
             Result.Success(users)
         } catch (e: Exception) {
             Timber.e(e, "Failed to fetch active users from Supabase")

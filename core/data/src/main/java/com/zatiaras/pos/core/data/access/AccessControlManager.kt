@@ -1,11 +1,15 @@
 package com.zatiaras.pos.core.data.access
 
+import com.zatiaras.pos.core.data.local.dao.AppSettingsDao
+import com.zatiaras.pos.core.data.repository.AppSettingsRepository
 import com.zatiaras.pos.core.data.session.SessionPreferences
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -30,12 +34,35 @@ sealed class AccessCheckResult {
  * 1. PEMILIK (Owner) always has full access
  * 2. KASIR (Cashier) needs owner PIN for locked routes
  * 3. If owner PIN is not set, all routes are accessible
+ * 
+ * This class uses AppSettingsRepository for synced settings when available,
+ * and falls back to AccessControlPreferences for local-only operation.
  */
 @Singleton
 class AccessControlManager @Inject constructor(
     private val sessionPreferences: SessionPreferences,
-    private val accessControlPreferences: AccessControlPreferences
+    private val accessControlPreferences: AccessControlPreferences,
+    private val appSettingsRepository: AppSettingsRepository,
+    private val appSettingsDao: AppSettingsDao
 ) {
+    
+    // ==================== INITIALIZATION ====================
+    
+    /**
+     * Initialize access control settings.
+     * Call this on app startup.
+     */
+    suspend fun initialize() {
+        try {
+            appSettingsRepository.initializeIfNeeded()
+            Timber.d("AccessControlManager initialized")
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to initialize AccessControlManager, using local fallback")
+        }
+    }
+    
+    // ==================== ROLE ====================
+    
     /**
      * Get current user role from session.
      */
@@ -64,8 +91,11 @@ class AccessControlManager @Inject constructor(
         return getCurrentRoleNow().isOwner()
     }
 
+    // ==================== ACCESS CHECK ====================
+
     /**
      * Check if a route requires PIN for current user.
+     * Uses synced settings from AppSettings with fallback to local preferences.
      * 
      * @param route The route to check (use LockableRoute.route values)
      * @return Flow of AccessCheckResult
@@ -73,8 +103,8 @@ class AccessControlManager @Inject constructor(
     fun checkAccess(route: String): Flow<AccessCheckResult> {
         return combine(
             getCurrentRole(),
-            accessControlPreferences.isRouteLocked(route),
-            accessControlPreferences.isOwnerPinSet()
+            observeIsRouteLocked(route),
+            observeIsOwnerPinSet()
         ) { role, isLocked, isPinSet ->
             when {
                 // Owner always has access
@@ -89,6 +119,9 @@ class AccessControlManager @Inject constructor(
                 // Kasir + locked route + PIN set = requires PIN
                 else -> AccessCheckResult.RequiresOwnerPin
             }
+        }.catch { e ->
+            Timber.e(e, "Error checking access, granting by default")
+            emit(AccessCheckResult.Granted)
         }
     }
 
@@ -96,7 +129,12 @@ class AccessControlManager @Inject constructor(
      * Check access now (suspend).
      */
     suspend fun checkAccessNow(route: String): AccessCheckResult {
-        return checkAccess(route).first()
+        return try {
+            checkAccess(route).first()
+        } catch (e: Exception) {
+            Timber.e(e, "Error checking access now, granting by default")
+            AccessCheckResult.Granted
+        }
     }
 
     /**
@@ -106,50 +144,218 @@ class AccessControlManager @Inject constructor(
         return checkAccessNow(route) == AccessCheckResult.RequiresOwnerPin
     }
 
+    // ==================== OWNER PIN (SYNCED with fallback) ====================
+
     /**
      * Verify owner PIN.
      */
     suspend fun verifyOwnerPin(pin: String): Boolean {
-        return accessControlPreferences.verifyOwnerPin(pin)
-    }
-
-    /**
-     * Get list of all lockable routes with their current lock status.
-     * Only relevant for owner to configure.
-     */
-    fun getLockableRoutesWithStatus(): Flow<List<Pair<LockableRoute, Boolean>>> {
-        return accessControlPreferences.getLockedRoutes().map { lockedRoutes ->
-            LockableRoute.all().map { route ->
-                route to lockedRoutes.contains(route.route)
-            }
+        return try {
+            // Try synced settings first
+            appSettingsRepository.verifyOwnerPin(pin)
+        } catch (e: Exception) {
+            Timber.w(e, "Using local preferences for PIN verification")
+            accessControlPreferences.verifyOwnerPin(pin)
         }
     }
 
     /**
-     * Toggle lock status for a route.
-     */
-    suspend fun toggleRouteLock(route: LockableRoute) {
-        accessControlPreferences.toggleRouteLock(route.route)
-    }
-
-    /**
      * Set owner PIN.
+     * This syncs to Supabase.
      */
-    suspend fun setOwnerPin(pin: String) {
-        accessControlPreferences.setOwnerPin(pin)
+    suspend fun setOwnerPin(pin: String): Result<Unit> {
+        return try {
+            Timber.d("Setting owner PIN (synced)")
+            val result = appSettingsRepository.setOwnerPin(pin)
+            // Also set in local preferences as backup
+            accessControlPreferences.setOwnerPin(pin)
+            result
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to set synced PIN, using local only")
+            accessControlPreferences.setOwnerPin(pin)
+            Result.failure(e)
+        }
     }
 
     /**
      * Check if owner PIN is set.
      */
     suspend fun isOwnerPinSetNow(): Boolean {
-        return accessControlPreferences.isOwnerPinSetNow()
+        return try {
+            appSettingsRepository.isOwnerPinSet()
+        } catch (e: Exception) {
+            Timber.w(e, "Using local preferences for PIN check")
+            accessControlPreferences.isOwnerPinSetNow()
+        }
     }
 
     /**
      * Check if owner PIN is set (flow).
      */
     fun isOwnerPinSet(): Flow<Boolean> {
-        return accessControlPreferences.isOwnerPinSet()
+        return try {
+            appSettingsDao.observeSettings()
+                .map { settings -> settings?.ownerPinHash != null }
+                .catch { e ->
+                    Timber.w(e, "Using local preferences for PIN set flow")
+                    emitAll(accessControlPreferences.isOwnerPinSet())
+                }
+        } catch (e: Exception) {
+            Timber.w(e, "Falling back to local preferences for PIN set")
+            accessControlPreferences.isOwnerPinSet()
+        }
+    }
+
+    /**
+     * Observe if owner PIN is set.
+     */
+    private fun observeIsOwnerPinSet(): Flow<Boolean> {
+        return isOwnerPinSet()
+    }
+
+    // ==================== LOCKED ROUTES (SYNCED with fallback) ====================
+
+    /**
+     * Get list of all lockable routes with their current lock status.
+     * Only relevant for owner to configure.
+     */
+    fun getLockableRoutesWithStatus(): Flow<List<Pair<LockableRoute, Boolean>>> {
+        return try {
+            appSettingsDao.observeSettings()
+                .map { settings ->
+                    val lockedRoutes = settings?.lockedRoutes ?: emptyList()
+                    LockableRoute.all().map { route ->
+                        route to lockedRoutes.contains(route.route)
+                    }
+                }
+                .catch { e ->
+                    Timber.w(e, "Using local preferences for lockable routes")
+                    emitAll(accessControlPreferences.getLockedRoutes().map { lockedRoutes ->
+                        LockableRoute.all().map { route ->
+                            route to lockedRoutes.contains(route.route)
+                        }
+                    })
+                }
+        } catch (e: Exception) {
+            Timber.w(e, "Falling back to local preferences for lockable routes")
+            accessControlPreferences.getLockedRoutes().map { lockedRoutes ->
+                LockableRoute.all().map { route ->
+                    route to lockedRoutes.contains(route.route)
+                }
+            }
+        }
+    }
+
+    /**
+     * Observe if a specific route is locked.
+     */
+    private fun observeIsRouteLocked(route: String): Flow<Boolean> {
+        return try {
+            appSettingsDao.observeSettings()
+                .map { settings -> settings?.lockedRoutes?.contains(route) ?: false }
+                .catch { e ->
+                    Timber.w(e, "Using local preferences for route lock check")
+                    emitAll(accessControlPreferences.isRouteLocked(route))
+                }
+        } catch (e: Exception) {
+            Timber.w(e, "Falling back to local preferences for route lock")
+            accessControlPreferences.isRouteLocked(route)
+        }
+    }
+
+    /**
+     * Toggle lock status for a route.
+     * This syncs to Supabase.
+     */
+    suspend fun toggleRouteLock(route: LockableRoute): Result<Unit> {
+        return try {
+            Timber.d("Toggling route lock (synced): ${route.route}")
+            val result = appSettingsRepository.toggleRouteLock(route.route)
+            // Also update local preferences as backup
+            accessControlPreferences.toggleRouteLock(route.route)
+            result
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to toggle synced route lock, using local only")
+            accessControlPreferences.toggleRouteLock(route.route)
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Get locked routes now.
+     */
+    suspend fun getLockedRoutesNow(): List<String> {
+        return try {
+            appSettingsRepository.getLockedRoutes()
+        } catch (e: Exception) {
+            Timber.w(e, "Using local preferences for locked routes")
+            accessControlPreferences.getLockedRoutesNow().toList()
+        }
+    }
+
+    // ==================== SYNC ====================
+
+    /**
+     * Sync access control settings from remote.
+     * Call this when online to pull latest settings.
+     */
+    suspend fun syncFromRemote(): Result<Unit> {
+        return try {
+            Timber.d("Syncing access control from remote")
+            appSettingsRepository.syncFromRemote()
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to sync from remote")
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Force sync settings to remote.
+     */
+    suspend fun forceSyncToRemote(): Result<Unit> {
+        return try {
+            appSettingsRepository.forceSyncToRemote()
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to force sync to remote")
+            Result.failure(e)
+        }
+    }
+
+    // ==================== MIGRATION ====================
+
+    /**
+     * Migrate from local AccessControlPreferences to synced AppSettings.
+     * Call this once during app upgrade.
+     */
+    suspend fun migrateFromLocalPreferences() {
+        try {
+            // Check if already migrated (AppSettings has data)
+            if (appSettingsRepository.isOwnerPinSet()) {
+                Timber.d("Already migrated to synced settings")
+                return
+            }
+            
+            // Migrate owner PIN
+            if (accessControlPreferences.isOwnerPinSetNow()) {
+                // Can't migrate hash directly, user will need to reset PIN
+                Timber.w("Owner PIN needs to be reset after migration (cannot migrate hash)")
+            }
+            
+            // Migrate locked routes
+            val localLockedRoutes = accessControlPreferences.getLockedRoutesNow()
+            if (localLockedRoutes.isNotEmpty()) {
+                appSettingsRepository.setLockedRoutes(localLockedRoutes.toList())
+                Timber.d("Migrated ${localLockedRoutes.size} locked routes to synced settings")
+            }
+            
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to migrate access control preferences")
+        }
     }
 }
+
+// Helper extension for Flow
+private suspend fun <T> kotlinx.coroutines.flow.FlowCollector<T>.emitAll(flow: Flow<T>) {
+    flow.collect { emit(it) }
+}
+

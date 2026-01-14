@@ -33,6 +33,8 @@ class SyncPreferences @Inject constructor(
         private val KEY_LAST_CATEGORIES_SYNC = longPreferencesKey("last_categories_sync")
         private val KEY_LAST_TRANSACTIONS_SYNC = longPreferencesKey("last_transactions_sync")
         private val KEY_LAST_CASH_RECORDS_SYNC = longPreferencesKey("last_cash_records_sync")
+        private val KEY_LAST_ADD_ONS_SYNC = longPreferencesKey("last_add_ons_sync")
+        private val KEY_LAST_SETTINGS_SYNC = longPreferencesKey("last_settings_sync")
         private val KEY_LAST_FULL_SYNC = longPreferencesKey("last_full_sync")
         private val KEY_SYNC_IN_PROGRESS = booleanPreferencesKey("sync_in_progress")
     }
@@ -117,6 +119,46 @@ class SyncPreferences @Inject constructor(
         }
     }
 
+    // ==================== ADD-ONS ====================
+
+    /**
+     * Get last add-ons sync timestamp.
+     */
+    suspend fun getLastAddOnsSyncTimestamp(): Long {
+        return context.syncDataStore.data.map { prefs ->
+            prefs[KEY_LAST_ADD_ONS_SYNC] ?: 0L
+        }.first()
+    }
+
+    /**
+     * Update last add-ons sync timestamp to now.
+     */
+    suspend fun updateLastAddOnsSyncTimestamp() {
+        context.syncDataStore.edit { prefs ->
+            prefs[KEY_LAST_ADD_ONS_SYNC] = System.currentTimeMillis()
+        }
+    }
+
+    // ==================== SETTINGS ====================
+
+    /**
+     * Get last settings sync timestamp.
+     */
+    suspend fun getLastSettingsSyncTimestamp(): Long {
+        return context.syncDataStore.data.map { prefs ->
+            prefs[KEY_LAST_SETTINGS_SYNC] ?: 0L
+        }.first()
+    }
+
+    /**
+     * Update last settings sync timestamp to now.
+     */
+    suspend fun updateLastSettingsSyncTimestamp() {
+        context.syncDataStore.edit { prefs ->
+            prefs[KEY_LAST_SETTINGS_SYNC] = System.currentTimeMillis()
+        }
+    }
+
     // ==================== OVERALL SYNC ====================
 
     /**
@@ -164,6 +206,8 @@ class SyncPreferences @Inject constructor(
             prefs[KEY_LAST_CATEGORIES_SYNC] = 0L
             prefs[KEY_LAST_TRANSACTIONS_SYNC] = 0L
             prefs[KEY_LAST_CASH_RECORDS_SYNC] = 0L
+            prefs[KEY_LAST_ADD_ONS_SYNC] = 0L
+            prefs[KEY_LAST_SETTINGS_SYNC] = 0L
             prefs[KEY_LAST_FULL_SYNC] = 0L
         }
     }

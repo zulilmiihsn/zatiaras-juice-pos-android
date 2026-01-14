@@ -2,6 +2,7 @@ package com.zatiaras.pos.feature.pos.data.mapper
 
 import com.zatiaras.pos.core.data.local.entity.TransactionEntity
 import com.zatiaras.pos.core.data.local.entity.TransactionItemEntity
+import com.zatiaras.pos.core.data.local.entity.TransactionWithItems
 import com.zatiaras.pos.feature.pos.domain.model.Cart
 import com.zatiaras.pos.feature.pos.domain.model.CartItem
 import com.zatiaras.pos.feature.pos.domain.model.PaymentMethod
@@ -114,4 +115,12 @@ fun createTransactionEntity(
         notes = notes,
         isSynced = false
     )
+}
+
+/**
+ * Convert TransactionWithItems (Room @Relation result) to domain Transaction.
+ * This avoids N+1 query problem by using Room's relation mapping.
+ */
+fun TransactionWithItems.toDomain(): Transaction {
+    return transaction.toDomain(items)
 }

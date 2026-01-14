@@ -2,15 +2,22 @@ package com.zatiaras.pos.feature.pos.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.paging.PagingData
+import androidx.paging.cachedIn
 import com.zatiaras.pos.core.domain.model.Product
 import com.zatiaras.pos.feature.inventory.domain.repository.ProductRepository
 import com.zatiaras.pos.feature.pos.domain.model.Cart
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
@@ -19,7 +26,7 @@ import javax.inject.Inject
  * ViewModel for the main POS screen.
  * 
  * Manages:
- * - Product catalog display
+ * - Product catalog display (with pagination)
  * - Category filtering
  * - Search functionality
  * - Shopping cart state
@@ -27,6 +34,7 @@ import javax.inject.Inject
  * The cart is stored in-memory only (not persisted).
  * This is intentional POS behavior - carts are session-based.
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class PosViewModel @Inject constructor(
     private val productRepository: ProductRepository
@@ -35,42 +43,71 @@ class PosViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(PosUiState())
     val uiState: StateFlow<PosUiState> = _uiState.asStateFlow()
 
+    // Separate flows for category and search query to trigger pagination refresh
+    private val _selectedCategoryId = MutableStateFlow<String?>(null)
+    private val _searchQuery = MutableStateFlow("")
+
+    /**
+     * Paginated products flow.
+     * Automatically refreshes when category or search query changes.
+     * Using cachedIn(viewModelScope) to cache data across configuration changes.
+     */
+    val pagedProducts: Flow<PagingData<Product>> = combine(
+        _selectedCategoryId,
+        _searchQuery
+    ) { categoryId, query ->
+        Pair(categoryId, query)
+    }.flatMapLatest { (categoryId, query) ->
+        when {
+            query.isNotBlank() -> productRepository.searchProductsPaged(query)
+            categoryId != null -> productRepository.getProductsByCategoryPaged(categoryId)
+            else -> productRepository.getProductsPaged()
+        }
+    }.cachedIn(viewModelScope)
+
     init {
         loadData()
     }
 
     private fun loadData() {
         viewModelScope.launch {
-            combine(
-                productRepository.getProducts(),
-                productRepository.getCategories()
-            ) { products, categories ->
-                _uiState.value.copy(
-                    products = products,
-                    categories = categories,
-                    isLoading = false
-                )
-            }
-            .catch { e ->
-                Timber.e(e, "Error loading POS data")
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    error = e.message ?: "Gagal memuat produk"
-                )
-            }
-            .collect { newState ->
-                _uiState.value = newState
-            }
+            // Load categories (not paginated - typically small list)
+            productRepository.getCategories()
+                .catch { e ->
+                    Timber.e(e, "Error loading categories")
+                    _uiState.value = _uiState.value.copy(
+                        error = e.message ?: "Gagal memuat kategori"
+                    )
+                }
+                .collect { categories ->
+                    _uiState.value = _uiState.value.copy(
+                        categories = categories,
+                        isLoading = false
+                    )
+                }
+        }
+
+        // Load product count for UI display
+        viewModelScope.launch {
+            productRepository.getProductCount()
+                .catch { e ->
+                    Timber.e(e, "Error loading product count")
+                }
+                .collect { count ->
+                    _uiState.value = _uiState.value.copy(productCount = count)
+                }
         }
     }
 
     fun onEvent(event: PosEvent) {
         when (event) {
             is PosEvent.SearchQueryChanged -> {
+                _searchQuery.value = event.query
                 _uiState.value = _uiState.value.copy(searchQuery = event.query)
             }
             
             is PosEvent.CategorySelected -> {
+                _selectedCategoryId.value = event.categoryId
                 _uiState.value = _uiState.value.copy(selectedCategoryId = event.categoryId)
             }
             

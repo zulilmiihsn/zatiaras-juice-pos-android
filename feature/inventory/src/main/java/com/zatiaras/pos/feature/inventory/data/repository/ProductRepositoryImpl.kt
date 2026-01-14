@@ -1,5 +1,9 @@
 package com.zatiaras.pos.feature.inventory.data.repository
 
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
+import androidx.paging.map
 import com.zatiaras.pos.core.data.di.ApplicationScope
 import com.zatiaras.pos.core.data.local.SyncPreferences
 import com.zatiaras.pos.core.data.local.dao.CategoryDao
@@ -15,6 +19,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -77,6 +82,62 @@ class ProductRepositoryImpl @Inject constructor(
             val categoryMap = categories.associate { it.id to it.toDomain() }
             products.toDomainList(categoryMap)
         }
+    }
+
+    // ==================== PAGINATED PRODUCTS ====================
+
+    companion object {
+        private const val PAGE_SIZE = 20
+        private const val PREFETCH_DISTANCE = 5
+    }
+
+    private val pagingConfig = PagingConfig(
+        pageSize = PAGE_SIZE,
+        prefetchDistance = PREFETCH_DISTANCE,
+        enablePlaceholders = false
+    )
+
+    override fun getProductsPaged(): Flow<PagingData<Product>> {
+        return Pager(
+            config = pagingConfig,
+            pagingSourceFactory = { productDao.getAllActivePaged() }
+        ).flow.map { pagingData ->
+            val categories = categoryDao.getAll().first()
+            val categoryMap = categories.associate { it.id to it.toDomain() }
+            pagingData.map { entity ->
+                entity.toDomain(categoryMap[entity.categoryId])
+            }
+        }
+    }
+
+    override fun getProductsByCategoryPaged(categoryId: String): Flow<PagingData<Product>> {
+        return Pager(
+            config = pagingConfig,
+            pagingSourceFactory = { productDao.getByCategoryPaged(categoryId) }
+        ).flow.map { pagingData ->
+            val categories = categoryDao.getAll().first()
+            val categoryMap = categories.associate { it.id to it.toDomain() }
+            pagingData.map { entity ->
+                entity.toDomain(categoryMap[entity.categoryId])
+            }
+        }
+    }
+
+    override fun searchProductsPaged(query: String): Flow<PagingData<Product>> {
+        return Pager(
+            config = pagingConfig,
+            pagingSourceFactory = { productDao.searchPaged(query) }
+        ).flow.map { pagingData ->
+            val categories = categoryDao.getAll().first()
+            val categoryMap = categories.associate { it.id to it.toDomain() }
+            pagingData.map { entity ->
+                entity.toDomain(categoryMap[entity.categoryId])
+            }
+        }
+    }
+
+    override fun getProductCount(): Flow<Int> {
+        return productDao.getActiveProductCount()
     }
 
     override suspend fun createProduct(product: Product): Result<Product> {

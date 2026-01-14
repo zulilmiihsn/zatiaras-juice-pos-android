@@ -2,13 +2,19 @@ package com.zatiaras.pos.core.data.local
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
+import com.zatiaras.pos.core.data.local.dao.AddOnDao
+import com.zatiaras.pos.core.data.local.dao.AppSettingsDao
 import com.zatiaras.pos.core.data.local.dao.CashRecordDao
 import com.zatiaras.pos.core.data.local.dao.CategoryDao
 import com.zatiaras.pos.core.data.local.dao.ProductDao
 import com.zatiaras.pos.core.data.local.dao.TransactionDao
 import com.zatiaras.pos.core.data.local.dao.UserDao
+import com.zatiaras.pos.core.data.local.entity.AddOnEntity
+import com.zatiaras.pos.core.data.local.entity.AppSettingsEntity
 import com.zatiaras.pos.core.data.local.entity.CashRecordEntity
 import com.zatiaras.pos.core.data.local.entity.CategoryEntity
+import com.zatiaras.pos.core.data.local.entity.LockedRoutesConverter
 import com.zatiaras.pos.core.data.local.entity.ProductEntity
 import com.zatiaras.pos.core.data.local.entity.ProductFtsEntity
 import com.zatiaras.pos.core.data.local.entity.TransactionEntity
@@ -34,6 +40,7 @@ import com.zatiaras.pos.core.data.local.entity.UserEntity
  * - v2: Added Transactions and TransactionItems
  * - v3: Added CashRecords (Buku Kas)
  * - v4: Added Users (Offline Auth)
+ * - v5: Added AppSettings and AddOns (Settings Sync + Toppings)
  */
 @Database(
     entities = [
@@ -43,11 +50,14 @@ import com.zatiaras.pos.core.data.local.entity.UserEntity
         TransactionEntity::class,
         TransactionItemEntity::class,
         CashRecordEntity::class,
-        UserEntity::class
+        UserEntity::class,
+        AppSettingsEntity::class,
+        AddOnEntity::class
     ],
-    version = 4,
+    version = 5,
     exportSchema = true
 )
+@TypeConverters(LockedRoutesConverter::class)
 abstract class ZatiarasDatabase : RoomDatabase() {
 
     abstract fun categoryDao(): CategoryDao
@@ -55,6 +65,8 @@ abstract class ZatiarasDatabase : RoomDatabase() {
     abstract fun transactionDao(): TransactionDao
     abstract fun cashRecordDao(): CashRecordDao
     abstract fun userDao(): UserDao
+    abstract fun appSettingsDao(): AppSettingsDao
+    abstract fun addOnDao(): AddOnDao
 
     companion object {
         const val DATABASE_NAME = "zatiaras_pos.db"

@@ -1,5 +1,6 @@
 package com.zatiaras.pos.feature.inventory.domain.repository
 
+import androidx.paging.PagingData
 import com.zatiaras.pos.core.domain.model.Category
 import com.zatiaras.pos.core.domain.model.Product
 import kotlinx.coroutines.flow.Flow
@@ -36,6 +37,29 @@ interface ProductRepository {
      * Uses FTS4 for fast typo-tolerant search.
      */
     fun searchProducts(query: String): Flow<List<Product>>
+
+    // ==================== PAGINATED PRODUCTS ====================
+
+    /**
+     * Get all active products with pagination.
+     * Efficiently loads products in chunks for large catalogs.
+     */
+    fun getProductsPaged(): Flow<PagingData<Product>>
+
+    /**
+     * Get products filtered by category with pagination.
+     */
+    fun getProductsByCategoryPaged(categoryId: String): Flow<PagingData<Product>>
+
+    /**
+     * Search products with pagination.
+     */
+    fun searchProductsPaged(query: String): Flow<PagingData<Product>>
+
+    /**
+     * Get total count of active products.
+     */
+    fun getProductCount(): Flow<Int>
 
     /**
      * Create a new product.

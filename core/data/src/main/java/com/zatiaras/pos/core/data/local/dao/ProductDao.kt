@@ -1,5 +1,6 @@
 package com.zatiaras.pos.core.data.local.dao
 
+import androidx.paging.PagingSource
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
@@ -134,4 +135,44 @@ interface ProductDao {
         ORDER BY createdAt DESC
     """)
     fun searchSimple(query: String): Flow<List<ProductEntity>>
+
+    // ==================== PAGINATION ====================
+
+    /**
+     * Get all active products with pagination support.
+     * Room automatically generates PagingSource implementation.
+     */
+    @Query("""
+        SELECT * FROM products 
+        WHERE isActive = 1 
+        ORDER BY createdAt DESC
+    """)
+    fun getAllActivePaged(): PagingSource<Int, ProductEntity>
+
+    /**
+     * Get products filtered by category with pagination.
+     */
+    @Query("""
+        SELECT * FROM products 
+        WHERE categoryId = :categoryId AND isActive = 1
+        ORDER BY createdAt DESC
+    """)
+    fun getByCategoryPaged(categoryId: String): PagingSource<Int, ProductEntity>
+
+    /**
+     * Search products with pagination.
+     * Uses simple LIKE for better compatibility with paging.
+     */
+    @Query("""
+        SELECT * FROM products 
+        WHERE isActive = 1 AND (name LIKE '%' || :query || '%' OR description LIKE '%' || :query || '%')
+        ORDER BY createdAt DESC
+    """)
+    fun searchPaged(query: String): PagingSource<Int, ProductEntity>
+
+    /**
+     * Get total count of active products (for UI display).
+     */
+    @Query("SELECT COUNT(*) FROM products WHERE isActive = 1")
+    fun getActiveProductCount(): Flow<Int>
 }
