@@ -5,4 +5,9 @@
     <string name="auth_password_label">Password</string>
     <string name="auth_login_button">Masuk</string>
     <string name="auth_error_empty_fields">Email dan password harus diisi</string>
+    <string name="auth_branch_label">Pilih Cabang</string>
+    <string name="auth_branch_samarinda">Zatiaras Juice - Samarinda</string>
+    <string name="auth_branch_berau">Zatiaras Juice - Berau</string>
+    <string name="auth_branch_balikpapan">Zatiaras Juice - Balikpapan</string>
+    <string name="auth_branch_samarinda2">Zatiaras Juice - Samarinda 2</string>
 </resources>

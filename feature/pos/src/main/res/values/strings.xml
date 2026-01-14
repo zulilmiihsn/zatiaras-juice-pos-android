@@ -9,6 +9,13 @@
     <string name="pos_empty_products_hint">Coba ubah kata kunci atau kategori</string>
     <string name="pos_cart">Keranjang</string>
     <string name="pos_clear_search">Hapus</string>
+    <string name="pos_to_list_view">Tampilan List</string>
+    <string name="pos_to_grid_view">Tampilan Grid</string>
+    <string name="pos_custom_item">Menu Manual</string>
+    <string name="pos_add_custom_item">Tambah Manual</string>
+    <string name="pos_custom_item_name">Nama Item</string>
+    <string name="pos_custom_item_price">Harga</string>
+    <string name="pos_add">Tambah</string>
     
     <!-- Cart -->
     <string name="cart_title">Keranjang</string>

@@ -25,6 +25,7 @@ sealed interface CheckoutUiState {
         val selectedPaymentMethod: PaymentMethod = PaymentMethod.CASH,
         val amountPaid: String = "",
         val changeAmount: Long = 0,
+        val customerName: String = "",
         val notes: String = "",
         val isProcessing: Boolean = false,
         val paymentError: String? = null

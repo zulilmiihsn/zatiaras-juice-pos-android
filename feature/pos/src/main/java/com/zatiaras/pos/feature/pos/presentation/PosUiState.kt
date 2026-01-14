@@ -17,5 +17,7 @@ data class PosUiState(
     val cart: Cart = Cart(),
     val isLoading: Boolean = true,
     val productCount: Int = 0,
-    val error: String? = null
+    val error: String? = null,
+    val isStoreOpen: Boolean = true, // Default to true until session loaded
+    val isGridView: Boolean = true
 )

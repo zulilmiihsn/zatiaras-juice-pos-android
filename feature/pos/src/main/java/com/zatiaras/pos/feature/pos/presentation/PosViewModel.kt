@@ -11,13 +11,11 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
@@ -34,10 +32,14 @@ import javax.inject.Inject
  * The cart is stored in-memory only (not persisted).
  * This is intentional POS behavior - carts are session-based.
  */
+import com.zatiaras.pos.core.domain.repository.StoreSessionRepository
+import kotlinx.coroutines.flow.collectLatest
+
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class PosViewModel @Inject constructor(
-    private val productRepository: ProductRepository
+    private val productRepository: ProductRepository,
+    private val storeSessionRepository: StoreSessionRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PosUiState())
@@ -97,6 +99,13 @@ class PosViewModel @Inject constructor(
                     _uiState.value = _uiState.value.copy(productCount = count)
                 }
         }
+        
+        // Observe Store Session
+        viewModelScope.launch {
+            storeSessionRepository.getActiveSession().collectLatest { session ->
+                _uiState.value = _uiState.value.copy(isStoreOpen = session != null)
+            }
+        }
     }
 
     fun onEvent(event: PosEvent) {
@@ -139,6 +148,25 @@ class PosViewModel @Inject constructor(
                 _uiState.value = _uiState.value.copy(error = null)
             }
             
+            is PosEvent.ToggleViewMode -> {
+                _uiState.value = _uiState.value.copy(isGridView = !_uiState.value.isGridView)
+            }
+            
+            is PosEvent.AddCustomItem -> {
+                val customProduct = Product(
+                    id = "custom_${System.currentTimeMillis()}",
+                    name = event.name,
+                    price = event.price,
+                    category = null,
+                    imageUrl = null,
+                    description = "Custom Item",
+                    createdAt = System.currentTimeMillis(),
+                    updatedAt = System.currentTimeMillis(),
+                    isActive = true
+                )
+                addToCart(customProduct)
+            }
+
             // Navigation events are handled by the UI layer
             is PosEvent.ProceedToCheckout,
             is PosEvent.BackToCatalog -> {

@@ -31,7 +31,8 @@ class CashRecordRepositoryImpl @Inject constructor(
         amount: Long,
         description: String,
         category: String?,
-        notes: String?
+        notes: String?,
+        date: Long
     ): Result<CashRecord> {
         return try {
             val record = CashRecord(
@@ -41,7 +42,7 @@ class CashRecordRepositoryImpl @Inject constructor(
                 description = description,
                 category = category,
                 notes = notes,
-                createdAt = System.currentTimeMillis(),
+                createdAt = date,
                 isSynced = false
             )
             

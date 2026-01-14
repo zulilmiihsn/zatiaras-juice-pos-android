@@ -36,6 +36,18 @@ interface CashRecordDao {
     fun getByDateRange(startOfDay: Long, endOfDay: Long): Flow<List<CashRecordEntity>>
 
     /**
+     * Get records list for report generation (suspend)
+     */
+    @Query("""
+        SELECT * FROM cash_records 
+        WHERE createdAt >= :startOfDay 
+        AND createdAt < :endOfDay 
+        AND isDeleted = 0
+        ORDER BY createdAt DESC
+    """)
+    suspend fun getRecordsListByDateRange(startOfDay: Long, endOfDay: Long): List<CashRecordEntity>
+
+    /**
      * Get today's total income.
      */
     @Query("""

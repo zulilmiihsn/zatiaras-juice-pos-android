@@ -11,6 +11,7 @@ import com.zatiaras.pos.core.data.local.dao.CategoryDao
 import com.zatiaras.pos.core.data.local.dao.ProductDao
 import com.zatiaras.pos.core.data.local.dao.TransactionDao
 import com.zatiaras.pos.core.data.local.dao.UserDao
+import com.zatiaras.pos.core.data.local.dao.StoreSessionDao
 import com.zatiaras.pos.core.data.session.SessionPreferences
 import dagger.Module
 import dagger.Provides
@@ -41,6 +42,7 @@ object DatabaseModule {
         )
             // Use proper migrations to preserve user data
             .addMigrations(*Migrations.ALL_MIGRATIONS)
+            .fallbackToDestructiveMigration() // VIBECODING: Enable during heavy active dev
             .build()
     }
 
@@ -84,6 +86,12 @@ object DatabaseModule {
     @Singleton
     fun provideAddOnDao(database: ZatiarasDatabase): AddOnDao {
         return database.addOnDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideStoreSessionDao(database: ZatiarasDatabase): StoreSessionDao {
+        return database.storeSessionDao()
     }
 
     @Provides

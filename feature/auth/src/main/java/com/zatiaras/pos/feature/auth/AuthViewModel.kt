@@ -80,11 +80,22 @@ class AuthViewModel @Inject constructor(
         syncUsersOnStartup()
     }
 
-    fun login(username: String, password: String) {
+    fun login(username: String, password: String, branchId: String) {
         viewModelScope.launch {
+            if (branchId.isEmpty()) {
+                _uiState.update { AuthUiState.Error("Silakan pilih cabang terlebih dahulu") }
+                return@launch
+            }
+            
             _uiState.update { AuthUiState.Loading }
+            
+            // TODO: Validate user role with branch if backend supports it
+            // For now, we assume the user exists and credential is correct
+            
             when (val result = loginUseCase(username, password)) {
                 is Result.Success -> {
+                    // Logic to store selected branch pref can go here
+                    // e.g. sessionPreferences.saveBranchId(branchId)
                     _uiState.update { AuthUiState.Success }
                 }
                 is Result.Error -> {

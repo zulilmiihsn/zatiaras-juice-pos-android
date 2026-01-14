@@ -22,8 +22,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.TableChart
@@ -41,7 +41,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.rememberDatePickerState
@@ -52,7 +51,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -71,7 +69,8 @@ import java.util.Locale
 
 @Composable
 fun PnlReportRoute(
-    onNavigateBack: () -> Unit,
+    onNavigateBack: (() -> Unit)? = null,
+    onNavigateToChat: () -> Unit = {},
     accessControlManager: AccessControlManager,
     viewModel: PnlReportViewModel = hiltViewModel()
 ) {
@@ -80,10 +79,11 @@ fun PnlReportRoute(
         accessControlManager = accessControlManager,
         route = LockableRoute.PNL_REPORT.route,
         screenName = "Laporan Laba Rugi",
-        onAccessDenied = onNavigateBack
+        onAccessDenied = { onNavigateBack?.invoke() }
     ) {
         PnlReportContent(
             onNavigateBack = onNavigateBack,
+            onNavigateToChat = onNavigateToChat,
             viewModel = viewModel
         )
     }
@@ -94,18 +94,21 @@ fun PnlReportRoute(
  */
 @Composable
 fun PnlReportRoute(
-    onNavigateBack: () -> Unit,
+    onNavigateBack: (() -> Unit)? = null,
+    onNavigateToChat: () -> Unit = {},
     viewModel: PnlReportViewModel = hiltViewModel()
 ) {
     PnlReportContent(
         onNavigateBack = onNavigateBack,
+        onNavigateToChat = onNavigateToChat,
         viewModel = viewModel
     )
 }
 
 @Composable
 private fun PnlReportContent(
-    onNavigateBack: () -> Unit,
+    onNavigateBack: (() -> Unit)?,
+    onNavigateToChat: () -> Unit,
     viewModel: PnlReportViewModel
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -139,6 +142,7 @@ private fun PnlReportContent(
     PnlReportScreen(
         uiState = uiState,
         onNavigateBack = onNavigateBack,
+        onNavigateToChat = onNavigateToChat,
         onPeriodSelected = viewModel::selectPeriod,
         onRefresh = viewModel::loadReport,
         onShowDatePicker = viewModel::showDatePicker,
@@ -153,7 +157,8 @@ private fun PnlReportContent(
 @Composable
 fun PnlReportScreen(
     uiState: PnlReportUiState,
-    onNavigateBack: () -> Unit,
+    onNavigateBack: (() -> Unit)? = null,
+    onNavigateToChat: () -> Unit = {},
     onPeriodSelected: (ReportPeriod) -> Unit,
     onRefresh: () -> Unit,
     onShowDatePicker: (Boolean) -> Unit,
@@ -162,7 +167,6 @@ fun PnlReportScreen(
     onExportPdf: () -> Unit = {},
     onExportCsv: () -> Unit = {}
 ) {
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val pullToRefreshState = rememberPullToRefreshState()
     
     // Date picker dialog
@@ -209,16 +213,18 @@ fun PnlReportScreen(
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        text = "Laporan Laba Rugi",
+                        text = "Laporan",
                         fontWeight = FontWeight.Bold
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Kembali"
-                        )
+                    if (onNavigateBack != null) {
+                        IconButton(onClick = onNavigateBack) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Kembali"
+                            )
+                        }
                     }
                 },
                 actions = {
@@ -229,6 +235,15 @@ fun PnlReportScreen(
                         )
                     }
                 }
+            )
+        },
+        floatingActionButton = {
+            androidx.compose.material3.ExtendedFloatingActionButton(
+                onClick = onNavigateToChat,
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                icon = { Icon(Icons.Default.AutoAwesome, contentDescription = null) },
+                text = { Text("Tanya AI") }
             )
         }
     ) { paddingValues ->

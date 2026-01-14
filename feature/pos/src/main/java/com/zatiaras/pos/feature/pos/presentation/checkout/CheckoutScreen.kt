@@ -475,6 +475,19 @@ private fun CheckoutContent(
             }
         }
         
+        // Customer Name field
+        item {
+            OutlinedTextField(
+                value = state.customerName,
+                onValueChange = { onEvent(CheckoutEvent.SetCustomerName(it)) },
+                modifier = Modifier.fillMaxWidth(),
+                label = { Text("Nama Pelanggan (opsional)") },
+                placeholder = { Text("Masukkan nama pelanggan...") },
+                singleLine = true,
+                shape = RoundedCornerShape(12.dp)
+            )
+        }
+        
         // Notes field
         item {
             OutlinedTextField(

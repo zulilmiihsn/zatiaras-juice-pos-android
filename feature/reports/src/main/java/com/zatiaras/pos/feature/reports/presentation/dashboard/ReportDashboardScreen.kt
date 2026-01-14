@@ -23,6 +23,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.Assessment
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material.icons.filled.Refresh
@@ -46,7 +47,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -60,6 +60,7 @@ import com.zatiaras.pos.feature.reports.presentation.components.formatRupiah
 fun ReportDashboardRoute(
     onNavigateBack: (() -> Unit)?,
     onNavigateToPnl: () -> Unit = {},
+    onNavigateToChat: () -> Unit = {},
     viewModel: ReportDashboardViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -68,7 +69,8 @@ fun ReportDashboardRoute(
         uiState = uiState,
         onRefresh = viewModel::refresh,
         onNavigateBack = onNavigateBack,
-        onNavigateToPnl = onNavigateToPnl
+        onNavigateToPnl = onNavigateToPnl,
+        onNavigateToChat = onNavigateToChat
     )
 }
 
@@ -78,7 +80,8 @@ fun ReportDashboardScreen(
     uiState: ReportDashboardUiState,
     onRefresh: () -> Unit,
     onNavigateBack: (() -> Unit)?,
-    onNavigateToPnl: () -> Unit
+    onNavigateToPnl: () -> Unit,
+    onNavigateToChat: () -> Unit
 ) {
 
     val pullToRefreshState = rememberPullToRefreshState()
@@ -113,6 +116,15 @@ fun ReportDashboardScreen(
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface
                 )
+            )
+        },
+        floatingActionButton = {
+            androidx.compose.material3.ExtendedFloatingActionButton(
+                onClick = onNavigateToChat,
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                icon = { Icon(Icons.Default.AutoAwesome, contentDescription = null) },
+                text = { Text("Tanya AI") }
             )
         }
     ) { paddingValues ->

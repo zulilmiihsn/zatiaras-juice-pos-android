@@ -19,4 +19,23 @@
     <string name="menu_settings">Pengaturan</string>
     <string name="menu_settings_subtitle">Konfigurasi App</string>
     <string name="menu_coming_soon">Segera Hadir</string>
+    
+    <!-- Dashboard & Session -->
+    <string name="dashboard_stats">Halaman Ringkasan</string>
+    <string name="metric_revenue">Omzet Hari Ini</string>
+    <string name="metric_profit">Estimasi Profit</string>
+    <string name="metric_transactions">Total Transaksi</string>
+    <string name="metric_items">Item Terjual</string>
+    
+    <string name="session_open_store">Buka Toko</string>
+    <string name="session_close_store">Tutup Toko</string>
+    <string name="session_store_closed">Toko Sedang Tutup</string>
+    <string name="session_store_open">Toko Buka</string>
+    <string name="session_open_desc">Yuk, buka toko dan mulai hari ini.</string>
+    <string name="session_close_desc">Terima kasih atas kerja keras hari ini!</string>
+    <string name="session_initial_cash">Modal Awal</string>
+    <string name="session_initial_cash_label">Masukkan Modal Awal</string>
+    <string name="session_cancel">Batal</string>
+    <string name="session_confirm_open">Buka Sekarang</string>
+    <string name="session_confirm_close">Tutup Sekarang</string>
 </resources>

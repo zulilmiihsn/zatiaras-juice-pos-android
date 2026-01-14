@@ -32,7 +32,8 @@ interface TransactionRepository {
         amountPaid: Long,
         discountPercent: Double = 0.0,
         taxPercent: Double = 11.0,
-        notes: String? = null
+        notes: String? = null,
+        customerName: String? = null
     ): Result<Transaction>
     
     /**

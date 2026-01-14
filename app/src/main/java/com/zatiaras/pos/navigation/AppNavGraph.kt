@@ -23,6 +23,7 @@ import com.zatiaras.pos.NavRoutes
 import com.zatiaras.pos.app.MainScreen
 import com.zatiaras.pos.core.data.access.AccessControlManager
 import com.zatiaras.pos.feature.auth.LoginRoute
+import com.zatiaras.pos.feature.auth.lock.AppLockRoute
 import com.zatiaras.pos.feature.auth.navigation.AuthRoutes
 import com.zatiaras.pos.feature.auth.navigation.pinSetupScreen
 import com.zatiaras.pos.feature.auth.navigation.settingsScreen
@@ -40,7 +41,9 @@ import com.zatiaras.pos.feature.pos.presentation.receipt.ReceiptViewModel
 import com.zatiaras.pos.feature.printer.navigation.navigateToPrinterSettings
 import com.zatiaras.pos.feature.printer.navigation.printerSettingsScreen
 import com.zatiaras.pos.feature.reports.navigation.navigateToPnlReport
+import com.zatiaras.pos.feature.reports.navigation.navigateToReportChat
 import com.zatiaras.pos.feature.reports.navigation.pnlReportScreen
+import com.zatiaras.pos.feature.reports.navigation.reportChatScreen
 
 /**
  * Main navigation graph for the Zatiaras POS app.
@@ -63,7 +66,7 @@ fun AppNavGraph(
         startDestination = NavRoutes.STARTUP,
         modifier = modifier
     ) {
-        // Startup screen - checks for saved session
+        // Startup screen - checks for saved session and app lock
         composable(NavRoutes.STARTUP) {
             val viewModel: StartupViewModel = hiltViewModel()
             val state by viewModel.state.collectAsStateWithLifecycle()
@@ -72,6 +75,12 @@ fun AppNavGraph(
                 when (state) {
                     is StartupState.SessionRestored -> {
                         navController.navigate(NavRoutes.HOME) {
+                            popUpTo(NavRoutes.STARTUP) { inclusive = true }
+                        }
+                    }
+                    is StartupState.NeedsUnlock -> {
+                        // Session is valid but app lock is enabled
+                        navController.navigate(NavRoutes.APP_LOCK) {
                             popUpTo(NavRoutes.STARTUP) { inclusive = true }
                         }
                     }
@@ -96,6 +105,17 @@ fun AppNavGraph(
             }
         }
         
+        // App Lock screen - shown when session is valid but lock is enabled
+        composable(NavRoutes.APP_LOCK) {
+            AppLockRoute(
+                onUnlocked = {
+                    navController.navigate(NavRoutes.HOME) {
+                        popUpTo(NavRoutes.APP_LOCK) { inclusive = true }
+                    }
+                }
+            )
+        }
+        
         composable(NavRoutes.LOGIN) {
             LoginRoute(
                 onLoginSuccess = {
@@ -116,8 +136,8 @@ fun AppNavGraph(
                 onNavigateToCheckout = {
                     navController.navigateToCheckout()
                 },
-                onNavigateToPnl = {
-                    navController.navigateToPnlReport()
+                onNavigateToChat = {
+                    navController.navigateToReportChat()
                 },
                 onNavigateToSettings = {
                     navController.navigate(AuthRoutes.SETTINGS)
@@ -165,12 +185,22 @@ fun AppNavGraph(
             accessControlManager = accessControlManager
         )
         
-        // Reports P&L (Full Screen) - Protected by Access Control
+        // Reports P&L (Full Screen) - For deep linking, protected by Access Control
         pnlReportScreen(
             onNavigateBack = {
                 navController.popBackStack()
             },
+            onNavigateToChat = {
+                navController.navigateToReportChat()
+            },
             accessControlManager = accessControlManager
+        )
+        
+        // Reports AI Chat (Full Screen)
+        reportChatScreen(
+            onNavigateBack = {
+                navController.popBackStack()
+            }
         )
         
         // Pin Setup

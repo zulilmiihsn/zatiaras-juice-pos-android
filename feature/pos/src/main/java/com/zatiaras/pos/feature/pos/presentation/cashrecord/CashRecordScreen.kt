@@ -2,6 +2,7 @@ package com.zatiaras.pos.feature.pos.presentation.cashrecord
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,7 +33,12 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.FloatingActionButton
@@ -40,6 +46,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -50,6 +57,7 @@ import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
@@ -515,6 +523,7 @@ private fun CashFlowItemCard(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AddCashRecordSheet(
     formState: CashRecordFormState,
@@ -590,6 +599,68 @@ private fun AddCashRecordSheet(
         
         Spacer(modifier = Modifier.height(16.dp))
         
+        // Date Selection
+        val date = formState.date ?: System.currentTimeMillis()
+        val dateFormatter = SimpleDateFormat("dd MMMM yyyy", Locale("id", "ID"))
+        var showDatePicker by remember { mutableStateOf(false) }
+
+        Box(modifier = Modifier.fillMaxWidth()) {
+            OutlinedTextField(
+                value = dateFormatter.format(Date(date)),
+                onValueChange = {},
+                readOnly = true,
+                label = { Text("Tanggal") },
+                leadingIcon = {
+                    Icon(Icons.Default.MenuBook, contentDescription = null)
+                },
+                trailingIcon = {
+                    IconButton(onClick = { showDatePicker = true }) {
+                        Icon(Icons.Default.MenuBook, contentDescription = "Pilih Tanggal")
+                    }
+                },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
+                shape = RoundedCornerShape(12.dp)
+            )
+            
+            // Invisible clickable layer
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .clickable { showDatePicker = true }
+            )
+        }
+
+        if (showDatePicker) {
+            val datePickerState = rememberDatePickerState(
+                initialSelectedDateMillis = date
+            )
+            DatePickerDialog(
+                onDismissRequest = { showDatePicker = false },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            datePickerState.selectedDateMillis?.let {
+                                onEvent(CashRecordEvent.SetDate(it))
+                            }
+                            showDatePicker = false
+                        }
+                    ) {
+                        Text("OK")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDatePicker = false }) {
+                        Text("Batal")
+                    }
+                }
+            ) {
+                DatePicker(state = datePickerState)
+            }
+        }
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
         // Amount
         OutlinedTextField(
             value = formState.amount,
@@ -621,16 +692,48 @@ private fun AddCashRecordSheet(
         
         Spacer(modifier = Modifier.height(8.dp))
         
-        // Category (optional)
-        OutlinedTextField(
-            value = formState.category,
-            onValueChange = { onEvent(CashRecordEvent.SetCategory(it)) },
-            modifier = Modifier.fillMaxWidth(),
-            label = { Text("Kategori (opsional)") },
-            placeholder = { Text("Contoh: Bahan Baku, Listrik") },
-            singleLine = true,
-            shape = RoundedCornerShape(12.dp)
-        )
+        // Category (Dropdown)
+        val categories = if (formState.type == CashRecordType.INCOME) {
+            com.zatiaras.pos.core.domain.model.CashCategories.INCOME_CATEGORIES
+        } else {
+            com.zatiaras.pos.core.domain.model.CashCategories.EXPENSE_CATEGORIES
+        }
+        var expanded by remember { mutableStateOf(false) }
+
+        ExposedDropdownMenuBox(
+            expanded = expanded,
+            onExpandedChange = { expanded = !expanded },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            OutlinedTextField(
+                value = formState.category,
+                onValueChange = {},
+                readOnly = true,
+                label = { Text("Kategori (opsional)") },
+                placeholder = { Text("Pilih kategori") },
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .menuAnchor(),
+                shape = RoundedCornerShape(12.dp)
+            )
+
+            ExposedDropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+                categories.forEach { category ->
+                    DropdownMenuItem(
+                        text = { Text(category) },
+                        onClick = {
+                            onEvent(CashRecordEvent.SetCategory(category))
+                            expanded = false
+                        }
+                    )
+                }
+            }
+        }
         
         Spacer(modifier = Modifier.height(8.dp))
         
@@ -651,7 +754,7 @@ private fun AddCashRecordSheet(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            androidx.compose.material3.OutlinedButton(
+            OutlinedButton(
                 onClick = onCancel,
                 modifier = Modifier.weight(1f),
                 shape = RoundedCornerShape(12.dp)

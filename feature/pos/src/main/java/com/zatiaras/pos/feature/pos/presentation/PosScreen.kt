@@ -3,25 +3,13 @@ package com.zatiaras.pos.feature.pos.presentation
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ShoppingCart
-import androidx.compose.material3.Badge
-import androidx.compose.material3.BadgedBox
-import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -29,8 +17,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.paging.compose.collectAsLazyPagingItems
@@ -69,6 +59,11 @@ fun PosScreen(
         }
     }
     
+    if (!uiState.isStoreOpen) {
+        StoreClosedOverlay(onNavigateBack)
+        return
+    }
+
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
@@ -97,15 +92,19 @@ fun PosScreen(
                 .padding(paddingValues)
         ) {
             // Main Catalog Area (now paginated)
+            // Main Catalog Area (now paginated)
             PagedProductCatalog(
                 products = pagedProducts,
                 categories = uiState.categories,
                 cart = uiState.cart,
                 selectedCategoryId = uiState.selectedCategoryId,
                 searchQuery = uiState.searchQuery,
+                isGridView = uiState.isGridView,
                 onSearchChange = { viewModel.onEvent(PosEvent.SearchQueryChanged(it)) },
                 onCategorySelect = { viewModel.onEvent(PosEvent.CategorySelected(it)) },
                 onProductClick = { viewModel.onEvent(PosEvent.AddToCart(it)) },
+                onToggleView = { viewModel.onEvent(PosEvent.ToggleViewMode) },
+                onAddCustomItem = { name, price -> viewModel.onEvent(PosEvent.AddCustomItem(name, price)) },
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight()
@@ -126,6 +125,50 @@ fun PosScreen(
                     onCheckout = onProceedToCheckout,
                     modifier = Modifier.width(320.dp)
                 )
+            }
+        }
+    }
+}
+
+@Composable
+private fun StoreClosedOverlay(onNavigateBack: () -> Unit) {
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(32.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.Lock,
+                contentDescription = null,
+                modifier = Modifier.size(64.dp),
+                tint = MaterialTheme.colorScheme.error
+            )
+            Spacer(modifier = Modifier.height(24.dp))
+            Text(
+                text = "Toko Sedang Tutup",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.error
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "Silakan buka toko terlebih dahulu melalui Dashboard untuk memulai transaksi.",
+                style = MaterialTheme.typography.bodyLarge,
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+            )
+            Spacer(modifier = Modifier.height(32.dp))
+            Button(
+                onClick = onNavigateBack,
+                modifier = Modifier.fillMaxWidth().height(50.dp)
+            ) {
+                Text("Kembali ke Dashboard")
             }
         }
     }

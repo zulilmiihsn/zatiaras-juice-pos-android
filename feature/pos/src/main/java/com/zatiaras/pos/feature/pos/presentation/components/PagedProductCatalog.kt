@@ -12,15 +12,22 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.SearchOff
+import androidx.compose.material.icons.filled.ViewList
+import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
@@ -30,10 +37,16 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.paging.LoadState
@@ -46,8 +59,7 @@ import com.zatiaras.pos.feature.pos.domain.model.Cart
 /**
  * Paginated Product catalog component with search, category filter, and product grid.
  * 
- * Uses Paging 3 for efficient memory management with large product catalogs.
- * Items are loaded on-demand as the user scrolls.
+ * Includes toggle between Grid and List view, and Custom Item button.
  */
 @Composable
 fun PagedProductCatalog(
@@ -56,20 +68,50 @@ fun PagedProductCatalog(
     cart: Cart,
     selectedCategoryId: String?,
     searchQuery: String,
+    isGridView: Boolean = true,
     onSearchChange: (String) -> Unit,
     onCategorySelect: (String?) -> Unit,
     onProductClick: (Product) -> Unit,
+    onToggleView: () -> Unit = {},
+    onAddCustomItem: (String, Long) -> Unit = { _, _ -> },
     modifier: Modifier = Modifier
 ) {
+    var showCustomItemDialog by remember { mutableStateOf(false) }
+
     Column(modifier = modifier) {
-        // Search Bar
-        SearchBar(
-            query = searchQuery,
-            onQueryChange = onSearchChange,
+        // Search Bar & Controls
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp)
-        )
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            SearchBar(
+                query = searchQuery,
+                onQueryChange = onSearchChange,
+                modifier = Modifier.weight(1f)
+            )
+            
+            Spacer(modifier = Modifier.width(8.dp))
+            
+            // View Toggle Button
+            IconButton(onClick = onToggleView) {
+                Icon(
+                    imageVector = if (isGridView) Icons.Default.ViewList else Icons.Default.GridView,
+                    contentDescription = stringResource(if (isGridView) R.string.pos_to_list_view else R.string.pos_to_grid_view)
+                )
+            }
+            
+            Spacer(modifier = Modifier.width(4.dp))
+            
+            // Custom Item Button
+            IconButton(onClick = { showCustomItemDialog = true }) {
+                Icon(
+                    imageVector = Icons.Outlined.Edit,
+                    contentDescription = stringResource(R.string.pos_custom_item)
+                )
+            }
+        }
         
         // Category Filter Chips
         CategoryChips(
@@ -83,13 +125,24 @@ fun PagedProductCatalog(
         
         Spacer(modifier = Modifier.height(8.dp))
         
-        // Paginated Product Grid
-        PagedProductGrid(
+        // Products (Grid or List)
+        PagedProducts(
             products = products,
             cart = cart,
+            isGridView = isGridView,
             onProductClick = onProductClick,
             modifier = Modifier.weight(1f)
         )
+
+        if (showCustomItemDialog) {
+            CustomItemDialog(
+                onDismiss = { showCustomItemDialog = false },
+                onAdd = { name, price ->
+                    onAddCustomItem(name, price)
+                    showCustomItemDialog = false
+                }
+            )
+        }
     }
 }
 
@@ -161,9 +214,10 @@ private fun CategoryChips(
 }
 
 @Composable
-private fun PagedProductGrid(
+private fun PagedProducts(
     products: LazyPagingItems<Product>,
     cart: Cart,
+    isGridView: Boolean,
     onProductClick: (Product) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -194,38 +248,75 @@ private fun PagedProductGrid(
                             .padding(32.dp)
                     )
                 } else {
-                    LazyVerticalGrid(
-                        columns = GridCells.Adaptive(minSize = 150.dp),
-                        contentPadding = PaddingValues(16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        items(
-                            count = products.itemCount,
-                            key = { index -> products[index]?.id ?: index }
-                        ) { index ->
-                            val product = products[index]
-                            if (product != null) {
-                                PosProductCard(
-                                    product = product,
-                                    quantityInCart = cart.getQuantity(product.id),
-                                    onAddToCart = { onProductClick(product) }
-                                )
+                    if (isGridView) {
+                        LazyVerticalGrid(
+                            columns = GridCells.Adaptive(minSize = 150.dp),
+                            contentPadding = PaddingValues(16.dp),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            items(
+                                count = products.itemCount,
+                                key = { index -> products[index]?.id ?: index }
+                            ) { index ->
+                                val product = products[index]
+                                if (product != null) {
+                                    PosProductCard(
+                                        product = product,
+                                        quantityInCart = cart.getQuantity(product.id),
+                                        onAddToCart = { onProductClick(product) }
+                                    )
+                                }
+                            }
+                            
+                            // Loading indicator at the bottom when appending more items
+                            if (products.loadState.append is LoadState.Loading) {
+                                item {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(16.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.size(32.dp)
+                                        )
+                                    }
+                                }
                             }
                         }
-                        
-                        // Loading indicator at the bottom when appending more items
-                        if (products.loadState.append is LoadState.Loading) {
-                            item {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(16.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    CircularProgressIndicator(
-                                        modifier = Modifier.size(32.dp)
+                    } else {
+                         LazyColumn(
+                            contentPadding = PaddingValues(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            items(
+                                count = products.itemCount,
+                                key = { index -> products[index]?.id ?: index }
+                            ) { index ->
+                                val product = products[index]
+                                if (product != null) {
+                                    PosProductListItem(
+                                        product = product,
+                                        quantityInCart = cart.getQuantity(product.id),
+                                        onAddToCart = { onProductClick(product) }
                                     )
+                                }
+                            }
+                            
+                            // Loading indicator at the bottom when appending more items
+                            if (products.loadState.append is LoadState.Loading) {
+                                item {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(16.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.size(32.dp)
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -300,4 +391,56 @@ private fun ErrorState(
             Text(stringResource(R.string.pos_retry))
         }
     }
+}
+
+@Composable
+fun CustomItemDialog(
+    onDismiss: () -> Unit,
+    onAdd: (String, Long) -> Unit
+) {
+    var name by remember { mutableStateOf("") }
+    var priceText by remember { mutableStateOf("") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.pos_add_custom_item)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text(stringResource(R.string.pos_custom_item_name)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+                OutlinedTextField(
+                    value = priceText,
+                    onValueChange = { if (it.all { char -> char.isDigit() }) priceText = it },
+                    label = { Text(stringResource(R.string.pos_custom_item_price)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    singleLine = true,
+                    prefix = { Text("Rp") }
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    val price = priceText.toLongOrNull() ?: 0L
+                    if (name.isNotBlank() && price > 0) {
+                        onAdd(name, price)
+                    }
+                },
+                enabled = name.isNotBlank() && priceText.isNotEmpty()
+            ) {
+                Text(stringResource(R.string.pos_add))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.dialog_cancel))
+            }
+        }
+    )
 }

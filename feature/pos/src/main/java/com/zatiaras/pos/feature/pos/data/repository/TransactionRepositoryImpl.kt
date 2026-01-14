@@ -38,7 +38,8 @@ class TransactionRepositoryImpl @Inject constructor(
         amountPaid: Long,
         discountPercent: Double,
         taxPercent: Double,
-        notes: String?
+        notes: String?,
+        customerName: String?
     ): Result<Transaction> {
         return try {
             if (cart.isEmpty()) {
@@ -57,7 +58,8 @@ class TransactionRepositoryImpl @Inject constructor(
                 amountPaid = amountPaid,
                 discountPercent = discountPercent,
                 taxPercent = taxPercent,
-                notes = notes
+                notes = notes,
+                customerName = customerName
             )
             
             // Create transaction item entities

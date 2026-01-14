@@ -18,7 +18,8 @@ import javax.inject.Singleton
  */
 @Singleton
 class ReportRepositoryImpl @Inject constructor(
-    private val transactionDao: TransactionDao
+    private val transactionDao: TransactionDao,
+    private val cashRecordDao: com.zatiaras.pos.core.data.local.dao.CashRecordDao
 ) : ReportRepository {
 
     override suspend fun getDashboardStats(): DashboardStats {
@@ -124,42 +125,91 @@ class ReportRepositoryImpl @Inject constructor(
 
     override suspend fun getProfitLossReport(startDate: Long, endDate: Long): ProfitLossReport {
         try {
-            val summary = transactionDao.getRevenueSummary(startDate, endDate)
-            val transactionCount = transactionDao.getTransactionCountForDay(startDate, endDate)
+            // 1. Get POS Revenue
+            val posSummary = transactionDao.getRevenueSummary(startDate, endDate)
+            val posTransactions = transactionDao.getTransactionCountForDay(startDate, endDate)
             
-            // Net revenue = gross - discount
-            val netRevenue = summary.grossRevenue - summary.totalDiscount
+            // 2. Get Manual Records & Aggregate
+            val manualRecords = cashRecordDao.getRecordsListByDateRange(startDate, endDate)
+            val manualSummary = aggregateManualRecords(manualRecords)
             
-            // For now, estimated cost is 0 (would need product cost data)
-            val estimatedCost = 0L
-            val grossProfit = summary.totalRevenue - estimatedCost
+            // 3. Combine Data
+            val posNetRevenue = posSummary.grossRevenue - posSummary.totalDiscount
+            val operatingRevenue = posNetRevenue + manualSummary.operatingIncome
+            val otherRevenue = manualSummary.otherIncome
+            val totalRevenue = operatingRevenue + otherRevenue
+            
+            val totalExpenses = manualSummary.operatingExpense + manualSummary.otherExpense
+            
+            // 4. Calculate Profit & Tax (UMKM 0.5% on Gross Profit)
+            val grossProfit = totalRevenue - totalExpenses
+            val tax = if (grossProfit > 0) (grossProfit * 0.005).toLong() else 0L
+            val netProfit = grossProfit - tax
             
             return ProfitLossReport(
                 periodStart = startDate,
                 periodEnd = endDate,
-                grossRevenue = summary.grossRevenue,
-                totalDiscount = summary.totalDiscount,
-                netRevenue = netRevenue,
-                totalTax = summary.totalTax,
-                grandTotal = summary.totalRevenue,
-                estimatedCost = estimatedCost,
+                operatingRevenue = operatingRevenue,
+                otherRevenue = otherRevenue,
+                grossRevenue = totalRevenue,
+                operatingExpenses = manualSummary.operatingExpense,
+                otherExpenses = manualSummary.otherExpense,
+                totalExpenses = totalExpenses,
                 grossProfit = grossProfit,
-                transactionCount = transactionCount
+                tax = tax,
+                netProfit = netProfit,
+                transactionCount = posTransactions + manualRecords.count { it.type == "INCOME" }
             )
+            
         } catch (e: Exception) {
             Timber.e(e, "Failed to get profit/loss report")
             return ProfitLossReport(
                 periodStart = startDate,
                 periodEnd = endDate,
+                operatingRevenue = 0,
+                otherRevenue = 0,
                 grossRevenue = 0,
-                totalDiscount = 0,
-                netRevenue = 0,
-                totalTax = 0,
-                grandTotal = 0,
-                estimatedCost = 0,
+                operatingExpenses = 0,
+                otherExpenses = 0,
+                totalExpenses = 0,
                 grossProfit = 0,
+                tax = 0,
+                netProfit = 0,
                 transactionCount = 0
             )
         }
+    }
+    
+    // --- Helper Functions (KISS) ---
+    
+    private data class ManualRecordSummary(
+        val operatingIncome: Long,
+        val otherIncome: Long,
+        val operatingExpense: Long,
+        val otherExpense: Long
+    )
+    
+    private fun aggregateManualRecords(
+        records: List<com.zatiaras.pos.core.data.local.entity.CashRecordEntity>
+    ): ManualRecordSummary {
+        var operatingIncome = 0L
+        var otherIncome = 0L
+        var operatingExpense = 0L
+        var otherExpense = 0L
+        
+        records.forEach { record ->
+            when {
+                record.type == "INCOME" && record.category == com.zatiaras.pos.core.domain.model.CashCategories.OPERATING_INCOME -> 
+                    operatingIncome += record.amount
+                record.type == "INCOME" -> 
+                    otherIncome += record.amount
+                record.type == "EXPENSE" && com.zatiaras.pos.core.domain.model.CashCategories.OPERATING_EXPENSES.contains(record.category) -> 
+                    operatingExpense += record.amount
+                record.type == "EXPENSE" -> 
+                    otherExpense += record.amount
+            }
+        }
+        
+        return ManualRecordSummary(operatingIncome, otherIncome, operatingExpense, otherExpense)
     }
 }

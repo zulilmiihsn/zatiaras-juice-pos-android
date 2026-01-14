@@ -1,12 +1,12 @@
 package com.zatiaras.pos
 
 import android.os.Bundle
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
+import androidx.fragment.app.FragmentActivity
 import androidx.navigation.compose.rememberNavController
 import com.zatiaras.pos.core.data.access.AccessControlManager
 import com.zatiaras.pos.core.ui.theme.ZatiarasPOSTheme
@@ -19,10 +19,11 @@ import javax.inject.Inject
 /**
  * Main entry point for the Zatiaras POS application.
  * 
+ * Uses FragmentActivity to support biometric authentication prompts.
  * Simplified to follow KISS principle - navigation logic extracted to AppNavGraph.
  */
 @AndroidEntryPoint
-class MainActivity : ComponentActivity() {
+class MainActivity : FragmentActivity() {
     
     @Inject
     lateinit var cartHolder: CartHolder
@@ -60,6 +61,7 @@ class MainActivity : ComponentActivity() {
 object NavRoutes {
     const val STARTUP = "startup"
     const val LOGIN = "login"
+    const val APP_LOCK = "app_lock"
     const val HOME = "home"
     const val POS = "pos"
     const val CHECKOUT = "checkout"

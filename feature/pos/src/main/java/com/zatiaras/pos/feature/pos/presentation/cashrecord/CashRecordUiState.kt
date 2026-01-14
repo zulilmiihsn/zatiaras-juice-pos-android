@@ -68,6 +68,7 @@ data class CashRecordFormState(
     val description: String = "",
     val category: String = "",
     val notes: String = "",
+    val date: Long? = null,
     val isSubmitting: Boolean = false,
     val amountError: String? = null,
     val descriptionError: String? = null
@@ -89,6 +90,7 @@ sealed interface CashRecordEvent {
     data class SetDescription(val description: String) : CashRecordEvent
     data class SetCategory(val category: String) : CashRecordEvent
     data class SetNotes(val notes: String) : CashRecordEvent
+    data class SetDate(val date: Long?) : CashRecordEvent
     data object SaveRecord : CashRecordEvent
     
     // List events

@@ -120,6 +120,10 @@ class CashRecordViewModel @Inject constructor(
                 _formState.value = _formState.value.copy(notes = event.notes)
             }
             
+            is CashRecordEvent.SetDate -> {
+                _formState.value = _formState.value.copy(date = event.date)
+            }
+            
             is CashRecordEvent.SaveRecord -> {
                 saveRecord()
             }
@@ -174,7 +178,8 @@ class CashRecordViewModel @Inject constructor(
                 amount = form.amount.toLongOrNull() ?: 0,
                 description = form.description.trim(),
                 category = form.category.trim().ifBlank { null },
-                notes = form.notes.trim().ifBlank { null }
+                notes = form.notes.trim().ifBlank { null },
+                date = form.date ?: System.currentTimeMillis()
             ).onSuccess {
                 Timber.d("Cash record saved successfully")
                 resetForm()

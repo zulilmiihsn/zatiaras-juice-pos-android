@@ -25,6 +25,10 @@ sealed interface PosEvent {
     
     // Error handling
     data object DismissError : PosEvent
+    
+    // UI Toggles
+    data object ToggleViewMode : PosEvent
+    data class AddCustomItem(val name: String, val price: Long, val quantity: Int = 1) : PosEvent
 }
 
 /**
@@ -34,6 +38,7 @@ sealed interface CheckoutEvent {
     data class SetPaymentMethod(val method: PaymentMethod) : CheckoutEvent
     data class SetAmountPaid(val amount: String) : CheckoutEvent
     data class SetDiscountPercent(val percent: String) : CheckoutEvent
+    data class SetCustomerName(val name: String) : CheckoutEvent
     data class SetNotes(val notes: String) : CheckoutEvent
     data object ConfirmPayment : CheckoutEvent
     data object CancelCheckout : CheckoutEvent

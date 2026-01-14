@@ -8,6 +8,7 @@ import com.zatiaras.pos.core.data.local.dao.AppSettingsDao
 import com.zatiaras.pos.core.data.local.dao.CashRecordDao
 import com.zatiaras.pos.core.data.local.dao.CategoryDao
 import com.zatiaras.pos.core.data.local.dao.ProductDao
+import com.zatiaras.pos.core.data.local.dao.StoreSessionDao
 import com.zatiaras.pos.core.data.local.dao.TransactionDao
 import com.zatiaras.pos.core.data.local.dao.UserDao
 import com.zatiaras.pos.core.data.local.entity.AddOnEntity
@@ -17,6 +18,7 @@ import com.zatiaras.pos.core.data.local.entity.CategoryEntity
 import com.zatiaras.pos.core.data.local.entity.LockedRoutesConverter
 import com.zatiaras.pos.core.data.local.entity.ProductEntity
 import com.zatiaras.pos.core.data.local.entity.ProductFtsEntity
+import com.zatiaras.pos.core.data.local.entity.StoreSessionEntity
 import com.zatiaras.pos.core.data.local.entity.TransactionEntity
 import com.zatiaras.pos.core.data.local.entity.TransactionItemEntity
 import com.zatiaras.pos.core.data.local.entity.UserEntity
@@ -41,6 +43,7 @@ import com.zatiaras.pos.core.data.local.entity.UserEntity
  * - v3: Added CashRecords (Buku Kas)
  * - v4: Added Users (Offline Auth)
  * - v5: Added AppSettings and AddOns (Settings Sync + Toppings)
+ * - v6: Added StoreSession (Buka/Tutup Toko)
  */
 @Database(
     entities = [
@@ -52,9 +55,10 @@ import com.zatiaras.pos.core.data.local.entity.UserEntity
         CashRecordEntity::class,
         UserEntity::class,
         AppSettingsEntity::class,
-        AddOnEntity::class
+        AddOnEntity::class,
+        StoreSessionEntity::class
     ],
-    version = 5,
+    version = 6,
     exportSchema = true
 )
 @TypeConverters(LockedRoutesConverter::class)
@@ -67,6 +71,7 @@ abstract class ZatiarasDatabase : RoomDatabase() {
     abstract fun userDao(): UserDao
     abstract fun appSettingsDao(): AppSettingsDao
     abstract fun addOnDao(): AddOnDao
+    abstract fun storeSessionDao(): StoreSessionDao
 
     companion object {
         const val DATABASE_NAME = "zatiaras_pos.db"

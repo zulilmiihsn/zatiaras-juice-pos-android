@@ -71,7 +71,7 @@ fun PnlBreakdownCard(
             
             Spacer(modifier = Modifier.height(20.dp))
             
-            // Revenue Section
+            // --- 1. INCOME SECTION ---
             SectionHeader(
                 title = "PENDAPATAN",
                 color = Color(0xFF4CAF50)
@@ -80,19 +80,20 @@ fun PnlBreakdownCard(
             Spacer(modifier = Modifier.height(12.dp))
             
             PnlLineItem(
-                label = "Pendapatan Kotor",
-                amount = report.grossRevenue,
+                label = "Pendapatan Usaha",
+                amount = report.operatingRevenue,
                 icon = Icons.Default.ArrowUpward,
                 iconColor = Color(0xFF4CAF50)
             )
             
-            PnlLineItem(
-                label = "Diskon",
-                amount = -report.totalDiscount,
-                icon = Icons.Default.ArrowDownward,
-                iconColor = Color(0xFFFF9800),
-                isNegative = true
-            )
+            if (report.otherRevenue > 0) {
+                PnlLineItem(
+                    label = "Pendapatan Lainnya",
+                    amount = report.otherRevenue,
+                    icon = Icons.Default.ArrowUpward,
+                    iconColor = Color(0xFF8BC34A)
+                )
+            }
             
             HorizontalDivider(
                 modifier = Modifier.padding(vertical = 12.dp),
@@ -100,70 +101,82 @@ fun PnlBreakdownCard(
             )
             
             PnlLineItem(
-                label = "Pendapatan Bersih",
-                amount = report.netRevenue,
+                label = "Total Pendapatan",
+                amount = report.grossRevenue,
                 isBold = true
             )
             
             Spacer(modifier = Modifier.height(24.dp))
             
-            // Tax Section
+            // --- 2. EXPENSE SECTION ---
             SectionHeader(
-                title = "PAJAK",
-                color = Color(0xFF2196F3)
+                title = "BEBAN / PENGELUARAN",
+                color = Color(0xFFE53935)
             )
             
             Spacer(modifier = Modifier.height(12.dp))
             
             PnlLineItem(
-                label = "PPN (11%)",
-                amount = report.totalTax,
-                icon = Icons.Default.Remove,
-                iconColor = Color(0xFF2196F3)
+                label = "Beban Usaha",
+                amount = report.operatingExpenses,
+                icon = Icons.Default.ArrowDownward,
+                iconColor = Color(0xFFE53935),
+                isNegative = true
+            )
+            
+            if (report.otherExpenses > 0) {
+                PnlLineItem(
+                    label = "Beban Lainnya",
+                    amount = report.otherExpenses,
+                    icon = Icons.Default.ArrowDownward,
+                    iconColor = Color(0xFFFF5722),
+                    isNegative = true
+                )
+            }
+            
+            HorizontalDivider(
+                modifier = Modifier.padding(vertical = 12.dp),
+                color = MaterialTheme.colorScheme.outlineVariant
+            )
+            
+            PnlLineItem(
+                label = "Total Beban",
+                amount = -report.totalExpenses, // Display as negative
+                isBold = true,
+                isNegative = true
             )
             
             Spacer(modifier = Modifier.height(24.dp))
             
-            // Grand Total Section
+            // --- 3. PROFIT / TAX SECTION ---
             SectionHeader(
-                title = "TOTAL PENERIMAAN",
+                title = "LABA & PAJAK",
                 color = MaterialTheme.colorScheme.primary
             )
             
             Spacer(modifier = Modifier.height(12.dp))
             
-            GrandTotalRow(
-                amount = report.grandTotal
+            PnlLineItem(
+                label = "Laba Kotor",
+                amount = report.grossProfit,
+                isBold = true
+            )
+
+            PnlLineItem(
+                label = "Pajak (0.5% Omzet)",
+                amount = report.tax, 
+                icon = Icons.Default.Remove,
+                iconColor = Color(0xFF2196F3),
+                isNegative = true
             )
             
-            // Profit Section (if cost data available)
-            if (report.estimatedCost > 0) {
-                Spacer(modifier = Modifier.height(24.dp))
-                
-                SectionHeader(
-                    title = "ESTIMASI LABA",
-                    color = Color(0xFF9C27B0)
-                )
-                
-                Spacer(modifier = Modifier.height(12.dp))
-                
-                PnlLineItem(
-                    label = "Harga Pokok Penjualan",
-                    amount = -report.estimatedCost,
-                    isNegative = true
-                )
-                
-                HorizontalDivider(
-                    modifier = Modifier.padding(vertical = 12.dp),
-                    color = MaterialTheme.colorScheme.outlineVariant
-                )
-                
-                ProfitRow(
-                    label = "Laba Kotor",
-                    amount = report.grossProfit,
-                    isProfit = report.grossProfit >= 0
-                )
-            }
+            Spacer(modifier = Modifier.height(12.dp))
+            
+            ProfitRow(
+                label = "Laba Bersih",
+                amount = report.netProfit,
+                isProfit = report.netProfit >= 0
+            )
         }
     }
 }

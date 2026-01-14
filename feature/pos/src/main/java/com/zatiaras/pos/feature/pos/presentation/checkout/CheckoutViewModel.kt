@@ -65,6 +65,9 @@ class CheckoutViewModel @Inject constructor(
         val notes = if (currentState is CheckoutUiState.Ready) {
             currentState.notes
         } else ""
+        val customerName = if (currentState is CheckoutUiState.Ready) {
+            currentState.customerName
+        } else ""
         
         val subtotal = cart.subtotal
         val discountAmount = (subtotal * discountPercent / 100).toLong()
@@ -88,7 +91,8 @@ class CheckoutViewModel @Inject constructor(
             selectedPaymentMethod = paymentMethod,
             amountPaid = amountPaid,
             changeAmount = changeAmount,
-            notes = notes
+            notes = notes,
+            customerName = customerName
         )
     }
 
@@ -124,6 +128,10 @@ class CheckoutViewModel @Inject constructor(
             is CheckoutEvent.SetNotes -> {
                 _uiState.value = currentState.copy(notes = event.notes)
             }
+
+            is CheckoutEvent.SetCustomerName -> {
+                _uiState.value = currentState.copy(customerName = event.name)
+            }
             
             is CheckoutEvent.ConfirmPayment -> {
                 confirmPayment(currentState)
@@ -157,7 +165,8 @@ class CheckoutViewModel @Inject constructor(
                 amountPaid = amountPaidValue,
                 discountPercent = state.discountPercent,
                 taxPercent = state.taxPercent,
-                notes = state.notes.ifBlank { null }
+                notes = state.notes.ifBlank { null },
+                customerName = state.customerName.ifBlank { null }
             ).onSuccess { transaction ->
                 Timber.d("Transaction completed: ${transaction.transactionNumber}")
                 _uiState.value = CheckoutUiState.Success(transaction)

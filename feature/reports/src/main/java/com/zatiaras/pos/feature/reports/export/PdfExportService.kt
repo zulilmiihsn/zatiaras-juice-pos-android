@@ -141,70 +141,57 @@ class PdfExportService @Inject constructor() {
         canvas.drawText("PENDAPATAN", margin, yPos, headerPaint)
         yPos += lineHeight * 1.2f
         
-        yPos = drawLineItem(canvas, "Pendapatan Kotor", report.grossRevenue, yPos, false)
-        yPos = drawLineItem(canvas, "Diskon", -report.totalDiscount, yPos, true)
+        yPos = drawLineItem(canvas, "Pendapatan Operasional", report.operatingRevenue, yPos, false)
+        yPos = drawLineItem(canvas, "Pendapatan Lainnya", report.otherRevenue, yPos, false)
         
         yPos += lineHeight * 0.5f
         canvas.drawLine(margin, yPos, pageWidth - margin, yPos, linePaint)
         yPos += lineHeight
         
-        yPos = drawLineItem(canvas, "Pendapatan Bersih", report.netRevenue, yPos, false, true)
+        yPos = drawLineItem(canvas, "Total Pendapatan", report.grossRevenue, yPos, false, true)
         yPos += lineHeight
         
-        // === PAJAK SECTION ===
-        canvas.drawText("PAJAK", margin, yPos, headerPaint)
+        // === BEBAN SECTION ===
+        canvas.drawText("BEBAN", margin, yPos, headerPaint)
         yPos += lineHeight * 1.2f
         
-        yPos = drawLineItem(canvas, "PPN (11%)", report.totalTax, yPos, false)
+        yPos = drawLineItem(canvas, "Beban Operasional", -report.operatingExpenses, yPos, true)
+        yPos = drawLineItem(canvas, "Beban Lainnya", -report.otherExpenses, yPos, true)
+        
+        yPos += lineHeight * 0.5f
+        canvas.drawLine(margin, yPos, pageWidth - margin, yPos, linePaint)
         yPos += lineHeight
         
-        // === TOTAL SECTION ===
-        canvas.drawText("TOTAL PENERIMAAN", margin, yPos, headerPaint)
+        yPos = drawLineItem(canvas, "Total Beban", -report.totalExpenses, yPos, true, true)
+        yPos += lineHeight
+        
+        // === LABA SECTION ===
+        canvas.drawText("RINGKASAN LABA", margin, yPos, headerPaint)
         yPos += lineHeight * 1.2f
         
-        // Draw total box
+        yPos = drawLineItem(canvas, "Laba Kotor", report.grossProfit, yPos, report.grossProfit < 0)
+        yPos = drawLineItem(canvas, "Pajak UMKM (0.5%)", -report.tax, yPos, true)
+        
+        yPos += lineHeight
+        
+        // Draw net profit box
+        val isProfit = report.netProfit >= 0
         val boxPaint = Paint().apply {
-            color = Color.rgb(240, 240, 255)
+            color = if (isProfit) Color.rgb(232, 245, 233) else Color.rgb(255, 235, 238)
             style = Paint.Style.FILL
         }
         canvas.drawRect(margin, yPos - 20f, pageWidth - margin, yPos + 30f, boxPaint)
         
-        canvas.drawText("Total Diterima", margin + 10f, yPos + 10f, totalPaint)
-        val totalValue = currencyFormat.format(report.grandTotal)
-        val totalWidth = totalPaint.measureText(totalValue)
-        canvas.drawText(totalValue, pageWidth - margin - 10f - totalWidth, yPos + 10f, totalPaint)
-        
-        yPos += lineHeight * 3f
-        
-        // === ESTIMASI LABA SECTION (if cost data available) ===
-        if (report.estimatedCost > 0) {
-            canvas.drawText("ESTIMASI LABA", margin, yPos, headerPaint)
-            yPos += lineHeight * 1.2f
-            
-            yPos = drawLineItem(canvas, "Harga Pokok Penjualan", -report.estimatedCost, yPos, true)
-            
-            yPos += lineHeight * 0.5f
-            canvas.drawLine(margin, yPos, pageWidth - margin, yPos, linePaint)
-            yPos += lineHeight
-            
-            val isProfit = report.grossProfit >= 0
-            val profitBoxPaint = Paint().apply {
-                color = if (isProfit) Color.rgb(232, 245, 233) else Color.rgb(255, 235, 238)
-                style = Paint.Style.FILL
-            }
-            canvas.drawRect(margin, yPos - 20f, pageWidth - margin, yPos + 30f, profitBoxPaint)
-            
-            val profitPaint = Paint().apply {
-                color = if (isProfit) Color.rgb(46, 125, 50) else Color.rgb(198, 40, 40)
-                textSize = 14f
-                isFakeBoldText = true
-            }
-            
-            canvas.drawText("Laba Kotor", margin + 10f, yPos + 10f, profitPaint)
-            val profitValue = currencyFormat.format(report.grossProfit)
-            val profitWidth = profitPaint.measureText(profitValue)
-            canvas.drawText(profitValue, pageWidth - margin - 10f - profitWidth, yPos + 10f, profitPaint)
+        val profitPaint = Paint().apply {
+            color = if (isProfit) Color.rgb(46, 125, 50) else Color.rgb(198, 40, 40)
+            textSize = 14f
+            isFakeBoldText = true
         }
+        
+        canvas.drawText("Laba Bersih", margin + 10f, yPos + 10f, profitPaint)
+        val profitValue = currencyFormat.format(report.netProfit)
+        val profitWidth = profitPaint.measureText(profitValue)
+        canvas.drawText(profitValue, pageWidth - margin - 10f - profitWidth, yPos + 10f, profitPaint)
         
         // Footer
         val footerY = pageHeight - margin

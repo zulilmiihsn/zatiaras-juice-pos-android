@@ -17,6 +17,10 @@ import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -24,6 +28,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -39,7 +44,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.zatiaras.pos.core.ui.theme.LocalDimensions
-import com.zatiaras.pos.feature.auth.R
 
 @Composable
 fun LoginRoute(
@@ -70,16 +74,27 @@ fun LoginRoute(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(
     uiState: AuthUiState,
     syncStatus: String?,
-    onLoginClick: (String, String) -> Unit,
+    onLoginClick: (String, String, String) -> Unit,
     onResyncClick: () -> Unit = {},
     snackbarHostState: SnackbarHostState
 ) {
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    
+    // Branch Selection State
+    var branchExpanded by remember { mutableStateOf(false) }
+    var selectedBranch by remember { mutableStateOf<String?>(null) }
+    val branches = listOf(
+        "Samarinda" to stringResource(R.string.auth_branch_samarinda),
+        "Berau" to stringResource(R.string.auth_branch_berau),
+        "Balikpapan" to stringResource(R.string.auth_branch_balikpapan),
+        "Samarinda 2" to stringResource(R.string.auth_branch_samarinda2)
+    )
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) }
@@ -150,7 +165,7 @@ fun LoginScreen(
                                     status.contains("koneksi", ignoreCase = true)
                     if (isOffline && uiState !is AuthUiState.Syncing) {
                         Spacer(modifier = Modifier.height(8.dp))
-                        androidx.compose.material3.TextButton(
+                        TextButton(
                             onClick = onResyncClick
                         ) {
                             Icon(
@@ -166,6 +181,45 @@ fun LoginScreen(
             }
             
             Spacer(modifier = Modifier.height(dimensions.paddingXXL))
+
+            // Branch Selection Dropdown
+            ExposedDropdownMenuBox(
+                expanded = branchExpanded,
+                onExpandedChange = { branchExpanded = !branchExpanded },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                OutlinedTextField(
+                    value = branches.find { it.first == selectedBranch }?.second ?: "",
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text(stringResource(R.string.auth_branch_label)) },
+                    trailingIcon = {
+                        ExposedDropdownMenuDefaults.TrailingIcon(
+                            expanded = branchExpanded
+                        )
+                    },
+                    colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
+                    modifier = Modifier.fillMaxWidth().menuAnchor()
+                )
+
+                ExposedDropdownMenu(
+                    expanded = branchExpanded,
+                    onDismissRequest = { branchExpanded = false }
+                ) {
+                    branches.forEach { (id, label) ->
+                        DropdownMenuItem(
+                            text = { Text(text = label) },
+                            onClick = {
+                                selectedBranch = id
+                                branchExpanded = false
+                            },
+                            contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(dimensions.spacingM))
 
             OutlinedTextField(
                 value = username,
@@ -197,9 +251,13 @@ fun LoginScreen(
                 }
                 else -> {
                     Button(
-                        onClick = { onLoginClick(username, password) },
+                        onClick = { 
+                            if (selectedBranch != null) {
+                                onLoginClick(username, password, selectedBranch!!) 
+                            }
+                        },
                         modifier = Modifier.fillMaxWidth().height(50.dp),
-                        enabled = username.isNotEmpty() && password.isNotEmpty()
+                        enabled = username.isNotEmpty() && password.isNotEmpty() && selectedBranch != null
                     ) {
                         Text(stringResource(R.string.auth_login_button))
                     }

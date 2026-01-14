@@ -49,7 +49,7 @@ fun MainScreen(
     cartHolder: CartHolder,
     onNavigateBackFromMain: () -> Unit,
     onNavigateToCheckout: () -> Unit,
-    onNavigateToPnl: () -> Unit,
+    onNavigateToChat: () -> Unit,
     onNavigateToSettings: () -> Unit = {},
     accessControlManager: com.zatiaras.pos.core.data.access.AccessControlManager? = null
 ) {
@@ -108,7 +108,7 @@ fun MainScreen(
             startDestination = NavRoutes.HOME,
             modifier = Modifier.padding(innerPadding)
         ) {
-            // Tab 1: Home (Quick Overview Dashboard)
+            // Tab 1: Home (Complete Business Dashboard with stats, charts, top products)
             homeDashboardScreen(
                 route = NavRoutes.HOME,
                 onNavigateToSettings = onNavigateToSettings
@@ -135,7 +135,7 @@ fun MainScreen(
                 accessControlManager = accessControlManager
             )
             
-            // Tab 4: Reports (Detailed Reports with Charts & P&L) - Protected by Access Control
+            // Tab 4: Reports (P&L Report with Tanya AI) - Protected by Access Control
             reportsScreen(
                 route = NavRoutes.REPORTS,
                 onNavigateBack = { 
@@ -147,7 +147,7 @@ fun MainScreen(
                         launchSingleTop = true
                     }
                 },
-                onNavigateToPnl = onNavigateToPnl,
+                onNavigateToChat = onNavigateToChat,
                 accessControlManager = accessControlManager
             )
         }

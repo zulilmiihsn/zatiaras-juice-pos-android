@@ -19,6 +19,7 @@ import androidx.room.PrimaryKey
     indices = [
         Index(value = ["createdAt"]),
         Index(value = ["isSynced"]),
+        Index(value = ["sessionId"]),
         Index(value = ["type"])
     ]
 )
@@ -30,6 +31,7 @@ data class CashRecordEntity(
     val description: String,
     val category: String? = null,
     val notes: String? = null,
+    val sessionId: String? = null,              // Linked Store Session
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis(),
     val isSynced: Boolean = false,

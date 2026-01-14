@@ -17,7 +17,8 @@ interface CashRecordRepository {
         amount: Long,
         description: String,
         category: String? = null,
-        notes: String? = null
+        notes: String? = null,
+        date: Long = System.currentTimeMillis()
     ): Result<CashRecord>
     
     /**

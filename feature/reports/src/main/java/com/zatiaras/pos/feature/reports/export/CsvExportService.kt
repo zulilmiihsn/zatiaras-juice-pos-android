@@ -48,17 +48,15 @@ class CsvExportService @Inject constructor() {
                 
                 // P&L Data
                 writer.appendLine("Kategori,Jumlah")
-                writer.appendLine("Pendapatan Kotor,${report.grossRevenue}")
-                writer.appendLine("Diskon,${report.totalDiscount}")
-                writer.appendLine("Pendapatan Bersih,${report.netRevenue}")
-                writer.appendLine("PPN (11%),${report.totalTax}")
-                writer.appendLine("Total Penerimaan,${report.grandTotal}")
-                
-                if (report.estimatedCost > 0) {
-                    writer.appendLine()
-                    writer.appendLine("Harga Pokok Penjualan,${report.estimatedCost}")
-                    writer.appendLine("Laba Kotor,${report.grossProfit}")
-                }
+                writer.appendLine("Pendapatan Operasional,${report.operatingRevenue}")
+                writer.appendLine("Pendapatan Lainnya,${report.otherRevenue}")
+                writer.appendLine("Total Pendapatan,${report.grossRevenue}")
+                writer.appendLine("Beban Operasional,${report.operatingExpenses}")
+                writer.appendLine("Beban Lainnya,${report.otherExpenses}")
+                writer.appendLine("Total Beban,${report.totalExpenses}")
+                writer.appendLine("Laba Kotor,${report.grossProfit}")
+                writer.appendLine("Pajak UMKM (0.5%),${report.tax}")
+                writer.appendLine("Laba Bersih,${report.netProfit}")
             }
             
             val uri = FileProvider.getUriForFile(

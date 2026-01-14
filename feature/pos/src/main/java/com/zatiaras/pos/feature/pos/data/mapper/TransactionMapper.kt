@@ -87,7 +87,8 @@ fun createTransactionEntity(
     amountPaid: Long,
     discountPercent: Double,
     taxPercent: Double,
-    notes: String?
+    notes: String?,
+    customerName: String?
 ): TransactionEntity {
     val subtotal = cart.subtotal
     val discountAmount = (subtotal * discountPercent / 100).toLong()

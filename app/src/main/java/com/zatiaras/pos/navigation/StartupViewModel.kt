@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.zatiaras.pos.core.data.repository.LocalAuthRepository
 import com.zatiaras.pos.core.data.session.SessionPreferences
+import com.zatiaras.pos.feature.auth.lock.AppLockPreferences
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -15,6 +16,7 @@ import javax.inject.Inject
 sealed interface StartupState {
     data object Loading : StartupState
     data object NeedsLogin : StartupState
+    data object NeedsUnlock : StartupState  // New state: session valid but lock is enabled
     data object SessionRestored : StartupState
     data object SessionExpired : StartupState
 }
@@ -26,11 +28,13 @@ sealed interface StartupState {
  * 1. Saved session existence
  * 2. Session expiry (8 hours default)
  * 3. User still active in database
+ * 4. App lock enabled (biometric/PIN)
  */
 @HiltViewModel
 class StartupViewModel @Inject constructor(
     private val localAuthRepository: LocalAuthRepository,
-    private val sessionPreferences: SessionPreferences
+    private val sessionPreferences: SessionPreferences,
+    private val appLockPreferences: AppLockPreferences
 ) : ViewModel() {
 
     private val _state = MutableStateFlow<StartupState>(StartupState.Loading)
@@ -68,7 +72,21 @@ class StartupViewModel @Inject constructor(
                 Timber.d("Session restored successfully")
                 // Refresh session timestamp to extend timeout
                 sessionPreferences.refreshSession()
-                _state.value = StartupState.SessionRestored
+                
+                // Check if app lock is enabled
+                val lockEnabled = appLockPreferences.isLockEnabledNow()
+                val biometricEnabled = appLockPreferences.isBiometricEnabledNow()
+                val pinSet = appLockPreferences.isPinSetNow()
+                
+                Timber.d("Lock check: lockEnabled=$lockEnabled, biometricEnabled=$biometricEnabled, pinSet=$pinSet")
+                
+                // If lock is enabled and either biometric is enabled or PIN is set, require unlock
+                if (lockEnabled && (biometricEnabled || pinSet)) {
+                    Timber.d("App lock is enabled, requiring unlock")
+                    _state.value = StartupState.NeedsUnlock
+                } else {
+                    _state.value = StartupState.SessionRestored
+                }
             } else {
                 Timber.d("Failed to restore session (user not found or inactive)")
                 sessionPreferences.clearSession()

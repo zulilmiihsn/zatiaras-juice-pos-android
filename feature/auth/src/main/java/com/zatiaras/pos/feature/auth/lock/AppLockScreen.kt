@@ -33,7 +33,10 @@ fun AppLockRoute(
     viewModel: AppLockViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val context = LocalContext.current as FragmentActivity
+    val context = LocalContext.current
+    
+    // Safe cast to FragmentActivity for biometric support
+    val fragmentActivity = context as? FragmentActivity
 
     LaunchedEffect(uiState.isUnlocked) {
         if (uiState.isUnlocked) {
@@ -42,9 +45,10 @@ fun AppLockRoute(
     }
 
     // Auto-trigger biometric on first load if enabled
-    LaunchedEffect(Unit) {
-        if (uiState.biometricEnabled && uiState.biometricAvailable) {
-            viewModel.authenticateWithBiometric(context)
+    // Use the state values as key so it triggers after settings are loaded
+    LaunchedEffect(uiState.biometricEnabled, uiState.biometricAvailable) {
+        if (uiState.biometricEnabled && uiState.biometricAvailable && fragmentActivity != null) {
+            viewModel.authenticateWithBiometric(fragmentActivity)
         }
     }
 
@@ -52,7 +56,9 @@ fun AppLockRoute(
         uiState = uiState,
         onPinDigitClick = viewModel::onPinDigitClick,
         onBackspaceClick = viewModel::onBackspaceClick,
-        onBiometricClick = { viewModel.authenticateWithBiometric(context) }
+        onBiometricClick = { 
+            fragmentActivity?.let { viewModel.authenticateWithBiometric(it) }
+        }
     )
 }
 
