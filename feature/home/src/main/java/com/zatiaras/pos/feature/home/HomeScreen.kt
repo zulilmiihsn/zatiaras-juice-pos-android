@@ -164,24 +164,26 @@ fun HomeScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(dimensions.paddingM)
         ) {
+            // Store Status Banner (TOP - Most Prominent)
+            StoreStatusBanner(
+                isStoreOpen = uiState.isStoreOpen,
+                onOpenClick = { showOpenStoreDialog = true },
+                onCloseClick = { showCloseStoreDialog = true }
+            )
+            
+            Spacer(modifier = Modifier.height(dimensions.spacingM))
+
             // Greeting Card
             GreetingHeader(uiState.userName, uiState.branchName)
             
             Spacer(modifier = Modifier.height(dimensions.spacingM))
 
-            // Dashboard Metrics (Always visible, but real data only if Store Open)
+            // Dashboard Metrics (Only if Store Open)
             DashboardMetricsGrid(uiState.metrics, uiState.isStoreOpen)
-
-            Spacer(modifier = Modifier.height(dimensions.spacingM))
-
-            // Store Control (Buka/Tutup Toko)
-            StoreSessionControl(
-                isStoreOpen = uiState.isStoreOpen,
-                onOpenClick = { showOpenStoreDialog = true },
-                onCloseClick = { showCloseStoreDialog = true }
-            )
-
-            Spacer(modifier = Modifier.height(dimensions.spacingL))
+            
+            if (uiState.isStoreOpen) {
+                Spacer(modifier = Modifier.height(dimensions.spacingM))
+            }
 
             Text(
                 text = stringResource(R.string.home_main_menu),
@@ -190,9 +192,7 @@ fun HomeScreen(
                 modifier = Modifier.padding(bottom = dimensions.spacingS)
             )
 
-            // Menu Grid (Non-scrollable within Scrollable Column, using FlowRow logic or just Column rows)
-            // Since we are in verticalScroll Column, we shouldn't use LazyVerticalGrid with infinite height.
-            // We'll use a simple Column with Rows layout for the menu items.
+            // Menu Grid
             SimpleMenuGrid(menuItems, onMenuClick)
             
             Spacer(modifier = Modifier.height(32.dp))
@@ -292,14 +292,14 @@ fun DashboardMetricsGrid(metrics: DashboardMetrics, isStoreOpen: Boolean) {
                 title = stringResource(R.string.metric_revenue),
                 value = formatCurrency.format(metrics.revenue),
                 icon = Icons.Outlined.MonetizationOn,
-                color = Color(0xFF11998e),
+                gradientColors = listOf(Color(0xFF667eea), Color(0xFF764ba2)), // Purple
                 modifier = Modifier.weight(1f)
             )
             MetricCard(
                 title = stringResource(R.string.metric_profit),
                 value = formatCurrency.format(metrics.profit),
                 icon = Icons.Outlined.TrendingUp,
-                color = Color(0xFF4facfe),
+                gradientColors = listOf(Color(0xFF11998e), Color(0xFF38ef7d)), // Green
                 modifier = Modifier.weight(1f)
             )
         }
@@ -308,14 +308,14 @@ fun DashboardMetricsGrid(metrics: DashboardMetrics, isStoreOpen: Boolean) {
                 title = stringResource(R.string.metric_transactions),
                 value = metrics.transactions.toString(),
                 icon = Icons.Outlined.Receipt,
-                color = Color(0xFFf093fb),
+                gradientColors = listOf(Color(0xFFf093fb), Color(0xFFf5576c)), // Pink
                 modifier = Modifier.weight(1f)
             )
             MetricCard(
                 title = stringResource(R.string.metric_items),
                 value = metrics.itemsSold.toString(),
                 icon = Icons.Outlined.ShoppingBag,
-                color = Color(0xFFf5576c),
+                gradientColors = listOf(Color(0xFF4facfe), Color(0xFF00f2fe)), // Blue
                 modifier = Modifier.weight(1f)
             )
         }
@@ -327,81 +327,128 @@ fun MetricCard(
     title: String,
     value: String,
     icon: ImageVector,
-    color: Color,
+    gradientColors: List<Color>,
     modifier: Modifier = Modifier
 ) {
-    Card(
-        modifier = modifier,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        shape = AppShapes.M
+    Box(
+        modifier = modifier
+            .clip(AppShapes.M)
+            .background(
+                brush = Brush.linearGradient(gradientColors)
+            )
+            .padding(12.dp)
     ) {
-        Column(
-            modifier = Modifier.padding(12.dp)
-        ) {
+        Column {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = color,
+                tint = Color.White.copy(alpha = 0.9f),
                 modifier = Modifier.size(20.dp)
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = value,
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = Color.White
             )
             Text(
                 text = title,
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = Color.White.copy(alpha = 0.8f)
             )
         }
     }
 }
 
+
+/**
+ * Prominent store status banner - shown at TOP of dashboard
+ */
+@Composable
+fun StoreStatusBanner(
+    isStoreOpen: Boolean,
+    onOpenClick: () -> Unit,
+    onCloseClick: () -> Unit
+) {
+    val dimensions = LocalDimensions.current
+    Card(
+        onClick = { if (isStoreOpen) onCloseClick() else onOpenClick() },
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isStoreOpen) 
+                MaterialTheme.colorScheme.primaryContainer 
+            else 
+                MaterialTheme.colorScheme.errorContainer
+        ),
+        shape = AppShapes.L
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(dimensions.paddingL)
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                // Status indicator dot
+                Box(
+                    modifier = Modifier
+                        .size(12.dp)
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(
+                            if (isStoreOpen) Color(0xFF10B981) // Green
+                            else Color(0xFFEF4444) // Red
+                        )
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Column {
+                    Text(
+                        text = if (isStoreOpen) 
+                            stringResource(R.string.session_store_open) 
+                        else 
+                            stringResource(R.string.session_store_closed),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = if (isStoreOpen) 
+                            MaterialTheme.colorScheme.onPrimaryContainer 
+                        else 
+                            MaterialTheme.colorScheme.onErrorContainer
+                    )
+                    Text(
+                        text = if (isStoreOpen) 
+                            "Ketuk untuk menutup toko" 
+                        else 
+                            "Ketuk untuk membuka toko",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (isStoreOpen) 
+                            MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f) 
+                        else 
+                            MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.7f)
+                    )
+                }
+            }
+            Icon(
+                imageVector = if (isStoreOpen) Icons.Outlined.LockOpen else Icons.Outlined.Lock,
+                contentDescription = null,
+                tint = if (isStoreOpen) 
+                    MaterialTheme.colorScheme.onPrimaryContainer 
+                else 
+                    MaterialTheme.colorScheme.onErrorContainer,
+                modifier = Modifier.size(28.dp)
+            )
+        }
+    }
+}
+
+@Deprecated("Use StoreStatusBanner instead", ReplaceWith("StoreStatusBanner"))
 @Composable
 fun StoreSessionControl(
     isStoreOpen: Boolean,
     onOpenClick: () -> Unit,
     onCloseClick: () -> Unit
 ) {
-    Card(
-        onClick = { if (isStoreOpen) onCloseClick() else onOpenClick() },
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isStoreOpen) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.primary
-        ),
-        shape = AppShapes.L
-    ) {
-        Row(
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Column {
-                Text(
-                    text = if (isStoreOpen) stringResource(R.string.session_store_open) else stringResource(R.string.session_store_closed),
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = if (isStoreOpen) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onPrimary
-                )
-                Text(
-                    text = if (isStoreOpen) "Ketuk untuk menutup toko" else "Ketuk untuk membuka toko",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = if (isStoreOpen) MaterialTheme.colorScheme.onErrorContainer.copy(alpha=0.8f) else MaterialTheme.colorScheme.onPrimary.copy(alpha=0.8f)
-                )
-            }
-            Icon(
-                imageVector = if (isStoreOpen) Icons.Outlined.Lock else Icons.Outlined.Store,
-                contentDescription = null,
-                tint = if (isStoreOpen) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onPrimary,
-                modifier = Modifier.size(32.dp)
-            )
-        }
-    }
+    StoreStatusBanner(isStoreOpen, onOpenClick, onCloseClick)
 }
 
 @Composable

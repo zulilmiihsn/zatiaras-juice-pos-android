@@ -3,7 +3,7 @@ package com.zatiaras.pos.feature.inventory.presentation.list
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.zatiaras.pos.core.data.local.DatabaseSeeder
-import com.zatiaras.pos.feature.inventory.domain.repository.ProductRepository
+import com.zatiaras.pos.core.domain.repository.ProductRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

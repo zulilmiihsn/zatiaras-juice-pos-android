@@ -7,6 +7,10 @@ import com.zatiaras.pos.feature.auth.LoginRoute
 import com.zatiaras.pos.feature.auth.lock.AppLockRoute
 import com.zatiaras.pos.feature.auth.lock.PinSetupRoute
 import com.zatiaras.pos.feature.auth.settings.SettingsRoute
+import com.zatiaras.pos.feature.auth.settings.SecuritySettingsScreen
+import com.zatiaras.pos.feature.auth.settings.AccessControlScreen
+import com.zatiaras.pos.feature.auth.settings.SyncSettingsScreen
+import com.zatiaras.pos.feature.auth.settings.AboutScreen
 
 /**
  * Navigation routes for the Auth feature module.
@@ -15,6 +19,10 @@ object AuthRoutes {
     const val LOGIN = "auth/login"
     const val APP_LOCK = "auth/app_lock"
     const val SETTINGS = "auth/settings"
+    const val SETTINGS_SECURITY = "auth/settings/security"
+    const val SETTINGS_ACCESS_CONTROL = "auth/settings/access_control"
+    const val SETTINGS_SYNC = "auth/settings/sync"
+    const val SETTINGS_ABOUT = "auth/settings/about"
     const val PIN_SETUP = "auth/pin_setup"
     const val PIN_CHANGE = "auth/pin_change"
 }
@@ -43,9 +51,6 @@ fun NavGraphBuilder.appLockScreen(
 
 /**
  * Add Settings screen to navigation graph.
- */
-/**
- * Add Settings screen to navigation graph.
  * Protected by Access Control.
  */
 fun NavGraphBuilder.settingsScreen(
@@ -53,6 +58,10 @@ fun NavGraphBuilder.settingsScreen(
     onNavigateToPinSetup: () -> Unit,
     onNavigateToPrinter: () -> Unit = {},
     onNavigateToInventory: () -> Unit = {},
+    onNavigateToSecurity: () -> Unit = {},
+    onNavigateToAccessControl: () -> Unit = {},
+    onNavigateToSync: () -> Unit = {},
+    onNavigateToAbout: () -> Unit = {},
     onLogout: () -> Unit,
     accessControlManager: com.zatiaras.pos.core.data.access.AccessControlManager? = null
 ) {
@@ -69,6 +78,10 @@ fun NavGraphBuilder.settingsScreen(
                     onNavigateToPinSetup = onNavigateToPinSetup,
                     onNavigateToPrinter = onNavigateToPrinter,
                     onNavigateToInventory = onNavigateToInventory,
+                    onNavigateToSecurity = onNavigateToSecurity,
+                    onNavigateToAccessControl = onNavigateToAccessControl,
+                    onNavigateToSync = onNavigateToSync,
+                    onNavigateToAbout = onNavigateToAbout,
                     onLogout = onLogout
                 )
             }
@@ -78,9 +91,67 @@ fun NavGraphBuilder.settingsScreen(
                 onNavigateToPinSetup = onNavigateToPinSetup,
                 onNavigateToPrinter = onNavigateToPrinter,
                 onNavigateToInventory = onNavigateToInventory,
+                onNavigateToSecurity = onNavigateToSecurity,
+                onNavigateToAccessControl = onNavigateToAccessControl,
+                onNavigateToSync = onNavigateToSync,
+                onNavigateToAbout = onNavigateToAbout,
                 onLogout = onLogout
             )
         }
+    }
+}
+
+/**
+ * Add Security Settings sub-screen to navigation graph.
+ */
+fun NavGraphBuilder.securitySettingsScreen(
+    onNavigateBack: () -> Unit,
+    onNavigateToPinSetup: () -> Unit
+) {
+    composable(AuthRoutes.SETTINGS_SECURITY) {
+        SecuritySettingsScreen(
+            onNavigateBack = onNavigateBack,
+            onChangePinClick = onNavigateToPinSetup
+        )
+    }
+}
+
+/**
+ * Add Access Control sub-screen to navigation graph.
+ */
+fun NavGraphBuilder.accessControlScreen(
+    onNavigateBack: () -> Unit
+) {
+    composable(AuthRoutes.SETTINGS_ACCESS_CONTROL) {
+        AccessControlScreen(
+            onNavigateBack = onNavigateBack
+        )
+    }
+}
+
+/**
+ * Add Sync Settings sub-screen to navigation graph.
+ */
+fun NavGraphBuilder.syncSettingsScreen(
+    onNavigateBack: () -> Unit
+) {
+    composable(AuthRoutes.SETTINGS_SYNC) {
+        SyncSettingsScreen(
+            onNavigateBack = onNavigateBack
+        )
+    }
+}
+
+/**
+ * Add About sub-screen to navigation graph.
+ */
+fun NavGraphBuilder.aboutScreen(
+    onNavigateBack: () -> Unit
+) {
+    composable(AuthRoutes.SETTINGS_ABOUT) {
+        AboutScreen(
+            onNavigateBack = onNavigateBack
+        )
     }
 }
 
@@ -134,6 +205,22 @@ fun NavController.navigateToSettings() {
     navigate(AuthRoutes.SETTINGS)
 }
 
+fun NavController.navigateToSecuritySettings() {
+    navigate(AuthRoutes.SETTINGS_SECURITY)
+}
+
+fun NavController.navigateToAccessControl() {
+    navigate(AuthRoutes.SETTINGS_ACCESS_CONTROL)
+}
+
+fun NavController.navigateToSyncSettings() {
+    navigate(AuthRoutes.SETTINGS_SYNC)
+}
+
+fun NavController.navigateToAbout() {
+    navigate(AuthRoutes.SETTINGS_ABOUT)
+}
+
 fun NavController.navigateToPinSetup() {
     navigate(AuthRoutes.PIN_SETUP)
 }
@@ -141,3 +228,4 @@ fun NavController.navigateToPinSetup() {
 fun NavController.navigateToPinChange() {
     navigate(AuthRoutes.PIN_CHANGE)
 }
+

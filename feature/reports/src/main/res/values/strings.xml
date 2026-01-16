@@ -47,4 +47,19 @@
     <!-- Errors -->
     <string name="reports_error_load">Gagal memuat laporan</string>
     <string name="reports_retry">Coba Lagi</string>
+
+    <!-- P&L Export Details -->
+    <string name="pnl_export_title">Export Laporan</string>
+    <string name="pnl_export_pdf">PDF</string>
+    <string name="pnl_export_csv">Excel/CSV</string>
+    <string name="pnl_export_hint">File akan tersimpan di folder aplikasi</string>
+    <string name="pnl_period">Periode</string>
+    <string name="pnl_period_label">Periode Laporan</string>
+    <string name="pnl_date_from">Dari</string>
+    <string name="pnl_date_to">Sampai</string>
+    <string name="pnl_select_date">Pilih Tanggal</string>
+    <string name="pnl_select_start_date">Pilih Tanggal Mulai</string>
+    <string name="pnl_select_end_date">Pilih Tanggal Akhir</string>
+    <string name="pnl_ask_ai">Tanya AI</string>
+    <string name="pnl_refresh">Refresh</string>
 </resources>

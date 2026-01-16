@@ -14,7 +14,7 @@ import com.zatiaras.pos.core.domain.model.Product
 import com.zatiaras.pos.feature.inventory.data.mapper.toDomain
 import com.zatiaras.pos.feature.inventory.data.mapper.toDomainList
 import com.zatiaras.pos.feature.inventory.data.mapper.toEntity
-import com.zatiaras.pos.feature.inventory.domain.repository.ProductRepository
+import com.zatiaras.pos.core.domain.repository.ProductRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow

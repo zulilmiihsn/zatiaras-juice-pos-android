@@ -52,6 +52,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.zatiaras.pos.core.ui.theme.LocalDimensions
 
 @Composable
 fun ReportChatRoute(
@@ -123,14 +124,15 @@ fun ReportChatScreen(
                 .padding(paddingValues)
                 .imePadding() // Handle keyboard
         ) {
+            val dimensions = LocalDimensions.current
             // Chat List
             LazyColumn(
                 state = listState,
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth(),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                contentPadding = PaddingValues(dimensions.paddingM),
+                verticalArrangement = Arrangement.spacedBy(dimensions.spacingM)
             ) {
                 items(uiState.messages) { message ->
                     ChatMessageItem(message)

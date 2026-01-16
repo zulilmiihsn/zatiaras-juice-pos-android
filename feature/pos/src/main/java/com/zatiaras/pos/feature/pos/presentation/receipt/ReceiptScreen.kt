@@ -48,6 +48,7 @@ import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import com.zatiaras.pos.core.ui.theme.LocalDimensions
 
 /**
  * Receipt Preview Screen shown after successful transaction.
@@ -70,12 +71,13 @@ fun ReceiptScreen(
     Scaffold(
         modifier = modifier
     ) { paddingValues ->
+        val dimensions = LocalDimensions.current
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            contentPadding = PaddingValues(dimensions.paddingM),
+            verticalArrangement = Arrangement.spacedBy(dimensions.spacingM)
         ) {
             // Success Header
             item {
@@ -128,7 +130,7 @@ fun ReceiptScreen(
                     elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                 ) {
                     Column(
-                        modifier = Modifier.padding(16.dp)
+                        modifier = Modifier.padding(dimensions.paddingM)
                     ) {
                         // Store Header (placeholder)
                         Column(
@@ -279,7 +281,7 @@ fun ReceiptScreen(
                 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(dimensions.spacingS)
                 ) {
                     OutlinedButton(
                         onClick = onPrintReceipt,

@@ -102,7 +102,7 @@ fun CartItemRow(
             
             Spacer(modifier = Modifier.width(dimensions.spacingS))
             
-            // Product Info
+            // Product Info - compact layout for sidebar
             Column(
                 modifier = Modifier.weight(1f)
             ) {
@@ -114,17 +114,20 @@ fun CartItemRow(
                     overflow = TextOverflow.Ellipsis
                 )
                 
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(2.dp))
                 
+                // Unit price - prevent wrapping
                 Text(
                     text = priceFormatter.format(cartItem.product.price),
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    softWrap = false
                 )
                 
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(2.dp))
                 
-                // Animated subtotal with slide animation
+                // Animated subtotal with slide animation - prevent wrapping
                 AnimatedContent(
                     targetState = cartItem.subtotal,
                     transitionSpec = {
@@ -144,22 +147,24 @@ fun CartItemRow(
                         text = priceFormatter.format(subtotal),
                         style = MaterialTheme.typography.titleSmall,
                         color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        softWrap = false
                     )
                 }
             }
             
             Spacer(modifier = Modifier.width(8.dp))
             
-            // Quantity Controls
+            // Quantity Controls - LARGER for Ibu-ibu (40dp instead of 32dp)
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 // Remove/Decrement button
                 IconButton(
                     onClick = if (cartItem.quantity == 1) onRemove else onDecrement,
-                    modifier = Modifier.size(32.dp),
+                    modifier = Modifier.size(40.dp),
                     colors = IconButtonDefaults.iconButtonColors(
                         containerColor = if (cartItem.quantity == 1) {
                             MaterialTheme.colorScheme.errorContainer
@@ -180,7 +185,7 @@ fun CartItemRow(
                                 Icons.Default.Remove
                             },
                             contentDescription = if (isLastItem) "Hapus" else "Kurangi",
-                            modifier = Modifier.size(18.dp),
+                            modifier = Modifier.size(20.dp),
                             tint = if (isLastItem) {
                                 MaterialTheme.colorScheme.error
                             } else {
@@ -215,10 +220,10 @@ fun CartItemRow(
                     )
                 }
                 
-                // Increment button
+                // Increment button - LARGER for Ibu-ibu
                 IconButton(
                     onClick = onIncrement,
-                    modifier = Modifier.size(32.dp),
+                    modifier = Modifier.size(40.dp),
                     colors = IconButtonDefaults.iconButtonColors(
                         containerColor = MaterialTheme.colorScheme.primaryContainer
                     )
@@ -226,7 +231,7 @@ fun CartItemRow(
                     Icon(
                         imageVector = Icons.Default.Add,
                         contentDescription = "Tambah",
-                        modifier = Modifier.size(18.dp),
+                        modifier = Modifier.size(20.dp),
                         tint = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                 }

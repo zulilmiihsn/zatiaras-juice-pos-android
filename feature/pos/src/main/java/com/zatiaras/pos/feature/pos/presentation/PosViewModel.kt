@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.zatiaras.pos.core.domain.model.Product
-import com.zatiaras.pos.feature.inventory.domain.repository.ProductRepository
+import com.zatiaras.pos.core.domain.repository.ProductRepository
 import com.zatiaras.pos.feature.pos.domain.model.Cart
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi

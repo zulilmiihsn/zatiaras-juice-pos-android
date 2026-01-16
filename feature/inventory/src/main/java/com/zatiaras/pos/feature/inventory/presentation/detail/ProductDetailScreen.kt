@@ -57,6 +57,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.zatiaras.pos.core.domain.model.Category
+import com.zatiaras.pos.core.ui.theme.LocalDimensions
 
 /**
  * Product Detail Screen for Add/Edit product.
@@ -177,12 +178,13 @@ private fun FormContent(
     onPickImage: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val dimensions = LocalDimensions.current
     Column(
         modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+            .padding(dimensions.paddingM),
+        verticalArrangement = Arrangement.spacedBy(dimensions.spacingM)
     ) {
         // Image Picker
         ImagePickerBox(
@@ -426,9 +428,10 @@ private fun ErrorContent(
         modifier = modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
+        val dimensions = LocalDimensions.current
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(32.dp)
+            modifier = Modifier.padding(dimensions.paddingXXL)
         ) {
             Icon(
                 imageVector = Icons.Default.ErrorOutline,

@@ -6,7 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.zatiaras.pos.core.data.remote.ImageUploader
 import com.zatiaras.pos.core.domain.model.Product
-import com.zatiaras.pos.feature.inventory.domain.repository.ProductRepository
+import com.zatiaras.pos.core.domain.repository.ProductRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow

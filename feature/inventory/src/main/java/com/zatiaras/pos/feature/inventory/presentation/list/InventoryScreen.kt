@@ -34,11 +34,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.zatiaras.pos.feature.inventory.presentation.components.CategoryFilterRow
 import com.zatiaras.pos.feature.inventory.presentation.components.InventorySearchBar
 import com.zatiaras.pos.feature.inventory.presentation.components.ProductCard
+import com.zatiaras.pos.feature.inventory.R
+import com.zatiaras.pos.core.ui.theme.LocalDimensions
 
 /**
  * Main Inventory List Screen.
@@ -62,12 +65,12 @@ fun InventoryScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Inventaris", fontWeight = androidx.compose.ui.text.font.FontWeight.Bold) },
+                title = { Text(stringResource(R.string.inventory_title), fontWeight = androidx.compose.ui.text.font.FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Kembali"
+                            contentDescription = stringResource(R.string.inventory_back)
                         )
                     }
                 }
@@ -80,7 +83,7 @@ fun InventoryScreen(
             ) {
                 Icon(
                     imageVector = Icons.Default.Add,
-                    contentDescription = "Tambah Produk"
+                    contentDescription = stringResource(R.string.inventory_add_product)
                 )
             }
         }
@@ -145,14 +148,15 @@ private fun InventoryContent(
                             modifier = Modifier.weight(1f)
                         )
                     } else {
+                        val dimensions = LocalDimensions.current
                         LazyVerticalGrid(
                             columns = GridCells.Fixed(2),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .weight(1f),
-                            contentPadding = PaddingValues(16.dp),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                            contentPadding = PaddingValues(dimensions.paddingM),
+                            horizontalArrangement = Arrangement.spacedBy(dimensions.spacingS),
+                            verticalArrangement = Arrangement.spacedBy(dimensions.spacingS)
                         ) {
                             items(
                                 items = uiState.filteredProducts,
@@ -186,13 +190,14 @@ private fun ErrorContent(
     message: String,
     modifier: Modifier = Modifier
 ) {
+    val dimensions = LocalDimensions.current
     Box(
         modifier = modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(32.dp)
+            modifier = Modifier.padding(dimensions.paddingXXL)
         ) {
             Icon(
                 imageVector = Icons.Default.ErrorOutline,
@@ -216,13 +221,14 @@ private fun EmptyContent(
     hasFilters: Boolean,
     modifier: Modifier = Modifier
 ) {
+    val dimensions = LocalDimensions.current
     Box(
         modifier = modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(32.dp)
+            modifier = Modifier.padding(dimensions.paddingXXL)
         ) {
             Icon(
                 imageVector = Icons.Default.Inventory2,
@@ -233,9 +239,9 @@ private fun EmptyContent(
             Spacer(modifier = Modifier.height(16.dp))
             Text(
                 text = if (hasFilters) {
-                    "Tidak ada produk yang cocok"
+                    stringResource(R.string.inventory_no_match)
                 } else {
-                    "Belum ada produk"
+                    stringResource(R.string.inventory_empty)
                 },
                 style = MaterialTheme.typography.titleMedium,
                 textAlign = TextAlign.Center,
@@ -244,7 +250,7 @@ private fun EmptyContent(
             if (!hasFilters) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "Tekan + untuk menambah produk",
+                    text = stringResource(R.string.inventory_add_hint),
                     style = MaterialTheme.typography.bodyMedium,
                     textAlign = TextAlign.Center,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)

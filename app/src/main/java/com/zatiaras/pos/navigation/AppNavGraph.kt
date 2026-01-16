@@ -27,6 +27,10 @@ import com.zatiaras.pos.feature.auth.lock.AppLockRoute
 import com.zatiaras.pos.feature.auth.navigation.AuthRoutes
 import com.zatiaras.pos.feature.auth.navigation.pinSetupScreen
 import com.zatiaras.pos.feature.auth.navigation.settingsScreen
+import com.zatiaras.pos.feature.auth.navigation.securitySettingsScreen
+import com.zatiaras.pos.feature.auth.navigation.accessControlScreen
+import com.zatiaras.pos.feature.auth.navigation.syncSettingsScreen
+import com.zatiaras.pos.feature.auth.navigation.aboutScreen
 import com.zatiaras.pos.feature.inventory.navigation.inventoryNavGraph
 import com.zatiaras.pos.feature.inventory.navigation.navigateToInventory
 import com.zatiaras.pos.feature.pos.domain.model.CartHolder
@@ -177,12 +181,55 @@ fun AppNavGraph(
             onNavigateToInventory = {
                 navController.navigateToInventory()
             },
+            onNavigateToSecurity = {
+                navController.navigate(AuthRoutes.SETTINGS_SECURITY)
+            },
+            onNavigateToAccessControl = {
+                navController.navigate(AuthRoutes.SETTINGS_ACCESS_CONTROL)
+            },
+            onNavigateToSync = {
+                navController.navigate(AuthRoutes.SETTINGS_SYNC)
+            },
+            onNavigateToAbout = {
+                navController.navigate(AuthRoutes.SETTINGS_ABOUT)
+            },
             onLogout = {
                 navController.navigate(NavRoutes.LOGIN) {
                     popUpTo(0) { inclusive = true }
                 }
             },
             accessControlManager = accessControlManager
+        )
+        
+        // Security Settings Sub-Screen
+        securitySettingsScreen(
+            onNavigateBack = {
+                navController.popBackStack()
+            },
+            onNavigateToPinSetup = {
+                navController.navigate(AuthRoutes.PIN_SETUP)
+            }
+        )
+        
+        // Access Control Sub-Screen
+        accessControlScreen(
+            onNavigateBack = {
+                navController.popBackStack()
+            }
+        )
+        
+        // Sync Settings Sub-Screen
+        syncSettingsScreen(
+            onNavigateBack = {
+                navController.popBackStack()
+            }
+        )
+        
+        // About Sub-Screen
+        aboutScreen(
+            onNavigateBack = {
+                navController.popBackStack()
+            }
         )
         
         // Reports P&L (Full Screen) - For deep linking, protected by Access Control

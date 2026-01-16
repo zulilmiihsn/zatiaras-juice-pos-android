@@ -1,4 +1,4 @@
-package com.zatiaras.pos.feature.inventory.domain.repository
+package com.zatiaras.pos.core.domain.repository
 
 import androidx.paging.PagingData
 import com.zatiaras.pos.core.domain.model.Category
@@ -6,7 +6,10 @@ import com.zatiaras.pos.core.domain.model.Product
 import kotlinx.coroutines.flow.Flow
 
 /**
- * Repository interface for Inventory operations.
+ * Repository interface for Product operations.
+ * 
+ * IMPORTANT: This interface lives in core/domain to be accessible from any feature module
+ * without creating cross-feature dependencies.
  * 
  * Design: Offline-first approach.
  * - All reads are from Room (Single Source of Truth)

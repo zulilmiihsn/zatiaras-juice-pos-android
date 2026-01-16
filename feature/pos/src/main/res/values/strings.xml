@@ -64,4 +64,36 @@
     <string name="dialog_clear_cart_message">Semua item akan dihapus dari keranjang.</string>
     <string name="dialog_confirm">Ya</string>
     <string name="dialog_cancel">Batal</string>
+
+    <!-- Store Session -->
+    <string name="pos_store_closed_title">Toko Sedang Tutup</string>
+    <string name="pos_store_closed_message">Silakan buka toko terlebih dahulu melalui Dashboard untuk memulai transaksi.</string>
+    <string name="pos_back_to_dashboard">Kembali ke Dashboard</string>
+
+    <!-- Cash Record (Buku Kas) -->
+    <string name="cash_record_title">Buku Kas</string>
+    <string name="cash_record_summary_title">Ringkasan Hari Ini</string>
+    <string name="cash_record_income">Masuk</string>
+    <string name="cash_record_expense">Keluar</string>
+    <string name="cash_record_balance">Saldo</string>
+    <string name="cash_record_pos_transactions">%d transaksi POS</string>
+    <string name="cash_record_empty">Belum ada catatan hari ini</string>
+    <string name="cash_record_empty_hint">Transaksi POS otomatis tercatat di sini</string>
+    <string name="cash_record_add">Tambah</string>
+    <string name="cash_record_add_title">Tambah Catatan Manual</string>
+    <string name="cash_record_add_subtitle">Untuk pemasukan/pengeluaran di luar POS</string>
+    <string name="cash_record_type">Jenis</string>
+    <string name="cash_record_type_income">Pemasukan</string>
+    <string name="cash_record_type_expense">Pengeluaran</string>
+    <string name="cash_record_date">Tanggal</string>
+    <string name="cash_record_amount">Jumlah *</string>
+    <string name="cash_record_description">Keterangan *</string>
+    <string name="cash_record_description_hint">Contoh: Beli stok es batu</string>
+    <string name="cash_record_category">Kategori (opsional)</string>
+    <string name="cash_record_notes">Catatan (opsional)</string>
+    <string name="cash_record_save">Simpan</string>
+    <string name="cash_record_saved">Data berhasil disimpan</string>
+    <string name="cash_record_delete_title">Hapus Catatan</string>
+    <string name="cash_record_delete_message">Apakah Anda yakin ingin menghapus catatan ini?</string>
+    <string name="cash_record_delete">Hapus</string>
 </resources>

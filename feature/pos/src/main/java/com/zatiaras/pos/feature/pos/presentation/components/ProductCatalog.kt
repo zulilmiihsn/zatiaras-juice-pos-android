@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import com.zatiaras.pos.core.domain.model.Category
 import com.zatiaras.pos.core.domain.model.Product
 import com.zatiaras.pos.feature.pos.domain.model.Cart
+import com.zatiaras.pos.core.ui.theme.LocalDimensions
 
 /**
  * Product catalog component with search, category filter, and product grid.
@@ -130,9 +131,10 @@ private fun CategoryChips(
     onCategorySelect: (String?) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val dimensions = LocalDimensions.current
     Row(
         modifier = modifier.horizontalScroll(rememberScrollState()),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        horizontalArrangement = Arrangement.spacedBy(dimensions.spacingXS)
     ) {
         FilterChip(
             selected = selectedCategoryId == null,
@@ -184,11 +186,12 @@ private fun ProductGrid(
             }
             
             else -> {
+                val dimensions = LocalDimensions.current
                 LazyVerticalGrid(
                     columns = GridCells.Adaptive(minSize = 150.dp),
-                    contentPadding = PaddingValues(16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    contentPadding = PaddingValues(dimensions.paddingM),
+                    horizontalArrangement = Arrangement.spacedBy(dimensions.spacingS),
+                    verticalArrangement = Arrangement.spacedBy(dimensions.spacingS)
                 ) {
                     items(
                         items = products,

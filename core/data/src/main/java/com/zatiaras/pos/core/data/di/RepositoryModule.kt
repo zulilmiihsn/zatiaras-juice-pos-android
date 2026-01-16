@@ -1,8 +1,10 @@
 package com.zatiaras.pos.core.data.di
 
+import com.zatiaras.pos.core.data.repository.DashboardRepositoryImpl
 import com.zatiaras.pos.core.data.repository.LocalAuthRepository
 import com.zatiaras.pos.core.data.repository.StoreSessionRepositoryImpl
 import com.zatiaras.pos.core.domain.AuthRepository
+import com.zatiaras.pos.core.domain.repository.DashboardRepository
 import com.zatiaras.pos.core.domain.repository.StoreSessionRepository
 import dagger.Binds
 import dagger.Module
@@ -22,4 +24,10 @@ abstract class RepositoryModule {
     abstract fun bindStoreSessionRepository(
         implementation: StoreSessionRepositoryImpl
     ): StoreSessionRepository
+
+    @Binds
+    abstract fun bindDashboardRepository(
+        implementation: DashboardRepositoryImpl
+    ): DashboardRepository
 }
+

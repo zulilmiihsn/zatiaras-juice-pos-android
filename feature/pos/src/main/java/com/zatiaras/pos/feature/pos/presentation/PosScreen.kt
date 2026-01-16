@@ -21,9 +21,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.paging.compose.collectAsLazyPagingItems
+import com.zatiaras.pos.core.ui.theme.LocalDimensions
+import com.zatiaras.pos.feature.pos.R
 import com.zatiaras.pos.feature.pos.presentation.components.CartSidebar
 import com.zatiaras.pos.feature.pos.presentation.components.PagedProductCatalog
 
@@ -50,6 +53,7 @@ fun PosScreen(
     val pagedProducts = viewModel.pagedProducts.collectAsLazyPagingItems()
     val snackbarHostState = remember { SnackbarHostState() }
     var isCartVisible by remember { mutableStateOf(false) }
+    val dimensions = LocalDimensions.current
     
     // Show error snackbar
     LaunchedEffect(uiState.error) {
@@ -69,7 +73,7 @@ fun PosScreen(
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        "Kasir",
+                        stringResource(R.string.pos_title),
                         fontWeight = FontWeight.Bold
                     )
                 },
@@ -123,7 +127,7 @@ fun PosScreen(
                     onRemove = { viewModel.onEvent(PosEvent.RemoveFromCart(it)) },
                     onClearCart = { viewModel.onEvent(PosEvent.ClearCart) },
                     onCheckout = onProceedToCheckout,
-                    modifier = Modifier.width(320.dp)
+                    modifier = Modifier.width(dimensions.sidebarWidth)
                 )
             }
         }
@@ -132,6 +136,7 @@ fun PosScreen(
 
 @Composable
 private fun StoreClosedOverlay(onNavigateBack: () -> Unit) {
+    val dimensions = LocalDimensions.current
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
@@ -139,7 +144,7 @@ private fun StoreClosedOverlay(onNavigateBack: () -> Unit) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(32.dp),
+                .padding(dimensions.paddingXXL),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -151,14 +156,14 @@ private fun StoreClosedOverlay(onNavigateBack: () -> Unit) {
             )
             Spacer(modifier = Modifier.height(24.dp))
             Text(
-                text = "Toko Sedang Tutup",
+                text = stringResource(R.string.pos_store_closed_title),
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.error
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "Silakan buka toko terlebih dahulu melalui Dashboard untuk memulai transaksi.",
+                text = stringResource(R.string.pos_store_closed_message),
                 style = MaterialTheme.typography.bodyLarge,
                 textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
@@ -168,7 +173,7 @@ private fun StoreClosedOverlay(onNavigateBack: () -> Unit) {
                 onClick = onNavigateBack,
                 modifier = Modifier.fillMaxWidth().height(50.dp)
             ) {
-                Text("Kembali ke Dashboard")
+                Text(stringResource(R.string.pos_back_to_dashboard))
             }
         }
     }

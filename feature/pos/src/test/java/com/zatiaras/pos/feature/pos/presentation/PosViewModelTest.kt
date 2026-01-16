@@ -3,7 +3,8 @@ package com.zatiaras.pos.feature.pos.presentation
 import app.cash.turbine.test
 import com.zatiaras.pos.core.domain.model.Category
 import com.zatiaras.pos.core.domain.model.Product
-import com.zatiaras.pos.feature.inventory.domain.repository.ProductRepository
+import com.zatiaras.pos.core.domain.repository.ProductRepository
+import com.zatiaras.pos.core.domain.repository.StoreSessionRepository
 import com.zatiaras.pos.feature.pos.MainDispatcherRule
 import io.mockk.every
 import io.mockk.mockk
@@ -32,6 +33,7 @@ class PosViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private lateinit var productRepository: ProductRepository
+    private lateinit var storeSessionRepository: StoreSessionRepository
     private lateinit var viewModel: PosViewModel
 
     private val testCategory = Category(id = "cat-1", name = "Minuman")
@@ -61,24 +63,27 @@ class PosViewModelTest {
     @Before
     fun setup() {
         productRepository = mockk()
+        storeSessionRepository = mockk()
         every { productRepository.getProducts() } returns flowOf(testProducts)
         every { productRepository.getCategories() } returns flowOf(listOf(testCategory))
-        viewModel = PosViewModel(productRepository)
+        every { productRepository.getProductCount() } returns flowOf(2)
+        every { storeSessionRepository.getActiveSession() } returns flowOf(null)
+        viewModel = PosViewModel(productRepository, storeSessionRepository)
     }
 
     @Test
-    fun `initial state loads products and categories`() = runTest {
+    fun `initial state loads categories and product count`() = runTest {
         viewModel.uiState.test {
             val state = awaitItem()
             
             // Skip loading state, get to loaded state
             if (state.isLoading) {
                 val loadedState = awaitItem()
-                assertEquals(2, loadedState.products.size)
+                assertEquals(2, loadedState.productCount) // Product count from repository
                 assertEquals(1, loadedState.categories.size)
                 assertEquals(false, loadedState.isLoading)
             } else {
-                assertEquals(2, state.products.size)
+                assertEquals(2, state.productCount)
                 assertEquals(1, state.categories.size)
             }
             cancelAndIgnoreRemainingEvents()
@@ -191,7 +196,7 @@ class PosViewModelTest {
     }
 
     @Test
-    fun `searchQueryChanged filters products`() = runTest {
+    fun `searchQueryChanged updates search query state`() = runTest {
         viewModel.uiState.test {
             skipItems(1)
             
@@ -199,8 +204,8 @@ class PosViewModelTest {
             
             val state = awaitItem()
             assertEquals("Kopi", state.searchQuery)
-            assertEquals(1, state.filteredProducts.size)
-            assertEquals("Kopi Susu", state.filteredProducts[0].name)
+            // Note: Actual product filtering is done via PagingData,
+            // not exposed in UiState directly
             cancelAndIgnoreRemainingEvents()
         }
     }

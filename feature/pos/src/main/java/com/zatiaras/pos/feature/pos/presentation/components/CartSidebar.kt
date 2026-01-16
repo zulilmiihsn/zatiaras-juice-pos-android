@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.ShoppingCart
@@ -30,6 +31,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.zatiaras.pos.feature.pos.domain.model.Cart
@@ -41,8 +43,10 @@ import java.util.Locale
 /**
  * Cart sidebar component for POS screen.
  * 
- * Displays cart items with quantity controls and checkout button.
- * Separated from PosScreen.kt to follow KISS principle (files under 200 lines).
+ * UX optimized for Ibu-ibu:
+ * - Large, prominent checkout button
+ * - Clear pricing
+ * - Easy-to-read typography
  */
 @Composable
 fun CartSidebar(
@@ -54,7 +58,6 @@ fun CartSidebar(
     onCheckout: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // Remember priceFormatter to avoid recomposition on every render
     val priceFormatter = remember {
         NumberFormat.getCurrencyInstance(Locale("id", "ID")).apply {
             maximumFractionDigits = 0
@@ -83,7 +86,7 @@ fun CartSidebar(
             LazyColumn(
                 modifier = Modifier.weight(1f),
                 contentPadding = PaddingValues(dimensions.paddingM),
-                verticalArrangement = Arrangement.spacedBy(dimensions.spacingXS)
+                verticalArrangement = Arrangement.spacedBy(dimensions.spacingS)
             ) {
                 items(
                     items = cart.items,
@@ -100,7 +103,7 @@ fun CartSidebar(
             
             HorizontalDivider()
             
-            // Footer with Total and Checkout
+            // Footer with Total and Checkout - LARGER for Ibu-ibu
             CartFooter(
                 subtotal = cart.subtotal,
                 priceFormatter = priceFormatter,
@@ -119,7 +122,7 @@ private fun CartHeader(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(dimensions.paddingM),
+            .padding(horizontal = dimensions.paddingM, vertical = dimensions.paddingS),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -131,7 +134,7 @@ private fun CartHeader(
         
         IconButton(
             onClick = onClearCart,
-            modifier = Modifier.size(32.dp)
+            modifier = Modifier.size(36.dp)
         ) {
             Icon(
                 imageVector = Icons.Default.Clear,
@@ -155,38 +158,45 @@ private fun CartFooter(
             .background(MaterialTheme.colorScheme.surface)
             .padding(dimensions.paddingM)
     ) {
+        // Subtotal row - larger text
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 text = "Subtotal",
-                style = MaterialTheme.typography.bodyLarge
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
                 text = priceFormatter.format(subtotal),
-                style = MaterialTheme.typography.titleLarge,
+                style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary
             )
         }
         
-        Spacer(modifier = Modifier.height(dimensions.spacingM))
+        Spacer(modifier = Modifier.height(16.dp))
         
+        // Checkout Button - LARGE and GREEN for Ibu-ibu
         Button(
             onClick = onCheckout,
-            modifier = Modifier.fillMaxWidth(),
-            shape = AppShapes.M,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            shape = RoundedCornerShape(14.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primary
+                containerColor = Color(0xFF10B981),
+                contentColor = Color.White
             )
         ) {
             Icon(
                 imageVector = Icons.Default.ShoppingCart,
                 contentDescription = null,
-                modifier = Modifier.size(20.dp)
+                modifier = Modifier.size(24.dp)
             )
-            Spacer(modifier = Modifier.width(dimensions.spacingXS))
+            Spacer(modifier = Modifier.width(10.dp))
             Text(
                 text = "Bayar",
                 style = MaterialTheme.typography.titleMedium,
@@ -195,3 +205,4 @@ private fun CartFooter(
         }
     }
 }
+

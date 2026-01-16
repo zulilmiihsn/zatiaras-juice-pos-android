@@ -127,6 +127,14 @@ private fun TopProductItem(
         animationPlayed = true
     }
     
+    // Medal emojis for top 3, then numbers for the rest
+    val rankDisplay = when (rank) {
+        1 -> "🥇"
+        2 -> "🥈"
+        3 -> "🥉"
+        else -> rank.toString()
+    }
+    
     val rankColors = listOf(
         Color(0xFFFFD700),  // Gold
         Color(0xFFC0C0C0),  // Silver
@@ -136,25 +144,36 @@ private fun TopProductItem(
     )
     
     val rankColor = rankColors.getOrElse(rank - 1) { MaterialTheme.colorScheme.primary }
+    val isMedal = rank <= 3
     
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Rank badge
-        Box(
-            modifier = Modifier
-                .size(28.dp)
-                .clip(CircleShape)
-                .background(rankColor.copy(alpha = 0.15f)),
-            contentAlignment = Alignment.Center
-        ) {
+        // Rank badge or medal
+        if (isMedal) {
+            // Show medal emoji
             Text(
-                text = rank.toString(),
-                style = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.Bold,
-                color = rankColor
+                text = rankDisplay,
+                style = MaterialTheme.typography.headlineSmall,
+                modifier = Modifier.size(32.dp)
             )
+        } else {
+            // Show number badge for rank 4+
+            Box(
+                modifier = Modifier
+                    .size(28.dp)
+                    .clip(CircleShape)
+                    .background(rankColor.copy(alpha = 0.15f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = rankDisplay,
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = rankColor
+                )
+            }
         }
         
         Spacer(modifier = Modifier.width(12.dp))

@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -70,11 +71,13 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import com.zatiaras.pos.core.ui.theme.ExpenseRed
+import com.zatiaras.pos.core.ui.theme.IncomeGreen
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.zatiaras.pos.core.ui.theme.LocalDimensions
 import com.zatiaras.pos.feature.pos.domain.model.CashRecordType
 import kotlinx.coroutines.launch
 import java.text.NumberFormat
@@ -199,9 +202,10 @@ fun CashRecordScreen(
                     }
                 }
             } else {
+                val dimensions = LocalDimensions.current
                 LazyColumn(
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    contentPadding = PaddingValues(dimensions.paddingM),
+                    verticalArrangement = Arrangement.spacedBy(dimensions.spacingXS)
                 ) {
                     items(
                         items = uiState.items,
@@ -246,6 +250,10 @@ fun CashRecordScreen(
     }
 }
 
+/**
+ * Redesigned summary card with larger numbers and clear visual separation.
+ * Optimized for busy cashiers who need quick glances.
+ */
 @Composable
 private fun CashSummaryCard(
     totalIncome: Long,
@@ -255,15 +263,18 @@ private fun CashSummaryCard(
     priceFormatter: NumberFormat,
     modifier: Modifier = Modifier
 ) {
+    val dimensions = LocalDimensions.current
     Card(
         modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer
-        )
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(dimensions.paddingL)
         ) {
+            // Header with transaction count badge
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -276,84 +287,135 @@ private fun CashSummaryCard(
                 )
                 if (posTransactionCount > 0) {
                     Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+                        shape = RoundedCornerShape(16.dp),
+                        color = MaterialTheme.colorScheme.primaryContainer
                     ) {
                         Text(
-                            text = "$posTransactionCount transaksi POS",
-                            style = MaterialTheme.typography.labelSmall,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                            color = MaterialTheme.colorScheme.primary
+                            text = "$posTransactionCount transaksi",
+                            style = MaterialTheme.typography.labelMedium,
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
                         )
                     }
                 }
             }
             
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(dimensions.spacingL))
             
+            // Income and Expense in clear separate cards
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Income
-                Column {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.TrendingUp,
-                            contentDescription = null,
-                            tint = Color(0xFF4CAF50),
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
+                // MASUK Card
+                Card(
+                    modifier = Modifier.weight(1f),
+                    colors = CardDefaults.cardColors(
+                        containerColor = IncomeGreen.copy(alpha = 0.1f)
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.TrendingUp,
+                                contentDescription = null,
+                                tint = IncomeGreen,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "MASUK",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = IncomeGreen
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "Masuk",
-                            style = MaterialTheme.typography.bodySmall
+                            text = priceFormatter.format(totalIncome),
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = IncomeGreen
                         )
                     }
-                    Text(
-                        text = priceFormatter.format(totalIncome),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF4CAF50)
-                    )
                 }
                 
-                // Expense
-                Column {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.TrendingDown,
-                            contentDescription = null,
-                            tint = Color(0xFFF44336),
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
+                // KELUAR Card
+                Card(
+                    modifier = Modifier.weight(1f),
+                    colors = CardDefaults.cardColors(
+                        containerColor = ExpenseRed.copy(alpha = 0.1f)
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.TrendingDown,
+                                contentDescription = null,
+                                tint = ExpenseRed,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "KELUAR",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = ExpenseRed
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "Keluar",
-                            style = MaterialTheme.typography.bodySmall
+                            text = priceFormatter.format(totalExpense),
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = ExpenseRed
                         )
                     }
-                    Text(
-                        text = priceFormatter.format(totalExpense),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFFF44336)
-                    )
                 }
-                
-                // Net
-                Column(horizontalAlignment = Alignment.End) {
-                    Text(
-                        text = "Saldo",
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                    Text(
-                        text = priceFormatter.format(netCash),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = if (netCash >= 0) Color(0xFF4CAF50) else Color(0xFFF44336)
-                    )
-                }
+            }
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // Divider
+            Spacer(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(1.dp)
+                    .background(MaterialTheme.colorScheme.outlineVariant)
+            )
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // SALDO - Large and Prominent
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "SALDO: ",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = priceFormatter.format(netCash),
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = if (netCash >= 0) IncomeGreen else ExpenseRed
+                )
             }
         }
     }
@@ -385,8 +447,8 @@ private fun CashFlowItemRow(
             backgroundContent = {
                 val color by animateColorAsState(
                     targetValue = when (dismissState.targetValue) {
-                        SwipeToDismissBoxValue.EndToStart -> Color(0xFFF44336)
-                        else -> Color.Transparent
+                        SwipeToDismissBoxValue.EndToStart -> ExpenseRed
+                        else -> androidx.compose.ui.graphics.Color.Transparent
                     },
                     label = "swipe_color"
                 )
@@ -401,7 +463,7 @@ private fun CashFlowItemRow(
                     Icon(
                         imageVector = Icons.Default.Delete,
                         contentDescription = "Hapus",
-                        tint = Color.White
+                        tint = androidx.compose.ui.graphics.Color.White
                     )
                 }
             },
@@ -445,7 +507,7 @@ private fun CashFlowItemCard(
     timeFormatter: SimpleDateFormat
 ) {
     val isTransactionItem = item is CashFlowItem.FromTransaction
-    val iconColor = if (item.isIncome) Color(0xFF4CAF50) else Color(0xFFF44336)
+    val iconColor = if (item.isIncome) IncomeGreen else ExpenseRed
     
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -536,65 +598,127 @@ private fun AddCashRecordSheet(
             .fillMaxWidth()
             .padding(24.dp)
     ) {
+        // Centered Title
         Text(
             text = "Tambah Catatan Manual",
             style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center
         )
+        
+        Spacer(modifier = Modifier.height(4.dp))
         
         Text(
             text = "Untuk pemasukan/pengeluaran di luar POS",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center
         )
         
         Spacer(modifier = Modifier.height(24.dp))
         
-        // Type Selection
+        // Type Selection - LARGE Segmented Button Style
         Text(
-            text = "Jenis",
-            style = MaterialTheme.typography.labelLarge
+            text = "Jenis Transaksi",
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.SemiBold
         )
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(12.dp))
+        
+        // Large segmented buttons for easy touch
         Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp), // Standard touch target
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            FilterChip(
-                selected = formState.type == CashRecordType.INCOME,
+            // PEMASUKAN Button
+            Surface(
                 onClick = { onEvent(CashRecordEvent.SetType(CashRecordType.INCOME)) },
-                label = { Text("Pemasukan") },
-                leadingIcon = {
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight(),
+                shape = RoundedCornerShape(16.dp),
+                color = if (formState.type == CashRecordType.INCOME) 
+                    IncomeGreen.copy(alpha = 0.15f)
+                else 
+                    MaterialTheme.colorScheme.surfaceVariant,
+                border = if (formState.type == CashRecordType.INCOME)
+                    androidx.compose.foundation.BorderStroke(2.dp, IncomeGreen)
+                else
+                    null
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Icon(
                         imageVector = Icons.Default.TrendingUp,
                         contentDescription = null,
-                        modifier = Modifier.size(18.dp)
+                        tint = if (formState.type == CashRecordType.INCOME) 
+                            IncomeGreen 
+                        else 
+                            MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(24.dp)
                     )
-                },
-                colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = Color(0xFF4CAF50).copy(alpha = 0.2f),
-                    selectedLabelColor = Color(0xFF4CAF50)
-                ),
-                modifier = Modifier.weight(1f)
-            )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "PEMASUKAN",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = if (formState.type == CashRecordType.INCOME) 
+                            IncomeGreen 
+                        else 
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
             
-            FilterChip(
-                selected = formState.type == CashRecordType.EXPENSE,
+            // PENGELUARAN Button
+            Surface(
                 onClick = { onEvent(CashRecordEvent.SetType(CashRecordType.EXPENSE)) },
-                label = { Text("Pengeluaran") },
-                leadingIcon = {
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight(),
+                shape = RoundedCornerShape(16.dp),
+                color = if (formState.type == CashRecordType.EXPENSE) 
+                    ExpenseRed.copy(alpha = 0.15f)
+                else 
+                    MaterialTheme.colorScheme.surfaceVariant,
+                border = if (formState.type == CashRecordType.EXPENSE)
+                    androidx.compose.foundation.BorderStroke(2.dp, ExpenseRed)
+                else
+                    null
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Icon(
                         imageVector = Icons.Default.TrendingDown,
                         contentDescription = null,
-                        modifier = Modifier.size(18.dp)
+                        tint = if (formState.type == CashRecordType.EXPENSE) 
+                            ExpenseRed 
+                        else 
+                            MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(24.dp)
                     )
-                },
-                colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = Color(0xFFF44336).copy(alpha = 0.2f),
-                    selectedLabelColor = Color(0xFFF44336)
-                ),
-                modifier = Modifier.weight(1f)
-            )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "PENGELUARAN",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = if (formState.type == CashRecordType.EXPENSE) 
+                            ExpenseRed 
+                        else 
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
         }
         
         Spacer(modifier = Modifier.height(16.dp))
@@ -769,9 +893,9 @@ private fun AddCashRecordSheet(
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = if (formState.type == CashRecordType.INCOME) {
-                        Color(0xFF4CAF50)
+                        IncomeGreen
                     } else {
-                        Color(0xFFF44336)
+                        ExpenseRed
                     }
                 )
             ) {
@@ -779,7 +903,7 @@ private fun AddCashRecordSheet(
                     CircularProgressIndicator(
                         modifier = Modifier.size(20.dp),
                         strokeWidth = 2.dp,
-                        color = Color.White
+                        color = androidx.compose.ui.graphics.Color.White
                     )
                 } else {
                     Text("Simpan")

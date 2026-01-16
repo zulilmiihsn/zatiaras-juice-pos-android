@@ -51,6 +51,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.zatiaras.pos.core.ui.theme.LocalDimensions
 import com.zatiaras.pos.feature.reports.presentation.components.RevenueLineChart
 import com.zatiaras.pos.feature.reports.presentation.components.StatCard
 import com.zatiaras.pos.feature.reports.presentation.components.TopProductsList
@@ -105,14 +106,6 @@ fun ReportDashboardScreen(
                         }
                     }
                 },
-                actions = {
-                    IconButton(onClick = onRefresh) {
-                        Icon(
-                            imageVector = Icons.Default.Refresh,
-                            contentDescription = "Refresh"
-                        )
-                    }
-                },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface
                 )
@@ -154,17 +147,25 @@ fun ReportDashboardScreen(
                 enter = fadeIn(),
                 exit = fadeOut()
             ) {
+                val dimensions = LocalDimensions.current
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                    contentPadding = PaddingValues(dimensions.paddingM),
+                    verticalArrangement = Arrangement.spacedBy(dimensions.spacingM)
                 ) {
                     // Today's Stats Section
                     item {
                         TodayStatsSection(uiState)
                     }
                     
-                    // Weekly Revenue Chart
+                    // Top Products (PRIORITAS - di atas chart)
+                    item {
+                        TopProductsList(
+                            products = uiState.topProducts
+                        )
+                    }
+                    
+                    // Weekly Revenue Chart (dipindah ke bawah)
                     item {
                         RevenueLineChart(
                             data = uiState.weeklyRevenue
@@ -174,13 +175,6 @@ fun ReportDashboardScreen(
                     // Period Summary Cards
                     item {
                         PeriodSummarySection(uiState)
-                    }
-                    
-                    // Top Products
-                    item {
-                        TopProductsList(
-                            products = uiState.topProducts
-                        )
                     }
                     
                     // P&L Report Quick Access

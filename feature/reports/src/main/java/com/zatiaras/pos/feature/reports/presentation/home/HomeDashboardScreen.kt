@@ -49,12 +49,21 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.zatiaras.pos.core.ui.theme.LocalDimensions
 import com.zatiaras.pos.feature.reports.presentation.components.RevenueLineChart
 import com.zatiaras.pos.feature.reports.presentation.components.StatCard
 import com.zatiaras.pos.feature.reports.presentation.components.TopProductsList
+import com.zatiaras.pos.feature.reports.presentation.components.StatisticsSection
 import com.zatiaras.pos.feature.reports.presentation.components.formatRupiah
 import com.zatiaras.pos.feature.reports.presentation.dashboard.ReportDashboardUiState
 import com.zatiaras.pos.feature.reports.presentation.dashboard.ReportDashboardViewModel
+import androidx.compose.foundation.clickable
+import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material.icons.outlined.LockOpen
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableLongStateOf
 
 /**
  * Home Dashboard Screen - Complete Business Overview
@@ -74,7 +83,9 @@ fun HomeDashboardRoute(
     HomeDashboardScreen(
         uiState = uiState,
         onRefresh = viewModel::refresh,
-        onNavigateToSettings = onNavigateToSettings
+        onNavigateToSettings = onNavigateToSettings,
+        onOpenStore = viewModel::openStore,
+        onCloseStore = viewModel::closeStore
     )
 }
 
@@ -83,9 +94,13 @@ fun HomeDashboardRoute(
 fun HomeDashboardScreen(
     uiState: ReportDashboardUiState,
     onRefresh: () -> Unit,
-    onNavigateToSettings: () -> Unit
+    onNavigateToSettings: () -> Unit,
+    onOpenStore: (Long) -> Unit = {},
+    onCloseStore: () -> Unit = {}
 ) {
     val pullToRefreshState = rememberPullToRefreshState()
+    var showOpenStoreDialog by remember { mutableStateOf(false) }
+    var showCloseStoreDialog by remember { mutableStateOf(false) }
     
     Scaffold(
         topBar = {
@@ -97,12 +112,6 @@ fun HomeDashboardScreen(
                     )
                 },
                 actions = {
-                    IconButton(onClick = onRefresh) {
-                        Icon(
-                            imageVector = Icons.Default.Refresh,
-                            contentDescription = "Refresh"
-                        )
-                    }
                     IconButton(onClick = onNavigateToSettings) {
                         Icon(
                             imageVector = Icons.Default.Settings,
@@ -142,32 +151,49 @@ fun HomeDashboardScreen(
                 enter = fadeIn(),
                 exit = fadeOut()
             ) {
+                val dimensions = LocalDimensions.current
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                    contentPadding = PaddingValues(dimensions.paddingM),
+                    verticalArrangement = Arrangement.spacedBy(dimensions.spacingM)
                 ) {
+                    // Store Status Banner (TOP - Most Prominent)
+                    item {
+                        StoreStatusBanner(
+                            isStoreOpen = uiState.isStoreOpen,
+                            onOpenClick = { showOpenStoreDialog = true },
+                            onCloseClick = { showCloseStoreDialog = true }
+                        )
+                    }
+                    
                     // Today's Stats Section
                     item {
                         TodayStatsSection(uiState)
                     }
                     
-                    // Weekly Revenue Chart
-                    item {
-                        RevenueLineChart(
-                            data = uiState.weeklyRevenue
-                        )
-                    }
-                    
-                    // Period Summary Cards
-                    item {
-                        PeriodSummarySection(uiState)
-                    }
-                    
-                    // Top Products
+                    // Top Products (PRIORITAS - di atas chart)
                     item {
                         TopProductsList(
                             products = uiState.topProducts
+                        )
+                    }
+                    
+                    // Statistics Section (6 metrics in grid)
+                    item {
+                        StatisticsSection(
+                            averageTransactions = uiState.averageTransactionsPerDay,
+                            peakHours = uiState.peakHours,
+                            averageOrderValue = uiState.averageOrderValue,
+                            averageItemsPerTransaction = uiState.averageItemsPerTransaction,
+                            growthPercent = uiState.growthPercent,
+                            busiestDay = uiState.busiestDay
+                        )
+                    }
+                    
+                    // Weekly Revenue Chart (dipindah ke bawah)
+                    item {
+                        RevenueLineChart(
+                            data = uiState.weeklyRevenue
                         )
                     }
                     
@@ -178,6 +204,41 @@ fun HomeDashboardScreen(
                 }
             }
         }
+    }
+    
+    // Open Store Dialog
+    if (showOpenStoreDialog) {
+        OpenStoreDialog(
+            onDismiss = { showOpenStoreDialog = false },
+            onConfirm = { amount ->
+                onOpenStore(amount)
+                showOpenStoreDialog = false
+            }
+        )
+    }
+    
+    // Close Store Dialog
+    if (showCloseStoreDialog) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { showCloseStoreDialog = false },
+            title = { Text("Tutup Toko") },
+            text = { Text("Apakah Anda yakin ingin menutup toko untuk hari ini?") },
+            confirmButton = {
+                androidx.compose.material3.Button(
+                    onClick = {
+                        onCloseStore()
+                        showCloseStoreDialog = false
+                    }
+                ) {
+                    Text("Tutup Toko")
+                }
+            },
+            dismissButton = {
+                androidx.compose.material3.TextButton(onClick = { showCloseStoreDialog = false }) {
+                    Text("Batal")
+                }
+            }
+        )
     }
 }
 
@@ -304,4 +365,132 @@ private fun PeriodCard(
             )
         }
     }
+}
+
+/**
+ * Prominent store status banner - shown at TOP of dashboard
+ */
+@Composable
+private fun StoreStatusBanner(
+    isStoreOpen: Boolean,
+    onOpenClick: () -> Unit,
+    onCloseClick: () -> Unit
+) {
+    val dimensions = LocalDimensions.current
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { if (isStoreOpen) onCloseClick() else onOpenClick() },
+        colors = CardDefaults.cardColors(
+            containerColor = if (isStoreOpen) 
+                MaterialTheme.colorScheme.primaryContainer 
+            else 
+                MaterialTheme.colorScheme.errorContainer
+        ),
+        shape = RoundedCornerShape(16.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(dimensions.paddingM)
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                // Status indicator dot
+                Box(
+                    modifier = Modifier
+                        .size(12.dp)
+                        .clip(CircleShape)
+                        .background(
+                            if (isStoreOpen) Color(0xFF10B981) // Green
+                            else Color(0xFFEF4444) // Red
+                        )
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Column {
+                    Text(
+                        text = if (isStoreOpen) "Toko Buka" else "Toko Tutup",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = if (isStoreOpen) 
+                            MaterialTheme.colorScheme.onPrimaryContainer 
+                        else 
+                            MaterialTheme.colorScheme.onErrorContainer
+                    )
+                    Text(
+                        text = if (isStoreOpen) 
+                            "Ketuk untuk menutup toko" 
+                        else 
+                            "Ketuk untuk membuka toko",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (isStoreOpen) 
+                            MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f) 
+                        else 
+                            MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.7f)
+                    )
+                }
+            }
+            Icon(
+                imageVector = if (isStoreOpen) Icons.Outlined.LockOpen else Icons.Outlined.Lock,
+                contentDescription = null,
+                tint = if (isStoreOpen) 
+                    MaterialTheme.colorScheme.onPrimaryContainer 
+                else 
+                    MaterialTheme.colorScheme.onErrorContainer,
+                modifier = Modifier.size(28.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun OpenStoreDialog(
+    onDismiss: () -> Unit,
+    onConfirm: (Long) -> Unit
+) {
+    var openingBalance by remember { mutableLongStateOf(0L) }
+    var balanceText by remember { mutableStateOf("0") }
+    
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { 
+            Text(
+                text = "Buka Toko",
+                fontWeight = FontWeight.Bold
+            )
+        },
+        text = {
+            Column {
+                Text(
+                    text = "Masukkan modal awal kasir:",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                androidx.compose.material3.OutlinedTextField(
+                    value = balanceText,
+                    onValueChange = { input ->
+                        balanceText = input.filter { it.isDigit() }
+                        openingBalance = balanceText.toLongOrNull() ?: 0L
+                    },
+                    label = { Text("Modal Awal") },
+                    prefix = { Text("Rp ") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        },
+        confirmButton = {
+            androidx.compose.material3.Button(
+                onClick = { onConfirm(openingBalance) }
+            ) {
+                Text("Buka Toko")
+            }
+        },
+        dismissButton = {
+            androidx.compose.material3.TextButton(onClick = onDismiss) {
+                Text("Batal")
+            }
+        }
+    )
 }

@@ -10,6 +10,7 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -20,9 +21,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.Fastfood
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -33,24 +35,27 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.zatiaras.pos.core.domain.model.Product
-import com.zatiaras.pos.core.ui.theme.LocalDimensions
 import java.text.NumberFormat
 import java.util.Locale
 
 /**
  * Product card optimized for POS catalog grid.
- * Compact design focusing on quick product identification and selection.
  * 
- * Features:
- * - Scale animation on press for tactile feedback
- * - Animated quantity badge with scale/fade transition
+ * UX optimized for Ibu-ibu target users:
+ * - Entire card is tap target (no small buttons)
+ * - Large, readable price
+ * - Visual feedback when item is in cart (green tint)
+ * - Large quantity badge
  */
 @Composable
 fun PosProductCard(
@@ -59,9 +64,10 @@ fun PosProductCard(
     onAddToCart: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val dimensions = LocalDimensions.current
-    val priceFormatter = NumberFormat.getCurrencyInstance(Locale("id", "ID")).apply {
-        maximumFractionDigits = 0
+    val priceFormatter = remember {
+        NumberFormat.getCurrencyInstance(Locale("id", "ID")).apply {
+            maximumFractionDigits = 0
+        }
     }
     
     // Animation for press effect
@@ -73,20 +79,26 @@ fun PosProductCard(
         label = "card_scale"
     )
     
+    val isInCart = quantityInCart > 0
+    val cardBorderColor = if (isInCart) Color(0xFF10B981) else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+    val cardBgColor = if (isInCart) Color(0xFF10B981).copy(alpha = 0.08f) else MaterialTheme.colorScheme.surface
+    
     Card(
         onClick = onAddToCart,
         modifier = modifier
             .fillMaxWidth()
             .scale(scale),
-        shape = MaterialTheme.shapes.medium, // ShadCN Medium (8dp)
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = cardBgColor
         ),
         border = androidx.compose.foundation.BorderStroke(
-            width = 1.dp,
-            color = MaterialTheme.colorScheme.outline
+            width = if (isInCart) 2.dp else 1.dp,
+            color = cardBorderColor
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp), // Flat design
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = if (isInCart) 4.dp else 1.dp
+        ),
         interactionSource = interactionSource
     ) {
         Box {
@@ -96,7 +108,7 @@ fun PosProductCard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .aspectRatio(1f)
-                        .background(MaterialTheme.colorScheme.surfaceVariant), // Placeholder bg
+                        .background(MaterialTheme.colorScheme.surfaceVariant),
                     contentAlignment = Alignment.Center
                 ) {
                     if (product.imageUrl != null) {
@@ -107,67 +119,51 @@ fun PosProductCard(
                             contentScale = ContentScale.Crop
                         )
                     } else {
+                        // Better placeholder for food/drink
                         Icon(
-                            imageVector = Icons.Default.Image,
+                            imageVector = Icons.Default.Fastfood,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f),
-                            modifier = Modifier.size(32.dp)
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                            modifier = Modifier.size(48.dp)
                         )
                     }
                 }
                 
-                // Product Info
+                // Product Info - larger padding and typography
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                        .padding(14.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
+                    // Product name - 2 lines max
                     Text(
                         text = product.name,
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurface,
+                        fontWeight = FontWeight.Medium,
                         maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
+                        overflow = TextOverflow.Ellipsis,
+                        lineHeight = MaterialTheme.typography.bodyLarge.lineHeight
                     )
                     
+                    // Price - LARGE and BOLD for Ibu-ibu
                     Text(
                         text = priceFormatter.format(product.price),
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurface,
+                        style = MaterialTheme.typography.titleLarge,
+                        color = if (isInCart) Color(0xFF10B981) else MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Bold
                     )
                 }
             }
             
-            // Add Button (with pulse effect via parent card scale)
-            androidx.compose.material3.Surface(
-                onClick = onAddToCart,
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(8.dp)
-                    .size(32.dp),
-                shape = MaterialTheme.shapes.small,
-                color = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "Tambah",
-                        modifier = Modifier.size(16.dp)
-                    )
-                }
-            }
-            
-            // Animated Quantity Badge
+            // Quantity Badge - LARGER and more visible
             AnimatedContent(
                 targetState = quantityInCart,
                 modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .padding(8.dp),
+                    .align(Alignment.TopEnd)
+                    .padding(10.dp),
                 transitionSpec = {
-                    // Scale in/out with fade for badge appearance
                     (scaleIn(initialScale = 0.8f) + fadeIn())
                         .togetherWith(scaleOut(targetScale = 0.8f) + fadeOut())
                         .using(SizeTransform(clip = false))
@@ -175,16 +171,19 @@ fun PosProductCard(
                 label = "quantity_badge_animation"
             ) { quantity ->
                 if (quantity > 0) {
-                    androidx.compose.material3.Surface(
-                        shape = MaterialTheme.shapes.extraSmall,
-                        color = MaterialTheme.colorScheme.secondary,
-                        contentColor = MaterialTheme.colorScheme.onSecondary
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFF10B981)),
+                        contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "${quantity}x",
-                            style = MaterialTheme.typography.labelSmall,
+                            text = quantity.toString(),
+                            style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            color = Color.White,
+                            textAlign = TextAlign.Center
                         )
                     }
                 }
@@ -192,3 +191,4 @@ fun PosProductCard(
         }
     }
 }
+

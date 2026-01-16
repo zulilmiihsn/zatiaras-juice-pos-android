@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.zatiaras.pos.core.data.access.LockableRoute
+import com.zatiaras.pos.core.ui.theme.LocalDimensions
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -27,6 +28,10 @@ fun SettingsRoute(
     onNavigateToPinSetup: () -> Unit,
     onNavigateToPrinter: () -> Unit = {},
     onNavigateToInventory: () -> Unit = {},
+    onNavigateToSecurity: () -> Unit = {},
+    onNavigateToAccessControl: () -> Unit = {},
+    onNavigateToSync: () -> Unit = {},
+    onNavigateToAbout: () -> Unit = {},
     onLogout: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
@@ -41,16 +46,13 @@ fun SettingsRoute(
     SettingsScreen(
         uiState = uiState,
         onNavigateBack = onNavigateBack,
-        onLockEnabledChange = viewModel::setLockEnabled,
-        onBiometricEnabledChange = viewModel::setBiometricEnabled,
-        onChangePinClick = onNavigateToPinSetup,
-        onPrinterClick = onNavigateToPrinter,
-        onInventoryClick = onNavigateToInventory,
-        onSyncNowClick = viewModel::syncNow,
-        onForceFullSyncClick = viewModel::forceFullSync,
-        onLogoutClick = viewModel::logout,
-        onToggleRouteLock = viewModel::toggleRouteLock,
-        onSetOwnerPin = viewModel::setOwnerPin
+        onNavigateToSecurity = onNavigateToSecurity,
+        onNavigateToAccessControl = onNavigateToAccessControl,
+        onNavigateToPrinter = onNavigateToPrinter,
+        onNavigateToInventory = onNavigateToInventory,
+        onNavigateToSync = onNavigateToSync,
+        onNavigateToAbout = onNavigateToAbout,
+        onLogoutClick = viewModel::logout
     )
 }
 
@@ -59,27 +61,23 @@ fun SettingsRoute(
 fun SettingsScreen(
     uiState: SettingsUiState,
     onNavigateBack: () -> Unit,
-    onLockEnabledChange: (Boolean) -> Unit,
-    onBiometricEnabledChange: (Boolean) -> Unit,
-    onChangePinClick: () -> Unit,
-    onPrinterClick: () -> Unit,
-    onInventoryClick: () -> Unit,
-    onSyncNowClick: () -> Unit,
-    onForceFullSyncClick: () -> Unit,
-    onLogoutClick: () -> Unit,
-    onToggleRouteLock: (LockableRoute) -> Unit = {},
-    onSetOwnerPin: (String) -> Unit = {}
+    onNavigateToSecurity: () -> Unit,
+    onNavigateToAccessControl: () -> Unit,
+    onNavigateToPrinter: () -> Unit,
+    onNavigateToInventory: () -> Unit,
+    onNavigateToSync: () -> Unit,
+    onNavigateToAbout: () -> Unit,
+    onLogoutClick: () -> Unit
 ) {
-    // State for owner PIN setup dialog
-    var showOwnerPinDialog by remember { mutableStateOf(false) }
-    var ownerPin by remember { mutableStateOf("") }
-    var ownerPinConfirm by remember { mutableStateOf("") }
-    var ownerPinError by remember { mutableStateOf<String?>(null) }
-
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Pengaturan") },
+                title = { 
+                    Text(
+                        text = "Pengaturan",
+                        fontWeight = FontWeight.Bold
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
@@ -97,184 +95,86 @@ fun SettingsScreen(
                 .padding(padding)
                 .verticalScroll(rememberScrollState())
         ) {
-            // Profile Section
-            SettingsSection(title = "Profil") {
-                ProfileCard(
-                    userName = uiState.userName,
-                    userEmail = uiState.userEmail,
-                    userRole = uiState.userRole
-                )
-            }
+            // Profile Card - Prominent at top
+            ProfileCard(
+                userName = uiState.userName,
+                userEmail = uiState.userEmail,
+                userRole = uiState.userRole
+            )
 
-            HorizontalDivider()
+            Spacer(modifier = Modifier.height(24.dp))
 
-            // Security Section
-            SettingsSection(title = "Keamanan") {
-                SwitchSettingItem(
-                    icon = Icons.Outlined.Lock,
-                    title = "Kunci Aplikasi",
-                    subtitle = "Aktifkan kunci saat membuka aplikasi",
-                    checked = uiState.lockEnabled,
-                    onCheckedChange = onLockEnabledChange
-                )
+            // Settings Categories
+            Text(
+                text = "Pengaturan",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+            )
 
-                if (uiState.lockEnabled) {
-                    SwitchSettingItem(
-                        icon = Icons.Outlined.Fingerprint,
-                        title = "Biometric",
-                        subtitle = if (uiState.biometricAvailable) {
-                            "Gunakan sidik jari atau wajah"
-                        } else {
-                            "Tidak tersedia di perangkat ini"
-                        },
-                        checked = uiState.biometricEnabled,
-                        onCheckedChange = onBiometricEnabledChange,
-                        enabled = uiState.biometricAvailable
-                    )
+            // Security
+            SettingsCategoryCard(
+                icon = Icons.Outlined.Security,
+                title = "Keamanan",
+                subtitle = if (uiState.lockEnabled) "Kunci aplikasi aktif" else "Kunci aplikasi nonaktif",
+                onClick = onNavigateToSecurity
+            )
 
-                    ClickableSettingItem(
-                        icon = Icons.Outlined.Pin,
-                        title = if (uiState.pinSet) "Ubah PIN" else "Atur PIN",
-                        subtitle = if (uiState.pinSet) "PIN sudah diatur" else "Atur PIN sebagai cadangan",
-                        onClick = onChangePinClick
-                    )
-                }
-            }
+            Spacer(modifier = Modifier.height(8.dp))
 
-            // Access Control Section (Owner only)
+            // Access Control (Owner only)
             if (uiState.isOwner) {
-                HorizontalDivider()
-
-                SettingsSection(title = "Kunci Menu (Kontrol Akses)") {
-                    // Owner PIN Setup
-                    ClickableSettingItem(
-                        icon = Icons.Outlined.Key,
-                        title = if (uiState.ownerPinSet) "Ubah PIN Pemilik" else "Atur PIN Pemilik",
-                        subtitle = if (uiState.ownerPinSet) {
-                            "PIN untuk akses menu terkunci"
-                        } else {
-                            "Atur PIN agar kasir bisa akses menu terkunci"
-                        },
-                        onClick = { showOwnerPinDialog = true }
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    // Description
-                    Text(
-                        text = "Menu yang dikunci akan meminta PIN pemilik saat diakses oleh kasir:",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    // Lockable routes toggles
-                    uiState.lockableRoutes.forEach { (route, isLocked) ->
-                        SwitchSettingItem(
-                            icon = if (isLocked) Icons.Outlined.Lock else Icons.Outlined.LockOpen,
-                            title = route.displayName,
-                            subtitle = if (isLocked) "Dikunci - Kasir perlu PIN" else "Tidak dikunci",
-                            checked = isLocked,
-                            onCheckedChange = { onToggleRouteLock(route) }
-                        )
-                    }
-                }
+                SettingsCategoryCard(
+                    icon = Icons.Outlined.AdminPanelSettings,
+                    title = "Kontrol Akses",
+                    subtitle = "Kelola akses menu untuk kasir",
+                    onClick = onNavigateToAccessControl
+                )
+                Spacer(modifier = Modifier.height(8.dp))
             }
 
-            HorizontalDivider()
+            // Printer
+            SettingsCategoryCard(
+                icon = Icons.Outlined.Print,
+                title = "Printer",
+                subtitle = "Atur printer thermal Bluetooth",
+                onClick = onNavigateToPrinter
+            )
 
-            // Hardware Section
-            SettingsSection(title = "Perangkat") {
-                ClickableSettingItem(
-                    icon = Icons.Outlined.Print,
-                    title = "Printer",
-                    subtitle = "Atur printer thermal Bluetooth",
-                    onClick = onPrinterClick
-                )
-            }
+            Spacer(modifier = Modifier.height(8.dp))
 
-            HorizontalDivider()
+            // Inventory/Menu
+            SettingsCategoryCard(
+                icon = Icons.Outlined.Restaurant,
+                title = "Kelola Menu",
+                subtitle = "Tambah, edit, atau hapus produk",
+                onClick = onNavigateToInventory
+            )
 
-            // Inventory/Menu Section
-            SettingsSection(title = "Manajemen") {
-                ClickableSettingItem(
-                    icon = Icons.Outlined.Restaurant,
-                    title = "Kelola Menu",
-                    subtitle = "Tambah, edit, atau hapus produk",
-                    onClick = onInventoryClick
-                )
-            }
+            Spacer(modifier = Modifier.height(8.dp))
 
-            HorizontalDivider()
+            // Sync
+            SettingsCategoryCard(
+                icon = Icons.Outlined.Sync,
+                title = "Sinkronisasi",
+                subtitle = uiState.lastSyncInfo,
+                onClick = onNavigateToSync
+            )
 
-            // Sync Section
-            SettingsSection(title = "Sinkronisasi") {
-                InfoSettingItem(
-                    icon = Icons.Outlined.Sync,
-                    title = "Status Sync",
-                    value = uiState.lastSyncInfo
-                )
+            Spacer(modifier = Modifier.height(8.dp))
 
-                InfoSettingItem(
-                    icon = Icons.Outlined.CloudQueue,
-                    title = "Data Pending",
-                    value = "${uiState.pendingCount} item belum tersinkron"
-                )
+            // About
+            SettingsCategoryCard(
+                icon = Icons.Outlined.Info,
+                title = "Tentang",
+                subtitle = "Versi 1.0.0",
+                onClick = onNavigateToAbout
+            )
 
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    OutlinedButton(
-                        onClick = onSyncNowClick,
-                        modifier = Modifier.weight(1f),
-                        enabled = !uiState.isSyncing
-                    ) {
-                        if (uiState.isSyncing) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(16.dp),
-                                strokeWidth = 2.dp
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                        }
-                        Text("Sync Sekarang")
-                    }
+            Spacer(modifier = Modifier.height(32.dp))
 
-                    TextButton(
-                        onClick = onForceFullSyncClick,
-                        enabled = !uiState.isSyncing
-                    ) {
-                        Text("Force Full Sync")
-                    }
-                }
-            }
-
-            HorizontalDivider()
-
-            // About Section
-            SettingsSection(title = "Tentang") {
-                InfoSettingItem(
-                    icon = Icons.Outlined.Info,
-                    title = "Versi Aplikasi",
-                    value = "1.0.0"
-                )
-
-                InfoSettingItem(
-                    icon = Icons.Outlined.Store,
-                    title = "Cabang",
-                    value = uiState.branchName
-                )
-            }
-
-            HorizontalDivider()
-
-            // Logout
-            Spacer(modifier = Modifier.height(16.dp))
-
+            // Logout Button
             Button(
                 onClick = onLogoutClick,
                 modifier = Modifier
@@ -296,108 +196,6 @@ fun SettingsScreen(
             Spacer(modifier = Modifier.height(32.dp))
         }
     }
-
-    // Owner PIN Setup Dialog
-    if (showOwnerPinDialog) {
-        AlertDialog(
-            onDismissRequest = {
-                showOwnerPinDialog = false
-                ownerPin = ""
-                ownerPinConfirm = ""
-                ownerPinError = null
-            },
-            title = {
-                Text(
-                    text = if (uiState.ownerPinSet) "Ubah PIN Pemilik" else "Atur PIN Pemilik",
-                    fontWeight = FontWeight.Bold
-                )
-            },
-            text = {
-                Column {
-                    Text(
-                        text = "PIN ini akan diminta saat kasir mengakses menu yang dikunci.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    OutlinedTextField(
-                        value = ownerPin,
-                        onValueChange = { 
-                            if (it.length <= 4 && it.all { c -> c.isDigit() }) {
-                                ownerPin = it
-                                ownerPinError = null
-                            }
-                        },
-                        label = { Text("PIN Baru (4 digit)") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    OutlinedTextField(
-                        value = ownerPinConfirm,
-                        onValueChange = { 
-                            if (it.length <= 4 && it.all { c -> c.isDigit() }) {
-                                ownerPinConfirm = it
-                                ownerPinError = null
-                            }
-                        },
-                        label = { Text("Konfirmasi PIN") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
-                        isError = ownerPinError != null
-                    )
-
-                    if (ownerPinError != null) {
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = ownerPinError!!,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.error
-                        )
-                    }
-                }
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        when {
-                            ownerPin.length != 4 -> {
-                                ownerPinError = "PIN harus 4 digit"
-                            }
-                            ownerPin != ownerPinConfirm -> {
-                                ownerPinError = "PIN tidak cocok"
-                            }
-                            else -> {
-                                onSetOwnerPin(ownerPin)
-                                showOwnerPinDialog = false
-                                ownerPin = ""
-                                ownerPinConfirm = ""
-                                ownerPinError = null
-                            }
-                        }
-                    }
-                ) {
-                    Text("Simpan")
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = {
-                        showOwnerPinDialog = false
-                        ownerPin = ""
-                        ownerPinConfirm = ""
-                        ownerPinError = null
-                    }
-                ) {
-                    Text("Batal")
-                }
-            }
-        )
-    }
 }
 
 @Composable
@@ -417,6 +215,70 @@ private fun SettingsSection(
     }
 }
 
+/**
+ * Category card for settings navigation.
+ */
+@Composable
+private fun SettingsCategoryCard(
+    icon: ImageVector,
+    title: String,
+    subtitle: String,
+    onClick: (() -> Unit)?
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 4.dp)
+            .then(
+                if (onClick != null) Modifier.clickable(onClick = onClick)
+                else Modifier
+            ),
+        colors = CardDefaults.cardColors(
+            containerColor = if (onClick != null) 
+                MaterialTheme.colorScheme.surface 
+            else 
+                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = if (onClick != null) 2.dp else 0.dp
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(24.dp)
+            )
+            Spacer(modifier = Modifier.width(16.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Medium
+                )
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            if (onClick != null) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    }
+}
+
 @Composable
 private fun ProfileCard(
     userName: String,
@@ -431,10 +293,11 @@ private fun ProfileCard(
             containerColor = MaterialTheme.colorScheme.primaryContainer
         )
     ) {
+        val dimensions = LocalDimensions.current
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(dimensions.paddingM),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(

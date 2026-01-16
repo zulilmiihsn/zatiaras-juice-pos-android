@@ -41,8 +41,8 @@ object DatabaseModule {
             ZatiarasDatabase.DATABASE_NAME
         )
             // Use proper migrations to preserve user data
+            // IMPORTANT: Never use fallbackToDestructiveMigration() in production!
             .addMigrations(*Migrations.ALL_MIGRATIONS)
-            .fallbackToDestructiveMigration() // VIBECODING: Enable during heavy active dev
             .build()
     }
 

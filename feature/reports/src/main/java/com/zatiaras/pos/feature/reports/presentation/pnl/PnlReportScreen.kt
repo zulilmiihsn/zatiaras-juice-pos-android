@@ -47,14 +47,18 @@ import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
+import com.zatiaras.pos.core.ui.theme.PdfRed
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.zatiaras.pos.core.ui.theme.LocalDimensions
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.zatiaras.pos.core.data.access.AccessControlManager
 import com.zatiaras.pos.core.data.access.LockableRoute
@@ -226,14 +230,6 @@ fun PnlReportScreen(
                             )
                         }
                     }
-                },
-                actions = {
-                    IconButton(onClick = onRefresh) {
-                        Icon(
-                            imageVector = Icons.Default.Refresh,
-                            contentDescription = "Refresh"
-                        )
-                    }
                 }
             )
         },
@@ -255,10 +251,11 @@ fun PnlReportScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
+            val dimensions = LocalDimensions.current
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                contentPadding = PaddingValues(dimensions.paddingL),
+                verticalArrangement = Arrangement.spacedBy(dimensions.spacingL)
             ) {
                 // Period Selector
                 item {
@@ -484,6 +481,8 @@ private fun ExportSection(
     onExportCsv: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    var showExportMenu by remember { mutableStateOf(false) }
+    
     Column(modifier = modifier.fillMaxWidth()) {
         Text(
             text = "Export Laporan",
@@ -494,64 +493,80 @@ private fun ExportSection(
         
         Spacer(modifier = Modifier.height(12.dp))
         
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            // PDF Export Button
+        // Single Export Button with Dropdown
+        Box {
             Button(
-                onClick = onExportPdf,
+                onClick = { showExportMenu = true },
                 enabled = !isExporting,
-                modifier = Modifier.weight(1f),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFE53935)
-                )
+                modifier = Modifier.fillMaxWidth()
             ) {
                 if (isExporting) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(18.dp),
-                        color = Color.White,
+                        color = androidx.compose.ui.graphics.Color.White,
                         strokeWidth = 2.dp
                     )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Mengexport...")
                 } else {
                     Icon(
                         imageVector = Icons.Default.PictureAsPdf,
                         contentDescription = null,
-                        modifier = Modifier.size(18.dp)
+                        modifier = Modifier.size(20.dp)
                     )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Export Laporan")
                 }
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("PDF")
             }
             
-            // CSV/Excel Export Button
-            OutlinedButton(
-                onClick = onExportCsv,
-                enabled = !isExporting,
-                modifier = Modifier.weight(1f)
+            // Export Format Dropdown Menu
+            androidx.compose.material3.DropdownMenu(
+                expanded = showExportMenu,
+                onDismissRequest = { showExportMenu = false }
             ) {
-                if (isExporting) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(18.dp),
-                        strokeWidth = 2.dp
-                    )
-                } else {
-                    Icon(
-                        imageVector = Icons.Default.TableChart,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(18.dp)
-                    )
-                }
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Excel/CSV")
+                androidx.compose.material3.DropdownMenuItem(
+                    text = { 
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.PictureAsPdf,
+                                contentDescription = null,
+                                tint = PdfRed,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text("Export PDF")
+                        }
+                    },
+                    onClick = {
+                        showExportMenu = false
+                        onExportPdf()
+                    }
+                )
+                androidx.compose.material3.DropdownMenuItem(
+                    text = { 
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.TableChart,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text("Export Excel/CSV")
+                        }
+                    },
+                    onClick = {
+                        showExportMenu = false
+                        onExportCsv()
+                    }
+                )
             }
         }
         
         Spacer(modifier = Modifier.height(8.dp))
         
         Text(
-            text = "File akan tersimpan di folder aplikasi",
+            text = "File akan tersimpan di folder Download",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
         )

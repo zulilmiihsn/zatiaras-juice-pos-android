@@ -2,9 +2,9 @@ package com.zatiaras.pos.feature.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.zatiaras.pos.core.data.local.dao.TransactionDao
 import com.zatiaras.pos.core.domain.AuthRepository
 import com.zatiaras.pos.core.domain.model.StoreSession
+import com.zatiaras.pos.core.domain.repository.DashboardRepository
 import com.zatiaras.pos.core.domain.repository.StoreSessionRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,7 +14,6 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import java.util.Calendar
 import javax.inject.Inject
 
 data class DashboardMetrics(
@@ -47,7 +46,7 @@ sealed class HomeEvent {
 class HomeViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val storeSessionRepository: StoreSessionRepository,
-    private val transactionDao: TransactionDao
+    private val dashboardRepository: DashboardRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState())
@@ -84,18 +83,9 @@ class HomeViewModel @Inject constructor(
             try {
                 _uiState.update { it.copy(isLoading = true) }
                 
-                val calendar = Calendar.getInstance()
-                val endOfDay = calendar.timeInMillis
-                
-                calendar.set(Calendar.HOUR_OF_DAY, 0)
-                calendar.set(Calendar.MINUTE, 0)
-                calendar.set(Calendar.SECOND, 0)
-                calendar.set(Calendar.MILLISECOND, 0)
-                val startOfDay = calendar.timeInMillis
-                
-                val revenue = transactionDao.getTotalRevenueForDay(startOfDay, endOfDay)
-                val itemsSold = transactionDao.getTotalItemsSoldForDay(startOfDay, endOfDay)
-                val transactions = transactionDao.getTransactionCountForDay(startOfDay, endOfDay)
+                val revenue = dashboardRepository.getTodayRevenue()
+                val itemsSold = dashboardRepository.getTodayItemsSold()
+                val transactions = dashboardRepository.getTodayTransactionCount()
                 
                 // Profit calculation requires COGS, simplified for now
                 val profit = (revenue * 0.4).toLong() // Mock 40% margin

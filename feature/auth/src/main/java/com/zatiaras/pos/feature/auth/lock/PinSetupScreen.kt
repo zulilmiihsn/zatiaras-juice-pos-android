@@ -239,7 +239,7 @@ private fun PinSetupKeypad(
                                 content = {
                                     Text(
                                         text = key,
-                                        fontSize = 24.sp,
+                                        style = MaterialTheme.typography.headlineSmall,
                                         fontWeight = FontWeight.Medium
                                     )
                                 }

@@ -254,10 +254,11 @@ private fun PrinterSettingsScreen(
                         containerColor = MaterialTheme.colorScheme.surfaceVariant
                     )
                 ) {
+                    val dimensions = LocalDimensions.current
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(16.dp),
+                            .padding(dimensions.paddingM),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -329,8 +330,9 @@ private fun ConnectionStatusCard(
                 MaterialTheme.colorScheme.surfaceVariant
         )
     ) {
+        val dimensions = LocalDimensions.current
         Column(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(dimensions.paddingM)
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically
@@ -377,7 +379,7 @@ private fun ConnectionStatusCard(
                 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(dimensions.spacingS)
                 ) {
                     OutlinedButton(
                         onClick = onDisconnect,
@@ -418,10 +420,11 @@ private fun PrinterDeviceItem(
                 MaterialTheme.colorScheme.surface
         )
     ) {
+        val dimensions = LocalDimensions.current
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(dimensions.paddingM),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
@@ -472,10 +475,11 @@ private fun EmptyDevicesCard(isBluetoothEnabled: Boolean) {
             containerColor = MaterialTheme.colorScheme.surfaceVariant
         )
     ) {
+        val dimensions = LocalDimensions.current
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(24.dp),
+                .padding(dimensions.paddingXL),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Icon(
@@ -517,8 +521,9 @@ private fun PaperWidthSelector(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
         )
     ) {
+        val dimensions = LocalDimensions.current
         Column(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(dimensions.paddingM)
         ) {
             Text(
                 text = "Lebar Kertas",
@@ -564,8 +569,9 @@ private fun StoreInfoCard(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
         )
     ) {
+        val dimensions = LocalDimensions.current
         Column(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(dimensions.paddingM)
         ) {
             OutlinedTextField(
                 value = storeName,

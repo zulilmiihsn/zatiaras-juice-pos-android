@@ -33,6 +33,11 @@ val SuccessGreen = Color(0xFF10B981)
 val WarningAmber = Color(0xFFF59E0B)
 val ErrorRed = Color(0xFFEF4444)
 
+// Income/Expense Colors (Theme-aware aliases)
+val IncomeGreen = Color(0xFF10B981)  // Same as SuccessGreen - for positive values
+val ExpenseRed = Color(0xFFEF4444)   // Same as ErrorRed - for negative values
+val PdfRed = Color(0xFFDC2626)       // Slightly darker red for PDF export button
+
 // Legacy compatibility (will be removed after Theme refactor)
 val Purple80 = Brand300
 val PurpleGrey80 = Slate300

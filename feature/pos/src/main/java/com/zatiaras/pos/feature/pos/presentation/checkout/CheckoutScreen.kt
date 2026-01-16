@@ -60,6 +60,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.zatiaras.pos.core.ui.theme.LocalDimensions
 import com.zatiaras.pos.feature.pos.domain.model.Cart
 import com.zatiaras.pos.feature.pos.domain.model.PaymentMethod
 import com.zatiaras.pos.feature.pos.domain.model.Transaction
@@ -205,10 +206,11 @@ private fun CheckoutContent(
     onExactAmount: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val dimensions = LocalDimensions.current
     LazyColumn(
         modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        contentPadding = PaddingValues(dimensions.paddingM),
+        verticalArrangement = Arrangement.spacedBy(dimensions.spacingM)
     ) {
         // Order Summary Card
         item {

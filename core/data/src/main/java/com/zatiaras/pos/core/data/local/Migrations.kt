@@ -15,6 +15,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
  * - Version 3: Added cash_records table for Buku Kas
  * - Version 4: Added users table for offline authentication
  * - Version 5: Added app_settings and add_ons tables
+ * - Version 6: Added store_sessions table, sessionId to transactions
  */
 object Migrations {
 
@@ -179,6 +180,41 @@ object Migrations {
     }
 
     /**
+     * Migration from version 5 to 6.
+     * Adds store_sessions table for Buka/Tutup Toko feature.
+     * Adds sessionId column to transactions table.
+     */
+    val MIGRATION_5_6 = object : Migration(5, 6) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            // Create store_sessions table
+            db.execSQL("""
+                CREATE TABLE IF NOT EXISTS `store_sessions` (
+                    `id` TEXT NOT NULL PRIMARY KEY,
+                    `openingCash` INTEGER NOT NULL,
+                    `openingTime` INTEGER NOT NULL,
+                    `closingTime` INTEGER,
+                    `isActive` INTEGER NOT NULL DEFAULT 0,
+                    `branchId` TEXT,
+                    `createdAt` INTEGER NOT NULL,
+                    `updatedAt` INTEGER NOT NULL,
+                    `isSynced` INTEGER NOT NULL DEFAULT 0
+                )
+            """.trimIndent())
+
+            // Create indexes for store_sessions
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_store_sessions_isActive` ON `store_sessions` (`isActive`)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_store_sessions_openingTime` ON `store_sessions` (`openingTime`)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_store_sessions_isSynced` ON `store_sessions` (`isSynced`)")
+
+            // Add sessionId column to transactions table
+            db.execSQL("ALTER TABLE `transactions` ADD COLUMN `sessionId` TEXT")
+            
+            // Create index for sessionId on transactions
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_transactions_sessionId` ON `transactions` (`sessionId`)")
+        }
+    }
+
+    /**
      * Get all migrations in order.
      * Add new migrations to this list.
      */
@@ -186,6 +222,7 @@ object Migrations {
         MIGRATION_1_2,
         MIGRATION_2_3,
         MIGRATION_3_4,
-        MIGRATION_4_5
+        MIGRATION_4_5,
+        MIGRATION_5_6
     )
 }

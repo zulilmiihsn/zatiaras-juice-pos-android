@@ -23,12 +23,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.zatiaras.pos.feature.reports.domain.model.DailyRevenue
@@ -37,17 +36,23 @@ import java.util.Date
 import java.util.Locale
 
 /**
- * Beautiful line chart for weekly revenue display.
+ * Beautiful bar chart for weekly revenue display.
+ * Displays vertical bars with gradient colors like the web app.
  */
 @Composable
 fun RevenueLineChart(
     data: List<DailyRevenue>,
     modifier: Modifier = Modifier
 ) {
-    val lineColor = MaterialTheme.colorScheme.primary
-    val gradientColors = listOf(
-        MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
-        MaterialTheme.colorScheme.primary.copy(alpha = 0.0f)
+    // Gradient colors for bars (matching web app style)
+    val barGradientColors = listOf(
+        listOf(Color(0xFF667eea), Color(0xFF764ba2)), // Purple gradient
+        listOf(Color(0xFF11998e), Color(0xFF38ef7d)), // Green gradient
+        listOf(Color(0xFFf093fb), Color(0xFFf5576c)), // Pink gradient
+        listOf(Color(0xFF4facfe), Color(0xFF00f2fe)), // Blue gradient
+        listOf(Color(0xFFfa709a), Color(0xFFfee140)), // Orange-pink gradient
+        listOf(Color(0xFF667eea), Color(0xFF764ba2)), // Purple gradient
+        listOf(Color(0xFF11998e), Color(0xFF38ef7d))  // Green gradient
     )
     
     // Animation
@@ -57,7 +62,7 @@ fun RevenueLineChart(
         animationProgress.snapTo(0f)
         animationProgress.animateTo(
             targetValue = 1f,
-            animationSpec = tween(durationMillis = 1000)
+            animationSpec = tween(durationMillis = 800)
         )
     }
     
@@ -108,72 +113,35 @@ fun RevenueLineChart(
             ) {
                 val width = size.width
                 val height = size.height
-                val padding = 24f
-                val chartWidth = width - padding * 2
+                val padding = 16f
                 val chartHeight = height - padding
-                
-                if (data.size < 2) return@Canvas
-                
-                val stepX = chartWidth / (data.size - 1)
-                
-                // Create path for line
-                val linePath = Path()
-                val fillPath = Path()
+                val barCount = data.size
+                val totalSpacing = width * 0.3f // 30% of width for spacing
+                val barWidth = (width - totalSpacing) / barCount
+                val spacing = totalSpacing / (barCount + 1)
                 
                 data.forEachIndexed { index, point ->
-                    val x = padding + index * stepX
-                    val normalizedY = if (maxRevenue > 0) {
+                    val x = spacing + index * (barWidth + spacing)
+                    val normalizedHeight = if (maxRevenue > 0) {
                         (point.revenue.toFloat() / maxRevenue.toFloat())
                     } else 0f
-                    val y = chartHeight - (normalizedY * chartHeight * animationProgress.value)
                     
-                    if (index == 0) {
-                        linePath.moveTo(x, y)
-                        fillPath.moveTo(x, chartHeight)
-                        fillPath.lineTo(x, y)
-                    } else {
-                        linePath.lineTo(x, y)
-                        fillPath.lineTo(x, y)
-                    }
-                }
-                
-                // Complete fill path
-                fillPath.lineTo(padding + (data.size - 1) * stepX, chartHeight)
-                fillPath.close()
-                
-                // Draw gradient fill
-                drawPath(
-                    path = fillPath,
-                    brush = Brush.verticalGradient(gradientColors)
-                )
-                
-                // Draw line
-                drawPath(
-                    path = linePath,
-                    color = lineColor,
-                    style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round)
-                )
-                
-                // Draw points
-                data.forEachIndexed { index, point ->
-                    val x = padding + index * stepX
-                    val normalizedY = if (maxRevenue > 0) {
-                        (point.revenue.toFloat() / maxRevenue.toFloat())
-                    } else 0f
-                    val y = chartHeight - (normalizedY * chartHeight * animationProgress.value)
+                    val animatedHeight = normalizedHeight * chartHeight * animationProgress.value
+                    val barTop = chartHeight - animatedHeight
                     
-                    // Outer circle
-                    drawCircle(
-                        color = lineColor,
-                        radius = 6.dp.toPx(),
-                        center = Offset(x, y)
-                    )
+                    // Get gradient colors for this bar
+                    val gradientColors = barGradientColors[index % barGradientColors.size]
                     
-                    // Inner circle
-                    drawCircle(
-                        color = Color.White,
-                        radius = 3.dp.toPx(),
-                        center = Offset(x, y)
+                    // Draw bar with gradient
+                    drawRoundRect(
+                        brush = Brush.verticalGradient(
+                            colors = gradientColors,
+                            startY = barTop,
+                            endY = chartHeight
+                        ),
+                        topLeft = Offset(x, barTop),
+                        size = Size(barWidth, animatedHeight),
+                        cornerRadius = CornerRadius(8.dp.toPx(), 8.dp.toPx())
                     )
                 }
             }
@@ -183,7 +151,7 @@ fun RevenueLineChart(
             // Day labels
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 data.forEach { point ->
                     Text(
@@ -196,3 +164,4 @@ fun RevenueLineChart(
         }
     }
 }
+

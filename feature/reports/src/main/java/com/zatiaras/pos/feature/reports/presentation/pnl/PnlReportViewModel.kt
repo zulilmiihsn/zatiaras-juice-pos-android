@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
+import com.zatiaras.pos.core.domain.util.DateUtils
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -197,65 +198,30 @@ class PnlReportViewModel @Inject constructor(
     }
 
     private fun calculateDateRange(): Pair<Long, Long> {
-        val calendar = Calendar.getInstance()
-        val now = calendar.timeInMillis
+        val now = System.currentTimeMillis()
         
         return when (_uiState.value.selectedPeriod) {
             ReportPeriod.TODAY -> {
-                val start = getStartOfDay(now)
-                val end = getEndOfDay(now)
-                start to end
+                DateUtils.getStartOfDay(now) to DateUtils.getEndOfDay(now)
             }
             ReportPeriod.THIS_WEEK -> {
-                calendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
-                val start = getStartOfDay(calendar.timeInMillis)
-                val end = getEndOfDay(now)
-                start to end
+                DateUtils.getThisWeekRange()
             }
             ReportPeriod.THIS_MONTH -> {
-                calendar.set(Calendar.DAY_OF_MONTH, 1)
-                val start = getStartOfDay(calendar.timeInMillis)
-                val end = getEndOfDay(now)
-                start to end
+                DateUtils.getThisMonthRange()
             }
             ReportPeriod.LAST_7_DAYS -> {
-                calendar.add(Calendar.DAY_OF_YEAR, -6)
-                val start = getStartOfDay(calendar.timeInMillis)
-                val end = getEndOfDay(now)
-                start to end
+                DateUtils.getLastNDaysRange(7)
             }
             ReportPeriod.LAST_30_DAYS -> {
-                calendar.add(Calendar.DAY_OF_YEAR, -29)
-                val start = getStartOfDay(calendar.timeInMillis)
-                val end = getEndOfDay(now)
-                start to end
+                DateUtils.getLastNDaysRange(30)
             }
             ReportPeriod.CUSTOM -> {
-                val start = _uiState.value.customStartDate ?: getStartOfDay(now)
-                val end = _uiState.value.customEndDate ?: getEndOfDay(now)
-                getStartOfDay(start) to getEndOfDay(end)
+                val start = _uiState.value.customStartDate ?: DateUtils.getStartOfDay(now)
+                val end = _uiState.value.customEndDate ?: DateUtils.getEndOfDay(now)
+                DateUtils.getStartOfDay(start) to DateUtils.getEndOfDay(end)
             }
         }
-    }
-
-    private fun getStartOfDay(timestamp: Long): Long {
-        return Calendar.getInstance().apply {
-            timeInMillis = timestamp
-            set(Calendar.HOUR_OF_DAY, 0)
-            set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-        }.timeInMillis
-    }
-
-    private fun getEndOfDay(timestamp: Long): Long {
-        return Calendar.getInstance().apply {
-            timeInMillis = timestamp
-            set(Calendar.HOUR_OF_DAY, 23)
-            set(Calendar.MINUTE, 59)
-            set(Calendar.SECOND, 59)
-            set(Calendar.MILLISECOND, 999)
-        }.timeInMillis
     }
 }
 
