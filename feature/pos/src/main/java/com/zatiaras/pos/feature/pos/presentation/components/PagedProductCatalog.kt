@@ -20,13 +20,13 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Apps
 import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.GridView
+import androidx.compose.material.icons.filled.FormatListBulleted
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.SearchOff
-import androidx.compose.material.icons.filled.ViewList
-import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.AddCircleOutline
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -94,11 +94,12 @@ fun PagedProductCatalog(
             
             Spacer(modifier = Modifier.width(8.dp))
             
-            // View Toggle Button
+            // View Toggle Button (Grid/List)
             IconButton(onClick = onToggleView) {
                 Icon(
-                    imageVector = if (isGridView) Icons.Default.ViewList else Icons.Default.GridView,
-                    contentDescription = stringResource(if (isGridView) R.string.pos_to_list_view else R.string.pos_to_grid_view)
+                    imageVector = if (isGridView) Icons.Default.FormatListBulleted else Icons.Default.Apps,
+                    contentDescription = stringResource(if (isGridView) R.string.pos_to_list_view else R.string.pos_to_grid_view),
+                    tint = MaterialTheme.colorScheme.tertiary
                 )
             }
             
@@ -107,8 +108,9 @@ fun PagedProductCatalog(
             // Custom Item Button
             IconButton(onClick = { showCustomItemDialog = true }) {
                 Icon(
-                    imageVector = Icons.Outlined.Edit,
-                    contentDescription = stringResource(R.string.pos_custom_item)
+                    imageVector = Icons.Outlined.AddCircleOutline,
+                    contentDescription = stringResource(R.string.pos_custom_item),
+                    tint = MaterialTheme.colorScheme.tertiary
                 )
             }
         }

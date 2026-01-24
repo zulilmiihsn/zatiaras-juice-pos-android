@@ -1,8 +1,8 @@
-# Zatiaras POS (Android Rebuild) - Context for Gemini
+# ZatiarasPOS (Android Rebuild) - Context for Gemini
 
 ## 🚀 Project Overview
 
-**Goal**: Rebuild the existing Zatiaras POS web application into a **High-Performance Native Android Application**.
+**Goal**: Rebuild the existing ZatiarasPOS web application into a **High-Performance Native Android Application**.
 **Philosophy**: "Offline-First", "AI-Driven", and "Production-Grade".
 **Vibe**: Vibecoding. You are the Brain. We are the Hands.
 

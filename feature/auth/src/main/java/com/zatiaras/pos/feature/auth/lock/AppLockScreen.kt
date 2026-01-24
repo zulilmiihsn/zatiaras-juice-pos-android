@@ -111,7 +111,7 @@ fun AppLockScreen(
                 Spacer(modifier = Modifier.height(dimensions.spacingL))
 
                 Text(
-                    text = "Zatiaras POS",
+                    text = "ZatiarasPOS",
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onBackground

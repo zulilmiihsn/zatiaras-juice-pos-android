@@ -1,4 +1,4 @@
-# 🗺️ Product Roadmap: Zatiaras POS (Android Native)
+# 🗺️ Product Roadmap: ZatiarasPOS (Android Native)
 
 > **Status**: 🟢 Active Development
 > **Phase**: Phase 8 - UI/UX Parity & Polish

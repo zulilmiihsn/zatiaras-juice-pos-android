@@ -2,11 +2,14 @@ package com.zatiaras.pos.feature.pos.presentation
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material3.*
@@ -26,21 +29,18 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.zatiaras.pos.core.ui.theme.LocalDimensions
+import com.zatiaras.pos.core.ui.util.noRippleClickable
 import com.zatiaras.pos.feature.pos.R
 import com.zatiaras.pos.feature.pos.presentation.components.CartSidebar
 import com.zatiaras.pos.feature.pos.presentation.components.PagedProductCatalog
 
 /**
- * Main POS Screen with product catalog and cart sidebar.
+ * Main POS Screen with product catalog and floating cart bar.
  * 
- * On tablet/landscape: Side-by-side layout (catalog | cart)
- * On phone/portrait: Catalog with floating cart button
- * 
- * Uses Paging 3 for efficient memory management with large product catalogs.
- * 
- * Refactored to use extracted components:
- * - PagedProductCatalog: Search, categories, paginated product grid
- * - CartSidebar: Cart items, checkout button
+ * Features:
+ * - Floating cart summary bar at bottom (like GoFood/GrabFood)
+ * - Slide-in cart sidebar when tapped
+ * - Full-width product catalog
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -63,6 +63,13 @@ fun PosScreen(
         }
     }
     
+    // Auto-hide cart sidebar when cart becomes empty
+    LaunchedEffect(uiState.cart.isEmpty()) {
+        if (uiState.cart.isEmpty()) {
+            isCartVisible = false
+        }
+    }
+    
     if (!uiState.isStoreOpen) {
         StoreClosedOverlay(onNavigateBack)
         return
@@ -77,12 +84,6 @@ fun PosScreen(
                         fontWeight = FontWeight.Bold
                     )
                 },
-                actions = {
-                    CartButton(
-                        itemCount = uiState.cart.itemCount,
-                        onClick = { isCartVisible = !isCartVisible }
-                    )
-                },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface
                 )
@@ -90,13 +91,12 @@ fun PosScreen(
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
-        Row(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            // Main Catalog Area (now paginated)
-            // Main Catalog Area (now paginated)
+            // Main Catalog Area
             PagedProductCatalog(
                 products = pagedProducts,
                 categories = uiState.categories,
@@ -110,15 +110,40 @@ fun PosScreen(
                 onToggleView = { viewModel.onEvent(PosEvent.ToggleViewMode) },
                 onAddCustomItem = { name, price -> viewModel.onEvent(PosEvent.AddCustomItem(name, price)) },
                 modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight()
+                    .fillMaxSize()
+                    .padding(bottom = if (uiState.cart.isNotEmpty()) 88.dp else 0.dp)
             )
             
-            // Cart Sidebar (animated)
+            // Floating Cart Summary Bar (at bottom, like GoFood/GrabFood)
+            AnimatedVisibility(
+                visible = uiState.cart.isNotEmpty(),
+                enter = slideInVertically(initialOffsetY = { it }),
+                exit = slideOutVertically(targetOffsetY = { it }),
+                modifier = Modifier.align(Alignment.BottomCenter)
+            ) {
+                FloatingCartBar(
+                    itemCount = uiState.cart.itemCount,
+                    total = uiState.cart.subtotal,
+                    onClick = { isCartVisible = true }
+                )
+            }
+            
+            // Scrim (Overlay) - Dismiss on click
+            if (isCartVisible && uiState.cart.isNotEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.32f))
+                        .noRippleClickable { isCartVisible = false }
+                )
+            }
+            
+            // Cart Sidebar (floating on top, slide from right)
             AnimatedVisibility(
                 visible = isCartVisible && uiState.cart.isNotEmpty(),
                 enter = slideInHorizontally(initialOffsetX = { it }),
-                exit = slideOutHorizontally(targetOffsetX = { it })
+                exit = slideOutHorizontally(targetOffsetX = { it }),
+                modifier = Modifier.align(Alignment.CenterEnd)
             ) {
                 CartSidebar(
                     cart = uiState.cart,
@@ -128,6 +153,78 @@ fun PosScreen(
                     onClearCart = { viewModel.onEvent(PosEvent.ClearCart) },
                     onCheckout = onProceedToCheckout,
                     modifier = Modifier.width(dimensions.sidebarWidth)
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Floating cart summary bar - appears at bottom when cart has items.
+ * Design inspired by food delivery apps (GoFood, GrabFood).
+ */
+@Composable
+private fun FloatingCartBar(
+    itemCount: Int,
+    total: Long,
+    onClick: () -> Unit
+) {
+    val priceFormatter = remember {
+        java.text.NumberFormat.getCurrencyInstance(java.util.Locale("id", "ID")).apply {
+            maximumFractionDigits = 0
+        }
+    }
+    
+    Surface(
+        onClick = onClick,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        shape = RoundedCornerShape(16.dp),
+        color = MaterialTheme.colorScheme.primary,
+        shadowElevation = 8.dp
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Left: Cart icon + item count
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.ShoppingCart,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onPrimary,
+                    modifier = Modifier.size(24.dp)
+                )
+                Text(
+                    text = "$itemCount item",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onPrimary
+                )
+            }
+            
+            // Right: Total + Arrow
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = priceFormatter.format(total),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onPrimary
+                )
+                Icon(
+                    imageVector = Icons.Default.KeyboardArrowRight,
+                    contentDescription = "Lihat Keranjang",
+                    tint = MaterialTheme.colorScheme.onPrimary
                 )
             }
         }
@@ -175,32 +272,6 @@ private fun StoreClosedOverlay(onNavigateBack: () -> Unit) {
             ) {
                 Text(stringResource(R.string.pos_back_to_dashboard))
             }
-        }
-    }
-}
-
-@Composable
-private fun CartButton(
-    itemCount: Int,
-    onClick: () -> Unit
-) {
-    IconButton(onClick = onClick) {
-        BadgedBox(
-            badge = {
-                if (itemCount > 0) {
-                    Badge(
-                        containerColor = MaterialTheme.colorScheme.tertiary,
-                        contentColor = MaterialTheme.colorScheme.onTertiary
-                    ) {
-                        Text(itemCount.toString())
-                    }
-                }
-            }
-        ) {
-            Icon(
-                imageVector = Icons.Default.ShoppingCart,
-                contentDescription = "Keranjang"
-            )
         }
     }
 }

@@ -168,7 +168,7 @@ class ReceiptFormatter @Inject constructor() {
             appendNewLine()
             append(EscPosCommands.NORMAL_SIZE)
             
-            appendText("Zatiaras POS")
+            appendText("ZatiarasPOS")
             appendNewLine()
             appendText(dateFormat.format(Date()))
             appendNewLine()

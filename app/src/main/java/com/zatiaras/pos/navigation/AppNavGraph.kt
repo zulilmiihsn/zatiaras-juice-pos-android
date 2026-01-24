@@ -50,7 +50,7 @@ import com.zatiaras.pos.feature.reports.navigation.pnlReportScreen
 import com.zatiaras.pos.feature.reports.navigation.reportChatScreen
 
 /**
- * Main navigation graph for the Zatiaras POS app.
+ * Main navigation graph for the ZatiarasPOS app.
  * 
  * Extracted from MainActivity to follow KISS principle (Activity under 100 lines).
  * Contains all top-level navigation routes.

@@ -24,7 +24,7 @@ import com.zatiaras.pos.core.data.local.entity.TransactionItemEntity
 import com.zatiaras.pos.core.data.local.entity.UserEntity
 
 /**
- * Main Room Database for Zatiaras POS.
+ * Main Room Database for ZatiarasPOS.
  * 
  * Design Decisions:
  * - Single database for all entities (simpler transactions)

@@ -17,7 +17,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
 /**
- * Main entry point for the Zatiaras POS application.
+ * Main entry point for the ZatiarasPOS application.
  * 
  * Uses FragmentActivity to support biometric authentication prompts.
  * Simplified to follow KISS principle - navigation logic extracted to AppNavGraph.

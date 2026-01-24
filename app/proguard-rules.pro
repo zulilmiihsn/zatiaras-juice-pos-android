@@ -1,5 +1,5 @@
 # ============================================================
-# Zatiaras POS ProGuard Rules
+# ZatiarasPOS ProGuard Rules
 # ============================================================
 # IMPORTANT: Test release builds after any changes to these rules!
 

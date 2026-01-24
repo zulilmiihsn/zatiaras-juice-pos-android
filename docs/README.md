@@ -1,8 +1,8 @@
-# 📚 Zatiaras POS Android - Documentation Index
+# 📚 ZatiarasPOS Android - Documentation Index
 
 > **Last Updated**: 2026-01-08
 
-Selamat datang di dokumentasi Zatiaras POS Android! Folder ini berisi semua dokumen yang mengatur development aplikasi.
+Selamat datang di dokumentasi ZatiarasPOS Android! Folder ini berisi semua dokumen yang mengatur development aplikasi.
 
 ---
 

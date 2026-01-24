@@ -1,4 +1,4 @@
-# Zatiaras POS - API & Data Contract Specification
+# ZatiarasPOS - API & Data Contract Specification
 
 > **Version**: 1.0.0
 > **Backend**: Supabase (PostgreSQL)

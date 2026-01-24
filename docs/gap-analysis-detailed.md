@@ -1,4 +1,4 @@
-# Zatiaras POS - Detailed UI/UX Parity Analysis
+# ZatiarasPOS - Detailed UI/UX Parity Analysis
 
 **Goal**: Complete 1:1 feature matches between Web App (Reference) and Android App (Target).
 **Strategy**: Correcting the Android App screen-by-screen to mimic the established Web App flow.

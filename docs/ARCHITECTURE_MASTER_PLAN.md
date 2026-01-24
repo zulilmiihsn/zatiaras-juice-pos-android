@@ -1,11 +1,11 @@
-# 🏗️ Zatiaras POS - Android Master Architecture
+# 🏗️ ZatiarasPOS - Android Master Architecture
 
 > **Version**: 2.1 (Production Ready)
 > **Status**: APPROVED
 > **Persona**: Senior Lead Architect
 
 ## 1. Executive Summary
-This document is the **Single Source of Truth** for the technical implementation of Zatiaras POS on Native Android. It supercedes all previous web-based architectures. The core philosophy is **"Offline-First, AI-Powered, Cloud-Syned"**.
+This document is the **Single Source of Truth** for the technical implementation of ZatiarasPOS on Native Android. It supercedes all previous web-based architectures. The core philosophy is **"Offline-First, AI-Powered, Cloud-Syned"**.
 
 ## 2. Technology Stack (Strict)
 All developers must adhere to this stack. No deviations without Senior Architect approval.

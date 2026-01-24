@@ -1,4 +1,4 @@
-# Zatiaras POS - UI/UX Gap Analysis (Web vs Android)
+# ZatiarasPOS - UI/UX Gap Analysis (Web vs Android)
 
 **Objective**: Achieve 1:1 Feature & UX Parity between the reference Web App and the Native Android App. The goal is "Zero Learning Curve" for existing users migrating to the Android app.
 

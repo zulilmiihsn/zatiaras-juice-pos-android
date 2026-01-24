@@ -197,7 +197,7 @@ class PdfExportService @Inject constructor() {
         val footerY = pageHeight - margin
         labelPaint.textSize = 10f
         labelPaint.color = Color.GRAY
-        canvas.drawText("Zatiaras POS - Generated automatically", margin, footerY, labelPaint)
+        canvas.drawText("ZatiarasPOS - Generated automatically", margin, footerY, labelPaint)
     }
 
     private fun drawLineItem(

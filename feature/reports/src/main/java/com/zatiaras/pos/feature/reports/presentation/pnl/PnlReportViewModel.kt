@@ -46,13 +46,69 @@ class PnlReportViewModel @Inject constructor(
     private val dateFormat = SimpleDateFormat("dd MMM yyyy", Locale("id", "ID"))
 
     init {
+        // Initialize dates for default period
+        initializeDatesForDefaultPeriod()
         loadReport()
+    }
+    
+    /**
+     * Initialize custom date fields based on the default period (THIS_MONTH).
+     */
+    private fun initializeDatesForDefaultPeriod() {
+        val (startDate, endDate) = calculateDateRangeForPeriod(_uiState.value.selectedPeriod)
+        _uiState.update {
+            it.copy(
+                customStartDate = startDate,
+                customEndDate = endDate
+            )
+        }
     }
 
     fun selectPeriod(period: ReportPeriod) {
-        _uiState.update { it.copy(selectedPeriod = period) }
+        // Calculate and populate dates for the selected period
+        val (startDate, endDate) = calculateDateRangeForPeriod(period)
+        
+        _uiState.update { 
+            it.copy(
+                selectedPeriod = period,
+                customStartDate = startDate,
+                customEndDate = endDate
+            ) 
+        }
+        
         if (period != ReportPeriod.CUSTOM) {
             loadReport()
+        }
+    }
+    
+    /**
+     * Calculate date range for a given period.
+     * Used to populate the date fields when a quick period is selected.
+     */
+    private fun calculateDateRangeForPeriod(period: ReportPeriod): Pair<Long, Long> {
+        val now = System.currentTimeMillis()
+        
+        return when (period) {
+            ReportPeriod.TODAY -> {
+                DateUtils.getStartOfDay(now) to DateUtils.getEndOfDay(now)
+            }
+            ReportPeriod.THIS_WEEK -> {
+                DateUtils.getThisWeekRange()
+            }
+            ReportPeriod.THIS_MONTH -> {
+                DateUtils.getThisMonthRange()
+            }
+            ReportPeriod.LAST_7_DAYS -> {
+                DateUtils.getLastNDaysRange(7)
+            }
+            ReportPeriod.LAST_30_DAYS -> {
+                DateUtils.getLastNDaysRange(30)
+            }
+            ReportPeriod.CUSTOM -> {
+                val start = _uiState.value.customStartDate ?: DateUtils.getStartOfDay(now)
+                val end = _uiState.value.customEndDate ?: DateUtils.getEndOfDay(now)
+                start to end
+            }
         }
     }
 
@@ -74,12 +130,16 @@ class PnlReportViewModel @Inject constructor(
             if (state.isSelectingStartDate) {
                 state.copy(
                     customStartDate = timestamp,
-                    showDatePicker = false
+                    showDatePicker = false,
+                    // Set to CUSTOM since user is manually selecting dates
+                    selectedPeriod = ReportPeriod.CUSTOM
                 )
             } else {
                 state.copy(
                     customEndDate = timestamp,
-                    showDatePicker = false
+                    showDatePicker = false,
+                    // Set to CUSTOM since user is manually selecting dates
+                    selectedPeriod = ReportPeriod.CUSTOM
                 )
             }
         }

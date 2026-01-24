@@ -1,7 +1,7 @@
 package com.zatiaras.pos.core.data.access
 
 /**
- * User roles in the Zatiaras POS system.
+ * User roles in the ZatiarasPOS system.
  * 
  * Role hierarchy:
  * - PEMILIK (Owner): Full access to all features

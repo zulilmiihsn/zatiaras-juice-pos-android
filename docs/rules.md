@@ -7,7 +7,7 @@
 
 ## 0. Software Engineering Principles (MANDATORY)
 
-The entire Zatiaras POS codebase MUST follow these engineering principles:
+The entire ZatiarasPOS codebase MUST follow these engineering principles:
 
 ### 0.1 SOLID Principles
 

@@ -86,18 +86,6 @@ fun PosProductListItem(
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                     )
                 }
-                Spacer(modifier = Modifier.width(8.dp))
-            }
-
-            IconButton(
-                onClick = onAddToCart,
-                modifier = Modifier.padding(start = 8.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = stringResource(R.string.pos_add_to_cart),
-                    tint = MaterialTheme.colorScheme.primary
-                )
             }
         }
     }

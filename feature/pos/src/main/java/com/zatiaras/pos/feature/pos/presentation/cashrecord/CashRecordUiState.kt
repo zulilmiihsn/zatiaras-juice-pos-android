@@ -56,7 +56,9 @@ data class CashRecordUiState(
     val summary: CashSummary = CashSummary(0, 0, 0),
     val posTransactionCount: Int = 0,
     val isLoading: Boolean = true,
-    val error: String? = null
+    val error: String? = null,
+    val customStartDate: Long? = null,
+    val customEndDate: Long? = null
 )
 
 /**
@@ -84,6 +86,13 @@ data class CashRecordFormState(
  * Events for Cash Record screens.
  */
 sealed interface CashRecordEvent {
+    // Filter events
+    data class SetDateFilter(
+        val filter: DateFilter,
+        val customStartDate: Long? = null,
+        val customEndDate: Long? = null
+    ) : CashRecordEvent
+    
     // Form events
     data class SetType(val type: CashRecordType) : CashRecordEvent
     data class SetAmount(val amount: String) : CashRecordEvent

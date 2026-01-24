@@ -3,30 +3,34 @@ package com.zatiaras.pos.feature.pos.presentation.cashrecord
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.MenuBook
+import androidx.compose.material.icons.automirrored.filled.TrendingDown
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.ShoppingCart
-import androidx.compose.material.icons.filled.TrendingDown
-import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -46,6 +50,7 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -72,11 +77,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import com.zatiaras.pos.core.ui.theme.ExpenseRed
-import com.zatiaras.pos.core.ui.theme.IncomeGreen
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.zatiaras.pos.core.ui.theme.ExpenseRed
+import com.zatiaras.pos.core.ui.theme.IncomeGreen
 import com.zatiaras.pos.core.ui.theme.LocalDimensions
 import com.zatiaras.pos.feature.pos.domain.model.CashRecordType
 import kotlinx.coroutines.launch
@@ -136,6 +141,11 @@ fun CashRecordScreen(
                         fontWeight = FontWeight.Bold
                     )
                 },
+                navigationIcon = {
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Kembali")
+                    }
+                },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface
                 )
@@ -169,6 +179,16 @@ fun CashRecordScreen(
                 modifier = Modifier.padding(16.dp)
             )
             
+            // Compact Date Filter
+            val selectedFilter by viewModel.selectedDateFilter.collectAsState()
+            DateFilterRow(
+                selectedFilter = selectedFilter,
+                onFilterSelected = { filter, customStart, customEnd ->
+                    viewModel.onEvent(CashRecordEvent.SetDateFilter(filter, customStart, customEnd))
+                },
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+            )
+            
             // Records List
             if (uiState.isLoading) {
                 Box(
@@ -184,7 +204,7 @@ fun CashRecordScreen(
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(
-                            imageVector = Icons.Default.MenuBook,
+                            imageVector = Icons.AutoMirrored.Filled.MenuBook,
                             contentDescription = null,
                             modifier = Modifier.size(72.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
@@ -251,8 +271,8 @@ fun CashRecordScreen(
 }
 
 /**
- * Redesigned summary card with larger numbers and clear visual separation.
- * Optimized for busy cashiers who need quick glances.
+ * Compact summary card with colored backgrounds.
+ * Maintains visual clarity with reduced spacing for efficiency.
  */
 @Composable
 private fun CashSummaryCard(
@@ -263,49 +283,29 @@ private fun CashSummaryCard(
     priceFormatter: NumberFormat,
     modifier: Modifier = Modifier
 ) {
-    val dimensions = LocalDimensions.current
     Card(
         modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Column(
-            modifier = Modifier.padding(dimensions.paddingL)
+            modifier = Modifier.padding(12.dp)
         ) {
-            // Header with transaction count badge
+            // Compact Header
+            Text(
+                text = "Ringkasan Hari Ini ($posTransactionCount Transaksi)",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold
+            )
+            
+            Spacer(modifier = Modifier.height(12.dp))
+            
+            // Income and Expense in compact colored cards
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Ringkasan Hari Ini",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-                if (posTransactionCount > 0) {
-                    Surface(
-                        shape = RoundedCornerShape(16.dp),
-                        color = MaterialTheme.colorScheme.primaryContainer
-                    ) {
-                        Text(
-                            text = "$posTransactionCount transaksi",
-                            style = MaterialTheme.typography.labelMedium,
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                    }
-                }
-            }
-            
-            Spacer(modifier = Modifier.height(dimensions.spacingL))
-            
-            // Income and Expense in clear separate cards
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 // MASUK Card
                 Card(
@@ -313,33 +313,33 @@ private fun CashSummaryCard(
                     colors = CardDefaults.cardColors(
                         containerColor = IncomeGreen.copy(alpha = 0.1f)
                     ),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(8.dp)
                 ) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(16.dp),
+                            .padding(12.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
-                                imageVector = Icons.Default.TrendingUp,
+                                imageVector = Icons.AutoMirrored.Filled.TrendingUp,
                                 contentDescription = null,
                                 tint = IncomeGreen,
-                                modifier = Modifier.size(20.dp)
+                                modifier = Modifier.size(16.dp)
                             )
-                            Spacer(modifier = Modifier.width(6.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
                             Text(
                                 text = "MASUK",
-                                style = MaterialTheme.typography.labelMedium,
+                                style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.SemiBold,
                                 color = IncomeGreen
                             )
                         }
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(6.dp))
                         Text(
                             text = priceFormatter.format(totalIncome),
-                            style = MaterialTheme.typography.headlineSmall,
+                            style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             color = IncomeGreen
                         )
@@ -352,33 +352,33 @@ private fun CashSummaryCard(
                     colors = CardDefaults.cardColors(
                         containerColor = ExpenseRed.copy(alpha = 0.1f)
                     ),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(8.dp)
                 ) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(16.dp),
+                            .padding(12.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
-                                imageVector = Icons.Default.TrendingDown,
+                                imageVector = Icons.AutoMirrored.Filled.TrendingDown,
                                 contentDescription = null,
                                 tint = ExpenseRed,
-                                modifier = Modifier.size(20.dp)
+                                modifier = Modifier.size(16.dp)
                             )
-                            Spacer(modifier = Modifier.width(6.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
                             Text(
                                 text = "KELUAR",
-                                style = MaterialTheme.typography.labelMedium,
+                                style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.SemiBold,
                                 color = ExpenseRed
                             )
                         }
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(6.dp))
                         Text(
                             text = priceFormatter.format(totalExpense),
-                            style = MaterialTheme.typography.headlineSmall,
+                            style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             color = ExpenseRed
                         )
@@ -386,37 +386,302 @@ private fun CashSummaryCard(
                 }
             }
             
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
             
-            // Divider
+            // Subtle divider
             Spacer(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(1.dp)
-                    .background(MaterialTheme.colorScheme.outlineVariant)
+                    .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
             )
             
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(10.dp))
             
-            // SALDO - Large and Prominent
+            // SALDO - Compact and clear
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
+                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "SALDO: ",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    text = "Saldo",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold
                 )
                 Text(
                     text = priceFormatter.format(netCash),
-                    style = MaterialTheme.typography.headlineMedium,
+                    style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = if (netCash >= 0) IncomeGreen else ExpenseRed
                 )
             }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun DateFilterRow(
+    selectedFilter: DateFilter,
+    onFilterSelected: (DateFilter, Long?, Long?) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var showDateRangePicker by remember { mutableStateOf(false) }
+    val dateFormatter = SimpleDateFormat("dd MMM", Locale("id", "ID"))
+    var customStartDate by remember { mutableStateOf<Long?>(null) }
+    var customEndDate by remember { mutableStateOf<Long?>(null) }
+    
+    Column(modifier = modifier) {
+        // Section Label
+        Text(
+            text = "Periode:",
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            fontWeight = FontWeight.Medium
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        
+        // Filter Chips
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            // Fixed date filters with check icons
+            DateFilter.entries.filter { it != DateFilter.CUSTOM }.forEach { filter ->
+                FilterChip(
+                    selected = selectedFilter == filter,
+                    onClick = { onFilterSelected(filter, null, null) },
+                    label = {
+                        Text(
+                            text = when (filter) {
+                                DateFilter.TODAY -> "Hari Ini"
+                                DateFilter.YESTERDAY -> "Kemarin"
+                                DateFilter.THIS_WEEK -> "Minggu Ini"
+                                DateFilter.CUSTOM -> ""
+                            },
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = if (selectedFilter == filter) FontWeight.SemiBold else FontWeight.Normal
+                        )
+                    },
+                    leadingIcon = if (selectedFilter == filter) {
+                        {
+                            Icon(
+                                imageVector = Icons.Default.CheckCircle,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    } else null,
+                colors = FilterChipDefaults.filterChipColors(
+                    selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                    selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            )
+        }
+        
+        // Custom date range chip with calendar icon
+        FilterChip(
+            selected = selectedFilter == DateFilter.CUSTOM,
+            onClick = { showDateRangePicker = true },
+            label = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (selectedFilter == DateFilter.CUSTOM && customStartDate != null && customEndDate != null) {
+                        Text(
+                            text = "${dateFormatter.format(Date(customStartDate!!))} - ${dateFormatter.format(Date(customEndDate!!))}",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.MenuBook,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "Pilih Tanggal",
+                            style = MaterialTheme.typography.labelMedium
+                        )
+                    }
+                }
+            },
+            colors = FilterChipDefaults.filterChipColors(
+                selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+        )
+    }
+}
+    
+    // Date Range Picker Dialog
+    if (showDateRangePicker) {
+        DateRangePickerDialog(
+            onDismiss = { showDateRangePicker = false },
+            onConfirm = { startDate, endDate ->
+                customStartDate = startDate
+                customEndDate = endDate
+                onFilterSelected(DateFilter.CUSTOM, startDate, endDate)
+                showDateRangePicker = false
+            }
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun DateRangePickerDialog(
+    onDismiss: () -> Unit,
+    onConfirm: (Long, Long) -> Unit
+) {
+    val dateFormatter = SimpleDateFormat("dd MMM yyyy", Locale("id", "ID"))
+    
+    var startDate by remember { mutableStateOf<Long?>(null) }
+    var endDate by remember { mutableStateOf<Long?>(null) }
+    var showStartPicker by remember { mutableStateOf(false) }
+    var showEndPicker by remember { mutableStateOf(false) }
+    
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                "Pilih Rentang Tanggal",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+        },
+        text = {
+            Column {
+                // Start Date
+                Text(
+                    "Dari:",
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Medium
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                OutlinedButton(
+                    onClick = { showStartPicker = true },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        startDate?.let { dateFormatter.format(Date(it)) } ?: "Pilih tanggal mulai",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                // End Date
+                Text(
+                    "Sampai:",
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Medium
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                OutlinedButton(
+                    onClick = { showEndPicker = true },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = startDate != null
+                ) {
+                    Text(
+                        endDate?.let { dateFormatter.format(Date(it)) } ?: "Pilih tanggal selesai",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+                
+                if (startDate == null) {
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        "Pilih tanggal mulai terlebih dahulu",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    if (startDate != null && endDate != null) {
+                        onConfirm(startDate!!, endDate!!)
+                    }
+                },
+                enabled = startDate != null && endDate != null
+            ) {
+                Text("Terapkan")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Batal")
+            }
+        }
+    )
+    
+    // Start Date Picker Dialog
+    if (showStartPicker) {
+        val datePickerState = rememberDatePickerState(
+            initialSelectedDateMillis = startDate ?: System.currentTimeMillis()
+        )
+        DatePickerDialog(
+            onDismissRequest = { showStartPicker = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        datePickerState.selectedDateMillis?.let { selectedDate ->
+                            startDate = selectedDate
+                            if (endDate != null && endDate!! < selectedDate) {
+                                endDate = null
+                            }
+                        }
+                        showStartPicker = false
+                    }
+                ) {
+                    Text("OK")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showStartPicker = false }) {
+                    Text("Batal")
+                }
+            }
+        ) {
+            DatePicker(state = datePickerState)
+        }
+    }
+    
+    // End Date Picker Dialog
+    if (showEndPicker) {
+        val datePickerState = rememberDatePickerState(
+            initialSelectedDateMillis = endDate ?: startDate ?: System.currentTimeMillis()
+        )
+        DatePickerDialog(
+            onDismissRequest = { showEndPicker = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        datePickerState.selectedDateMillis?.let { selectedDate ->
+                            if (startDate != null && selectedDate >= startDate!!) {
+                                endDate = selectedDate
+                            }
+                        }
+                        showEndPicker = false
+                    }
+                ) {
+                    Text("OK")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showEndPicker = false }) {
+                    Text("Batal")
+                }
+            }
+        ) {
+            DatePicker(state = datePickerState)
         }
     }
 }
@@ -529,8 +794,8 @@ private fun CashFlowItemCard(
                 Icon(
                     imageVector = when {
                         isTransactionItem -> Icons.Default.ShoppingCart
-                        item.isIncome -> Icons.Default.TrendingUp
-                        else -> Icons.Default.TrendingDown
+                        item.isIncome -> Icons.AutoMirrored.Filled.TrendingUp
+                        else -> Icons.AutoMirrored.Filled.TrendingDown
                     },
                     contentDescription = null,
                     tint = iconColor,
@@ -557,7 +822,7 @@ private fun CashFlowItemCard(
                     // Show item count for transactions
                     if (item is CashFlowItem.FromTransaction) {
                         Text(
-                            text = " • ${item.itemCount} item",
+                            text = " \u2022 ${item.itemCount} item",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -566,7 +831,7 @@ private fun CashFlowItemCard(
                     // Show category for manual records
                     if (item is CashFlowItem.FromCashRecord && !item.category.isNullOrBlank()) {
                         Text(
-                            text = " • ${item.category}",
+                            text = " \u2022 ${item.category}",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -656,7 +921,7 @@ private fun AddCashRecordSheet(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
-                        imageVector = Icons.Default.TrendingUp,
+                        imageVector = Icons.AutoMirrored.Filled.TrendingUp,
                         contentDescription = null,
                         tint = if (formState.type == CashRecordType.INCOME) 
                             IncomeGreen 
@@ -699,7 +964,7 @@ private fun AddCashRecordSheet(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
-                        imageVector = Icons.Default.TrendingDown,
+                        imageVector = Icons.AutoMirrored.Filled.TrendingDown,
                         contentDescription = null,
                         tint = if (formState.type == CashRecordType.EXPENSE) 
                             ExpenseRed 
@@ -735,11 +1000,11 @@ private fun AddCashRecordSheet(
                 readOnly = true,
                 label = { Text("Tanggal") },
                 leadingIcon = {
-                    Icon(Icons.Default.MenuBook, contentDescription = null)
+                    Icon(Icons.AutoMirrored.Filled.MenuBook, contentDescription = null)
                 },
                 trailingIcon = {
                     IconButton(onClick = { showDatePicker = true }) {
-                        Icon(Icons.Default.MenuBook, contentDescription = "Pilih Tanggal")
+                        Icon(Icons.AutoMirrored.Filled.MenuBook, contentDescription = "Pilih Tanggal")
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
@@ -839,7 +1104,7 @@ private fun AddCashRecordSheet(
                 colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .menuAnchor(),
+                    .menuAnchor(MenuAnchorType.PrimaryNotEditable),
                 shape = RoundedCornerShape(12.dp)
             )
 
@@ -914,3 +1179,4 @@ private fun AddCashRecordSheet(
         Spacer(modifier = Modifier.height(32.dp))
     }
 }
+

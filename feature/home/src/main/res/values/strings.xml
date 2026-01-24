@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Zatiaras POS</string>
+    <string name="app_name">ZatiarasPOS</string>
     
     <!-- Home Screen -->
     <string name="home_greeting">Selamat Datang</string>

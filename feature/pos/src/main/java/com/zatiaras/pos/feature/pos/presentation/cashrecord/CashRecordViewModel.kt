@@ -17,12 +17,23 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import java.util.Calendar
 import javax.inject.Inject
+
+/**
+ * Date filter options for Cash Record screen.
+ */
+enum class DateFilter {
+    TODAY,
+    YESTERDAY,
+    THIS_WEEK,
+    CUSTOM
+}
 
 /**
  * ViewModel for Cash Record (Buku Kas) list screen.
  * 
- * Combines both POS transactions and manual cash records in one view.
+ * Combines both POS transactions and manual cash records in one view with date filtering.
  */
 @HiltViewModel
 class CashRecordViewModel @Inject constructor(
@@ -38,6 +49,9 @@ class CashRecordViewModel @Inject constructor(
     
     private val _saveSuccess = MutableSharedFlow<Boolean>()
     val saveSuccess: SharedFlow<Boolean> = _saveSuccess.asSharedFlow()
+    
+    private val _selectedDateFilter = MutableStateFlow(DateFilter.TODAY)
+    val selectedDateFilter: StateFlow<DateFilter> = _selectedDateFilter.asStateFlow()
 
     init {
         loadRecords()
@@ -45,10 +59,12 @@ class CashRecordViewModel @Inject constructor(
 
     private fun loadRecords() {
         viewModelScope.launch {
+            val (startDate, endDate) = getDateRange(_selectedDateFilter.value)
+            
             // Combine POS transactions and manual cash records
             combine(
-                transactionRepository.getTodayTransactions(),
-                cashRecordRepository.getTodayRecords()
+                transactionRepository.getTransactionsByDateRange(startDate, endDate),
+                cashRecordRepository.getRecordsByDateRange(startDate, endDate)
             ) { transactions, cashRecords ->
                 // Convert to unified CashFlowItems
                 val transactionItems = transactions.map { CashFlowItem.FromTransaction(it) }
@@ -93,6 +109,15 @@ class CashRecordViewModel @Inject constructor(
 
     fun onEvent(event: CashRecordEvent) {
         when (event) {
+            is CashRecordEvent.SetDateFilter -> {
+                _selectedDateFilter.value = event.filter
+                _uiState.value = _uiState.value.copy(
+                    customStartDate = event.customStartDate,
+                    customEndDate = event.customEndDate
+                )
+                loadRecords()
+            }
+            
             is CashRecordEvent.SetType -> {
                 _formState.value = _formState.value.copy(type = event.type)
             }
@@ -220,5 +245,48 @@ class CashRecordViewModel @Inject constructor(
 
     fun resetForm() {
         _formState.value = CashRecordFormState()
+    }
+    
+    private fun getDateRange(filter: DateFilter): Pair<Long, Long> {
+        val calendar = Calendar.getInstance()
+        calendar.set(Calendar.HOUR_OF_DAY, 0)
+        calendar.set(Calendar.MINUTE, 0)
+        calendar.set(Calendar.SECOND, 0)
+        calendar.set(Calendar.MILLISECOND, 0)
+        
+        return when (filter) {
+            DateFilter.TODAY -> {
+                val start = calendar.timeInMillis
+                calendar.set(Calendar.HOUR_OF_DAY, 23)
+                calendar.set(Calendar.MINUTE, 59)
+                calendar.set(Calendar.SECOND, 59)
+                val end = calendar.timeInMillis
+                start to end
+            }
+            DateFilter.YESTERDAY -> {
+                calendar.add(Calendar.DAY_OF_YEAR, -1)
+                val start = calendar.timeInMillis
+                calendar.set(Calendar.HOUR_OF_DAY, 23)
+                calendar.set(Calendar.MINUTE, 59)
+                calendar.set(Calendar.SECOND, 59)
+                val end = calendar.timeInMillis
+                start to end
+            }
+            DateFilter.THIS_WEEK -> {
+                calendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
+                val start = calendar.timeInMillis
+                calendar.add(Calendar.DAY_OF_YEAR, 6)
+                calendar.set(Calendar.HOUR_OF_DAY, 23)
+                calendar.set(Calendar.MINUTE, 59)
+                calendar.set(Calendar.SECOND, 59)
+                val end = calendar.timeInMillis
+                start to end
+            }
+            DateFilter.CUSTOM -> {
+                val start = _uiState.value.customStartDate ?: calendar.timeInMillis
+                val end = _uiState.value.customEndDate ?: calendar.timeInMillis
+                start to end
+            }
+        }
     }
 }

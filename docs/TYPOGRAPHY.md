@@ -1,4 +1,4 @@
-# Typography Guidelines - Zatiaras POS
+# Typography Guidelines - ZatiarasPOS
 
 ## Overview
 

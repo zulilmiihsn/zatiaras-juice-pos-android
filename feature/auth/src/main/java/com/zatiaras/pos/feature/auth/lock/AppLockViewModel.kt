@@ -128,7 +128,7 @@ class AppLockViewModel @Inject constructor(
         biometricManager.authenticate(
             activity = activity,
             title = "Buka Kunci Aplikasi",
-            subtitle = "Gunakan sidik jari untuk membuka Zatiaras POS",
+            subtitle = "Gunakan sidik jari untuk membuka ZatiarasPOS",
             negativeButtonText = "Gunakan PIN"
         ) { result ->
             when (result) {

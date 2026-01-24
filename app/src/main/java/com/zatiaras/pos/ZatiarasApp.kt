@@ -15,7 +15,7 @@ import timber.log.Timber
 import javax.inject.Inject
 
 /**
- * Application class for Zatiaras POS.
+ * Application class for ZatiarasPOS.
  * 
  * Implements Configuration.Provider for WorkManager Hilt integration.
  * Initializes:

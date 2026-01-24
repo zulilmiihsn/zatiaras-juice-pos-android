@@ -4,7 +4,7 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
 /**
- * Database migrations for Zatiaras POS.
+ * Database migrations for ZatiarasPOS.
  * 
  * IMPORTANT: Always add new migrations here instead of using fallbackToDestructiveMigration().
  * Destructive migration will delete all user data on schema changes.

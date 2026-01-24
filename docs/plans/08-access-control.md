@@ -8,7 +8,7 @@
 
 ## Overview
 
-Implementasi sistem kontrol akses multi-role untuk Zatiaras POS yang memungkinkan:
+Implementasi sistem kontrol akses multi-role untuk ZatiarasPOS yang memungkinkan:
 - **Pemilik (Owner)**: Akses penuh ke semua fitur
 - **Kasir (Cashier)**: Akses terbatas, beberapa screen memerlukan PIN pemilik
 

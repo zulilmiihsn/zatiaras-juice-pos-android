@@ -163,13 +163,8 @@ object AppShapes {
     /** 50% - Fully rounded (circles, pills) */
     val Full = RoundedCornerShape(percent = 50)
     
-    /** Cart sidebar shape - rounded left corners only */
-    val CartSidebar = RoundedCornerShape(
-        topStart = 16.dp,
-        bottomStart = 16.dp,
-        topEnd = 0.dp,
-        bottomEnd = 0.dp
-    )
+    /** Cart sidebar shape - flat rectangle */
+    val CartSidebar = RoundedCornerShape(0.dp)
     
     /** Top rounded for image covers */
     val TopRounded = RoundedCornerShape(

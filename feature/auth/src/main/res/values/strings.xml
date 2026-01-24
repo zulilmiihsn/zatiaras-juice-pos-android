@@ -1,6 +1,6 @@
 <resources>
     <!-- Auth Screen -->
-    <string name="auth_title">Zatiaras POS</string>
+    <string name="auth_title">ZatiarasPOS</string>
     <string name="auth_email_label">Email</string>
     <string name="auth_password_label">Password</string>
     <string name="auth_login_button">Masuk</string>

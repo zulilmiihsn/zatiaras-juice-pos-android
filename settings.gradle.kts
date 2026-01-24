@@ -18,7 +18,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Zatiaras POS"
+rootProject.name = "ZatiarasPOS"
 include(":app")
 include(":core:domain")
 include(":core:ui")

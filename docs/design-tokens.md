@@ -1,4 +1,4 @@
-# 🎨 Design Tokens - Zatiaras POS
+# 🎨 Design Tokens - ZatiarasPOS
 
 ## Overview
 

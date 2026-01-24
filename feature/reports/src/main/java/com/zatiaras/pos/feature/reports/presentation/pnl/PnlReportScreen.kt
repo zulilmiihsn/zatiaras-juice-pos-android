@@ -64,9 +64,8 @@ import com.zatiaras.pos.core.data.access.AccessControlManager
 import com.zatiaras.pos.core.data.access.LockableRoute
 import com.zatiaras.pos.core.ui.components.AccessControlGate
 import com.zatiaras.pos.feature.reports.domain.model.ReportPeriod
-import com.zatiaras.pos.feature.reports.presentation.components.PeriodSelector
+import com.zatiaras.pos.feature.reports.presentation.components.DateFilterRow
 import com.zatiaras.pos.feature.reports.presentation.components.PnlBreakdownCard
-import com.zatiaras.pos.feature.reports.presentation.components.toDisplayName
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -257,40 +256,16 @@ fun PnlReportScreen(
                 contentPadding = PaddingValues(dimensions.paddingL),
                 verticalArrangement = Arrangement.spacedBy(dimensions.spacingL)
             ) {
-                // Period Selector
+                // Date Filter Row (always visible date range + quick period chips)
                 item {
-                    Column {
-                        Text(
-                            text = "Periode",
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        
-                        Spacer(modifier = Modifier.height(8.dp))
-                        
-                        PeriodSelector(
-                            selectedPeriod = uiState.selectedPeriod,
-                            onPeriodSelected = onPeriodSelected
-                        )
-                    }
-                }
-                
-                // Custom Date Range (if CUSTOM period selected)
-                if (uiState.selectedPeriod == ReportPeriod.CUSTOM) {
-                    item {
-                        CustomDateRangeSelector(
-                            startDate = uiState.customStartDate,
-                            endDate = uiState.customEndDate,
-                            onSelectStartDate = { onShowDatePicker(true) },
-                            onSelectEndDate = { onShowDatePicker(false) }
-                        )
-                    }
-                }
-                
-                // Period Info
-                item {
-                    PeriodInfoCard(uiState)
+                    DateFilterRow(
+                        startDate = uiState.customStartDate,
+                        endDate = uiState.customEndDate,
+                        activePeriod = if (uiState.selectedPeriod != ReportPeriod.CUSTOM) uiState.selectedPeriod else null,
+                        onStartDateClick = { onShowDatePicker(true) },
+                        onEndDateClick = { onShowDatePicker(false) },
+                        onQuickPeriodSelected = onPeriodSelected
+                    )
                 }
                 
                 // Loading State
@@ -356,123 +331,6 @@ fun PnlReportScreen(
     }
 }
 
-@Composable
-private fun CustomDateRangeSelector(
-    startDate: Long?,
-    endDate: Long?,
-    onSelectStartDate: () -> Unit,
-    onSelectEndDate: () -> Unit
-) {
-    val dateFormat = SimpleDateFormat("dd MMM yyyy", Locale("id", "ID"))
-    
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        DateButton(
-            label = "Dari",
-            date = startDate?.let { dateFormat.format(Date(it)) } ?: "Pilih Tanggal",
-            onClick = onSelectStartDate,
-            modifier = Modifier.weight(1f)
-        )
-        
-        DateButton(
-            label = "Sampai",
-            date = endDate?.let { dateFormat.format(Date(it)) } ?: "Pilih Tanggal",
-            onClick = onSelectEndDate,
-            modifier = Modifier.weight(1f)
-        )
-    }
-}
-
-@Composable
-private fun DateButton(
-    label: String,
-    date: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Column(
-        modifier = modifier
-            .clip(RoundedCornerShape(12.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant)
-            .clickable(onClick = onClick)
-            .padding(12.dp)
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        
-        Spacer(modifier = Modifier.height(4.dp))
-        
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                imageVector = Icons.Default.CalendarMonth,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(18.dp)
-            )
-            
-            Spacer(modifier = Modifier.width(8.dp))
-            
-            Text(
-                text = date,
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Medium
-            )
-        }
-    }
-}
-
-@Composable
-private fun PeriodInfoCard(uiState: PnlReportUiState) {
-    val dateFormat = SimpleDateFormat("dd MMM yyyy", Locale("id", "ID"))
-    
-    val periodText = when (uiState.selectedPeriod) {
-        ReportPeriod.CUSTOM -> {
-            val start = uiState.customStartDate?.let { dateFormat.format(Date(it)) } ?: "-"
-            val end = uiState.customEndDate?.let { dateFormat.format(Date(it)) } ?: "-"
-            "$start - $end"
-        }
-        else -> uiState.selectedPeriod.toDisplayName()
-    }
-    
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f))
-            .padding(12.dp)
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = Icons.Default.CalendarMonth,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(20.dp)
-            )
-            
-            Spacer(modifier = Modifier.width(12.dp))
-            
-            Column {
-                Text(
-                    text = "Periode Laporan",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Text(
-                    text = periodText,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
-        }
-    }
-}
 
 @Composable
 private fun ExportSection(

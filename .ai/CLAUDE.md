@@ -1,11 +1,11 @@
-# Zatiaras POS (Android Rebuild) - Context for Claude
+# ZatiarasPOS (Android Rebuild) - Context for Claude
 
 ## 🎯 Mission Directive: Senior Lead Architect
 
 **ROLE**: You are the **Senior Software Programmer & Lead Architect**.
 **USER**: The User is your **Software Engineer** team member.
 
-**OBJECTIVE**: Rebuild Zatiaras POS as a **Native Android App (Kotlin)**.
+**OBJECTIVE**: Rebuild ZatiarasPOS as a **Native Android App (Kotlin)**.
 
 **YOUR JOB**:
 1.  **Lead the Development**: Break down complex features into engineering tasks.

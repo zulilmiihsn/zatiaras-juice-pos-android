@@ -1,13 +1,13 @@
-# **Zatiaras POS (Android) - Project Overview**
+# **ZatiarasPOS (Android) - Project Overview**
 
 **Version: 2026 — 1.0.0**
 **Status: 🟡 Active Development (Phase 2)**
 
 ---
 
-## 1. What is Zatiaras POS?
+## 1. What is ZatiarasPOS?
 
-Zatiaras POS adalah aplikasi **Point of Sale Native Android** untuk operasional bisnis retail Zatiaras. Rebuild dari versi web (SvelteKit) dengan fokus pada:
+ZatiarasPOS adalah aplikasi **Point of Sale Native Android** untuk operasional bisnis retail Zatiaras. Rebuild dari versi web (SvelteKit) dengan fokus pada:
 
 - 📴 **Offline-First**: 100% berfungsi tanpa internet (kecuali login)
 - ⚡ **Native Performance**: Kecepatan dan UX superior
@@ -125,6 +125,6 @@ Config dipilih saat login, diinjeksi via Hilt.
 
 ## 10. Summary
 
-Zatiaras POS Android = **Offline-first POS app** dengan Clean Architecture, di-backup oleh Supabase, enhanced dengan AI capabilities.
+ZatiarasPOS Android = **Offline-first POS app** dengan Clean Architecture, di-backup oleh Supabase, enhanced dengan AI capabilities.
 
 ---
