@@ -129,11 +129,26 @@ class ReportRepositoryImpl @Inject constructor(
             val posSummary = transactionDao.getRevenueSummary(startDate, endDate)
             val posTransactions = transactionDao.getTransactionCountForDay(startDate, endDate)
             
-            // 2. Get Manual Records & Aggregate
+            // 2. Get Product Sales Breakdown
+            val productSales = transactionDao.getTopSellingProducts(startDate, endDate, 100)
+                .map { entity ->
+                    com.zatiaras.pos.feature.reports.domain.model.ProductSaleItem(
+                        productId = entity.productId,
+                        productName = entity.productName,
+                        quantity = entity.totalQuantity,
+                        revenue = entity.totalRevenue
+                    )
+                }
+            
+            // 3. Get Manual Records & Aggregate
             val manualRecords = cashRecordDao.getRecordsListByDateRange(startDate, endDate)
             val manualSummary = aggregateManualRecords(manualRecords)
+            val expensesByCategory = aggregateExpensesByCategory(manualRecords)
             
-            // 3. Combine Data
+            // 4. Aggregate Manual Income Items (detailed breakdown)
+            val (manualIncomeItems, otherIncomeItems) = aggregateManualIncomeItems(manualRecords)
+            
+            // 5. Combine Data
             val posNetRevenue = posSummary.grossRevenue - posSummary.totalDiscount
             val operatingRevenue = posNetRevenue + manualSummary.operatingIncome
             val otherRevenue = manualSummary.otherIncome
@@ -141,7 +156,7 @@ class ReportRepositoryImpl @Inject constructor(
             
             val totalExpenses = manualSummary.operatingExpense + manualSummary.otherExpense
             
-            // 4. Calculate Profit & Tax (UMKM 0.5% on Gross Profit)
+            // 6. Calculate Profit & Tax (UMKM 0.5% on Gross Profit)
             val grossProfit = totalRevenue - totalExpenses
             val tax = if (grossProfit > 0) (grossProfit * 0.005).toLong() else 0L
             val netProfit = grossProfit - tax
@@ -158,7 +173,14 @@ class ReportRepositoryImpl @Inject constructor(
                 grossProfit = grossProfit,
                 tax = tax,
                 netProfit = netProfit,
-                transactionCount = posTransactions + manualRecords.count { it.type == "INCOME" }
+                transactionCount = posTransactions + manualRecords.count { it.type == "INCOME" },
+                // Detailed breakdown
+                productSales = productSales,
+                posNetRevenue = posNetRevenue,
+                manualOperatingIncome = manualSummary.operatingIncome,
+                manualIncomeItems = manualIncomeItems,
+                otherIncomeItems = otherIncomeItems,
+                expensesByCategory = expensesByCategory
             )
             
         } catch (e: Exception) {
@@ -211,5 +233,64 @@ class ReportRepositoryImpl @Inject constructor(
         }
         
         return ManualRecordSummary(operatingIncome, otherIncome, operatingExpense, otherExpense)
+    }
+    
+    /**
+     * Aggregate expense records by category with individual items.
+     */
+    private fun aggregateExpensesByCategory(
+        records: List<com.zatiaras.pos.core.data.local.entity.CashRecordEntity>
+    ): List<com.zatiaras.pos.feature.reports.domain.model.ExpenseCategoryItem> {
+        val expenseRecords = records.filter { it.type == "EXPENSE" && !it.isDeleted }
+        
+        return expenseRecords
+            .groupBy { it.category ?: "Lainnya" }
+            .map { (category, items) ->
+                com.zatiaras.pos.feature.reports.domain.model.ExpenseCategoryItem(
+                    category = category,
+                    amount = items.sumOf { it.amount },
+                    items = items.map { record ->
+                        com.zatiaras.pos.feature.reports.domain.model.ExpenseDetailItem(
+                            description = record.description,
+                            amount = record.amount
+                        )
+                    }
+                )
+            }
+            .sortedByDescending { it.amount }
+    }
+    
+    /**
+     * Aggregate manual income records by description.
+     * Returns Pair(operatingIncomeItems, otherIncomeItems)
+     */
+    private fun aggregateManualIncomeItems(
+        records: List<com.zatiaras.pos.core.data.local.entity.CashRecordEntity>
+    ): Pair<List<com.zatiaras.pos.feature.reports.domain.model.IncomeDetailItem>, List<com.zatiaras.pos.feature.reports.domain.model.IncomeDetailItem>> {
+        val incomeRecords = records.filter { it.type == "INCOME" && !it.isDeleted }
+        
+        val operatingIncomeItems = incomeRecords
+            .filter { it.category == com.zatiaras.pos.core.domain.model.CashCategories.OPERATING_INCOME }
+            .map { record ->
+                com.zatiaras.pos.feature.reports.domain.model.IncomeDetailItem(
+                    description = record.description,
+                    amount = record.amount,
+                    category = record.category
+                )
+            }
+            .sortedByDescending { it.amount }
+        
+        val otherIncomeItems = incomeRecords
+            .filter { it.category != com.zatiaras.pos.core.domain.model.CashCategories.OPERATING_INCOME }
+            .map { record ->
+                com.zatiaras.pos.feature.reports.domain.model.IncomeDetailItem(
+                    description = record.description,
+                    amount = record.amount,
+                    category = record.category
+                )
+            }
+            .sortedByDescending { it.amount }
+        
+        return Pair(operatingIncomeItems, otherIncomeItems)
     }
 }

@@ -88,7 +88,7 @@ data class CashRecordFormState(
 sealed interface CashRecordEvent {
     // Filter events
     data class SetDateFilter(
-        val filter: DateFilter,
+        val period: com.zatiaras.pos.core.domain.model.DatePeriod,
         val customStartDate: Long? = null,
         val customEndDate: Long? = null
     ) : CashRecordEvent

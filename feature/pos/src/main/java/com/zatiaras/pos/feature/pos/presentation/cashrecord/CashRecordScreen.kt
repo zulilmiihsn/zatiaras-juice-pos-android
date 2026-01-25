@@ -90,6 +90,9 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+import com.zatiaras.pos.core.domain.model.DatePeriod
+import com.zatiaras.pos.core.ui.components.DateFilterRow
+
 /**
  * Cash Record (Buku Kas) screen.
  * 
@@ -179,15 +182,50 @@ fun CashRecordScreen(
                 modifier = Modifier.padding(16.dp)
             )
             
-            // Compact Date Filter
-            val selectedFilter by viewModel.selectedDateFilter.collectAsState()
+            // Shared Date Filter Component
+            val selectedPeriod by viewModel.selectedDatePeriod.collectAsState()
+            
+            // Logic to handle date filter events
+            var showDateRangePicker by remember { mutableStateOf(false) }
+            val dateFormatter = SimpleDateFormat("dd MMM yyyy", Locale("id", "ID"))
+            
+            // Since the new DateFilterRow component requires explicit date range values and handlers,
+            // we use the component but adapt it to use the ViewModel's state and events
+            
+            // Note: DateFilterRow component from core:ui implements its own specific UI.
+            // We use it here to ensure consistency with Reports screen.
             DateFilterRow(
-                selectedFilter = selectedFilter,
-                onFilterSelected = { filter, customStart, customEnd ->
-                    viewModel.onEvent(CashRecordEvent.SetDateFilter(filter, customStart, customEnd))
+                startDate = uiState.customStartDate,
+                endDate = uiState.customEndDate,
+                activePeriod = selectedPeriod,
+                onStartDateClick = { 
+                    // To simplify, we trigger the custom date period selection which will show picker in the reusable component if needed.
+                    // However, the reusable component DateFilterRow handles start/end date clicks by calling the callback.
+                    // The actual date picking logic is not embedded in the component itself (it's stateless regarding picker dialog).
+                    showDateRangePicker = true 
+                },
+                onEndDateClick = { showDateRangePicker = true },
+                onQuickPeriodSelected = { period ->
+                    viewModel.onEvent(CashRecordEvent.SetDateFilter(period))
                 },
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
             )
+
+            // Date Picker Dialog Logic (since we removed local implementation, we need a way to pick dates if needed)
+            if (showDateRangePicker) {
+               // We need a DatePickerDialog here. 
+               // For now, let's use the DateRangePickerDialog from core:ui logic if we want to be fully reused,
+               // but DateFilterRow is just a UI component.
+               // We should implement a picker dialog or use a shared one.
+               // To keep it simple and consistent, we can reuse 'androidx.compose.material3.DatePickerDialog' directly here.
+               com.zatiaras.pos.core.ui.components.DateRangePickerDialog(
+                   onDismiss = { showDateRangePicker = false },
+                   onConfirm = { start, end ->
+                       viewModel.onEvent(CashRecordEvent.SetDateFilter(DatePeriod.CUSTOM, start, end))
+                       showDateRangePicker = false
+                   }
+               )
+            }
             
             // Records List
             if (uiState.isLoading) {
@@ -420,271 +458,7 @@ private fun CashSummaryCard(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun DateFilterRow(
-    selectedFilter: DateFilter,
-    onFilterSelected: (DateFilter, Long?, Long?) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    var showDateRangePicker by remember { mutableStateOf(false) }
-    val dateFormatter = SimpleDateFormat("dd MMM", Locale("id", "ID"))
-    var customStartDate by remember { mutableStateOf<Long?>(null) }
-    var customEndDate by remember { mutableStateOf<Long?>(null) }
-    
-    Column(modifier = modifier) {
-        // Section Label
-        Text(
-            text = "Periode:",
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            fontWeight = FontWeight.Medium
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        
-        // Filter Chips
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .horizontalScroll(rememberScrollState()),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            // Fixed date filters with check icons
-            DateFilter.entries.filter { it != DateFilter.CUSTOM }.forEach { filter ->
-                FilterChip(
-                    selected = selectedFilter == filter,
-                    onClick = { onFilterSelected(filter, null, null) },
-                    label = {
-                        Text(
-                            text = when (filter) {
-                                DateFilter.TODAY -> "Hari Ini"
-                                DateFilter.YESTERDAY -> "Kemarin"
-                                DateFilter.THIS_WEEK -> "Minggu Ini"
-                                DateFilter.CUSTOM -> ""
-                            },
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = if (selectedFilter == filter) FontWeight.SemiBold else FontWeight.Normal
-                        )
-                    },
-                    leadingIcon = if (selectedFilter == filter) {
-                        {
-                            Icon(
-                                imageVector = Icons.Default.CheckCircle,
-                                contentDescription = null,
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
-                    } else null,
-                colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                    selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-            )
-        }
-        
-        // Custom date range chip with calendar icon
-        FilterChip(
-            selected = selectedFilter == DateFilter.CUSTOM,
-            onClick = { showDateRangePicker = true },
-            label = {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    if (selectedFilter == DateFilter.CUSTOM && customStartDate != null && customEndDate != null) {
-                        Text(
-                            text = "${dateFormatter.format(Date(customStartDate!!))} - ${dateFormatter.format(Date(customEndDate!!))}",
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    } else {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.MenuBook,
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = "Pilih Tanggal",
-                            style = MaterialTheme.typography.labelMedium
-                        )
-                    }
-                }
-            },
-            colors = FilterChipDefaults.filterChipColors(
-                selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
-            )
-        )
-    }
-}
-    
-    // Date Range Picker Dialog
-    if (showDateRangePicker) {
-        DateRangePickerDialog(
-            onDismiss = { showDateRangePicker = false },
-            onConfirm = { startDate, endDate ->
-                customStartDate = startDate
-                customEndDate = endDate
-                onFilterSelected(DateFilter.CUSTOM, startDate, endDate)
-                showDateRangePicker = false
-            }
-        )
-    }
-}
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun DateRangePickerDialog(
-    onDismiss: () -> Unit,
-    onConfirm: (Long, Long) -> Unit
-) {
-    val dateFormatter = SimpleDateFormat("dd MMM yyyy", Locale("id", "ID"))
-    
-    var startDate by remember { mutableStateOf<Long?>(null) }
-    var endDate by remember { mutableStateOf<Long?>(null) }
-    var showStartPicker by remember { mutableStateOf(false) }
-    var showEndPicker by remember { mutableStateOf(false) }
-    
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Text(
-                "Pilih Rentang Tanggal",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold
-            )
-        },
-        text = {
-            Column {
-                // Start Date
-                Text(
-                    "Dari:",
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.Medium
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                
-                OutlinedButton(
-                    onClick = { showStartPicker = true },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        startDate?.let { dateFormatter.format(Date(it)) } ?: "Pilih tanggal mulai",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
-                
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                // End Date
-                Text(
-                    "Sampai:",
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.Medium
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                
-                OutlinedButton(
-                    onClick = { showEndPicker = true },
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = startDate != null
-                ) {
-                    Text(
-                        endDate?.let { dateFormatter.format(Date(it)) } ?: "Pilih tanggal selesai",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
-                
-                if (startDate == null) {
-                    Spacer(modifier = Modifier.height(6.dp))
-                    Text(
-                        "Pilih tanggal mulai terlebih dahulu",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    if (startDate != null && endDate != null) {
-                        onConfirm(startDate!!, endDate!!)
-                    }
-                },
-                enabled = startDate != null && endDate != null
-            ) {
-                Text("Terapkan")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Batal")
-            }
-        }
-    )
-    
-    // Start Date Picker Dialog
-    if (showStartPicker) {
-        val datePickerState = rememberDatePickerState(
-            initialSelectedDateMillis = startDate ?: System.currentTimeMillis()
-        )
-        DatePickerDialog(
-            onDismissRequest = { showStartPicker = false },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        datePickerState.selectedDateMillis?.let { selectedDate ->
-                            startDate = selectedDate
-                            if (endDate != null && endDate!! < selectedDate) {
-                                endDate = null
-                            }
-                        }
-                        showStartPicker = false
-                    }
-                ) {
-                    Text("OK")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showStartPicker = false }) {
-                    Text("Batal")
-                }
-            }
-        ) {
-            DatePicker(state = datePickerState)
-        }
-    }
-    
-    // End Date Picker Dialog
-    if (showEndPicker) {
-        val datePickerState = rememberDatePickerState(
-            initialSelectedDateMillis = endDate ?: startDate ?: System.currentTimeMillis()
-        )
-        DatePickerDialog(
-            onDismissRequest = { showEndPicker = false },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        datePickerState.selectedDateMillis?.let { selectedDate ->
-                            if (startDate != null && selectedDate >= startDate!!) {
-                                endDate = selectedDate
-                            }
-                        }
-                        showEndPicker = false
-                    }
-                ) {
-                    Text("OK")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showEndPicker = false }) {
-                    Text("Batal")
-                }
-            }
-        ) {
-            DatePicker(state = datePickerState)
-        }
-    }
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

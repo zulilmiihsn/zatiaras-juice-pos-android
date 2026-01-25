@@ -68,6 +68,19 @@ object DateUtils {
     }
 
     /**
+     * Get yesterday's date range as a pair of (startOfDay, endOfDay).
+     * 
+     * @return Pair of (startOfYesterday, endOfYesterday)
+     */
+    fun getYesterdayRange(): Pair<Long, Long> {
+        val calendar = Calendar.getInstance()
+        calendar.add(Calendar.DAY_OF_YEAR, -1)
+        val start = getStartOfDay(calendar.timeInMillis)
+        val end = getEndOfDay(calendar.timeInMillis)
+        return start to end
+    }
+
+    /**
      * Get this week's date range (Monday to now).
      * 
      * @return Pair of (startOfWeek, now)

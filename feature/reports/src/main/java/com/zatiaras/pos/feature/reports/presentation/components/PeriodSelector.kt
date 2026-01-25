@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -86,16 +85,4 @@ private fun PeriodChip(
             color = textColor
         )
     }
-}
-
-/**
- * Convert ReportPeriod enum to Indonesian display name.
- */
-fun ReportPeriod.toDisplayName(): String = when (this) {
-    ReportPeriod.TODAY -> "Hari Ini"
-    ReportPeriod.THIS_WEEK -> "Minggu Ini"
-    ReportPeriod.THIS_MONTH -> "Bulan Ini"
-    ReportPeriod.LAST_7_DAYS -> "7 Hari Terakhir"
-    ReportPeriod.LAST_30_DAYS -> "30 Hari Terakhir"
-    ReportPeriod.CUSTOM -> "Kustom"
 }

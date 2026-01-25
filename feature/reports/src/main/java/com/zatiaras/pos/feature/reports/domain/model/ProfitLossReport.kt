@@ -1,7 +1,7 @@
 package com.zatiaras.pos.feature.reports.domain.model
 
 /**
- * Profit & Loss report data.
+ * Profit & Loss report data with detailed breakdown.
  */
 data class ProfitLossReport(
     val periodStart: Long,
@@ -23,6 +23,58 @@ data class ProfitLossReport(
     val netProfit: Long,         // Gross Profit - Tax
     
     // Metadata
-    val transactionCount: Int
+    val transactionCount: Int,
+    
+    // === DETAILED BREAKDOWN ===
+    // POS Sales per product
+    val productSales: List<ProductSaleItem> = emptyList(),
+    
+    // Operating Revenue Details (POS net + Manual operating income)  
+    val posNetRevenue: Long = 0,
+    val manualOperatingIncome: Long = 0,
+    
+    // Manual income items breakdown (like "Sangu Ilham", "Titipan dari X")
+    val manualIncomeItems: List<IncomeDetailItem> = emptyList(),
+    
+    // Other income items breakdown
+    val otherIncomeItems: List<IncomeDetailItem> = emptyList(),
+    
+    // Expense breakdown by category
+    val expensesByCategory: List<ExpenseCategoryItem> = emptyList()
 )
 
+/**
+ * Detail penjualan per produk dari POS.
+ */
+data class ProductSaleItem(
+    val productId: String,
+    val productName: String,
+    val quantity: Int,
+    val revenue: Long
+)
+
+/**
+ * Detail pemasukan manual individual (e.g., "Sangu Ilham", "Titipan dari X").
+ */
+data class IncomeDetailItem(
+    val description: String,
+    val amount: Long,
+    val category: String? = null
+)
+
+/**
+ * Detail pengeluaran per kategori.
+ */
+data class ExpenseCategoryItem(
+    val category: String,
+    val amount: Long,
+    val items: List<ExpenseDetailItem> = emptyList()
+)
+
+/**
+ * Detail item pengeluaran individual.
+ */
+data class ExpenseDetailItem(
+    val description: String,
+    val amount: Long
+)

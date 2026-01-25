@@ -2,6 +2,7 @@ package com.zatiaras.pos.feature.pos.presentation.cashrecord
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.zatiaras.pos.core.domain.model.DatePeriod
 import com.zatiaras.pos.feature.pos.domain.model.CashRecordType
 import com.zatiaras.pos.feature.pos.domain.repository.CashRecordRepository
 import com.zatiaras.pos.feature.pos.domain.repository.CashSummary
@@ -19,16 +20,6 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.util.Calendar
 import javax.inject.Inject
-
-/**
- * Date filter options for Cash Record screen.
- */
-enum class DateFilter {
-    TODAY,
-    YESTERDAY,
-    THIS_WEEK,
-    CUSTOM
-}
 
 /**
  * ViewModel for Cash Record (Buku Kas) list screen.
@@ -50,8 +41,8 @@ class CashRecordViewModel @Inject constructor(
     private val _saveSuccess = MutableSharedFlow<Boolean>()
     val saveSuccess: SharedFlow<Boolean> = _saveSuccess.asSharedFlow()
     
-    private val _selectedDateFilter = MutableStateFlow(DateFilter.TODAY)
-    val selectedDateFilter: StateFlow<DateFilter> = _selectedDateFilter.asStateFlow()
+    private val _selectedDatePeriod = MutableStateFlow(DatePeriod.TODAY)
+    val selectedDatePeriod: StateFlow<DatePeriod> = _selectedDatePeriod.asStateFlow()
 
     init {
         loadRecords()
@@ -59,7 +50,7 @@ class CashRecordViewModel @Inject constructor(
 
     private fun loadRecords() {
         viewModelScope.launch {
-            val (startDate, endDate) = getDateRange(_selectedDateFilter.value)
+            val (startDate, endDate) = getDateRange(_selectedDatePeriod.value)
             
             // Combine POS transactions and manual cash records
             combine(
@@ -110,7 +101,7 @@ class CashRecordViewModel @Inject constructor(
     fun onEvent(event: CashRecordEvent) {
         when (event) {
             is CashRecordEvent.SetDateFilter -> {
-                _selectedDateFilter.value = event.filter
+                _selectedDatePeriod.value = event.period
                 _uiState.value = _uiState.value.copy(
                     customStartDate = event.customStartDate,
                     customEndDate = event.customEndDate
@@ -247,15 +238,15 @@ class CashRecordViewModel @Inject constructor(
         _formState.value = CashRecordFormState()
     }
     
-    private fun getDateRange(filter: DateFilter): Pair<Long, Long> {
+    private fun getDateRange(period: DatePeriod): Pair<Long, Long> {
         val calendar = Calendar.getInstance()
         calendar.set(Calendar.HOUR_OF_DAY, 0)
         calendar.set(Calendar.MINUTE, 0)
         calendar.set(Calendar.SECOND, 0)
         calendar.set(Calendar.MILLISECOND, 0)
         
-        return when (filter) {
-            DateFilter.TODAY -> {
+        return when (period) {
+            DatePeriod.TODAY -> {
                 val start = calendar.timeInMillis
                 calendar.set(Calendar.HOUR_OF_DAY, 23)
                 calendar.set(Calendar.MINUTE, 59)
@@ -263,7 +254,7 @@ class CashRecordViewModel @Inject constructor(
                 val end = calendar.timeInMillis
                 start to end
             }
-            DateFilter.YESTERDAY -> {
+            DatePeriod.YESTERDAY -> {
                 calendar.add(Calendar.DAY_OF_YEAR, -1)
                 val start = calendar.timeInMillis
                 calendar.set(Calendar.HOUR_OF_DAY, 23)
@@ -272,7 +263,7 @@ class CashRecordViewModel @Inject constructor(
                 val end = calendar.timeInMillis
                 start to end
             }
-            DateFilter.THIS_WEEK -> {
+            DatePeriod.THIS_WEEK -> {
                 calendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
                 val start = calendar.timeInMillis
                 calendar.add(Calendar.DAY_OF_YEAR, 6)
@@ -282,7 +273,35 @@ class CashRecordViewModel @Inject constructor(
                 val end = calendar.timeInMillis
                 start to end
             }
-            DateFilter.CUSTOM -> {
+            DatePeriod.THIS_MONTH -> {
+                calendar.set(Calendar.DAY_OF_MONTH, 1)
+                val start = calendar.timeInMillis
+                calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH))
+                calendar.set(Calendar.HOUR_OF_DAY, 23)
+                calendar.set(Calendar.MINUTE, 59)
+                calendar.set(Calendar.SECOND, 59)
+                val end = calendar.timeInMillis
+                start to end
+            }
+            DatePeriod.LAST_7_DAYS -> {
+                calendar.add(Calendar.DAY_OF_YEAR, -6)
+                val start = calendar.timeInMillis
+                val endCalendar = Calendar.getInstance()
+                endCalendar.set(Calendar.HOUR_OF_DAY, 23)
+                endCalendar.set(Calendar.MINUTE, 59)
+                endCalendar.set(Calendar.SECOND, 59)
+                start to endCalendar.timeInMillis
+            }
+            DatePeriod.LAST_30_DAYS -> {
+                calendar.add(Calendar.DAY_OF_YEAR, -29)
+                val start = calendar.timeInMillis
+                val endCalendar = Calendar.getInstance()
+                endCalendar.set(Calendar.HOUR_OF_DAY, 23)
+                endCalendar.set(Calendar.MINUTE, 59)
+                endCalendar.set(Calendar.SECOND, 59)
+                start to endCalendar.timeInMillis
+            }
+            DatePeriod.CUSTOM -> {
                 val start = _uiState.value.customStartDate ?: calendar.timeInMillis
                 val end = _uiState.value.customEndDate ?: calendar.timeInMillis
                 start to end

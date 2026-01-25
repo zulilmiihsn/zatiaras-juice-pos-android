@@ -63,8 +63,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.zatiaras.pos.core.data.access.AccessControlManager
 import com.zatiaras.pos.core.data.access.LockableRoute
 import com.zatiaras.pos.core.ui.components.AccessControlGate
+import com.zatiaras.pos.core.ui.components.DateFilterRow
 import com.zatiaras.pos.feature.reports.domain.model.ReportPeriod
-import com.zatiaras.pos.feature.reports.presentation.components.DateFilterRow
 import com.zatiaras.pos.feature.reports.presentation.components.PnlBreakdownCard
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -253,8 +253,8 @@ fun PnlReportScreen(
             val dimensions = LocalDimensions.current
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(dimensions.paddingL),
-                verticalArrangement = Arrangement.spacedBy(dimensions.spacingL)
+                contentPadding = PaddingValues(dimensions.paddingM),
+                verticalArrangement = Arrangement.spacedBy(dimensions.spacingM)
             ) {
                 // Date Filter Row (always visible date range + quick period chips)
                 item {
@@ -324,7 +324,7 @@ fun PnlReportScreen(
                 
                 // Bottom spacing
                 item {
-                    Spacer(modifier = Modifier.height(32.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
                 }
             }
         }
@@ -344,12 +344,12 @@ private fun ExportSection(
     Column(modifier = modifier.fillMaxWidth()) {
         Text(
             text = "Export Laporan",
-            style = MaterialTheme.typography.titleSmall,
+            style = MaterialTheme.typography.labelLarge,
             fontWeight = FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(8.dp))
         
         // Single Export Button with Dropdown
         Box {
@@ -360,7 +360,7 @@ private fun ExportSection(
             ) {
                 if (isExporting) {
                     CircularProgressIndicator(
-                        modifier = Modifier.size(18.dp),
+                        modifier = Modifier.size(16.dp),
                         color = androidx.compose.ui.graphics.Color.White,
                         strokeWidth = 2.dp
                     )
@@ -370,7 +370,7 @@ private fun ExportSection(
                     Icon(
                         imageVector = Icons.Default.PictureAsPdf,
                         contentDescription = null,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(18.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Export Laporan")
@@ -389,9 +389,9 @@ private fun ExportSection(
                                 imageVector = Icons.Default.PictureAsPdf,
                                 contentDescription = null,
                                 tint = PdfRed,
-                                modifier = Modifier.size(20.dp)
+                                modifier = Modifier.size(18.dp)
                             )
-                            Spacer(modifier = Modifier.width(12.dp))
+                            Spacer(modifier = Modifier.width(10.dp))
                             Text("Export PDF")
                         }
                     },
@@ -407,9 +407,9 @@ private fun ExportSection(
                                 imageVector = Icons.Default.TableChart,
                                 contentDescription = null,
                                 tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(20.dp)
+                                modifier = Modifier.size(18.dp)
                             )
-                            Spacer(modifier = Modifier.width(12.dp))
+                            Spacer(modifier = Modifier.width(10.dp))
                             Text("Export Excel/CSV")
                         }
                     },
@@ -421,13 +421,14 @@ private fun ExportSection(
             }
         }
         
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(4.dp))
         
         Text(
             text = "File akan tersimpan di folder Download",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
         )
     }
 }
+
 

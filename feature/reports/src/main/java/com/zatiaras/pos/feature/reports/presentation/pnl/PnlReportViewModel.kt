@@ -2,14 +2,12 @@ package com.zatiaras.pos.feature.reports.presentation.pnl
 
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.zatiaras.pos.feature.reports.domain.model.ReportPeriod
 import com.zatiaras.pos.feature.reports.domain.repository.ReportRepository
 import com.zatiaras.pos.feature.reports.export.CsvExportService
 import com.zatiaras.pos.feature.reports.export.PdfExportService
-import com.zatiaras.pos.feature.reports.presentation.components.toDisplayName
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -24,7 +22,6 @@ import kotlinx.coroutines.withContext
 import timber.log.Timber
 import com.zatiaras.pos.core.domain.util.DateUtils
 import java.text.SimpleDateFormat
-import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 import javax.inject.Inject
@@ -91,6 +88,9 @@ class PnlReportViewModel @Inject constructor(
         return when (period) {
             ReportPeriod.TODAY -> {
                 DateUtils.getStartOfDay(now) to DateUtils.getEndOfDay(now)
+            }
+            ReportPeriod.YESTERDAY -> {
+                DateUtils.getYesterdayRange()
             }
             ReportPeriod.THIS_WEEK -> {
                 DateUtils.getThisWeekRange()
@@ -263,6 +263,9 @@ class PnlReportViewModel @Inject constructor(
         return when (_uiState.value.selectedPeriod) {
             ReportPeriod.TODAY -> {
                 DateUtils.getStartOfDay(now) to DateUtils.getEndOfDay(now)
+            }
+            ReportPeriod.YESTERDAY -> {
+                DateUtils.getYesterdayRange()
             }
             ReportPeriod.THIS_WEEK -> {
                 DateUtils.getThisWeekRange()
