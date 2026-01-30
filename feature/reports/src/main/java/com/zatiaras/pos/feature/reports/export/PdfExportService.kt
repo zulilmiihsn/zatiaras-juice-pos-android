@@ -8,6 +8,7 @@ import android.graphics.Paint
 import android.graphics.pdf.PdfDocument
 import android.net.Uri
 import androidx.core.content.FileProvider
+import com.zatiaras.pos.core.ui.util.CurrencyFormatter
 import com.zatiaras.pos.feature.reports.domain.model.ProfitLossReport
 import timber.log.Timber
 import java.io.File
@@ -65,7 +66,7 @@ class PdfExportService @Inject constructor() {
     }
     
     private val dateFormat = SimpleDateFormat("dd MMMM yyyy", Locale("id", "ID"))
-    private val currencyFormat = NumberFormat.getCurrencyInstance(Locale("id", "ID"))
+    private val currencyFormat: NumberFormat = CurrencyFormatter.getCurrencyFormatter()
 
     /**
      * Export P&L report to PDF and return the file URI.

@@ -1,5 +1,6 @@
 package com.zatiaras.pos.feature.printer.data.escpos
 
+import com.zatiaras.pos.core.ui.util.CurrencyFormatter
 import com.zatiaras.pos.feature.pos.domain.model.Transaction
 import com.zatiaras.pos.feature.printer.domain.model.PaperWidth
 import java.text.NumberFormat
@@ -15,9 +16,7 @@ import javax.inject.Singleton
 @Singleton
 class ReceiptFormatter @Inject constructor() {
     
-    private val currencyFormat = NumberFormat.getCurrencyInstance(Locale("id", "ID")).apply {
-        maximumFractionDigits = 0
-    }
+    private val currencyFormat: NumberFormat = CurrencyFormatter.getCurrencyFormatter()
     
     private val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale("id", "ID"))
     

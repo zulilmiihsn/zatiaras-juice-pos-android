@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AccountBalance
@@ -56,17 +55,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.zatiaras.pos.core.ui.components.CurrencyTextField
 import com.zatiaras.pos.core.ui.theme.LocalDimensions
+import com.zatiaras.pos.core.ui.util.CurrencyFormatter
 import com.zatiaras.pos.feature.pos.domain.model.Cart
 import com.zatiaras.pos.feature.pos.domain.model.PaymentMethod
 import com.zatiaras.pos.feature.pos.domain.model.Transaction
 import com.zatiaras.pos.feature.pos.presentation.CheckoutEvent
 import java.text.NumberFormat
-import java.util.Locale
 
 /**
  * Checkout Screen for completing payment.
@@ -82,9 +81,7 @@ fun CheckoutScreen(
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     
-    val priceFormatter = NumberFormat.getCurrencyInstance(Locale("id", "ID")).apply {
-        maximumFractionDigits = 0
-    }
+    val priceFormatter = CurrencyFormatter.getCurrencyFormatter()
     
     // Initialize cart on first composition
     LaunchedEffect(cart) {
@@ -360,13 +357,12 @@ private fun CheckoutContent(
                             fontWeight = FontWeight.Bold
                         )
                         
-                        OutlinedTextField(
+                        CurrencyTextField(
                             value = state.amountPaid,
                             onValueChange = { onEvent(CheckoutEvent.SetAmountPaid(it)) },
                             modifier = Modifier.fillMaxWidth(),
                             label = { Text("Jumlah uang diterima") },
-                            prefix = { Text("Rp ") },
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            showPrefix = true,
                             singleLine = true,
                             shape = RoundedCornerShape(12.dp)
                         )
@@ -388,7 +384,7 @@ private fun CheckoutContent(
                             
                             listOf(10_000L, 20_000L, 50_000L, 100_000L).forEach { amount ->
                                 OutlinedButton(onClick = { onQuickAmount(amount) }) {
-                                    Text(priceFormatter.format(amount).replace("Rp", "").trim())
+                                    Text(CurrencyFormatter.formatCurrency(amount, includeSymbol = false))
                                 }
                             }
                         }
@@ -412,7 +408,7 @@ private fun CheckoutContent(
                                         style = MaterialTheme.typography.titleMedium
                                     )
                                     Text(
-                                        text = priceFormatter.format(state.changeAmount),
+                                        text = CurrencyFormatter.formatCurrency(state.changeAmount),
                                         style = MaterialTheme.typography.headlineSmall,
                                         fontWeight = FontWeight.Bold,
                                         color = MaterialTheme.colorScheme.primary
@@ -467,7 +463,7 @@ private fun CheckoutContent(
                         Spacer(modifier = Modifier.height(8.dp))
                         
                         Text(
-                            text = priceFormatter.format(state.grandTotal),
+                            text = CurrencyFormatter.formatCurrency(state.grandTotal),
                             style = MaterialTheme.typography.headlineMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary

@@ -44,6 +44,7 @@ import androidx.compose.ui.unit.dp
 import com.zatiaras.pos.feature.pos.domain.model.PaymentMethod
 import com.zatiaras.pos.feature.pos.domain.model.Transaction
 import com.zatiaras.pos.feature.pos.domain.model.TransactionItem
+import com.zatiaras.pos.core.ui.util.CurrencyFormatter
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -63,9 +64,7 @@ fun ReceiptScreen(
     printerName: String? = null,
     modifier: Modifier = Modifier
 ) {
-    val priceFormatter = NumberFormat.getCurrencyInstance(Locale("id", "ID")).apply {
-        maximumFractionDigits = 0
-    }
+    val priceFormatter = CurrencyFormatter.getCurrencyFormatter()
     val dateFormatter = SimpleDateFormat("dd MMM yyyy, HH:mm", Locale("id", "ID"))
     
     Scaffold(

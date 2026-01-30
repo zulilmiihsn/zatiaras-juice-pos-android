@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.zatiaras.pos.core.ui.theme.LocalDimensions
+import com.zatiaras.pos.core.ui.util.CurrencyFormatter
 import com.zatiaras.pos.core.ui.util.noRippleClickable
 import com.zatiaras.pos.feature.pos.R
 import com.zatiaras.pos.feature.pos.presentation.components.CartSidebar
@@ -169,11 +170,7 @@ private fun FloatingCartBar(
     total: Long,
     onClick: () -> Unit
 ) {
-    val priceFormatter = remember {
-        java.text.NumberFormat.getCurrencyInstance(java.util.Locale("id", "ID")).apply {
-            maximumFractionDigits = 0
-        }
-    }
+    val priceFormatter = remember { CurrencyFormatter.getCurrencyFormatter() }
     
     Surface(
         onClick = onClick,

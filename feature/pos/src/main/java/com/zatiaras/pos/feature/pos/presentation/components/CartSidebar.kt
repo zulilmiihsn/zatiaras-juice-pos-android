@@ -37,8 +37,8 @@ import androidx.compose.ui.unit.dp
 import com.zatiaras.pos.feature.pos.domain.model.Cart
 import com.zatiaras.pos.core.ui.theme.AppShapes
 import com.zatiaras.pos.core.ui.theme.LocalDimensions
+import com.zatiaras.pos.core.ui.util.CurrencyFormatter
 import java.text.NumberFormat
-import java.util.Locale
 
 /**
  * Cart sidebar component for POS screen.
@@ -58,11 +58,7 @@ fun CartSidebar(
     onCheckout: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val priceFormatter = remember {
-        NumberFormat.getCurrencyInstance(Locale("id", "ID")).apply {
-            maximumFractionDigits = 0
-        }
-    }
+    val priceFormatter = remember { CurrencyFormatter.getCurrencyFormatter() }
     
     val dimensions = LocalDimensions.current
     

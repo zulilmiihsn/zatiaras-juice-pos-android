@@ -55,7 +55,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.zatiaras.pos.core.ui.components.CurrencyTextField
 import com.zatiaras.pos.core.ui.theme.LocalDimensions
+import com.zatiaras.pos.core.ui.util.CurrencyFormatter
 import com.zatiaras.pos.feature.reports.presentation.components.RevenueLineChart
 import com.zatiaras.pos.feature.reports.presentation.components.StatCard
 import com.zatiaras.pos.feature.reports.presentation.components.TopProductsList
@@ -623,16 +625,15 @@ private fun OpenStoreDialog(
                         
                         Spacer(modifier = Modifier.height(16.dp))
                         
-                        // Custom amount input
-                        OutlinedTextField(
-                            value = balanceText,
-                            onValueChange = { input ->
-                                val cleanInput = input.filter { it.isDigit() }
-                                balanceText = if (cleanInput.isNotEmpty()) formatNumber(cleanInput.toLong()) else ""
-                                openingBalance = cleanInput.toLongOrNull() ?: 0L
+                        // Custom amount input - using CurrencyTextField
+                        CurrencyTextField(
+                            value = openingBalance,
+                            onValueChange = { newValue ->
+                                openingBalance = newValue
+                                balanceText = if (newValue > 0) formatNumber(newValue) else ""
                             },
                             label = { Text("Masukkan Jumlah Lain") },
-                            prefix = { Text("Rp ") },
+                            showPrefix = true,
                             singleLine = true,
                             shape = RoundedCornerShape(16.dp),
                             modifier = Modifier.fillMaxWidth(),
@@ -752,7 +753,7 @@ private fun AmountChip(
 }
 
 private fun formatNumber(number: Long): String {
-    return java.text.NumberFormat.getNumberInstance(java.util.Locale("id", "ID")).format(number)
+    return CurrencyFormatter.formatNumber(number)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

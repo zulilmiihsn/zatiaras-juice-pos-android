@@ -22,8 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import java.text.NumberFormat
-import java.util.Locale
+import com.zatiaras.pos.core.ui.util.CurrencyFormatter
 
 /**
  * Statistics section displaying 6 metrics in a grid layout.
@@ -39,9 +38,7 @@ fun StatisticsSection(
     busiestDay: String = "-",
     modifier: Modifier = Modifier
 ) {
-    val formatCurrency = NumberFormat.getCurrencyInstance(Locale("id", "ID")).apply {
-        maximumFractionDigits = 0
-    }
+    val formatCurrency = CurrencyFormatter.getCurrencyFormatter()
     
     Card(
         modifier = modifier.fillMaxWidth(),

@@ -45,8 +45,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.zatiaras.pos.core.domain.model.Product
-import java.text.NumberFormat
-import java.util.Locale
+import com.zatiaras.pos.core.ui.util.CurrencyFormatter
 
 /**
  * Product card optimized for POS catalog grid.
@@ -64,11 +63,7 @@ fun PosProductCard(
     onAddToCart: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val priceFormatter = remember {
-        NumberFormat.getCurrencyInstance(Locale("id", "ID")).apply {
-            maximumFractionDigits = 0
-        }
-    }
+    val priceFormatter = remember { CurrencyFormatter.getCurrencyFormatter() }
     
     // Animation for press effect
     val interactionSource = remember { MutableInteractionSource() }

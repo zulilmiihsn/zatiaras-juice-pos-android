@@ -24,9 +24,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.zatiaras.pos.core.domain.model.Product
 import com.zatiaras.pos.core.ui.theme.AppShapes
+import com.zatiaras.pos.core.ui.util.CurrencyFormatter
 import com.zatiaras.pos.feature.pos.R
-import java.text.NumberFormat
-import java.util.Locale
 
 @Composable
 fun PosProductListItem(
@@ -35,9 +34,7 @@ fun PosProductListItem(
     onAddToCart: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val formatCurrency = NumberFormat.getCurrencyInstance(Locale("id", "ID")).apply {
-        maximumFractionDigits = 0
-    }
+    val formatCurrency = CurrencyFormatter.getCurrencyFormatter()
 
     Card(
         modifier = modifier

@@ -40,8 +40,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.zatiaras.pos.core.ui.theme.AppShapes
 import com.zatiaras.pos.core.ui.theme.LocalDimensions
-import java.text.NumberFormat
-import java.util.Locale
+import com.zatiaras.pos.core.ui.util.CurrencyFormatter
 
 /**
  * Beautiful stat card with icon, value, and optional trend indicator.
@@ -189,6 +188,5 @@ fun StatCard(
  * Format currency in Indonesian Rupiah.
  */
 fun formatRupiah(amount: Long): String {
-    val formatter = NumberFormat.getCurrencyInstance(Locale("id", "ID"))
-    return formatter.format(amount).replace("Rp", "Rp ")
+    return CurrencyFormatter.formatCurrency(amount)
 }

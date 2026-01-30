@@ -42,8 +42,7 @@ import coil.compose.AsyncImage
 import com.zatiaras.pos.feature.pos.domain.model.CartItem
 import com.zatiaras.pos.core.ui.theme.AppShapes
 import com.zatiaras.pos.core.ui.theme.LocalDimensions
-import java.text.NumberFormat
-import java.util.Locale
+import com.zatiaras.pos.core.ui.util.CurrencyFormatter
 
 /**
  * Cart item row for displaying items in the shopping cart.
@@ -60,9 +59,7 @@ fun CartItemRow(
     modifier: Modifier = Modifier
 ) {
     val dimensions = LocalDimensions.current
-    val priceFormatter = NumberFormat.getCurrencyInstance(Locale("id", "ID")).apply {
-        maximumFractionDigits = 0
-    }
+    val priceFormatter = CurrencyFormatter.getCurrencyFormatter()
     
     Surface(
         modifier = modifier.fillMaxWidth(),

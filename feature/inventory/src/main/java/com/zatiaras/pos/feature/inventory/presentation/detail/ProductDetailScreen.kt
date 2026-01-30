@@ -57,6 +57,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.zatiaras.pos.core.domain.model.Category
+import com.zatiaras.pos.core.ui.components.CurrencyTextField
 import com.zatiaras.pos.core.ui.theme.LocalDimensions
 
 /**
@@ -206,20 +207,27 @@ private fun FormContent(
             shape = RoundedCornerShape(12.dp)
         )
 
-        // Price Field
-        OutlinedTextField(
+        // Price Field with currency formatting
+        CurrencyTextField(
             value = state.price,
             onValueChange = { onEvent(ProductDetailEvent.SetPrice(it)) },
             modifier = Modifier.fillMaxWidth(),
-            label = { Text("Harga (Rp) *") },
-            placeholder = { Text("15000") },
+            label = { Text("Harga *") },
             isError = state.priceError != null,
-            supportingText = state.priceError?.let { { Text(it) } },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            showPrefix = true,
             singleLine = true,
-            shape = RoundedCornerShape(12.dp),
-            prefix = { Text("Rp ") }
+            shape = RoundedCornerShape(12.dp)
         )
+        
+        // Show price error if any
+        if (state.priceError != null) {
+            Text(
+                text = state.priceError!!,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding(start = 16.dp, top = 4.dp)
+            )
+        }
 
         // Category Dropdown
         CategoryDropdown(

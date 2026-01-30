@@ -74,6 +74,8 @@ import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
 import com.zatiaras.pos.core.domain.model.Category
 import com.zatiaras.pos.core.domain.model.Product
+import com.zatiaras.pos.core.ui.components.CurrencyTextField
+import com.zatiaras.pos.core.ui.util.CurrencyFormatter
 import com.zatiaras.pos.feature.pos.R
 import com.zatiaras.pos.feature.pos.domain.model.Cart
 
@@ -537,17 +539,15 @@ fun CustomItemDialog(
                         
                         Spacer(modifier = Modifier.height(12.dp))
                         
-                        // Price Input Field
-                        OutlinedTextField(
+                        // Price Input Field with formatting
+                        CurrencyTextField(
                             value = priceText,
-                            onValueChange = { if (it.all { char -> char.isDigit() }) priceText = it },
+                            onValueChange = { priceText = it },
                             label = { Text(stringResource(R.string.pos_custom_item_price)) },
-                            placeholder = { Text("15000") },
                             modifier = Modifier.fillMaxWidth(),
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            showPrefix = true,
                             singleLine = true,
                             shape = RoundedCornerShape(16.dp),
-                            prefix = { Text("Rp ", fontWeight = FontWeight.SemiBold) },
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = customItemColor,
                                 focusedLabelColor = customItemColor,
@@ -579,7 +579,7 @@ fun CustomItemDialog(
                                         color = MaterialTheme.colorScheme.onSurface
                                     )
                                     Text(
-                                        text = "Rp ${java.text.NumberFormat.getNumberInstance(java.util.Locale("id", "ID")).format(price)}",
+                                        text = CurrencyFormatter.formatCurrency(price),
                                         style = MaterialTheme.typography.titleMedium,
                                         fontWeight = FontWeight.Bold,
                                         color = customItemColor

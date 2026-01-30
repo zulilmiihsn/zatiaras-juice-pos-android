@@ -80,10 +80,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.zatiaras.pos.core.ui.components.CurrencyTextField
+import com.zatiaras.pos.core.ui.util.CurrencyFormatter
+import com.zatiaras.pos.feature.pos.domain.model.CashRecordType
+import com.zatiaras.pos.core.ui.components.DateFilterRow
 import com.zatiaras.pos.core.ui.theme.ExpenseRed
 import com.zatiaras.pos.core.ui.theme.IncomeGreen
 import com.zatiaras.pos.core.ui.theme.LocalDimensions
-import com.zatiaras.pos.feature.pos.domain.model.CashRecordType
 import kotlinx.coroutines.launch
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
@@ -91,7 +94,6 @@ import java.util.Date
 import java.util.Locale
 
 import com.zatiaras.pos.core.domain.model.DatePeriod
-import com.zatiaras.pos.core.ui.components.DateFilterRow
 
 /**
  * Cash Record (Buku Kas) screen.
@@ -112,9 +114,7 @@ fun CashRecordScreen(
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
     
-    val priceFormatter = NumberFormat.getCurrencyInstance(Locale("id", "ID")).apply {
-        maximumFractionDigits = 0
-    }
+    val priceFormatter = CurrencyFormatter.getCurrencyFormatter()
     val timeFormatter = SimpleDateFormat("HH:mm", Locale("id", "ID"))
     
     // Listen for save success
@@ -824,19 +824,27 @@ private fun AddCashRecordSheet(
         
         Spacer(modifier = Modifier.height(16.dp))
         
-        // Amount
-        OutlinedTextField(
+        // Amount with currency formatting
+        CurrencyTextField(
             value = formState.amount,
             onValueChange = { onEvent(CashRecordEvent.SetAmount(it)) },
             modifier = Modifier.fillMaxWidth(),
             label = { Text("Jumlah *") },
-            prefix = { Text("Rp ") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            showPrefix = true,
             isError = formState.amountError != null,
-            supportingText = formState.amountError?.let { { Text(it) } },
             singleLine = true,
             shape = RoundedCornerShape(12.dp)
         )
+        
+        // Show error if any
+        if (formState.amountError != null) {
+            Text(
+                text = formState.amountError!!,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding(start = 16.dp, top = 4.dp)
+            )
+        }
         
         Spacer(modifier = Modifier.height(8.dp))
         
@@ -953,4 +961,3 @@ private fun AddCashRecordSheet(
         Spacer(modifier = Modifier.height(32.dp))
     }
 }
-
