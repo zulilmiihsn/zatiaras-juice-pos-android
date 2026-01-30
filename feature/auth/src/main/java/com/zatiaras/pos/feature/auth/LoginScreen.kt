@@ -1,5 +1,6 @@
 package com.zatiaras.pos.feature.auth
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -37,6 +38,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -44,6 +46,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.zatiaras.pos.core.ui.theme.LocalDimensions
+import com.zatiaras.pos.feature.auth.R
+import com.zatiaras.pos.core.ui.R as CoreUiR
 
 @Composable
 fun LoginRoute(
@@ -108,6 +112,15 @@ fun LoginScreen(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // Zatiaras Juice Logo
+            Image(
+                painter = painterResource(id = CoreUiR.drawable.zatiaras_logo),
+                contentDescription = "Zatiaras Juice Logo",
+                modifier = Modifier.size(140.dp)
+            )
+            
+            Spacer(modifier = Modifier.height(dimensions.spacingL))
+            
             Text(
                 text = stringResource(R.string.auth_title),
                 style = MaterialTheme.typography.displayMedium,

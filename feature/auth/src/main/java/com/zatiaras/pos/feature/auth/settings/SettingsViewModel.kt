@@ -65,84 +65,120 @@ class SettingsViewModel @Inject constructor(
     init {
         loadSettings()
         observeAccessControl()
+        observeLockSettings()
     }
 
     private fun loadSettings() {
         viewModelScope.launch {
-            // Load user info
-            val currentUser = auth.currentUserOrNull()
-            currentUser?.let { user ->
+            try {
+                // Load user info
+                val currentUser = auth.currentUserOrNull()
+                val userName = currentUser?.let { extractUserName(it) } ?: ""
+                val userEmail = currentUser?.email ?: ""
+
+                // Load role info
+                val role = UserRole.fromString(sessionPreferences.getRole())
+                val isOwner = role.isOwner()
+                val userRoleDisplay = if (isOwner) "Pemilik" else "Kasir"
+
+                // Load biometric availability
+                val biometricAvailable = biometricManager.isBiometricAvailable()
+
+                // Load lock settings
+                val lockEnabled = appLockPreferences.isLockEnabledNow()
+                val biometricEnabled = appLockPreferences.isBiometricEnabledNow()
+                val pinSet = appLockPreferences.isPinSetNow()
+
+                // Load access control settings (for owner)
+                val ownerPinSet = try { accessControlManager.isOwnerPinSetNow() } catch (_: Exception) { false }
+                val lockableRoutes = try {
+                    accessControlManager.getLockableRoutesWithStatus().first()
+                } catch (_: Exception) {
+                    emptyList()
+                }
+
+                // Load sync info
+                val pendingCount = try { syncManager.getPendingCount() } catch (_: Exception) { 0 }
+                val lastSync = try { syncManager.getLastSyncTimestamp() } catch (_: Exception) { 0L }
+                val lastSyncInfo = formatLastSync(lastSync)
+
                 _uiState.update { state ->
                     state.copy(
-                        userEmail = user.email ?: "",
-                        userName = extractUserName(user)
+                        userName = userName,
+                        userEmail = userEmail,
+                        userRole = userRoleDisplay,
+                        isOwner = isOwner,
+                        lockEnabled = lockEnabled,
+                        biometricEnabled = biometricEnabled,
+                        biometricAvailable = biometricAvailable,
+                        pinSet = pinSet,
+                        ownerPinSet = ownerPinSet,
+                        lockableRoutes = lockableRoutes,
+                        pendingCount = pendingCount,
+                        lastSyncInfo = lastSyncInfo
                     )
                 }
+
+                // Observe sync in progress
+                observeSyncStatus()
+            } catch (e: Exception) {
+                Timber.e(e, "Error loading settings")
             }
-
-            // Load role info
-            val role = UserRole.fromString(sessionPreferences.getRole())
-            val isOwner = role.isOwner()
-            val userRoleDisplay = if (isOwner) "Pemilik" else "Kasir"
-
-            // Load lock settings
-            val lockEnabled = appLockPreferences.isLockEnabledNow()
-            val biometricEnabled = appLockPreferences.isBiometricEnabledNow()
-            val biometricAvailable = biometricManager.isBiometricAvailable()
-            val pinSet = appLockPreferences.isPinSetNow()
-
-            // Load access control settings (for owner)
-            val ownerPinSet = accessControlManager.isOwnerPinSetNow()
-            val lockableRoutes = accessControlManager.getLockableRoutesWithStatus().first()
-
-            // Load sync info
-            val pendingCount = syncManager.getPendingCount()
-            val lastSync = syncManager.getLastSyncTimestamp()
-            val lastSyncInfo = formatLastSync(lastSync)
-
-            _uiState.update { state ->
-                state.copy(
-                    userRole = userRoleDisplay,
-                    isOwner = isOwner,
-                    lockEnabled = lockEnabled,
-                    biometricEnabled = biometricEnabled,
-                    biometricAvailable = biometricAvailable,
-                    pinSet = pinSet,
-                    ownerPinSet = ownerPinSet,
-                    lockableRoutes = lockableRoutes,
-                    pendingCount = pendingCount,
-                    lastSyncInfo = lastSyncInfo
-                )
-            }
-
-            // Observe sync in progress
-            observeSyncStatus()
         }
     }
 
     private fun observeAccessControl() {
         viewModelScope.launch {
-            accessControlManager.getLockableRoutesWithStatus().collect { routes ->
-                _uiState.update { it.copy(lockableRoutes = routes) }
+            try {
+                accessControlManager.getLockableRoutesWithStatus().collect { routes ->
+                    _uiState.update { it.copy(lockableRoutes = routes) }
+                }
+            } catch (e: Exception) {
+                Timber.e(e, "Error observing routes")
             }
         }
         viewModelScope.launch {
-            accessControlManager.isOwnerPinSet().collect { isSet ->
-                _uiState.update { it.copy(ownerPinSet = isSet) }
+            try {
+                accessControlManager.isOwnerPinSet().collect { isSet ->
+                    _uiState.update { it.copy(ownerPinSet = isSet) }
+                }
+            } catch (e: Exception) {
+                Timber.e(e, "Error observing owner pin")
+            }
+        }
+    }
+
+    private fun observeLockSettings() {
+        viewModelScope.launch {
+            appLockPreferences.isPinSet().collect { isSet ->
+                _uiState.update { it.copy(pinSet = isSet) }
+            }
+        }
+        viewModelScope.launch {
+            appLockPreferences.isLockEnabled().collect { isEnabled ->
+                _uiState.update { it.copy(lockEnabled = isEnabled) }
+            }
+        }
+        viewModelScope.launch {
+            appLockPreferences.isBiometricEnabled().collect { isEnabled ->
+                _uiState.update { it.copy(biometricEnabled = isEnabled) }
             }
         }
     }
 
     private fun observeSyncStatus() {
         viewModelScope.launch {
-            syncManager.isSyncing().collect { isSyncing ->
-                _uiState.update { it.copy(isSyncing = isSyncing) }
+            try {
+                syncManager.isSyncing().collect { isSyncing ->
+                    _uiState.update { it.copy(isSyncing = isSyncing) }
+                }
+            } catch (e: Exception) {
+                Timber.e(e, "Error observing sync status")
             }
         }
     }
 
     private fun extractUserName(user: UserInfo): String {
-        // Try to get name from user metadata
         return user.email?.substringBefore("@")?.replaceFirstChar { it.uppercase() } ?: "User"
     }
 
@@ -161,14 +197,10 @@ class SettingsViewModel @Inject constructor(
     fun setLockEnabled(enabled: Boolean) {
         viewModelScope.launch {
             appLockPreferences.setLockEnabled(enabled)
-            _uiState.update { it.copy(lockEnabled = enabled) }
-
             // If disabling lock, also disable biometric
             if (!enabled) {
                 appLockPreferences.setBiometricEnabled(false)
-                _uiState.update { it.copy(biometricEnabled = false) }
             }
-
             Timber.d("Lock enabled: $enabled")
         }
     }
@@ -176,22 +208,32 @@ class SettingsViewModel @Inject constructor(
     fun setBiometricEnabled(enabled: Boolean) {
         viewModelScope.launch {
             appLockPreferences.setBiometricEnabled(enabled)
-            _uiState.update { it.copy(biometricEnabled = enabled) }
             Timber.d("Biometric enabled: $enabled")
+        }
+    }
+
+    fun refreshPinStatus() {
+        viewModelScope.launch {
+            val pinSet = appLockPreferences.isPinSetNow()
+            val lockEnabled = appLockPreferences.isLockEnabledNow()
+            _uiState.update { it.copy(pinSet = pinSet, lockEnabled = lockEnabled) }
+        }
+    }
+
+    fun refreshOwnerPinStatus() {
+        viewModelScope.launch {
+            val ownerPinSet = accessControlManager.isOwnerPinSetNow()
+            _uiState.update { it.copy(ownerPinSet = ownerPinSet) }
         }
     }
 
     fun syncNow() {
         viewModelScope.launch {
             _uiState.update { it.copy(isSyncing = true) }
-            
             try {
                 syncManager.syncNow()
-                
-                // Refresh sync info
                 val pendingCount = syncManager.getPendingCount()
                 val lastSync = syncManager.getLastSyncTimestamp()
-                
                 _uiState.update { state ->
                     state.copy(
                         pendingCount = pendingCount,
@@ -209,14 +251,10 @@ class SettingsViewModel @Inject constructor(
     fun forceFullSync() {
         viewModelScope.launch {
             _uiState.update { it.copy(isSyncing = true) }
-            
             try {
                 syncManager.forceFullSync()
-                
-                // Refresh sync info
                 val pendingCount = syncManager.getPendingCount()
                 val lastSync = syncManager.getLastSyncTimestamp()
-                
                 _uiState.update { state ->
                     state.copy(
                         pendingCount = pendingCount,
@@ -235,9 +273,7 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 auth.signOut()
-                // Clear lock settings on logout
                 appLockPreferences.resetAllSettings()
-                // Clear session
                 sessionPreferences.clearSession()
                 _uiState.update { it.copy(isLoggedOut = true) }
                 Timber.d("User logged out")
@@ -247,36 +283,18 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    // ==================== ACCESS CONTROL (Owner only) ====================
-
-    /**
-     * Toggle lock status for a route.
-     * Only owner can call this.
-     */
     fun toggleRouteLock(route: LockableRoute) {
         viewModelScope.launch {
-            if (!_uiState.value.isOwner) {
-                Timber.w("Non-owner tried to toggle route lock")
-                return@launch
-            }
+            if (!_uiState.value.isOwner) return@launch
             accessControlManager.toggleRouteLock(route)
-            Timber.d("Toggled lock for route: ${route.displayName}")
         }
     }
 
-    /**
-     * Set owner PIN for access control.
-     * Only owner can call this.
-     */
     fun setOwnerPin(pin: String) {
         viewModelScope.launch {
-            if (!_uiState.value.isOwner) {
-                Timber.w("Non-owner tried to set owner PIN")
-                return@launch
-            }
+            if (!_uiState.value.isOwner) return@launch
             accessControlManager.setOwnerPin(pin)
             _uiState.update { it.copy(ownerPinSet = true) }
-            Timber.d("Owner PIN set")
         }
     }
 }

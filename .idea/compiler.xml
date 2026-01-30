@@ -11,6 +11,7 @@
       <module name="Zatiaras_POS.feature.pos" target="21" />
       <module name="Zatiaras_POS.feature.printer" target="21" />
       <module name="Zatiaras_POS.feature.reports" target="21" />
+      <module name="ZatiarasPOS.feature.home" target="21" />
     </bytecodeTargetLevel>
   </component>
 </project>

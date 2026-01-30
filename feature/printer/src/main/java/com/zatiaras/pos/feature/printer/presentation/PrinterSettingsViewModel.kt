@@ -46,6 +46,7 @@ class PrinterSettingsViewModel @Inject constructor(
                 val paperWidth = printerPreferences.getPaperWidth()
                 val storeName = printerPreferences.getStoreName()
                 val storeAddress = printerPreferences.getStoreAddress() ?: ""
+                val storeLogo = printerPreferences.getStoreLogo()
                 val autoConnect = printerPreferences.isAutoConnectEnabled()
                 val lastPrinter = printerPreferences.getLastPrinter()
                 
@@ -55,6 +56,7 @@ class PrinterSettingsViewModel @Inject constructor(
                         paperWidth = paperWidth,
                         storeName = storeName,
                         storeAddress = storeAddress,
+                        storeLogoUri = storeLogo,
                         autoConnect = autoConnect,
                         selectedDevice = lastPrinter,
                         isBluetoothEnabled = printerManager.isBluetoothEnabled()
@@ -178,7 +180,19 @@ class PrinterSettingsViewModel @Inject constructor(
                 name = state.storeName,
                 address = state.storeAddress.ifBlank { null }
             )
+            printerPreferences.saveStoreLogo(state.storeLogoUri)
             _events.emit(PrinterEvent.ShowToast("Informasi toko disimpan"))
+        }
+    }
+    
+    fun setStoreLogo(uri: String?) {
+        _uiState.update { it.copy(storeLogoUri = uri) }
+    }
+    
+    fun clearStoreLogo() {
+        viewModelScope.launch {
+            printerPreferences.clearStoreLogo()
+            _uiState.update { it.copy(storeLogoUri = null) }
         }
     }
     

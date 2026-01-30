@@ -13,7 +13,6 @@ import com.zatiaras.pos.feature.pos.presentation.PosScreen
 import com.zatiaras.pos.feature.pos.presentation.PosViewModel
 import com.zatiaras.pos.feature.pos.presentation.cashrecord.CashRecordScreen
 import com.zatiaras.pos.feature.pos.presentation.checkout.CheckoutScreen
-import com.zatiaras.pos.feature.pos.presentation.receipt.ReceiptScreen
 
 /**
  * Route constants for POS feature screens.
@@ -134,19 +133,3 @@ fun NavGraphBuilder.cashRecordScreen(
     }
 }
 
-/**
- * Add Receipt screen to NavGraph.
- */
-fun NavGraphBuilder.receiptScreen(
-    onNewTransaction: () -> Unit,
-    onPrintReceipt: (Transaction) -> Unit,
-    getTransaction: suspend (String) -> Transaction?
-) {
-    composable(route = PosRoutes.RECEIPT) { backStackEntry ->
-        val transactionId = backStackEntry.arguments?.getString("transactionId") ?: ""
-        
-        // For now, we'll pass transaction via a different mechanism
-        // This is a placeholder - in real app, fetch from repository
-        // TODO: Implement proper transaction retrieval
-    }
-}

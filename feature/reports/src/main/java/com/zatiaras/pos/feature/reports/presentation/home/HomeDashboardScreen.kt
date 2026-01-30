@@ -1,9 +1,14 @@
 package com.zatiaras.pos.feature.reports.presentation.home
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
+import androidx.compose.ui.window.Dialog
+import kotlinx.coroutines.delay
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -39,6 +44,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -55,11 +61,17 @@ import com.zatiaras.pos.feature.reports.presentation.components.StatCard
 import com.zatiaras.pos.feature.reports.presentation.components.TopProductsList
 import com.zatiaras.pos.feature.reports.presentation.components.StatisticsSection
 import com.zatiaras.pos.feature.reports.presentation.components.formatRupiah
-import com.zatiaras.pos.feature.reports.presentation.dashboard.ReportDashboardUiState
-import com.zatiaras.pos.feature.reports.presentation.dashboard.ReportDashboardViewModel
 import androidx.compose.foundation.clickable
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.LockOpen
+import androidx.compose.material3.BasicAlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.ui.window.DialogProperties
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -76,7 +88,7 @@ import androidx.compose.runtime.mutableLongStateOf
 @Composable
 fun HomeDashboardRoute(
     onNavigateToSettings: () -> Unit = {},
-    viewModel: ReportDashboardViewModel = hiltViewModel()
+    viewModel: HomeDashboardViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     
@@ -92,7 +104,7 @@ fun HomeDashboardRoute(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeDashboardScreen(
-    uiState: ReportDashboardUiState,
+    uiState: HomeDashboardUiState,
     onRefresh: () -> Unit,
     onNavigateToSettings: () -> Unit,
     onOpenStore: (Long) -> Unit = {},
@@ -115,7 +127,8 @@ fun HomeDashboardScreen(
                     IconButton(onClick = onNavigateToSettings) {
                         Icon(
                             imageVector = Icons.Default.Settings,
-                            contentDescription = "Pengaturan"
+                            contentDescription = "Pengaturan",
+                            tint = MaterialTheme.colorScheme.tertiary
                         )
                     }
                 },
@@ -219,31 +232,23 @@ fun HomeDashboardScreen(
     
     // Close Store Dialog
     if (showCloseStoreDialog) {
-        androidx.compose.material3.AlertDialog(
-            onDismissRequest = { showCloseStoreDialog = false },
-            title = { Text("Tutup Toko") },
-            text = { Text("Apakah Anda yakin ingin menutup toko untuk hari ini?") },
-            confirmButton = {
-                androidx.compose.material3.Button(
-                    onClick = {
-                        onCloseStore()
-                        showCloseStoreDialog = false
-                    }
-                ) {
-                    Text("Tutup Toko")
-                }
-            },
-            dismissButton = {
-                androidx.compose.material3.TextButton(onClick = { showCloseStoreDialog = false }) {
-                    Text("Batal")
-                }
+        CloseStoreDialog(
+            todayRevenue = uiState.stats.todayRevenue,
+            todayTransactions = uiState.stats.todayTransactions,
+            todayItemsSold = uiState.stats.todayItemsSold,
+            openingBalance = uiState.openingBalance,
+            todayExpenses = uiState.todayExpenses,
+            onDismiss = { showCloseStoreDialog = false },
+            onConfirm = {
+                onCloseStore()
+                showCloseStoreDialog = false
             }
         )
     }
 }
 
 @Composable
-private fun TodayStatsSection(uiState: ReportDashboardUiState) {
+private fun TodayStatsSection(uiState: HomeDashboardUiState) {
     Column {
         Text(
             text = "Hari Ini",
@@ -297,7 +302,7 @@ private fun TodayStatsSection(uiState: ReportDashboardUiState) {
 }
 
 @Composable
-private fun PeriodSummarySection(uiState: ReportDashboardUiState) {
+private fun PeriodSummarySection(uiState: HomeDashboardUiState) {
     Column {
         Text(
             text = "Ringkasan Periode",
@@ -444,53 +449,668 @@ private fun StoreStatusBanner(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun OpenStoreDialog(
     onDismiss: () -> Unit,
     onConfirm: (Long) -> Unit
 ) {
     var openingBalance by remember { mutableLongStateOf(0L) }
-    var balanceText by remember { mutableStateOf("0") }
+    var balanceText by remember { mutableStateOf("") }
     
-    androidx.compose.material3.AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { 
-            Text(
-                text = "Buka Toko",
-                fontWeight = FontWeight.Bold
-            )
-        },
-        text = {
-            Column {
-                Text(
-                    text = "Masukkan modal awal kasir:",
-                    style = MaterialTheme.typography.bodyMedium
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                androidx.compose.material3.OutlinedTextField(
-                    value = balanceText,
-                    onValueChange = { input ->
-                        balanceText = input.filter { it.isDigit() }
-                        openingBalance = balanceText.toLongOrNull() ?: 0L
-                    },
-                    label = { Text("Modal Awal") },
-                    prefix = { Text("Rp ") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-        },
-        confirmButton = {
-            androidx.compose.material3.Button(
-                onClick = { onConfirm(openingBalance) }
+    // Animation state
+    var isVisible by remember { mutableStateOf(false) }
+    var pendingAction by remember { mutableStateOf<(() -> Unit)?>(null) }
+    
+    // Trigger enter animation
+    LaunchedEffect(Unit) { isVisible = true }
+    
+    // Handle exit actions
+    LaunchedEffect(pendingAction) {
+        pendingAction?.let { action ->
+            isVisible = false
+            delay(300) // Wait for animation
+            action()
+        }
+    }
+    
+    val presetAmounts = listOf(100_000L, 200_000L, 300_000L, 500_000L)
+    
+    Dialog(
+        onDismissRequest = { pendingAction = { onDismiss() } },
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        AnimatedVisibility(
+            visible = isVisible,
+            enter = slideInVertically(
+                initialOffsetY = { it },
+                animationSpec = tween(300)
+            ) + fadeIn(animationSpec = tween(300)),
+            exit = slideOutVertically(
+                targetOffsetY = { it },
+                animationSpec = tween(300)
+            ) + fadeOut(animationSpec = tween(300))
+        ) {
+            Box(
+                modifier = Modifier.fillMaxWidth(0.95f),
+                contentAlignment = Alignment.Center
             ) {
-                Text("Buka Toko")
-            }
-        },
-        dismissButton = {
-            androidx.compose.material3.TextButton(onClick = onDismiss) {
-                Text("Batal")
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(28.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surface
+                    ),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        // Header with animated icon
+                        Box(
+                            modifier = Modifier
+                                .size(80.dp)
+                                .clip(CircleShape)
+                                .background(
+                                    Brush.linearGradient(
+                                        colors = listOf(
+                                            Color(0xFF10B981),
+                                            Color(0xFF34D399)
+                                        )
+                                    )
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.LockOpen,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(40.dp)
+                            )
+                        }
+                        
+                        Spacer(modifier = Modifier.height(20.dp))
+                        
+                        // Title
+                        Text(
+                            text = "Buka Toko",
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        
+                        Spacer(modifier = Modifier.height(8.dp))
+                        
+                        // Description
+                        Text(
+                            text = "Masukkan modal awal kasir untuk memulai hari ini",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                        )
+                        
+                        Spacer(modifier = Modifier.height(24.dp))
+                        
+                        // Quick amount selection chips
+                        Text(
+                            text = "Pilih Cepat",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier
+                                .align(Alignment.Start)
+                                .padding(bottom = 8.dp)
+                        )
+                        
+                        // Amount chips in 2x2 grid
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                presetAmounts.take(2).forEach { amount ->
+                                    AmountChip(
+                                        amount = amount,
+                                        isSelected = openingBalance == amount,
+                                        onClick = {
+                                            openingBalance = amount
+                                            balanceText = formatNumber(amount)
+                                        },
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                }
+                            }
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                presetAmounts.drop(2).forEach { amount ->
+                                    AmountChip(
+                                        amount = amount,
+                                        isSelected = openingBalance == amount,
+                                        onClick = {
+                                            openingBalance = amount
+                                            balanceText = formatNumber(amount)
+                                        },
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                }
+                            }
+                        }
+                        
+                        Spacer(modifier = Modifier.height(16.dp))
+                        
+                        // Divider with "atau" text
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            HorizontalDivider(
+                                modifier = Modifier.weight(1f),
+                                color = MaterialTheme.colorScheme.outlineVariant
+                            )
+                            Text(
+                                text = "  atau  ",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            HorizontalDivider(
+                                modifier = Modifier.weight(1f),
+                                color = MaterialTheme.colorScheme.outlineVariant
+                            )
+                        }
+                        
+                        Spacer(modifier = Modifier.height(16.dp))
+                        
+                        // Custom amount input
+                        OutlinedTextField(
+                            value = balanceText,
+                            onValueChange = { input ->
+                                val cleanInput = input.filter { it.isDigit() }
+                                balanceText = if (cleanInput.isNotEmpty()) formatNumber(cleanInput.toLong()) else ""
+                                openingBalance = cleanInput.toLongOrNull() ?: 0L
+                            },
+                            label = { Text("Masukkan Jumlah Lain") },
+                            prefix = { Text("Rp ") },
+                            singleLine = true,
+                            shape = RoundedCornerShape(16.dp),
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
+                            )
+                        )
+                        
+                        // Current selection display
+                        if (openingBalance > 0) {
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Card(
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
+                                ),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(12.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = "Modal Awal:",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                                    )
+                                    Text(
+                                        text = "Rp ${formatNumber(openingBalance)}",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            }
+                        }
+                        
+                        Spacer(modifier = Modifier.height(24.dp))
+                        
+                        // Action buttons
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            OutlinedButton(
+                                onClick = { pendingAction = { onDismiss() } },
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(16.dp),
+                                contentPadding = PaddingValues(vertical = 16.dp)
+                            ) {
+                                Text("Batal")
+                            }
+                            Button(
+                                onClick = { pendingAction = { onConfirm(openingBalance) } },
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(16.dp),
+                                contentPadding = PaddingValues(vertical = 16.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFF10B981)
+                                )
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Outlined.LockOpen,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Buka Toko", fontWeight = FontWeight.SemiBold)
+                            }
+                        }
+                    }
+                }
             }
         }
-    )
+    }
+}
+
+@Composable
+private fun AmountChip(
+    amount: Long,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        onClick = onClick,
+        modifier = modifier,
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isSelected) 
+                MaterialTheme.colorScheme.primary 
+            else 
+                MaterialTheme.colorScheme.surfaceVariant
+        ),
+        border = if (isSelected) null else CardDefaults.outlinedCardBorder()
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 14.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "Rp ${formatNumber(amount)}",
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                color = if (isSelected) 
+                    MaterialTheme.colorScheme.onPrimary 
+                else 
+                    MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+private fun formatNumber(number: Long): String {
+    return java.text.NumberFormat.getNumberInstance(java.util.Locale("id", "ID")).format(number)
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun CloseStoreDialog(
+    todayRevenue: Long,
+    todayTransactions: Int,
+    todayItemsSold: Int,
+    openingBalance: Long,
+    todayExpenses: Long,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit
+) {
+    // Animation state
+    var isVisible by remember { mutableStateOf(false) }
+    var pendingAction by remember { mutableStateOf<(() -> Unit)?>(null) }
+    
+    // Trigger enter animation
+    LaunchedEffect(Unit) { isVisible = true }
+    
+    // Handle exit actions
+    LaunchedEffect(pendingAction) {
+        pendingAction?.let { action ->
+            isVisible = false
+            delay(300) // Wait for animation
+            action()
+        }
+    }
+
+    Dialog(
+        onDismissRequest = { pendingAction = { onDismiss() } },
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        AnimatedVisibility(
+            visible = isVisible,
+            enter = slideInVertically(
+                initialOffsetY = { it },
+                animationSpec = tween(300)
+            ) + fadeIn(animationSpec = tween(300)),
+            exit = slideOutVertically(
+                targetOffsetY = { it },
+                animationSpec = tween(300)
+            ) + fadeOut(animationSpec = tween(300))
+        ) {
+            Box(
+                modifier = Modifier.fillMaxWidth(0.95f),
+                contentAlignment = Alignment.Center
+            ) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(28.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surface
+                    ),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        // Header with icon
+                        Box(
+                            modifier = Modifier
+                                .size(80.dp)
+                                .clip(CircleShape)
+                                .background(
+                                    Brush.linearGradient(
+                                        colors = listOf(
+                                            Color(0xFFEF4444),
+                                            Color(0xFFF87171)
+                                        )
+                                    )
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.Lock,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(40.dp)
+                            )
+                        }
+                        
+                        Spacer(modifier = Modifier.height(20.dp))
+                        
+                        // Title
+                        Text(
+                            text = "Tutup Toko",
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        
+                        Spacer(modifier = Modifier.height(8.dp))
+                        
+                        // Description
+                        Text(
+                            text = "Berikut ringkasan penjualan hari ini",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        
+                        Spacer(modifier = Modifier.height(24.dp))
+                        
+                        // Today's Summary Card
+                        Card(
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                            ),
+                            shape = RoundedCornerShape(16.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                // Revenue row
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            imageVector = Icons.Default.AccountBalanceWallet,
+                                            contentDescription = null,
+                                            tint = Color(0xFF10B981),
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(
+                                            text = "Pendapatan",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                    Text(
+                                        text = "Rp ${formatNumber(todayRevenue)}",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFF10B981)
+                                    )
+                                }
+                                
+                                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                                
+                                // Transactions row
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            imageVector = Icons.Default.Receipt,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(
+                                            text = "Transaksi",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                    Text(
+                                        text = "$todayTransactions",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                }
+                                
+                                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                                
+                                // Items sold row
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            imageVector = Icons.Default.Inventory2,
+                                            contentDescription = null,
+                                            tint = Color(0xFFF59E0B),
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(
+                                            text = "Item Terjual",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                    Text(
+                                        text = "$todayItemsSold",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                }
+                            }
+                        }
+                        
+                        Spacer(modifier = Modifier.height(16.dp))
+        
+                        // Cash Flow Summary Card
+                        val netIncome = todayRevenue - todayExpenses
+                        val currentCash = openingBalance + netIncome
+        
+                        Text(
+                            text = "Arus Kas",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.align(Alignment.Start).padding(bottom = 8.dp)
+                        )
+        
+                        Card(
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+                            ),
+                            shape = RoundedCornerShape(16.dp),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                // Opening Balance
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(
+                                        text = "Modal Awal",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    Text(
+                                        text = "Rp ${formatNumber(openingBalance)}",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                }
+        
+                                // Net Income
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(
+                                        text = "Penda. Bersih", // Pendapatan - Pengeluaran
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    Text(
+                                        text = "${if (netIncome >= 0) "+" else ""}Rp ${formatNumber(netIncome)}",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = if (netIncome >= 0) Color(0xFF10B981) else Color(0xFFEF4444)
+                                    )
+                                }
+        
+                                HorizontalDivider(
+                                    modifier = Modifier.padding(vertical = 4.dp),
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f)
+                                )
+        
+                                // Current Cash Total
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = "Uang Saat Ini",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                    Text(
+                                        text = "Rp ${formatNumber(currentCash)}",
+                                        style = MaterialTheme.typography.titleLarge,
+                                        fontWeight = FontWeight.Black,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            }
+                        }
+                        
+                        Spacer(modifier = Modifier.height(16.dp))
+                        
+                        // Confirmation message
+                        Card(
+                            colors = CardDefaults.cardColors(
+                                containerColor = Color(0xFFFEF3C7)
+                            ),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "⚠️",
+                                    style = MaterialTheme.typography.titleMedium
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "Setelah toko ditutup, tidak bisa melakukan transaksi sampai buka kembali.",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = Color(0xFF92400E)
+                                )
+                            }
+                        }
+                        
+                        Spacer(modifier = Modifier.height(24.dp))
+                        
+                        // Action buttons
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            OutlinedButton(
+                                onClick = { pendingAction = { onDismiss() } },
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(16.dp),
+                                contentPadding = PaddingValues(vertical = 16.dp)
+                            ) {
+                                Text("Batal")
+                            }
+                            Button(
+                                onClick = { pendingAction = { onConfirm() } },
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(16.dp),
+                                contentPadding = PaddingValues(vertical = 16.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFFEF4444)
+                                )
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Outlined.Lock,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Tutup Toko", fontWeight = FontWeight.SemiBold)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 }

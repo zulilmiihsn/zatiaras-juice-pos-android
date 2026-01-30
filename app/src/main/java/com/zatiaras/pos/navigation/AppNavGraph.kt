@@ -29,6 +29,7 @@ import com.zatiaras.pos.feature.auth.navigation.pinSetupScreen
 import com.zatiaras.pos.feature.auth.navigation.settingsScreen
 import com.zatiaras.pos.feature.auth.navigation.securitySettingsScreen
 import com.zatiaras.pos.feature.auth.navigation.accessControlScreen
+import com.zatiaras.pos.feature.auth.navigation.ownerPinSetupScreen
 import com.zatiaras.pos.feature.auth.navigation.syncSettingsScreen
 import com.zatiaras.pos.feature.auth.navigation.aboutScreen
 import com.zatiaras.pos.feature.inventory.navigation.inventoryNavGraph
@@ -100,13 +101,8 @@ fun AppNavGraph(
                 }
             }
             
-            // Simple loading indicator
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
-            }
+            // Animated splash screen with logo
+            SplashScreen()
         }
         
         // App Lock screen - shown when session is valid but lock is enabled
@@ -215,6 +211,9 @@ fun AppNavGraph(
         accessControlScreen(
             onNavigateBack = {
                 navController.popBackStack()
+            },
+            onNavigateToOwnerPinSetup = {
+                navController.navigate(AuthRoutes.OWNER_PIN_SETUP)
             }
         )
         
@@ -252,6 +251,16 @@ fun AppNavGraph(
         
         // Pin Setup
         pinSetupScreen(
+            onPinSet = {
+                navController.popBackStack()
+            },
+            onNavigateBack = {
+                navController.popBackStack()
+            }
+        )
+        
+        // Owner Pin Setup
+        ownerPinSetupScreen(
             onPinSet = {
                 navController.popBackStack()
             },

@@ -15,6 +15,7 @@ data class PrinterSettingsUiState(
     val paperWidth: PaperWidth = PaperWidth.MM_58,
     val storeName: String = "ZATIARAS",
     val storeAddress: String = "",
+    val storeLogoUri: String? = null, // null = use default app logo
     val autoConnect: Boolean = false,
     val errorMessage: String? = null,
     val isBluetoothEnabled: Boolean = false,

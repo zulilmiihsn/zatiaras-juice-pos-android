@@ -10,9 +10,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import com.zatiaras.pos.core.data.access.LockableRoute
 
 /**
@@ -23,13 +26,25 @@ import com.zatiaras.pos.core.data.access.LockableRoute
 @Composable
 fun AccessControlScreen(
     onNavigateBack: () -> Unit,
+    onNavigateToOwnerPinSetup: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    var showOwnerPinDialog by remember { mutableStateOf(false) }
-    var ownerPin by remember { mutableStateOf("") }
-    var ownerPinConfirm by remember { mutableStateOf("") }
-    var ownerPinError by remember { mutableStateOf<String?>(null) }
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    // Refresh owner PIN status when screen becomes visible
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                viewModel.refreshOwnerPinStatus()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
 
     Scaffold(
         topBar = {
@@ -98,14 +113,14 @@ fun AccessControlScreen(
                                 text = if (uiState.ownerPinSet) {
                                     "PIN untuk akses menu terkunci"
                                 } else {
-                                    "Atur PIN agar kasir bisa akses menu terkunci"
+                                    "Atur PIN untuk kasir"
                                 },
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
-                    Button(onClick = { showOwnerPinDialog = true }) {
+                    Button(onClick = onNavigateToOwnerPinSetup) {
                         Text(if (uiState.ownerPinSet) "Ubah" else "Atur")
                     }
                 }
@@ -197,107 +212,5 @@ fun AccessControlScreen(
                 }
             }
         }
-    }
-
-    // Owner PIN Setup Dialog
-    if (showOwnerPinDialog) {
-        AlertDialog(
-            onDismissRequest = {
-                showOwnerPinDialog = false
-                ownerPin = ""
-                ownerPinConfirm = ""
-                ownerPinError = null
-            },
-            title = {
-                Text(
-                    text = if (uiState.ownerPinSet) "Ubah PIN Pemilik" else "Atur PIN Pemilik",
-                    fontWeight = FontWeight.Bold
-                )
-            },
-            text = {
-                Column {
-                    Text(
-                        text = "PIN ini akan diminta saat kasir mengakses menu yang dikunci.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    OutlinedTextField(
-                        value = ownerPin,
-                        onValueChange = { 
-                            if (it.length <= 4 && it.all { c -> c.isDigit() }) {
-                                ownerPin = it
-                                ownerPinError = null
-                            }
-                        },
-                        label = { Text("PIN Baru (4 digit)") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    OutlinedTextField(
-                        value = ownerPinConfirm,
-                        onValueChange = { 
-                            if (it.length <= 4 && it.all { c -> c.isDigit() }) {
-                                ownerPinConfirm = it
-                                ownerPinError = null
-                            }
-                        },
-                        label = { Text("Konfirmasi PIN") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
-                        isError = ownerPinError != null
-                    )
-
-                    if (ownerPinError != null) {
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = ownerPinError!!,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.error
-                        )
-                    }
-                }
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        when {
-                            ownerPin.length != 4 -> {
-                                ownerPinError = "PIN harus 4 digit"
-                            }
-                            ownerPin != ownerPinConfirm -> {
-                                ownerPinError = "PIN tidak cocok"
-                            }
-                            else -> {
-                                viewModel.setOwnerPin(ownerPin)
-                                showOwnerPinDialog = false
-                                ownerPin = ""
-                                ownerPinConfirm = ""
-                                ownerPinError = null
-                            }
-                        }
-                    }
-                ) {
-                    Text("Simpan")
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = {
-                        showOwnerPinDialog = false
-                        ownerPin = ""
-                        ownerPinConfirm = ""
-                        ownerPinError = null
-                    }
-                ) {
-                    Text("Batal")
-                }
-            }
-        )
     }
 }

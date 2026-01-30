@@ -160,4 +160,40 @@ class PrinterPreferences @Inject constructor(
         val prefs = dataStore.data.first()
         return prefs[KEY_AUTO_CONNECT] == "true"
     }
+    
+    // ==================== STORE LOGO ====================
+    
+    private val KEY_STORE_LOGO = stringPreferencesKey("store_logo_uri")
+    
+    /**
+     * Save store logo URI.
+     * Pass null to use default app logo.
+     */
+    suspend fun saveStoreLogo(uri: String?) {
+        dataStore.edit { prefs ->
+            if (uri != null) {
+                prefs[KEY_STORE_LOGO] = uri
+            } else {
+                prefs.remove(KEY_STORE_LOGO)
+            }
+        }
+    }
+    
+    /**
+     * Get store logo URI.
+     * Returns null if using default app logo.
+     */
+    suspend fun getStoreLogo(): String? {
+        val prefs = dataStore.data.first()
+        return prefs[KEY_STORE_LOGO]
+    }
+    
+    /**
+     * Clear store logo to use default.
+     */
+    suspend fun clearStoreLogo() {
+        dataStore.edit { prefs ->
+            prefs.remove(KEY_STORE_LOGO)
+        }
+    }
 }

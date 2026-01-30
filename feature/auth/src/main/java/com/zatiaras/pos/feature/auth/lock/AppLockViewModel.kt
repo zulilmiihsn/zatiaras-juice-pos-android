@@ -4,6 +4,7 @@ import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -92,6 +93,10 @@ class AppLockViewModel @Inject constructor(
 
     private fun verifyPin(pin: String) {
         viewModelScope.launch {
+            // Add a small delay to allow the user to see the 4th dot filled
+            // before showing the verification result
+            delay(200)
+            
             _uiState.update { it.copy(isLoading = true) }
             
             val isValid = appLockPreferences.verifyPin(pin)

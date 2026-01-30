@@ -9,6 +9,7 @@ import com.zatiaras.pos.feature.auth.lock.PinSetupRoute
 import com.zatiaras.pos.feature.auth.settings.SettingsRoute
 import com.zatiaras.pos.feature.auth.settings.SecuritySettingsScreen
 import com.zatiaras.pos.feature.auth.settings.AccessControlScreen
+import com.zatiaras.pos.feature.auth.settings.OwnerPinSetupScreen
 import com.zatiaras.pos.feature.auth.settings.SyncSettingsScreen
 import com.zatiaras.pos.feature.auth.settings.AboutScreen
 
@@ -24,7 +25,7 @@ object AuthRoutes {
     const val SETTINGS_SYNC = "auth/settings/sync"
     const val SETTINGS_ABOUT = "auth/settings/about"
     const val PIN_SETUP = "auth/pin_setup"
-    const val PIN_CHANGE = "auth/pin_change"
+    const val OWNER_PIN_SETUP = "auth/owner_pin_setup"
 }
 
 /**
@@ -120,11 +121,13 @@ fun NavGraphBuilder.securitySettingsScreen(
  * Add Access Control sub-screen to navigation graph.
  */
 fun NavGraphBuilder.accessControlScreen(
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    onNavigateToOwnerPinSetup: () -> Unit
 ) {
     composable(AuthRoutes.SETTINGS_ACCESS_CONTROL) {
         AccessControlScreen(
-            onNavigateBack = onNavigateBack
+            onNavigateBack = onNavigateBack,
+            onNavigateToOwnerPinSetup = onNavigateToOwnerPinSetup
         )
     }
 }
@@ -172,15 +175,14 @@ fun NavGraphBuilder.pinSetupScreen(
 }
 
 /**
- * Add PIN Change screen to navigation graph.
+ * Add Owner PIN Setup screen to navigation graph.
  */
-fun NavGraphBuilder.pinChangeScreen(
+fun NavGraphBuilder.ownerPinSetupScreen(
     onPinSet: () -> Unit,
     onNavigateBack: () -> Unit
 ) {
-    composable(AuthRoutes.PIN_CHANGE) {
-        PinSetupRoute(
-            isChangingPin = true,
+    composable(AuthRoutes.OWNER_PIN_SETUP) {
+        OwnerPinSetupScreen(
             onPinSet = onPinSet,
             onNavigateBack = onNavigateBack
         )
@@ -225,7 +227,6 @@ fun NavController.navigateToPinSetup() {
     navigate(AuthRoutes.PIN_SETUP)
 }
 
-fun NavController.navigateToPinChange() {
-    navigate(AuthRoutes.PIN_CHANGE)
+fun NavController.navigateToOwnerPinSetup() {
+    navigate(AuthRoutes.OWNER_PIN_SETUP)
 }
-

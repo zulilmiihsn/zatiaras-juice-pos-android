@@ -70,5 +70,8 @@ dependencies {
     // Timber
     implementation(libs.timber)
 
+    // Coil for image loading
+    implementation(libs.coil.compose)
+
     debugImplementation(libs.androidx.ui.tooling)
 }

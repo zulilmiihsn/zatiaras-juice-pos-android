@@ -1,8 +1,13 @@
 package com.zatiaras.pos.feature.auth.settings
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -13,13 +18,25 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.zatiaras.pos.core.data.access.LockableRoute
 import com.zatiaras.pos.core.ui.theme.LocalDimensions
+
+// Icon background colors for different categories
+private val SecurityIconColor = Color(0xFF6366F1) // Indigo
+private val AccessIconColor = Color(0xFFF59E0B) // Amber
+private val PrinterIconColor = Color(0xFF10B981) // Emerald
+private val MenuIconColor = Color(0xFFEC4899) // Pink (Brand)
+private val SyncIconColor = Color(0xFF3B82F6) // Blue
+private val AboutIconColor = Color(0xFF8B5CF6) // Purple
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -85,7 +102,10 @@ fun SettingsScreen(
                             contentDescription = "Kembali"
                         )
                     }
-                }
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
             )
         }
     ) { padding ->
@@ -95,8 +115,8 @@ fun SettingsScreen(
                 .padding(padding)
                 .verticalScroll(rememberScrollState())
         ) {
-            // Profile Card - Prominent at top
-            ProfileCard(
+            // Premium Profile Card with Gradient
+            PremiumProfileCard(
                 userName = uiState.userName,
                 userEmail = uiState.userEmail,
                 userRole = uiState.userRole
@@ -104,60 +124,84 @@ fun SettingsScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Settings Categories
-            Text(
-                text = "Pengaturan",
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+            // Section: Keamanan & Akses
+            SettingsSectionHeader(
+                title = "🔐 Keamanan & Akses",
+                subtitle = "Lindungi aplikasi dan data kamu"
             )
 
-            // Security
-            SettingsCategoryCard(
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Security Card
+            EnhancedSettingsCard(
                 icon = Icons.Outlined.Security,
+                iconBackgroundColor = SecurityIconColor,
                 title = "Keamanan",
-                subtitle = if (uiState.lockEnabled) "Kunci aplikasi aktif" else "Kunci aplikasi nonaktif",
+                subtitle = "Kunci PIN & Sidik Jari",
+                statusBadge = if (uiState.lockEnabled) "Aktif ✓" else null,
+                statusBadgeColor = if (uiState.lockEnabled) Color(0xFF10B981) else null,
                 onClick = onNavigateToSecurity
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
-
             // Access Control (Owner only)
             if (uiState.isOwner) {
-                SettingsCategoryCard(
+                Spacer(modifier = Modifier.height(8.dp))
+                EnhancedSettingsCard(
                     icon = Icons.Outlined.AdminPanelSettings,
+                    iconBackgroundColor = AccessIconColor,
                     title = "Kontrol Akses",
-                    subtitle = "Kelola akses menu untuk kasir",
+                    subtitle = "Atur menu yang bisa diakses kasir",
+                    statusBadge = "Pemilik",
+                    statusBadgeColor = Color(0xFFF59E0B),
                     onClick = onNavigateToAccessControl
                 )
-                Spacer(modifier = Modifier.height(8.dp))
             }
 
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Section: Perangkat & Operasional
+            SettingsSectionHeader(
+                title = "🖨️ Perangkat & Toko",
+                subtitle = "Atur printer dan menu produk"
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
             // Printer
-            SettingsCategoryCard(
+            EnhancedSettingsCard(
                 icon = Icons.Outlined.Print,
-                title = "Printer",
-                subtitle = "Atur printer thermal Bluetooth",
+                iconBackgroundColor = PrinterIconColor,
+                title = "Printer Struk",
+                subtitle = "Hubungkan printer Bluetooth",
                 onClick = onNavigateToPrinter
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
             // Inventory/Menu
-            SettingsCategoryCard(
+            EnhancedSettingsCard(
                 icon = Icons.Outlined.Restaurant,
+                iconBackgroundColor = MenuIconColor,
                 title = "Kelola Menu",
-                subtitle = "Tambah, edit, atau hapus produk",
+                subtitle = "Tambah, edit, hapus produk",
                 onClick = onNavigateToInventory
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Section: Data & Informasi
+            SettingsSectionHeader(
+                title = "📱 Data & Informasi",
+                subtitle = "Sinkronisasi dan info aplikasi"
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
 
             // Sync
-            SettingsCategoryCard(
+            EnhancedSettingsCard(
                 icon = Icons.Outlined.Sync,
-                title = "Sinkronisasi",
+                iconBackgroundColor = SyncIconColor,
+                title = "Sinkronisasi Data",
                 subtitle = uiState.lastSyncInfo,
                 onClick = onNavigateToSync
             )
@@ -165,39 +209,286 @@ fun SettingsScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             // About
-            SettingsCategoryCard(
+            EnhancedSettingsCard(
                 icon = Icons.Outlined.Info,
-                title = "Tentang",
+                iconBackgroundColor = AboutIconColor,
+                title = "Tentang Aplikasi",
                 subtitle = "Versi 1.0.0",
                 onClick = onNavigateToAbout
             )
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Logout Button
-            Button(
-                onClick = onLogoutClick,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.error
-                )
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.Logout,
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Keluar")
-            }
+            // Logout Button - More prominent and friendly
+            LogoutButton(onClick = onLogoutClick)
 
             Spacer(modifier = Modifier.height(32.dp))
         }
     }
 }
 
+/**
+ * Section header with emoji and subtitle for better visual hierarchy
+ */
+@Composable
+private fun SettingsSectionHeader(
+    title: String,
+    subtitle: String
+) {
+    Column(
+        modifier = Modifier.padding(horizontal = 20.dp)
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Text(
+            text = subtitle,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+/**
+ * Enhanced settings card with colorful icon background and status badge
+ */
+@Composable
+private fun EnhancedSettingsCard(
+    icon: ImageVector,
+    iconBackgroundColor: Color,
+    title: String,
+    subtitle: String,
+    statusBadge: String? = null,
+    statusBadgeColor: Color? = null,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Colorful icon background
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(iconBackgroundColor.copy(alpha = 0.15f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = iconBackgroundColor,
+                    modifier = Modifier.size(26.dp)
+                )
+            }
+            
+            Spacer(modifier = Modifier.width(16.dp))
+            
+            Column(modifier = Modifier.weight(1f)) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    
+                    // Status badge
+                    if (statusBadge != null && statusBadgeColor != null) {
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(statusBadgeColor.copy(alpha = 0.15f))
+                                .padding(horizontal = 8.dp, vertical = 2.dp)
+                        ) {
+                            Text(
+                                text = statusBadge,
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.SemiBold,
+                                color = statusBadgeColor,
+                                fontSize = 10.sp
+                            )
+                        }
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(2.dp))
+                
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                modifier = Modifier.size(24.dp)
+            )
+        }
+    }
+}
+
+/**
+ * Premium profile card with gradient background
+ */
+@Composable
+private fun PremiumProfileCard(
+    userName: String,
+    userEmail: String,
+    userRole: String
+) {
+    val gradientColors = listOf(
+        Color(0xFFEC4899), // Pink
+        Color(0xFFF472B6), // Light Pink
+        Color(0xFFFBCFE8)  // Very Light Pink
+    )
+    
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        shape = RoundedCornerShape(20.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    brush = Brush.linearGradient(
+                        colors = listOf(
+                            Color(0xFFEC4899),
+                            Color(0xFFDB2777)
+                        )
+                    )
+                )
+                .padding(20.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Avatar circle
+                Box(
+                    modifier = Modifier
+                        .size(64.dp)
+                        .clip(CircleShape)
+                        .background(Color.White.copy(alpha = 0.2f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = userName.firstOrNull()?.uppercase() ?: "U",
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(16.dp))
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = userName.ifEmpty { "Pengguna" },
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                    
+                    Spacer(modifier = Modifier.height(4.dp))
+                    
+                    Text(
+                        text = userEmail,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.White.copy(alpha = 0.85f)
+                    )
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(Color.White.copy(alpha = 0.25f))
+                            .padding(horizontal = 12.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            text = when (userRole.lowercase()) {
+                                "owner", "pemilik" -> "👑 Pemilik"
+                                "admin" -> "🔧 Admin"
+                                else -> "💼 Kasir"
+                            },
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color.White
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Friendly logout button with confirmation feel
+ */
+@Composable
+private fun LogoutButton(onClick: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.Logout,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.error,
+                modifier = Modifier.size(22.dp)
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Text(
+                text = "Keluar dari Akun",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.error
+            )
+        }
+    }
+}
+
+// Legacy components kept for backward compatibility
 @Composable
 private fun SettingsSection(
     title: String,
@@ -215,9 +506,6 @@ private fun SettingsSection(
     }
 }
 
-/**
- * Category card for settings navigation.
- */
 @Composable
 private fun SettingsCategoryCard(
     icon: ImageVector,
@@ -444,3 +732,4 @@ private fun InfoSettingItem(
         }
     )
 }
+

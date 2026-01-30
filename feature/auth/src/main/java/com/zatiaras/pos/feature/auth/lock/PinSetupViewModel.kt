@@ -104,6 +104,8 @@ class PinSetupViewModel @Inject constructor(
                     verifyCurrentPin(pin)
                 }
                 PinSetupStep.ENTER_NEW_PIN -> {
+                    // Add small delay so user can see 4th dot filled before transition
+                    delay(200)
                     // Store the new PIN and move to confirmation
                     _uiState.update { state ->
                         state.copy(
