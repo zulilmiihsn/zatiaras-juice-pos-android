@@ -11,6 +11,7 @@ import com.zatiaras.pos.feature.reports.domain.model.TopProduct
 data class HomeDashboardUiState(
     val isLoading: Boolean = true,
     val isStoreOpen: Boolean = false,
+    val isOwner: Boolean = false,
     val stats: DashboardStats = DashboardStats(
         todayRevenue = 0L,
         todayTransactions = 0,

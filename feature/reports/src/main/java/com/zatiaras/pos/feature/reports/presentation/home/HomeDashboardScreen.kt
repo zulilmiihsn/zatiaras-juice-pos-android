@@ -58,6 +58,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.zatiaras.pos.core.ui.components.CurrencyTextField
 import com.zatiaras.pos.core.ui.theme.LocalDimensions
 import com.zatiaras.pos.core.ui.util.CurrencyFormatter
+import com.zatiaras.pos.core.ui.components.OwnerPinDialog
 import com.zatiaras.pos.feature.reports.presentation.components.RevenueLineChart
 import com.zatiaras.pos.feature.reports.presentation.components.StatCard
 import com.zatiaras.pos.feature.reports.presentation.components.TopProductsList
@@ -99,7 +100,8 @@ fun HomeDashboardRoute(
         onRefresh = viewModel::refresh,
         onNavigateToSettings = onNavigateToSettings,
         onOpenStore = viewModel::openStore,
-        onCloseStore = viewModel::closeStore
+        onCloseStore = viewModel::closeStore,
+        verifyPin = viewModel::verifyPin
     )
 }
 
@@ -110,11 +112,16 @@ fun HomeDashboardScreen(
     onRefresh: () -> Unit,
     onNavigateToSettings: () -> Unit,
     onOpenStore: (Long) -> Unit = {},
-    onCloseStore: () -> Unit = {}
+    onCloseStore: () -> Unit = {},
+    verifyPin: suspend (String) -> Boolean = { true }
 ) {
     val pullToRefreshState = rememberPullToRefreshState()
     var showOpenStoreDialog by remember { mutableStateOf(false) }
     var showCloseStoreDialog by remember { mutableStateOf(false) }
+    
+    // PIN Verification State
+    var showPinDialog by remember { mutableStateOf(false) }
+    var pendingStoreAction by remember { mutableStateOf<StoreAction?>(null) }
     
     Scaffold(
         topBar = {
@@ -176,8 +183,22 @@ fun HomeDashboardScreen(
                     item {
                         StoreStatusBanner(
                             isStoreOpen = uiState.isStoreOpen,
-                            onOpenClick = { showOpenStoreDialog = true },
-                            onCloseClick = { showCloseStoreDialog = true }
+                            onOpenClick = { 
+                                if (!uiState.isOwner) {
+                                    pendingStoreAction = StoreAction.Open
+                                    showPinDialog = true
+                                } else {
+                                    showOpenStoreDialog = true 
+                                }
+                            },
+                            onCloseClick = { 
+                                if (!uiState.isOwner) {
+                                    pendingStoreAction = StoreAction.Close
+                                    showPinDialog = true
+                                } else {
+                                    showCloseStoreDialog = true 
+                                }
+                            }
                         )
                     }
                     
@@ -221,6 +242,27 @@ fun HomeDashboardScreen(
         }
     }
     
+    // PIN Verification Dialog
+    if (showPinDialog) {
+        OwnerPinDialog(
+            onDismiss = { 
+                showPinDialog = false
+                pendingStoreAction = null 
+            },
+            onPinVerified = {
+                showPinDialog = false
+                when (pendingStoreAction) {
+                    StoreAction.Open -> showOpenStoreDialog = true
+                    StoreAction.Close -> showCloseStoreDialog = true
+                    null -> {}
+                }
+                pendingStoreAction = null
+            },
+            verifyPin = verifyPin,
+            screenName = if (pendingStoreAction == StoreAction.Open) "Buka Toko" else "Tutup Toko"
+        )
+    }
+
     // Open Store Dialog
     if (showOpenStoreDialog) {
         OpenStoreDialog(
@@ -1115,3 +1157,5 @@ private fun CloseStoreDialog(
         }
     }
 }
+
+private enum class StoreAction { Open, Close }

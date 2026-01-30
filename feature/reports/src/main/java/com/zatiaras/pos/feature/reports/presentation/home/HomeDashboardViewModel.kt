@@ -2,6 +2,7 @@ package com.zatiaras.pos.feature.reports.presentation.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.zatiaras.pos.core.data.access.AccessControlManager
 import com.zatiaras.pos.core.domain.repository.StoreSessionRepository
 import com.zatiaras.pos.core.domain.util.DateUtils
 import com.zatiaras.pos.feature.reports.domain.repository.ReportRepository
@@ -21,7 +22,8 @@ import javax.inject.Inject
 @HiltViewModel
 class HomeDashboardViewModel @Inject constructor(
     private val reportRepository: ReportRepository,
-    private val storeSessionRepository: StoreSessionRepository
+    private val storeSessionRepository: StoreSessionRepository,
+    private val accessControlManager: AccessControlManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeDashboardUiState())
@@ -30,6 +32,25 @@ class HomeDashboardViewModel @Inject constructor(
     init {
         loadDashboard()
         observeStoreSession()
+        observeUserRole()
+    }
+
+    /**
+     * Observe user role (Owner or not)
+     */
+    private fun observeUserRole() {
+        viewModelScope.launch {
+            accessControlManager.isOwner().collect { isOwner ->
+                _uiState.update { it.copy(isOwner = isOwner) }
+            }
+        }
+    }
+
+    /**
+     * Verify PIN for protected actions.
+     */
+    suspend fun verifyPin(pin: String): Boolean {
+        return accessControlManager.verifyOwnerPin(pin)
     }
 
     /**

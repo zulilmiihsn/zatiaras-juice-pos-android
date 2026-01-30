@@ -1,24 +1,31 @@
 package com.zatiaras.pos.core.ui.components
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Backspace
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -38,6 +45,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import kotlinx.coroutines.delay
 
 /**
@@ -64,6 +73,10 @@ fun OwnerPinDialog(
     var pin by remember { mutableStateOf("") }
     var isError by remember { mutableStateOf(false) }
     var isVerifying by remember { mutableStateOf(false) }
+    
+    // Animation state - declared before use in LaunchedEffect
+    var isVisible by remember { mutableStateOf(false) }
+    var pendingAction by remember { mutableStateOf<(() -> Unit)?>(null) }
 
     // Auto-verify when 4 digits entered
     LaunchedEffect(pin) {
@@ -73,7 +86,7 @@ fun OwnerPinDialog(
             isVerifying = false
             
             if (isValid) {
-                onPinVerified()
+                pendingAction = { onPinVerified() }
             } else {
                 isError = true
                 delay(500)
@@ -82,92 +95,132 @@ fun OwnerPinDialog(
             }
         }
     }
+    
+    // Trigger enter animation
+    LaunchedEffect(Unit) { isVisible = true }
+    
+    // Handle exit actions
+    LaunchedEffect(pendingAction) {
+        pendingAction?.let { action ->
+            isVisible = false
+            delay(300) // Wait for animation
+            action()
+        }
+    }
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = null,
-        text = {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
+    Dialog(
+        onDismissRequest = { pendingAction = { onDismiss() } },
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        AnimatedVisibility(
+            visible = isVisible,
+            enter = slideInVertically(
+                initialOffsetY = { it },
+                animationSpec = tween(300)
+            ) + fadeIn(animationSpec = tween(300)),
+            exit = slideOutVertically(
+                targetOffsetY = { it },
+                animationSpec = tween(300)
+            ) + fadeOut(animationSpec = tween(300))
+        ) {
+            Box(
+                modifier = Modifier.fillMaxWidth(0.95f),
+                contentAlignment = Alignment.Center
             ) {
-                // Lock Icon
-                Box(
-                    modifier = Modifier
-                        .size(64.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primaryContainer),
-                    contentAlignment = Alignment.Center
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(24.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainer
+                    ),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Lock,
-                        contentDescription = "Locked",
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                        modifier = Modifier.size(32.dp)
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Text(
-                    text = "Menu Terkunci",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = "Masukkan PIN pemilik untuk mengakses $screenName",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center
-                )
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                // PIN Dots
-                PinDotsIndicator(
-                    pinLength = pin.length,
-                    maxLength = 4,
-                    isError = isError
-                )
-
-                if (isError) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "PIN salah, coba lagi",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.error
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                // Numeric Keypad
-                PinKeypad(
-                    onDigitClick = { digit ->
-                        if (pin.length < 4 && !isVerifying) {
-                            pin += digit
+                    Column(
+                        modifier = Modifier.padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        // Lock Icon
+                        Box(
+                            modifier = Modifier
+                                .size(64.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.primaryContainer),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Lock,
+                                contentDescription = "Locked",
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                modifier = Modifier.size(32.dp)
+                            )
                         }
-                    },
-                    onDeleteClick = {
-                        if (pin.isNotEmpty() && !isVerifying) {
-                            pin = pin.dropLast(1)
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        Text(
+                            text = "Menu Terkunci",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Text(
+                            text = "Masukkan PIN pemilik untuk mengakses $screenName",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center
+                        )
+
+                        Spacer(modifier = Modifier.height(24.dp))
+
+                        // PIN Dots
+                        PinDotsIndicator(
+                            pinLength = pin.length,
+                            isError = isError
+                        )
+
+                        if (isError) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "PIN salah, coba lagi",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.error
+                            )
                         }
-                    },
-                    enabled = !isVerifying
-                )
+
+                        Spacer(modifier = Modifier.height(24.dp))
+
+                        // Numeric Keypad
+                        PinKeypad(
+                            onDigitClick = { digit ->
+                                if (pin.length < 4 && !isVerifying) {
+                                    pin += digit
+                                }
+                            },
+                            onDeleteClick = {
+                                if (pin.isNotEmpty() && !isVerifying) {
+                                    pin = pin.dropLast(1)
+                                }
+                            },
+                            enabled = !isVerifying
+                        )
+                        
+                        Spacer(modifier = Modifier.height(16.dp))
+                        
+                        // Cancel Button
+                        TextButton(
+                            onClick = { pendingAction = { onDismiss() } },
+                            modifier = Modifier.fillMaxWidth(),
+                            contentPadding = PaddingValues(12.dp)
+                        ) {
+                            Text("Batal")
+                        }
+                    }
+                }
             }
-        },
-        confirmButton = {},
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Batal")
-            }
-        },
-        shape = RoundedCornerShape(24.dp)
-    )
+        }
+    }
 }
 
 /**
@@ -176,9 +229,9 @@ fun OwnerPinDialog(
 @Composable
 private fun PinDotsIndicator(
     pinLength: Int,
-    maxLength: Int,
     isError: Boolean
 ) {
+    val maxLength = 4
     Row(
         horizontalArrangement = Arrangement.spacedBy(16.dp),
         verticalAlignment = Alignment.CenterVertically
