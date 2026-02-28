@@ -58,4 +58,67 @@
     <string name="inventory_back">Kembali</string>
     <string name="inventory_no_match">Tidak ada produk yang cocok</string>
     <string name="inventory_add_hint">Tekan + untuk menambah produk</string>
+
+    <!-- Added for Inventory UI Components -->
+    <string name="inventory_tab_menu">Menu</string>
+    <string name="inventory_tab_categories">Kategori</string>
+    <string name="inventory_tab_addons">Tambahan</string>
+    <string name="inventory_categories_title">Kategori Produk</string>
+    <string name="inventory_addons_title">Daftar Tambahan</string>
+    <string name="inventory_empty_categories">Belum ada kategori</string>
+    <string name="inventory_empty_addons">Belum ada tambahan</string>
+    <string name="inventory_add_hint_general">Klik tombol + untuk menambahkan</string>
+    <string name="inventory_add_category">Tambah Kategori</string>
+    <string name="inventory_edit_category">Edit Kategori</string>
+    <string name="inventory_add_addon">Tambah Tambahan</string>
+    <string name="inventory_edit_addon">Edit Tambahan</string>
+    <string name="inventory_category_name">Nama Kategori</string>
+    <string name="inventory_addon_name">Nama Tambahan</string>
+    <string name="inventory_addon_name_example">Contoh: Keju Parut</string>
+    <string name="inventory_addon_price">Harga Tambahan</string>
+    <string name="inventory_addon_create_title">Buat Tambahan Baru</string>
+    <string name="inventory_addons_empty_create">Belum ada data tambahan. Silakan buat baru.</string>
+    <string name="validation_name_empty">Nama wajib diisi</string>
+    <string name="inventory_action_edit">Edit</string>
+    <string name="inventory_action_cancel">Batal</string>
+    <string name="inventory_action_save">Simpan</string>
+    <string name="inventory_action_delete">Hapus</string>
+    <string name="inventory_uncategorized_products">Produk tanpa kategori (%d)</string>
+    <string name="inventory_categorized_products">Produk di kategori ini (%d)</string>
+    <string name="inventory_category_products_label">Produk dalam kategori:</string>
+    <string name="inventory_product_selected">%d dipilih</string>
+    <string name="inventory_product_not_found">Produk tidak ditemukan</string>
+    <string name="inventory_other">Lainnya</string>
+    <string name="inventory_view_grid">Tampilan Petak</string>
+    <string name="inventory_view_list">Tampilan Daftar</string>
+
+    <!-- Added for Product Detail Components -->
+    <string name="product_detail_edit_title">Edit Produk</string>
+    <string name="product_detail_add_title">Tambah Produk</string>
+    <string name="product_detail_title">Detail Produk</string>
+    <string name="product_name_label">Nama Produk *</string>
+    <string name="product_name_placeholder">Contoh: Es Kopi Susu</string>
+    <string name="product_price_label">Harga *</string>
+    <string name="product_desc_label">Deskripsi (opsional)</string>
+    <string name="product_desc_placeholder">Deskripsi singkat produk...</string>
+    <string name="product_action_update">Perbarui Produk</string>
+    <string name="product_action_save">Simpan Produk</string>
+    <string name="product_image_placeholder">Tap untuk tambah foto</string>
+    <string name="product_image_selected">Gambar terpilih</string>
+    <string name="product_image_existing">Gambar produk</string>
+    <string name="product_category_label">Kategori</string>
+    <string name="product_category_placeholder">Pilih kategori...</string>
+    <string name="product_category_none">Tanpa kategori</string>
+    <string name="product_delete_confirm_title">Hapus Produk?</string>
+    <string name="product_delete_confirm_desc">Produk yang dihapus tidak dapat dikembalikan.</string>
+    <string name="product_type_label">Tipe Produk</string>
+    <string name="product_drink_hint">💡 Produk minuman akan memiliki opsi level gula dan es.</string>
+    <string name="product_addons_label">Tambahan</string>
+    <string name="product_create_new">Buat Baru</string>
+    <string name="category_delete_confirm_title">Hapus Kategori?</string>
+    <string name="category_delete_confirm_desc">Kategori ini akan dihapus. Produk di dalamnya TIDAK akan ikut terhapus.</string>
+    <string name="category_delete_confirm_item">"%1$s" akan dihapus.</string>
+    <string name="inventory_category_with_count">%1$s (%2$d)</string>
+    <string name="addon_delete_confirm_title">Hapus Tambahan?</string>
+    <string name="addon_delete_confirm_desc">Tambahan \'%s\' akan dihapus permanen dan tidak bisa dikembalikan.</string>
 </resources>

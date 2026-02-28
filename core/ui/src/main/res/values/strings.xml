@@ -66,4 +66,23 @@
     <string name="confirm_delete_message">Yakin ingin menghapus item ini?</string>
     <string name="confirm_discard_title">Buang Perubahan?</string>
     <string name="confirm_discard_message">Perubahan yang belum disimpan akan hilang.</string>
+
+    <!-- Added from UI Components Extraction -->
+    <string name="core_batal">Batal</string>
+    <string name="core_terapkan">Terapkan</string>
+    <string name="core_rentang_tanggal">Pilih Rentang Tanggal</string>
+    <string name="core_tentukan_periode">Tentukan periode laporan yang ingin Anda lihat</string>
+    <string name="core_dari">Dari</string>
+    <string name="core_sampai">Sampai</string>
+    <string name="core_mulai">Mulai</string>
+    <string name="core_selesai">Selesai</string>
+    <string name="core_pilih_tanggal">Pilih Tanggal</string>
+    <string name="core_pilih_tgl_mulai_dulu">* Pilih tanggal mulai terlebih dahulu</string>
+    <string name="core_periode">Periode</string>
+    <string name="core_coba_lagi">Coba Lagi</string>
+    <string name="core_menu_terkunci">Menu Terkunci</string>
+    <string name="core_masukkan_pin_akses">Masukkan PIN pemilik untuk mengakses %s</string>
+    <string name="core_pin_salah">PIN salah, coba lagi</string>
+    <string name="core_pengaturan">Pengaturan</string>
+    <string name="core_halaman_ini">halaman ini</string>
 </resources>

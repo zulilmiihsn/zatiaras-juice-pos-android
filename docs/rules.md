@@ -104,7 +104,7 @@ Composable (UI) → ViewModel → UseCase → Repository → DataSource → Data
 
 ## 3. Technical Commandments
 
-1.  **Language**: Kotlin 2.0+ Only.
+1.  **Language**: Kotlin 1.9.22.
 2.  **UI**: Jetpack Compose (Material 3). **No XML layouts**.
 3.  **Architecture**: MVVM + Clean Architecture + Repository Pattern.
     ```
@@ -213,5 +213,30 @@ This rulebook ensures:
 - ✅ **Quality**: No shortcuts, no technical debt accumulation
 
 **All AI-generated code MUST follow these rules.**
+
+---
+
+## 9. Localization & UI Text Consistency (MANDATORY)
+
+1. **No hardcoded user-facing text** in Composables, ViewModels, Dialogs, or Screen titles.
+    - ✅ Use `stringResource(...)` in UI.
+    - ✅ Use message keys / enums / sealed classes from ViewModel, map to string in UI.
+    - ❌ Do not return raw localized sentences from ViewModel.
+
+2. **Accessibility labels are localized too**.
+    - `contentDescription`, placeholders, button labels, empty/error states must use `strings.xml`.
+
+3. **Module-owned strings**.
+    - Text for `feature/xxx` should live in `feature/xxx/src/main/res/values/strings.xml`.
+    - Shared/common text can live in shared UI module if truly reused.
+
+4. **Dynamic text format**.
+    - Use format resources (`%1$s`, `%1$d`) instead of string interpolation in UI literals.
+    - Use plural resources where quantity matters.
+
+5. **PR / review gate**.
+    - Before finalizing, run search for obvious hardcoded UI text in changed scope.
+    - Example grep (Windows PowerShell + ripgrep):
+      - `rg 'Text\("|contentDescription\s*=\s*"|placeholder\s*=\s*\{\s*Text\("' feature/**/src/main/**/*.kt`
 
 ---

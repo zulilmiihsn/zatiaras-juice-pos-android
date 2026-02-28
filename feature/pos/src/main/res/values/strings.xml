@@ -9,11 +9,11 @@
     <string name="pos_empty_products_hint">Coba ubah kata kunci atau kategori</string>
     <string name="pos_cart">Keranjang</string>
     <string name="pos_clear_search">Hapus</string>
-    <string name="pos_to_list_view">Tampilan List</string>
-    <string name="pos_to_grid_view">Tampilan Grid</string>
+    <string name="pos_to_list_view">Tampilan Daftar</string>
+    <string name="pos_to_grid_view">Tampilan Petak</string>
     <string name="pos_custom_item">Menu Manual</string>
     <string name="pos_add_custom_item">Tambah Manual</string>
-    <string name="pos_custom_item_name">Nama Item</string>
+    <string name="pos_custom_item_name">Nama Produk</string>
     <string name="pos_custom_item_price">Harga</string>
     <string name="pos_add">Tambah</string>
     
@@ -26,11 +26,15 @@
     <string name="cart_item_decrease">Kurangi</string>
     <string name="cart_item_increase">Tambah</string>
     <string name="cart_total">Total</string>
-    <string name="cart_item_count">%d item</string>
-    <string name="cart_item_count_plural">%d items</string>
+    <string name="cart_item_count">%d produk</string>
+    <plurals name="cart_item_count_plural">
+        <item quantity="one">%d item</item>
+        <item quantity="other">%d item</item>
+    </plurals>
+    <string name="pos_view_cart">Lihat Keranjang</string>
     
     <!-- Checkout -->
-    <string name="checkout_title">Checkout</string>
+    <string name="checkout_title">Pembayaran</string>
     <string name="checkout_button">Bayar</string>
     <string name="checkout_payment_method">Metode Pembayaran</string>
     <string name="checkout_payment_cash">Tunai</string>
@@ -42,6 +46,12 @@
     <string name="checkout_print_receipt">Cetak Struk</string>
     <string name="checkout_new_transaction">Transaksi Baru</string>
     <string name="checkout_processing">Memproses...</string>
+        <string name="checkout_discount_value">-%1$s</string>
+        <string name="checkout_payment_title">Pembayaran %1$s</string>
+        <string name="checkout_reset">Reset</string>
+        <string name="checkout_quick_amount_plus">+ %1$s</string>
+        <string name="checkout_item_customization">+ %1$s</string>
+        <string name="checkout_item_qty_price">%1$d x %2$s</string>
     
     <!-- Validation -->
     <string name="checkout_error_payment_required">Pilih metode pembayaran</string>
@@ -61,14 +71,14 @@
     
     <!-- Confirmation Dialogs -->
     <string name="dialog_clear_cart_title">Hapus Keranjang?</string>
-    <string name="dialog_clear_cart_message">Semua item akan dihapus dari keranjang.</string>
+    <string name="dialog_clear_cart_message">Semua produk akan dihapus dari keranjang.</string>
     <string name="dialog_confirm">Ya</string>
     <string name="dialog_cancel">Batal</string>
 
     <!-- Store Session -->
     <string name="pos_store_closed_title">Toko Sedang Tutup</string>
-    <string name="pos_store_closed_message">Silakan buka toko terlebih dahulu melalui Dashboard untuk memulai transaksi.</string>
-    <string name="pos_back_to_dashboard">Kembali ke Dashboard</string>
+    <string name="pos_store_closed_message">Silakan buka toko terlebih dahulu melalui Beranda untuk memulai transaksi.</string>
+    <string name="pos_back_to_dashboard">Kembali ke Beranda</string>
 
     <!-- Cash Record (Buku Kas) -->
     <string name="cash_record_title">Buku Kas</string>
@@ -96,4 +106,94 @@
     <string name="cash_record_delete_title">Hapus Catatan</string>
     <string name="cash_record_delete_message">Apakah Anda yakin ingin menghapus catatan ini?</string>
     <string name="cash_record_delete">Hapus</string>
+        <string name="cash_record_pick_date">Pilih Tanggal</string>
+        <string name="dialog_ok">OK</string>
+        <string name="cash_record_category_placeholder">Pilih kategori</string>
+        <string name="cash_flow_sales">Penjualan</string>
+        <string name="cash_flow_item_count"> • %1$d item</string>
+        <string name="cash_flow_category"> • %1$s</string>
+        <string name="cash_flow_amount_signed">%1$s%2$s</string>
+        <string name="cash_record_detail_income_title">Detail Pemasukan</string>
+        <string name="cash_record_detail_expense_title">Detail Pengeluaran</string>
+        <string name="cash_record_detail_description_label">Keterangan</string>
+        <string name="cash_record_detail_category_label">Kategori</string>
+        <string name="cash_record_detail_time_label">Waktu</string>
+        <string name="cash_record_close">Tutup</string>
+
+    <!-- Added for Checkout Screen translation -->
+    <string name="checkout_customer_name_hint">Nama Pelanggan (opsional)</string>
+    <string name="checkout_order_notes_hint">Catatan Pesanan...</string>
+    <string name="checkout_order_summary">Ringkasan Pesanan</string>
+    <string name="checkout_subtotal">Subtotal</string>
+    <string name="checkout_discount">Diskon (%d%%)</string>
+    <string name="checkout_tax">PPN (%d%%)</string>
+    <string name="checkout_grand_total">Total Tagihan</string>
+    <string name="checkout_grand_total_amount">Total Tagihan: %s</string>
+    <string name="checkout_amount_received_label">Jumlah uang diterima</string>
+    <string name="checkout_quick_amount">Nominal Cepat</string>
+    <string name="checkout_exact_amount">Uang Pas</string>
+    <string name="checkout_check_qr">Periksa QR dengan benar</string>
+    <string name="checkout_check_qr_desc">Pastikan pelanggan sudah melakukan scan dan pembayaran berhasil.</string>
+    <string name="checkout_check_transfer">Periksa transfer dengan benar</string>
+    <string name="checkout_check_transfer_desc">Cek mutasi atau bukti transfer dari pelanggan.</string>
+    <string name="checkout_confirm_print">Konfirmasi &amp; Cetak Struk</string>
+
+    <!-- Added for POS Components -->
+    <string name="pos_sugar_level">Jenis Gula</string>
+    <string name="pos_ice_level">Jenis Es</string>
+    <string name="pos_addons">Tambahan</string>
+    <string name="pos_notes">Catatan</string>
+    <string name="pos_notes_hint">Contoh: Tanpa sedotan, cup besar...</string>
+    <string name="pos_quantity">Jumlah</string>
+    <string name="pos_close">Tutup</string>
+    <string name="pos_back">Kembali</string>
+    <string name="pos_custom_item_add_hint">Tambahkan item yang tidak ada di menu</string>
+    <string name="pos_custom_item_name_placeholder">Contoh: Es Jeruk Spesial</string>
+    <string name="pos_cart_title_with_count">Keranjang (%d)</string>
+    <string name="pos_total">Total</string>
+    <string name="pos_subtotal">Subtotal</string>
+    <string name="pos_history_today_title">Riwayat Transaksi Hari Ini</string>
+    <string name="pos_history_search_placeholder">Cari transaksi...</string>
+    <string name="pos_history_empty_today">Belum ada transaksi hari ini</string>
+    <string name="pos_history_delete_title">Hapus Transaksi?</string>
+    <string name="pos_history_delete_message">Transaksi yang dihapus tidak dapat dikembalikan. Yakin ingin menghapus transaksi ini?</string>
+    <string name="pos_history_default_transaction">Transaksi Kasir</string>
+    <string name="pos_history_cash_upper">TUNAI</string>
+    <string name="pos_history_detail_title">Detail Transaksi</string>
+    <string name="pos_history_customer">Pelanggan</string>
+    <string name="pos_history_time">Waktu</string>
+    <string name="pos_history_total_payment">Total Pembayaran</string>
+    <string name="pos_history_payment_type">Jenis Pembayaran</string>
+    <string name="pos_receipt_detail_title">Detail Transaksi</string>
+    <string name="pos_receipt_store_name_default">Zatiaras Juice</string>
+    <string name="pos_receipt_total_upper">TOTAL</string>
+    <string name="pos_receipt_paid">Dibayar</string>
+    <string name="pos_receipt_customer">Pelanggan:</string>
+    <string name="pos_receipt_notes">Catatan:</string>
+    <string name="pos_receipt_thanks">Terima kasih atas kunjungan Anda!</string>
+    <string name="pos_receipt_printer">Printer: %1$s</string>
+    <string name="pos_receipt_printing">Mencetak...</string>
+    <string name="pos_receipt_setup_printer">Setup Printer</string>
+    <string name="pos_receipt_discount_value">-%1$s</string>
+    <string name="pos_receipt_item_qty_price">%1$dx %2$s</string>
+    <string name="pos_receipt_printer_not_connected">Printer tidak terhubung. Silakan setup di Pengaturan.</string>
+    <string name="pos_receipt_print_success">Struk berhasil dicetak!</string>
+    <string name="pos_receipt_print_failed_generic">Gagal mencetak</string>
+    <string name="pos_receipt_print_failed_with_reason">Gagal mencetak: %1$s</string>
+
+    <string name="checkout_error_insufficient_amount">Jumlah bayar kurang dari total</string>
+    <string name="checkout_error_save_failed">Gagal menyimpan transaksi</string>
+
+    <string name="pos_history_error_load_with_reason">Gagal memuat transaksi: %1$s</string>
+    <string name="pos_history_error_delete">Gagal menghapus transaksi</string>
+    <string name="pos_history_error_payment_update">Gagal mengubah metode pembayaran</string>
+
+    <string name="cash_record_error_load">Gagal memuat data</string>
+    <string name="cash_record_error_amount_required">Jumlah wajib diisi</string>
+    <string name="cash_record_error_amount_positive">Jumlah harus lebih dari 0</string>
+    <string name="cash_record_error_description_required">Keterangan wajib diisi</string>
+    <string name="cash_record_error_description_min">Keterangan minimal 3 karakter</string>
+    <string name="cash_record_error_save">Gagal menyimpan data</string>
+    <string name="cash_record_error_pos_not_deletable">Transaksi POS tidak bisa dihapus</string>
+    <string name="cash_record_error_delete">Gagal menghapus data</string>
 </resources>

@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="printer_bluetooth_permission_required">Izin Bluetooth diperlukan</string>
+    <string name="printer_print_success">Cetak berhasil!</string>
+    <string name="printer_settings_title">Pengaturan Printer</string>
+    <string name="printer_back">Kembali</string>
+    <string name="printer_refresh">Refresh</string>
+
+    <string name="printer_section_bluetooth_title">🔌 Perangkat Bluetooth</string>
+    <string name="printer_section_bluetooth_subtitle">Pilih printer thermal untuk cetak struk</string>
+    <string name="printer_auto_connect_title">Hubung Otomatis</string>
+    <string name="printer_auto_connect_subtitle">Sambungkan ke printer terakhir saat buka aplikasi</string>
+
+    <string name="printer_section_print_title">⚙️ Pengaturan Cetak</string>
+    <string name="printer_section_print_subtitle">Atur lebar kertas thermal printer</string>
+    <string name="printer_paper_width_title">Lebar Kertas</string>
+    <string name="printer_paper_58">58mm (Kecil)</string>
+    <string name="printer_paper_80">80mm (Besar)</string>
+
+    <string name="printer_section_store_title">🏪 Info Toko</string>
+    <string name="printer_section_store_subtitle">Atur informasi yang tampil di header struk</string>
+
+    <string name="printer_section_preview_title">🧾 Preview Struk</string>
+    <string name="printer_section_preview_subtitle">Lihat bagaimana struk akan tercetak</string>
+
+    <string name="printer_store_logo_title">Logo Toko</string>
+    <string name="printer_store_logo_default">Menggunakan logo default</string>
+    <string name="printer_store_logo_custom">Logo custom dipilih</string>
+    <string name="printer_store_logo_default_cd">Logo Default</string>
+    <string name="printer_delete">Hapus</string>
+    <string name="printer_select_logo">Pilih Logo</string>
+    <string name="printer_change">Ganti</string>
+    <string name="printer_store_logo_hint">💡 Logo akan tampil di bagian atas struk. Gunakan gambar dengan background transparan untuk hasil terbaik.</string>
+
+    <string name="printer_store_info_title">Informasi Toko</string>
+    <string name="printer_store_info_subtitle">Tampil di bagian atas struk</string>
+    <string name="printer_store_name_label">Nama Toko</string>
+    <string name="printer_store_name_placeholder">Contoh: Warung Makan Barokah</string>
+    <string name="printer_store_address_label">Alamat Toko (Opsional)</string>
+    <string name="printer_store_address_placeholder">Contoh: Jl. Merdeka No. 123</string>
+    <string name="printer_save_store_info">Simpan Info Toko</string>
+
+    <string name="printer_connected_status">✓ Printer Terhubung</string>
+    <string name="printer_disconnected_status">Printer Tidak Terhubung</string>
+    <string name="printer_status_disconnected">Tidak terhubung</string>
+    <string name="printer_status_scanning">Mencari printer...</string>
+    <string name="printer_status_connecting">Menghubungkan ke %1$s...</string>
+    <string name="printer_status_connected">Terhubung ke %1$s</string>
+    <string name="printer_status_printing_progress">Mencetak... %1$d%%</string>
+    <string name="printer_status_print_success">Berhasil dicetak!</string>
+    <string name="printer_disconnect">Putuskan</string>
+    <string name="printer_test_print">Cetak Tes</string>
+    <string name="printer_connected">Connected</string>
+    <string name="printer_preview_title">Preview Struk</string>
+    <string name="printer_preview_subtitle">Tampilan struk %1$s • Premium</string>
+    <string name="printer_preview_size_58">58mm</string>
+    <string name="printer_preview_size_80">80mm</string>
+    <string name="printer_preview_hint">💡 Ini adalah simulasi visual. Hasil cetak sebenarnya menggunakan format ESC/POS thermal printer.</string>
+    <string name="printer_store_name_default">Nama Toko</string>
+    <string name="printer_no_devices_found">Tidak Ada Printer Ditemukan</string>
+    <string name="printer_bluetooth_disabled_title">Bluetooth Tidak Aktif</string>
+    <string name="printer_no_devices_hint">Pastikan printer sudah dipasangkan&#10;di Pengaturan Bluetooth HP</string>
+    <string name="printer_enable_bluetooth_hint">Aktifkan Bluetooth untuk&#10;mencari printer</string>
+    <string name="printer_receipt_transaction_no">No. Transaksi</string>
+    <string name="printer_receipt_transaction_sample">TRX-2024-001234</string>
+    <string name="printer_receipt_date">Tanggal</string>
+    <string name="printer_receipt_date_sample">30 Jan 2026, 14:35</string>
+    <string name="printer_item_sample_1">Es Teh Manis</string>
+    <string name="printer_item_sample_2">Nasi Goreng Spesial</string>
+    <string name="printer_item_sample_3">Ayam Bakar Madu</string>
+    <string name="printer_receipt_subtotal">Subtotal</string>
+    <string name="printer_receipt_subtotal_sample">Rp 60.000</string>
+    <string name="printer_receipt_tax_sample">Pajak (10%)</string>
+    <string name="printer_receipt_tax_amount_sample">Rp 6.000</string>
+    <string name="printer_receipt_total_upper">TOTAL</string>
+    <string name="printer_receipt_total_sample">Rp 66.000</string>
+    <string name="printer_receipt_paid_cash">Bayar (Tunai)</string>
+    <string name="printer_receipt_paid_sample">Rp 100.000</string>
+    <string name="printer_receipt_change">Kembali</string>
+    <string name="printer_receipt_change_sample">Rp 34.000</string>
+    <string name="printer_receipt_thanks_title">*** Terima Kasih ***</string>
+    <string name="printer_receipt_enjoy">Selamat Menikmati</string>
+    <string name="printer_receipt_policy_line_1">Barang yang sudah dibeli</string>
+    <string name="printer_receipt_policy_line_2">tidak dapat ditukar/dikembalikan</string>
+    <string name="printer_receipt_powered_by">Powered by Zatiaras Juice POS</string>
+    <string name="printer_receipt_separator">- - - - - - - - - - - - - - - - - - - -</string>
+    <string name="printer_receipt_item_qty_price">%1$dx @ %2$s</string>
+
+    <string name="printer_connected_to_device">Terhubung ke %1$s</string>
+    <string name="printer_failed_with_reason">Gagal: %1$s</string>
+    <string name="printer_disconnected_toast">Printer terputus</string>
+    <string name="printer_not_connected">Printer tidak terhubung</string>
+    <string name="printer_print_failed_with_reason">Gagal cetak: %1$s</string>
+    <string name="printer_store_info_saved">Informasi toko disimpan</string>
+    <string name="printer_error_unknown">Terjadi kesalahan</string>
+    <string name="printer_bluetooth_adapter_unavailable">Bluetooth adapter tidak tersedia</string>
+    <string name="printer_connect_failed_with_reason">Gagal terhubung ke printer: %1$s</string>
+    <string name="printer_bluetooth_permission_denied">Izin Bluetooth tidak diberikan</string>
+    <string name="printer_error_with_reason">Error: %1$s</string>
+    <string name="printer_no_saved_device">Belum ada printer tersimpan</string>
+    <string name="printer_auto_connect_disabled">Hubung otomatis nonaktif</string>
+</resources>
