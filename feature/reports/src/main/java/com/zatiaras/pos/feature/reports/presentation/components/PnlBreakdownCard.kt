@@ -37,6 +37,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import com.zatiaras.pos.feature.reports.R
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
@@ -44,6 +46,11 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.zatiaras.pos.core.ui.theme.LossRed
+import com.zatiaras.pos.core.ui.theme.ProfitGreen
+import com.zatiaras.pos.core.ui.theme.ProfitGreenDark
+import com.zatiaras.pos.core.ui.theme.ProfitGreenLight
+import com.zatiaras.pos.core.ui.theme.TaxBlue
 import com.zatiaras.pos.feature.reports.domain.model.ExpenseCategoryItem
 import com.zatiaras.pos.feature.reports.domain.model.ProductSaleItem
 import com.zatiaras.pos.feature.reports.domain.model.ProfitLossReport
@@ -71,13 +78,13 @@ fun PnlBreakdownCard(
         ) {
             // Header
             Text(
-                text = "Ringkasan Laba Rugi",
+                text = stringResource(R.string.pnl_summary),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
             
             Text(
-                text = "${report.transactionCount} transaksi",
+                text = stringResource(R.string.pnl_transactions_count, report.transactionCount),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -86,42 +93,37 @@ fun PnlBreakdownCard(
             
             // --- 1. INCOME SECTION ---
             SectionHeader(
-                title = "PENDAPATAN",
-                color = Color(0xFF4CAF50)
+                title = stringResource(R.string.pnl_revenue),
+                color = ProfitGreen
             )
             
             Spacer(modifier = Modifier.height(8.dp))
             
             // Expandable Operating Revenue
             ExpandableLineItem(
-                label = "Pendapatan Usaha",
+                label = stringResource(R.string.pnl_operating_revenue),
                 amount = report.operatingRevenue,
                 icon = Icons.Default.ArrowUpward,
-                iconColor = Color(0xFF4CAF50),
+                iconColor = ProfitGreen,
                 hasDetails = report.productSales.isNotEmpty() || report.posNetRevenue > 0 || report.manualIncomeItems.isNotEmpty()
             ) {
                 // POS Sales Detail
                 if (report.posNetRevenue > 0) {
                     DetailLineItem(
-                        label = "Penjualan POS",
+                        label = stringResource(R.string.pnl_pos_sales),
                         amount = report.posNetRevenue
                     )
                     
-                    // Product Sales Breakdown
-                    report.productSales.take(5).forEach { item ->
+                    // Product Sales Breakdown - display all items without truncation
+                    report.productSales.forEach { item ->
                         DetailLineItem(
-                            label = "${item.productName} (${item.quantity}x)",
+                            label = stringResource(
+                                R.string.pnl_product_with_qty,
+                                item.productName,
+                                item.quantity
+                            ),
                             amount = item.revenue,
                             isSubItem = true
-                        )
-                    }
-                    
-                    if (report.productSales.size > 5) {
-                        Text(
-                            text = "+ ${report.productSales.size - 5} produk lainnya",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(start = 36.dp, top = 4.dp)
                         )
                     }
                 }
@@ -129,7 +131,7 @@ fun PnlBreakdownCard(
                 // Manual Operating Income with breakdown
                 if (report.manualIncomeItems.isNotEmpty()) {
                     DetailLineItem(
-                        label = "Pendapatan Manual",
+                        label = stringResource(R.string.pnl_manual_revenue),
                         amount = report.manualOperatingIncome
                     )
                     
@@ -147,10 +149,10 @@ fun PnlBreakdownCard(
             // Expandable Other Revenue (if any)
             if (report.otherRevenue > 0) {
                 ExpandableLineItem(
-                    label = "Pendapatan Lainnya",
+                    label = stringResource(R.string.pnl_other_revenue),
                     amount = report.otherRevenue,
                     icon = Icons.Default.ArrowUpward,
-                    iconColor = Color(0xFF8BC34A),
+                    iconColor = ProfitGreenLight,
                     hasDetails = report.otherIncomeItems.isNotEmpty()
                 ) {
                     report.otherIncomeItems.forEach { item ->
@@ -169,7 +171,7 @@ fun PnlBreakdownCard(
             )
             
             PnlLineItem(
-                label = "Total Pendapatan",
+                label = stringResource(R.string.pnl_total_revenue),
                 amount = report.grossRevenue,
                 isBold = true
             )
@@ -178,8 +180,8 @@ fun PnlBreakdownCard(
             
             // --- 2. EXPENSE SECTION ---
             SectionHeader(
-                title = "BEBAN / PENGELUARAN",
-                color = Color(0xFFE53935)
+                title = stringResource(R.string.pnl_expenses),
+                color = LossRed
             )
             
             Spacer(modifier = Modifier.height(8.dp))
@@ -189,24 +191,24 @@ fun PnlBreakdownCard(
                 report.expensesByCategory.forEach { categoryItem ->
                     ExpandableExpenseCategory(
                         categoryItem = categoryItem,
-                        iconColor = Color(0xFFE53935)
+                        iconColor = LossRed
                     )
                 }
             } else {
                 // Fallback to summary view if no details
                 if (report.operatingExpenses > 0) {
                     PnlLineItem(
-                        label = "Beban Usaha",
+                        label = stringResource(R.string.pnl_operating_expenses),
                         amount = report.operatingExpenses,
                         icon = Icons.Default.ArrowDownward,
-                        iconColor = Color(0xFFE53935),
+                        iconColor = LossRed,
                         isNegative = true
                     )
                 }
                 
                 if (report.otherExpenses > 0) {
                     PnlLineItem(
-                        label = "Beban Lainnya",
+                        label = stringResource(R.string.pnl_other_expenses),
                         amount = report.otherExpenses,
                         icon = Icons.Default.ArrowDownward,
                         iconColor = Color(0xFFFF5722),
@@ -221,7 +223,7 @@ fun PnlBreakdownCard(
             )
             
             PnlLineItem(
-                label = "Total Beban",
+                label = stringResource(R.string.pnl_total_expenses),
                 amount = -report.totalExpenses, // Display as negative
                 isBold = true,
                 isNegative = true
@@ -231,30 +233,30 @@ fun PnlBreakdownCard(
             
             // --- 3. PROFIT / TAX SECTION ---
             SectionHeader(
-                title = "LABA & PAJAK",
+                title = stringResource(R.string.pnl_profit_and_tax),
                 color = MaterialTheme.colorScheme.primary
             )
             
             Spacer(modifier = Modifier.height(8.dp))
             
             PnlLineItem(
-                label = "Laba Kotor",
+                label = stringResource(R.string.pnl_gross_profit),
                 amount = report.grossProfit,
                 isBold = true
             )
 
             PnlLineItem(
-                label = "Pajak (0.5% Omzet)",
+                label = stringResource(R.string.pnl_tax, report.taxPercentage.toString()),
                 amount = report.tax, 
                 icon = Icons.Default.Remove,
-                iconColor = Color(0xFF2196F3),
+                iconColor = TaxBlue,
                 isNegative = true
             )
             
             Spacer(modifier = Modifier.height(10.dp))
             
             ProfitRow(
-                label = "Laba Bersih",
+                label = stringResource(R.string.pnl_net_profit),
                 amount = report.netProfit,
                 isProfit = report.netProfit >= 0
             )
@@ -343,7 +345,7 @@ private fun PnlLineItem(
             },
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = if (isBold) FontWeight.SemiBold else FontWeight.Normal,
-            color = if (isNegative) Color(0xFFE53935) else MaterialTheme.colorScheme.onSurface
+            color = if (isNegative) LossRed else MaterialTheme.colorScheme.onSurface
         )
     }
 }
@@ -365,7 +367,7 @@ private fun GrandTotalRow(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Total Diterima",
+                text = stringResource(R.string.pnl_total_received),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -388,13 +390,13 @@ private fun ProfitRow(
     isProfit: Boolean
 ) {
     val backgroundColor = if (isProfit) {
-        Color(0xFF4CAF50).copy(alpha = 0.1f)
+        ProfitGreen.copy(alpha = 0.1f)
     } else {
-        Color(0xFFE53935).copy(alpha = 0.1f)
+        LossRed.copy(alpha = 0.1f)
     }
     
     val textColor = if (isProfit) {
-        Color(0xFF2E7D32)
+        ProfitGreenDark
     } else {
         Color(0xFFC62828)
     }
@@ -596,9 +598,9 @@ private fun ExpandableExpenseCategory(
             }
             
             Text(
-                text = "(${formatRupiah(categoryItem.amount)})",
+                text = stringResource(R.string.pnl_amount_in_parentheses, formatRupiah(categoryItem.amount)),
                 style = MaterialTheme.typography.bodyMedium,
-                color = Color(0xFFE53935)
+                color = LossRed
             )
         }
         

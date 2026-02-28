@@ -15,5 +15,5 @@ data class PnlReportUiState(
     val report: ProfitLossReport? = null,
     val error: String? = null,
     val showDatePicker: Boolean = false,
-    val isSelectingStartDate: Boolean = true
+    val taxPercentage: Double = 0.5
 )

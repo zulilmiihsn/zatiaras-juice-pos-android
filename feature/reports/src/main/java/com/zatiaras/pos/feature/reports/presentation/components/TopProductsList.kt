@@ -31,11 +31,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import com.zatiaras.pos.feature.reports.R
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.zatiaras.pos.core.ui.theme.MedalColors
 import com.zatiaras.pos.feature.reports.domain.model.TopProduct
 
 /**
@@ -65,7 +68,7 @@ fun TopProductsList(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Produk Terlaris",
+                    text = stringResource(R.string.stat_top_products),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -73,7 +76,7 @@ fun TopProductsList(
                 Icon(
                     imageVector = Icons.Default.Star,
                     contentDescription = null,
-                    tint = Color(0xFFFFB800),
+                    tint = MedalColors.Star,
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -88,7 +91,7 @@ fun TopProductsList(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "Belum ada data penjualan",
+                        text = stringResource(R.string.reports_no_sales_data),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -136,9 +139,9 @@ private fun TopProductItem(
     }
     
     val rankColors = listOf(
-        Color(0xFFFFD700),  // Gold
-        Color(0xFFC0C0C0),  // Silver
-        Color(0xFFCD7F32),  // Bronze
+        MedalColors.Gold,
+        MedalColors.Silver,
+        MedalColors.Bronze,
         MaterialTheme.colorScheme.primary,
         MaterialTheme.colorScheme.primary
     )
@@ -193,7 +196,7 @@ private fun TopProductItem(
                 )
                 
                 Text(
-                    text = "${product.quantitySold} terjual",
+                    text = stringResource(R.string.top_products_sold, product.quantitySold),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

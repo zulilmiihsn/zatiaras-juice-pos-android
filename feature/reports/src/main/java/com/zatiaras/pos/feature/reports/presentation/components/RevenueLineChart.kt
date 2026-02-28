@@ -22,6 +22,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import com.zatiaras.pos.feature.reports.R
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
@@ -30,6 +32,9 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.zatiaras.pos.core.ui.theme.GradientColors
+import com.zatiaras.pos.core.domain.util.LocaleUtils
 import com.zatiaras.pos.feature.reports.domain.model.DailyRevenue
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -44,17 +49,6 @@ fun RevenueLineChart(
     data: List<DailyRevenue>,
     modifier: Modifier = Modifier
 ) {
-    // Gradient colors for bars (matching web app style)
-    val barGradientColors = listOf(
-        listOf(Color(0xFF667eea), Color(0xFF764ba2)), // Purple gradient
-        listOf(Color(0xFF11998e), Color(0xFF38ef7d)), // Green gradient
-        listOf(Color(0xFFf093fb), Color(0xFFf5576c)), // Pink gradient
-        listOf(Color(0xFF4facfe), Color(0xFF00f2fe)), // Blue gradient
-        listOf(Color(0xFFfa709a), Color(0xFFfee140)), // Orange-pink gradient
-        listOf(Color(0xFF667eea), Color(0xFF764ba2)), // Purple gradient
-        listOf(Color(0xFF11998e), Color(0xFF38ef7d))  // Green gradient
-    )
-    
     // Animation
     val animationProgress = remember { Animatable(0f) }
     
@@ -76,7 +70,7 @@ fun RevenueLineChart(
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = "Belum ada data",
+                text = stringResource(R.string.reports_no_data),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -84,8 +78,11 @@ fun RevenueLineChart(
         return
     }
     
-    val maxRevenue = data.maxOfOrNull { it.revenue } ?: 1L
-    val dayFormat = SimpleDateFormat("EEE", Locale("id", "ID"))
+    val maxRevenue = data.maxOf { it.revenue }.coerceAtLeast(1000L).toFloat()
+    val dayFormat = SimpleDateFormat("EEE", LocaleUtils.LOCALE_ID)
+    
+    // Base color for the chart (using primary theme color, which is pink)
+    val primaryColor = MaterialTheme.colorScheme.primary
     
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -99,49 +96,52 @@ fun RevenueLineChart(
             modifier = Modifier.padding(16.dp)
         ) {
             Text(
-                text = "Pendapatan 7 Hari Terakhir",
+                text = stringResource(R.string.reports_chart_title),
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold
+                fontWeight = FontWeight.ExtraBold,
+                color = MaterialTheme.colorScheme.onSurface
             )
             
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(20.dp))
             
             Canvas(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(160.dp)
+                    .height(180.dp) // Slightly taller
             ) {
                 val width = size.width
                 val height = size.height
-                val padding = 16f
-                val chartHeight = height - padding
                 val barCount = data.size
-                val totalSpacing = width * 0.3f // 30% of width for spacing
-                val barWidth = (width - totalSpacing) / barCount
-                val spacing = totalSpacing / (barCount + 1)
+                val barSpacing = width * 0.15f / (barCount + 1)
+                val barWidth = (width - (barSpacing * (barCount + 1))) / barCount
                 
                 data.forEachIndexed { index, point ->
-                    val x = spacing + index * (barWidth + spacing)
-                    val normalizedHeight = if (maxRevenue > 0) {
-                        (point.revenue.toFloat() / maxRevenue.toFloat())
-                    } else 0f
+                    val x = barSpacing + index * (barWidth + barSpacing)
                     
-                    val animatedHeight = normalizedHeight * chartHeight * animationProgress.value
-                    val barTop = chartHeight - animatedHeight
+                    // Normalized height with animation and a tiny minimum height for 0 values
+                    val normalizedHeight = (point.revenue.toFloat() / maxRevenue).coerceIn(0f, 1f)
+                    val minBarHeight = 4.dp.toPx()
+                    val targetHeight = (normalizedHeight * height).coerceAtLeast(minBarHeight)
+                    val animatedHeight = targetHeight * animationProgress.value
                     
-                    // Get gradient colors for this bar
-                    val gradientColors = barGradientColors[index % barGradientColors.size]
+                    val barTop = height - animatedHeight
                     
-                    // Draw bar with gradient
+                    // Intensity based on height (taller bars are more solid/darker pink)
+                    // Minimum intensity 0.35f, maximum 1.0f
+                    val intensity = 0.35f + (normalizedHeight * 0.65f)
+                    val barTopColor = primaryColor.copy(alpha = intensity * 0.7f) // Slightly lighter at the top
+                    val barBottomColor = primaryColor.copy(alpha = intensity)     // Solid towards the bottom
+                    
+                    // Draw bar with dynamic gradient
                     drawRoundRect(
                         brush = Brush.verticalGradient(
-                            colors = gradientColors,
+                            colors = listOf(barTopColor, barBottomColor),
                             startY = barTop,
-                            endY = chartHeight
+                            endY = height
                         ),
                         topLeft = Offset(x, barTop),
                         size = Size(barWidth, animatedHeight),
-                        cornerRadius = CornerRadius(8.dp.toPx(), 8.dp.toPx())
+                        cornerRadius = CornerRadius(6.dp.toPx(), 6.dp.toPx())
                     )
                 }
             }

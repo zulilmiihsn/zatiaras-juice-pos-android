@@ -5,14 +5,22 @@ import androidx.lifecycle.viewModelScope
 import com.zatiaras.pos.core.data.access.AccessControlManager
 import com.zatiaras.pos.core.domain.repository.StoreSessionRepository
 import com.zatiaras.pos.core.domain.util.DateUtils
+import com.zatiaras.pos.core.domain.util.LocaleUtils
+import com.zatiaras.pos.feature.reports.domain.model.DailyRevenue
+import com.zatiaras.pos.feature.reports.domain.model.DashboardStats
 import com.zatiaras.pos.feature.reports.domain.repository.ReportRepository
+import com.zatiaras.pos.feature.reports.domain.usecase.GenerateProfitLossReportUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import com.zatiaras.pos.feature.reports.R
 import javax.inject.Inject
 
 /**
@@ -23,7 +31,9 @@ import javax.inject.Inject
 class HomeDashboardViewModel @Inject constructor(
     private val reportRepository: ReportRepository,
     private val storeSessionRepository: StoreSessionRepository,
-    private val accessControlManager: AccessControlManager
+    private val accessControlManager: AccessControlManager,
+    private val calculateDashboardAnalyticsUseCase: com.zatiaras.pos.feature.reports.domain.usecase.CalculateDashboardAnalyticsUseCase,
+    private val generateProfitLossReportUseCase: GenerateProfitLossReportUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeDashboardUiState())
@@ -81,27 +91,29 @@ class HomeDashboardViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = true, error = null) }
             
             try {
-                // Load dashboard stats
-                val stats = reportRepository.getDashboardStats()
-                
-                // Load today's PnL for expenses
                 val (startOfDay, endOfDay) = DateUtils.getTodayRange()
-                val pnlReport = reportRepository.getProfitLossReport(startOfDay, endOfDay)
+                val (recentStart, recentEnd) = DateUtils.getLastNDaysRange(30)
+
+                // Parallel data loading
+                val statsDeferred = async { reportRepository.getDashboardStats() }
+                val pnlDeferred = async { generateProfitLossReportUseCase(startOfDay, endOfDay) }
+                val weeklyDeferred = async { reportRepository.getDailyRevenueHistory(7) }
+                val topProductsDeferred = async { reportRepository.getTopSellingProducts(recentStart, recentEnd, 5) }
+
+                val stats = statsDeferred.await().getOrThrow()
+                val pnlReport = pnlDeferred.await().getOrThrow()
+                val weeklyRevenue = weeklyDeferred.await().getOrThrow()
+                val topProducts = topProductsDeferred.await().getOrThrow()
+                
                 val todayExpenses = pnlReport.totalExpenses
                 
-                // Load weekly revenue for chart
-                val weeklyRevenue = reportRepository.getDailyRevenueHistory(7)
+                // Calculate analytics on background thread
+                val analyticsResult = withContext(Dispatchers.Default) {
+                    calculateDashboardAnalyticsUseCase(stats, weeklyRevenue)
+                }
                 
-                // Load top products (last 30 days)
-                val (startDate, endDate) = DateUtils.getLastNDaysRange(30)
-                val topProducts = reportRepository.getTopSellingProducts(startDate, endDate, 5)
-                
-                // Calculate analytics
-                val averageTransactions = calculateAverageTransactions(weeklyRevenue)
-                val peakHours = calculatePeakHours()
-                val averageOrderValue = calculateAverageOrderValue(stats)
-                val avgItemsPerTransaction = calculateAverageItemsPerTransaction(stats)
-                val busiestDay = calculateBusiestDay(weeklyRevenue)
+                // Hide growth if no historical data exists
+                val hasGrowthData = !(stats.weeklyRevenue == 0L && stats.revenueGrowthPercent == 0.0)
                 
                 _uiState.update { state ->
                     state.copy(
@@ -109,12 +121,12 @@ class HomeDashboardViewModel @Inject constructor(
                         stats = stats,
                         weeklyRevenue = weeklyRevenue,
                         topProducts = topProducts,
-                        averageTransactionsPerDay = averageTransactions,
-                        peakHours = peakHours,
-                        averageOrderValue = averageOrderValue,
-                        averageItemsPerTransaction = avgItemsPerTransaction,
-                        growthPercent = stats.revenueGrowthPercent,
-                        busiestDay = busiestDay,
+                        averageTransactionsPerDay = analyticsResult.averageTransactionsPerDay,
+                        peakHours = analyticsResult.peakHours,
+                        averageOrderValue = analyticsResult.averageOrderValue,
+                        averageItemsPerTransaction = analyticsResult.averageItemsPerTransaction,
+                        growthPercent = if (hasGrowthData) stats.revenueGrowthPercent else null,
+                        busiestDay = analyticsResult.busiestDay,
                         todayExpenses = todayExpenses
                     )
                 }
@@ -122,10 +134,16 @@ class HomeDashboardViewModel @Inject constructor(
                 Timber.d("Dashboard loaded: ${stats.todayTransactions} transactions today")
             } catch (e: Exception) {
                 Timber.e(e, "Failed to load dashboard")
+                val errorMessage = e.message ?: ""
+                val uiError = if (errorMessage.isNotBlank()) {
+                    com.zatiaras.pos.core.ui.util.UiText.DynamicString(errorMessage)
+                } else {
+                    com.zatiaras.pos.core.ui.util.UiText.StringResource(R.string.reports_error_load)
+                }
                 _uiState.update { 
                     it.copy(
                         isLoading = false,
-                        error = e.message ?: "Gagal memuat dashboard"
+                        error = uiError
                     )
                 }
             }
@@ -163,34 +181,4 @@ class HomeDashboardViewModel @Inject constructor(
         }
     }
 
-    // Helper functions for analytics calculations
-
-    private fun calculateAverageTransactions(weeklyRevenue: List<com.zatiaras.pos.feature.reports.domain.model.DailyRevenue>): Int {
-        if (weeklyRevenue.isEmpty()) return 0
-        // This is a simplified calculation - ideally we'd have transaction count per day
-        return weeklyRevenue.size
-    }
-
-    private fun calculatePeakHours(): String {
-        // Placeholder - would need hourly data to calculate this properly
-        return "10:00 - 14:00"
-    }
-
-    private fun calculateAverageOrderValue(stats: com.zatiaras.pos.feature.reports.domain.model.DashboardStats): Long {
-        if (stats.todayTransactions == 0) return 0L
-        return stats.todayRevenue / stats.todayTransactions
-    }
-
-    private fun calculateAverageItemsPerTransaction(stats: com.zatiaras.pos.feature.reports.domain.model.DashboardStats): Double {
-        if (stats.todayTransactions == 0) return 0.0
-        return stats.todayItemsSold.toDouble() / stats.todayTransactions
-    }
-
-    private fun calculateBusiestDay(weeklyRevenue: List<com.zatiaras.pos.feature.reports.domain.model.DailyRevenue>): String {
-        if (weeklyRevenue.isEmpty()) return "-"
-        val busiestDay = weeklyRevenue.maxByOrNull { it.revenue }
-        return busiestDay?.let {
-            java.text.SimpleDateFormat("EEEE", java.util.Locale("id", "ID")).format(java.util.Date(it.date))
-        } ?: "-"
-    }
 }

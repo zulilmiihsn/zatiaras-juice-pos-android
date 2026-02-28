@@ -5,7 +5,10 @@ import android.content.Intent
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.zatiaras.pos.feature.reports.domain.model.ReportPeriod
-import com.zatiaras.pos.feature.reports.domain.repository.ReportRepository
+import com.zatiaras.pos.core.domain.util.LocaleUtils
+import com.zatiaras.pos.feature.reports.domain.usecase.GenerateProfitLossReportUseCase
+import com.zatiaras.pos.core.data.repository.AppSettingsRepository
+import com.zatiaras.pos.feature.printer.data.preferences.PrinterPreferences
 import com.zatiaras.pos.feature.reports.export.CsvExportService
 import com.zatiaras.pos.feature.reports.export.PdfExportService
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -16,6 +19,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -28,9 +32,11 @@ import javax.inject.Inject
 
 @HiltViewModel
 class PnlReportViewModel @Inject constructor(
-    private val reportRepository: ReportRepository,
+    private val generateProfitLossReportUseCase: GenerateProfitLossReportUseCase,
     private val pdfExportService: PdfExportService,
-    private val csvExportService: CsvExportService
+    private val csvExportService: CsvExportService,
+    private val appSettingsRepository: AppSettingsRepository,
+    private val printerPreferences: PrinterPreferences
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PnlReportUiState())
@@ -40,12 +46,25 @@ class PnlReportViewModel @Inject constructor(
     private val _exportEvent = MutableSharedFlow<ExportEvent>()
     val exportEvent: SharedFlow<ExportEvent> = _exportEvent.asSharedFlow()
 
-    private val dateFormat = SimpleDateFormat("dd MMM yyyy", Locale("id", "ID"))
+    private val dateFormat = SimpleDateFormat("dd MMM yyyy", LocaleUtils.LOCALE_ID)
 
     init {
         // Initialize dates for default period
         initializeDatesForDefaultPeriod()
-        loadReport()
+        loadTaxPercentageAndReport()
+    }
+
+    /**
+     * Observe settings from repository and load the report.
+     */
+    private fun loadTaxPercentageAndReport() {
+        viewModelScope.launch {
+            appSettingsRepository.observeSettings().collectLatest { settings ->
+                val taxPercentage = settings?.defaultTaxPercentage ?: 0.5
+                _uiState.update { it.copy(taxPercentage = taxPercentage) }
+                loadReport()
+            }
+        }
     }
     
     /**
@@ -112,12 +131,9 @@ class PnlReportViewModel @Inject constructor(
         }
     }
 
-    fun showDatePicker(isStartDate: Boolean) {
+    fun showDatePicker() {
         _uiState.update { 
-            it.copy(
-                showDatePicker = true,
-                isSelectingStartDate = isStartDate
-            )
+            it.copy(showDatePicker = true)
         }
     }
 
@@ -125,31 +141,18 @@ class PnlReportViewModel @Inject constructor(
         _uiState.update { it.copy(showDatePicker = false) }
     }
 
-    fun setCustomDate(timestamp: Long) {
-        _uiState.update { state ->
-            if (state.isSelectingStartDate) {
-                state.copy(
-                    customStartDate = timestamp,
-                    showDatePicker = false,
-                    // Set to CUSTOM since user is manually selecting dates
-                    selectedPeriod = ReportPeriod.CUSTOM
-                )
-            } else {
-                state.copy(
-                    customEndDate = timestamp,
-                    showDatePicker = false,
-                    // Set to CUSTOM since user is manually selecting dates
-                    selectedPeriod = ReportPeriod.CUSTOM
-                )
-            }
+    fun setCustomRange(start: Long, end: Long) {
+        _uiState.update { 
+            it.copy(
+                customStartDate = start,
+                customEndDate = end,
+                showDatePicker = false,
+                selectedPeriod = ReportPeriod.CUSTOM
+            )
         }
-        
-        // Load report if both dates are set
-        val state = _uiState.value
-        if (state.customStartDate != null && state.customEndDate != null) {
-            loadReport()
-        }
+        loadReport()
     }
+
 
     fun loadReport() {
         viewModelScope.launch {
@@ -157,8 +160,10 @@ class PnlReportViewModel @Inject constructor(
             
             try {
                 val (startDate, endDate) = calculateDateRange()
+                val currentTaxPercentage = _uiState.value.taxPercentage
                 
-                val report = reportRepository.getProfitLossReport(startDate, endDate)
+                val reportResult = generateProfitLossReportUseCase(startDate, endDate, currentTaxPercentage)
+                val report = reportResult.getOrNull()
                 
                 _uiState.update { 
                     it.copy(
@@ -167,7 +172,7 @@ class PnlReportViewModel @Inject constructor(
                     )
                 }
                 
-                Timber.d("P&L Report loaded: ${report.transactionCount} transactions")
+                Timber.d("P&L Report loaded: ${report?.transactionCount ?: 0} transactions")
             } catch (e: Exception) {
                 Timber.e(e, "Failed to load P&L report")
                 _uiState.update { 
@@ -194,14 +199,16 @@ class PnlReportViewModel @Inject constructor(
                 val periodName = getPeriodDisplayName()
                 
                 val result = withContext(Dispatchers.IO) {
-                    pdfExportService.exportToPdf(context, report, periodName)
+                    val storeLogoUri = printerPreferences.getStoreLogo()
+                    pdfExportService.exportToPdf(context, report, periodName, storeLogoUri)
                 }
                 
                 result.fold(
                     onSuccess = { uri ->
                         // Get the file name from the URI
                         val fileName = "Laporan_Laba_Rugi_${System.currentTimeMillis()}.pdf"
-                        _exportEvent.emit(ExportEvent.SavedToDownloads(fileName, uri.toString()))
+                        val intent = pdfExportService.createShareIntent(uri)
+                        _exportEvent.emit(ExportEvent.ShareFile(intent, fileName))
                     },
                     onFailure = { error ->
                         _exportEvent.emit(ExportEvent.Error("Gagal export PDF: ${error.message}"))
@@ -233,7 +240,8 @@ class PnlReportViewModel @Inject constructor(
                 result.fold(
                     onSuccess = { uri ->
                         val fileName = "Laporan_Laba_Rugi_${System.currentTimeMillis()}.csv"
-                        _exportEvent.emit(ExportEvent.SavedToDownloads(fileName, uri.toString()))
+                        val intent = csvExportService.createShareIntent(uri)
+                        _exportEvent.emit(ExportEvent.ShareFile(intent, fileName))
                     },
                     onFailure = { error ->
                         _exportEvent.emit(ExportEvent.Error("Gagal export CSV: ${error.message}"))

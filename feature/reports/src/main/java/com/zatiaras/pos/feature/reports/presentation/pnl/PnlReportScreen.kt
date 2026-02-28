@@ -52,6 +52,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import com.zatiaras.pos.feature.reports.R
 import androidx.compose.ui.draw.clip
 import com.zatiaras.pos.core.ui.theme.PdfRed
 import androidx.compose.ui.platform.LocalContext
@@ -69,6 +71,12 @@ import com.zatiaras.pos.feature.reports.presentation.components.PnlBreakdownCard
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 
 @Composable
 fun PnlReportRoute(
@@ -81,7 +89,7 @@ fun PnlReportRoute(
     AccessControlGate(
         accessControlManager = accessControlManager,
         route = LockableRoute.PNL_REPORT.route,
-        screenName = "Laporan Laba Rugi",
+        screenName = stringResource(R.string.pnl_title),
         onAccessDenied = { onNavigateBack?.invoke() }
     ) {
         PnlReportContent(
@@ -122,16 +130,18 @@ private fun PnlReportContent(
         viewModel.exportEvent.collect { event ->
             when (event) {
                 is ExportEvent.SavedToDownloads -> {
+                    val message = context.getString(R.string.export_saved, event.fileName)
                     Toast.makeText(
                         context, 
-                        "File tersimpan: ${event.fileName}", 
+                        message, 
                         Toast.LENGTH_LONG
                     ).show()
                 }
                 is ExportEvent.ShareFile -> {
+                    val prefix = context.getString(R.string.export_share_prefix, event.fileName)
                     val chooserIntent = android.content.Intent.createChooser(
                         event.intent,
-                        "Bagikan ${event.fileName}"
+                        prefix
                     )
                     context.startActivity(chooserIntent)
                 }
@@ -142,6 +152,34 @@ private fun PnlReportContent(
         }
     }
     
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            Toast.makeText(context, "Izin diberikan, silakan tekan Export sekali lagi", Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(context, "Izin ditolak, file tidak otomatis tersimpan. Silakan simpan manual dari menu Share", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    val checkAndExportPdf = {
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P && 
+            ContextCompat.checkSelfPermission(context, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            permissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+        } else {
+            viewModel.exportToPdf(context)
+        }
+    }
+
+    val checkAndExportCsv = {
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P && 
+            ContextCompat.checkSelfPermission(context, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            permissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+        } else {
+            viewModel.exportToCsv(context)
+        }
+    }
+
     PnlReportScreen(
         uiState = uiState,
         onNavigateBack = onNavigateBack,
@@ -150,9 +188,9 @@ private fun PnlReportContent(
         onRefresh = viewModel::loadReport,
         onShowDatePicker = viewModel::showDatePicker,
         onHideDatePicker = viewModel::hideDatePicker,
-        onDateSelected = viewModel::setCustomDate,
-        onExportPdf = { viewModel.exportToPdf(context) },
-        onExportCsv = { viewModel.exportToCsv(context) }
+        onRangeSelected = viewModel::setCustomRange,
+        onExportPdf = checkAndExportPdf,
+        onExportCsv = checkAndExportCsv
     )
 }
 
@@ -164,51 +202,22 @@ fun PnlReportScreen(
     onNavigateToChat: () -> Unit = {},
     onPeriodSelected: (ReportPeriod) -> Unit,
     onRefresh: () -> Unit,
-    onShowDatePicker: (Boolean) -> Unit,
+    onShowDatePicker: () -> Unit,
     onHideDatePicker: () -> Unit,
-    onDateSelected: (Long) -> Unit,
+    onRangeSelected: (Long, Long) -> Unit,
     onExportPdf: () -> Unit = {},
     onExportCsv: () -> Unit = {}
 ) {
     val pullToRefreshState = rememberPullToRefreshState()
     
-    // Date picker dialog
+    // Date range picker dialog
     if (uiState.showDatePicker) {
-        val datePickerState = rememberDatePickerState(
-            initialSelectedDateMillis = if (uiState.isSelectingStartDate) {
-                uiState.customStartDate ?: System.currentTimeMillis()
-            } else {
-                uiState.customEndDate ?: System.currentTimeMillis()
+        com.zatiaras.pos.core.ui.components.DateRangePickerDialog(
+            onDismiss = onHideDatePicker,
+            onConfirm = { start, end ->
+                onRangeSelected(start, end)
             }
         )
-        
-        DatePickerDialog(
-            onDismissRequest = onHideDatePicker,
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        datePickerState.selectedDateMillis?.let { onDateSelected(it) }
-                    }
-                ) {
-                    Text("OK")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = onHideDatePicker) {
-                    Text("Batal")
-                }
-            }
-        ) {
-            DatePicker(
-                state = datePickerState,
-                title = {
-                    Text(
-                        text = if (uiState.isSelectingStartDate) "Pilih Tanggal Mulai" else "Pilih Tanggal Akhir",
-                        modifier = Modifier.padding(start = 24.dp, top = 16.dp)
-                    )
-                }
-            )
-        }
     }
     
     Scaffold(
@@ -216,7 +225,7 @@ fun PnlReportScreen(
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        text = "Laporan",
+                        text = stringResource(R.string.reports_title),
                         fontWeight = FontWeight.Bold
                     )
                 },
@@ -225,7 +234,7 @@ fun PnlReportScreen(
                         IconButton(onClick = onNavigateBack) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Kembali"
+                                contentDescription = stringResource(R.string.reports_back)
                             )
                         }
                     }
@@ -238,7 +247,7 @@ fun PnlReportScreen(
                 containerColor = MaterialTheme.colorScheme.primaryContainer,
                 contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
                 icon = { Icon(Icons.Default.AutoAwesome, contentDescription = null) },
-                text = { Text("Tanya AI") }
+                text = { Text(stringResource(R.string.pnl_ask_ai)) }
             )
         }
     ) { paddingValues ->
@@ -262,11 +271,12 @@ fun PnlReportScreen(
                         startDate = uiState.customStartDate,
                         endDate = uiState.customEndDate,
                         activePeriod = if (uiState.selectedPeriod != ReportPeriod.CUSTOM) uiState.selectedPeriod else null,
-                        onStartDateClick = { onShowDatePicker(true) },
-                        onEndDateClick = { onShowDatePicker(false) },
+                        onStartDateClick = onShowDatePicker,
+                        onEndDateClick = onShowDatePicker,
                         onQuickPeriodSelected = onPeriodSelected
                     )
                 }
+
                 
                 // Loading State
                 if (uiState.isLoading && uiState.report == null) {
@@ -343,7 +353,7 @@ private fun ExportSection(
     
     Column(modifier = modifier.fillMaxWidth()) {
         Text(
-            text = "Export Laporan",
+            text = stringResource(R.string.export_title),
             style = MaterialTheme.typography.labelLarge,
             fontWeight = FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -365,7 +375,7 @@ private fun ExportSection(
                         strokeWidth = 2.dp
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Mengexport...")
+                    Text(stringResource(R.string.export_exporting))
                 } else {
                     Icon(
                         imageVector = Icons.Default.PictureAsPdf,
@@ -373,7 +383,7 @@ private fun ExportSection(
                         modifier = Modifier.size(18.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Export Laporan")
+                    Text(stringResource(R.string.export_title))
                 }
             }
             
@@ -392,7 +402,7 @@ private fun ExportSection(
                                 modifier = Modifier.size(18.dp)
                             )
                             Spacer(modifier = Modifier.width(10.dp))
-                            Text("Export PDF")
+                            Text(stringResource(R.string.export_pdf))
                         }
                     },
                     onClick = {
@@ -410,7 +420,7 @@ private fun ExportSection(
                                 modifier = Modifier.size(18.dp)
                             )
                             Spacer(modifier = Modifier.width(10.dp))
-                            Text("Export Excel/CSV")
+                            Text(stringResource(R.string.export_csv))
                         }
                     },
                     onClick = {
@@ -424,7 +434,7 @@ private fun ExportSection(
         Spacer(modifier = Modifier.height(4.dp))
         
         Text(
-            text = "File akan tersimpan di folder Download",
+            text = stringResource(R.string.export_save_desc),
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
         )

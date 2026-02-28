@@ -4,8 +4,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -17,11 +19,15 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import com.zatiaras.pos.feature.reports.R
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.zatiaras.pos.core.ui.theme.ErrorRed
+import com.zatiaras.pos.core.ui.theme.SuccessGreen
 import com.zatiaras.pos.core.ui.util.CurrencyFormatter
 
 /**
@@ -52,7 +58,7 @@ fun StatisticsSection(
             modifier = Modifier.padding(20.dp)
         ) {
             Text(
-                text = "Statistik",
+                text = stringResource(R.string.reports_stats),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold
             )
@@ -61,19 +67,25 @@ fun StatisticsSection(
             
             // Row 1: Rata-rata transaksi & Jam paling ramai
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(IntrinsicSize.Min),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 StatItem(
                     value = if (averageTransactions > 0) averageTransactions.toString() else null,
-                    label = "Rata-rata transaksi",
-                    sublabel = "per hari",
-                    modifier = Modifier.weight(1f)
+                    label = stringResource(R.string.reports_avg_items),
+                    sublabel = stringResource(R.string.reports_per_day),
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
                 )
                 StatItem(
                     value = if (peakHours != "-") peakHours else null,
-                    label = "Jam paling ramai",
-                    modifier = Modifier.weight(1f)
+                    label = stringResource(R.string.reports_peak_hour),
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
                 )
             }
             
@@ -81,19 +93,25 @@ fun StatisticsSection(
             
             // Row 2: AOV & Items per transaksi
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(IntrinsicSize.Min),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 StatItem(
                     value = if (averageOrderValue > 0) formatCurrency.format(averageOrderValue) else null,
-                    label = "Rata-rata nilai",
-                    sublabel = "per transaksi",
-                    modifier = Modifier.weight(1f)
+                    label = stringResource(R.string.reports_avg_value_label),
+                    sublabel = stringResource(R.string.reports_per_transaction),
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
                 )
                 StatItem(
                     value = if (averageItemsPerTransaction > 0) String.format("%.1f", averageItemsPerTransaction) else null,
-                    label = "Item per transaksi",
-                    modifier = Modifier.weight(1f)
+                    label = stringResource(R.string.reports_avg_items_label),
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
                 )
             }
             
@@ -101,7 +119,9 @@ fun StatisticsSection(
             
             // Row 3: Growth & Busiest day
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(IntrinsicSize.Min),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 StatItem(
@@ -109,18 +129,22 @@ fun StatisticsSection(
                         val sign = if (it >= 0) "+" else ""
                         "$sign${String.format("%.1f", it)}%"
                     },
-                    label = "Pertumbuhan",
-                    sublabel = "vs kemarin",
+                    label = stringResource(R.string.reports_growth_label),
+                    sublabel = stringResource(R.string.reports_vs_yesterday),
                     valueColor = growthPercent?.let { 
-                        if (it >= 0) Color(0xFF10B981) else Color(0xFFEF4444) 
+                        if (it >= 0) SuccessGreen else ErrorRed 
                     },
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
                 )
                 StatItem(
                     value = if (busiestDay != "-") busiestDay else null,
-                    label = "Hari paling ramai",
-                    sublabel = "minggu ini",
-                    modifier = Modifier.weight(1f)
+                    label = stringResource(R.string.reports_peak_day),
+                    sublabel = stringResource(R.string.reports_this_week),
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
                 )
             }
         }
@@ -139,6 +163,7 @@ private fun StatItem(
         modifier = modifier
             .clip(RoundedCornerShape(12.dp))
             .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+            .fillMaxHeight()
             .padding(horizontal = 12.dp, vertical = 16.dp),
         contentAlignment = Alignment.Center
     ) {
@@ -159,7 +184,7 @@ private fun StatItem(
             } else {
                 // No data - show placeholder
                 Text(
-                    text = "Belum ada",
+                    text = stringResource(R.string.reports_no_data),
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
