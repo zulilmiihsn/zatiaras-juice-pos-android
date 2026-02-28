@@ -14,6 +14,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import com.zatiaras.pos.feature.auth.R
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -43,6 +45,7 @@ fun AboutScreen(
     onNavigateBack: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
+    @Suppress("UNUSED_VARIABLE")
     val uiState by viewModel.uiState.collectAsState()
 
     Scaffold(
@@ -50,7 +53,7 @@ fun AboutScreen(
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        text = "Tentang",
+                        text = stringResource(R.string.about_title),
                         fontWeight = FontWeight.Bold
                     )
                 },
@@ -58,7 +61,7 @@ fun AboutScreen(
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Kembali"
+                            contentDescription = stringResource(R.string.auth_back)
                         )
                     }
                 },
@@ -111,7 +114,7 @@ fun AboutScreen(
                         ) {
                             Image(
                                 painter = painterResource(id = CoreUiR.drawable.zatiaras_logo),
-                                contentDescription = "Zatiaras Juice Logo",
+                                contentDescription = stringResource(R.string.brand_logo_content_desc),
                                 modifier = Modifier.size(80.dp)
                             )
                         }
@@ -120,14 +123,14 @@ fun AboutScreen(
 
                         // App Name
                         Text(
-                            text = "ZatiarasPOS",
+                            text = stringResource(R.string.auth_title),
                             style = MaterialTheme.typography.headlineMedium,
                             fontWeight = FontWeight.Bold,
                             color = Color.White
                         )
 
                         Text(
-                            text = "Point of Sale System",
+                            text = stringResource(R.string.about_system_pos),
                             style = MaterialTheme.typography.bodyMedium,
                             color = Color.White.copy(alpha = 0.8f)
                         )
@@ -142,7 +145,7 @@ fun AboutScreen(
                                 .padding(horizontal = 16.dp, vertical = 6.dp)
                         ) {
                             Text(
-                                text = "v1.0.0",
+                                text = stringResource(R.string.about_version_badge, "1.0"),
                                 style = MaterialTheme.typography.labelLarge,
                                 fontWeight = FontWeight.SemiBold,
                                 color = Color.White
@@ -156,8 +159,8 @@ fun AboutScreen(
 
             // Section Header
             SectionHeader(
-                title = "📋 Informasi Akun",
-                subtitle = "Detail akun yang sedang login"
+                title = stringResource(R.string.about_account_info),
+                subtitle = stringResource(R.string.about_account_detail)
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -166,38 +169,16 @@ fun AboutScreen(
             AboutInfoCard(
                 icon = Icons.Outlined.Store,
                 iconColor = BranchIconColor,
-                label = "Cabang",
-                value = uiState.branchName
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            AboutInfoCard(
-                icon = Icons.Outlined.Person,
-                iconColor = UserIconColor,
-                label = "Pengguna",
-                value = uiState.userName.ifEmpty { "Tidak diketahui" }
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            AboutInfoCard(
-                icon = Icons.Outlined.Badge,
-                iconColor = RoleIconColor,
-                label = "Role",
-                value = when (uiState.userRole.lowercase()) {
-                    "owner", "pemilik" -> "👑 Pemilik"
-                    "admin" -> "🔧 Admin"
-                    else -> "💼 Kasir"
-                }
+                label = stringResource(R.string.about_branch_label),
+                value = stringResource(R.string.about_branch_value)
             )
 
             Spacer(modifier = Modifier.height(24.dp))
 
             // Section Header for App Info
             SectionHeader(
-                title = "📱 Info Aplikasi", 
-                subtitle = "Versi dan detail teknis"
+                title = stringResource(R.string.about_app_info), 
+                subtitle = stringResource(R.string.about_version_detail)
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -205,17 +186,8 @@ fun AboutScreen(
             AboutInfoCard(
                 icon = Icons.Outlined.Info,
                 iconColor = VersionIconColor,
-                label = "Versi Aplikasi",
-                value = "1.0.0 (Build 1)"
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            AboutInfoCard(
-                icon = Icons.Outlined.Code,
-                iconColor = SupportIconColor,
-                label = "Platform",
-                value = "Android (Kotlin/Jetpack Compose)"
+                label = stringResource(R.string.about_version_label),
+                value = stringResource(R.string.about_version_value)
             )
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -235,7 +207,7 @@ fun AboutScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "Made with 💖 in Indonesia",
+                        text = stringResource(R.string.about_made_in),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -243,14 +215,14 @@ fun AboutScreen(
                     Spacer(modifier = Modifier.height(8.dp))
                     
                     Text(
-                        text = "© 2024 Zatiaras",
+                        text = stringResource(R.string.about_copyright_text),
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
 
                     Text(
-                        text = "All rights reserved",
+                        text = stringResource(R.string.about_copyright),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                     )

@@ -7,13 +7,15 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Backspace
+import androidx.compose.material.icons.automirrored.filled.Backspace
 import androidx.compose.material.icons.filled.Fingerprint
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import com.zatiaras.pos.feature.auth.R
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -111,7 +113,7 @@ fun AppLockScreen(
                 Spacer(modifier = Modifier.height(dimensions.spacingL))
 
                 Text(
-                    text = "ZatiarasPOS",
+                    text = stringResource(R.string.auth_title),
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onBackground
@@ -120,7 +122,7 @@ fun AppLockScreen(
                 Spacer(modifier = Modifier.height(dimensions.spacingXS))
 
                 Text(
-                    text = if (uiState.showPinInput) "Masukkan PIN" else "Buka Kunci Aplikasi",
+                    text = if (uiState.showPinInput) stringResource(R.string.app_lock_enter_pin) else stringResource(R.string.app_lock_title),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -175,7 +177,7 @@ fun AppLockScreen(
                         ) {
                             Icon(
                                 imageVector = Icons.Filled.Fingerprint,
-                                contentDescription = "Biometric",
+                                contentDescription = stringResource(R.string.app_lock_biometric),
                                 modifier = Modifier.size(48.dp)
                             )
                         }
@@ -183,7 +185,7 @@ fun AppLockScreen(
                         Spacer(modifier = Modifier.height(dimensions.spacingM))
 
                         Text(
-                            text = "Sentuh untuk membuka",
+                            text = stringResource(R.string.app_lock_touch),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -251,7 +253,7 @@ private fun PinKeypad(
                                     content = {
                                         Icon(
                                             imageVector = Icons.Filled.Fingerprint,
-                                            contentDescription = "Biometric",
+                                            contentDescription = stringResource(R.string.app_lock_biometric),
                                             modifier = Modifier.size(28.dp)
                                         )
                                     }
@@ -265,8 +267,8 @@ private fun PinKeypad(
                                 onClick = onBackspaceClick,
                                 content = {
                                     Icon(
-                                        imageVector = Icons.Filled.Backspace,
-                                        contentDescription = "Delete",
+                                        imageVector = Icons.AutoMirrored.Filled.Backspace,
+                                        contentDescription = stringResource(R.string.auth_delete),
                                         modifier = Modifier.size(28.dp)
                                     )
                                 }

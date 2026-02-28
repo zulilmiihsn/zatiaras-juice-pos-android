@@ -1,16 +1,18 @@
 package com.zatiaras.pos.feature.pos.presentation.checkout
 
-import androidx.lifecycle.SavedStateHandle
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.zatiaras.pos.core.domain.Result
 import com.zatiaras.pos.core.domain.onFailure
 import com.zatiaras.pos.core.domain.onSuccess
+import com.zatiaras.pos.feature.pos.R
 import com.zatiaras.pos.feature.pos.domain.model.Cart
 import com.zatiaras.pos.feature.pos.domain.model.PaymentMethod
 import com.zatiaras.pos.feature.pos.domain.repository.TransactionRepository
 import com.zatiaras.pos.feature.pos.presentation.CheckoutEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -30,7 +32,8 @@ import javax.inject.Inject
 @HiltViewModel
 class CheckoutViewModel @Inject constructor(
     private val transactionRepository: TransactionRepository,
-    savedStateHandle: SavedStateHandle
+    private val calculateCheckoutTotalsUseCase: com.zatiaras.pos.feature.pos.domain.usecase.CalculateCheckoutTotalsUseCase,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<CheckoutUiState>(CheckoutUiState.Loading)
@@ -69,28 +72,25 @@ class CheckoutViewModel @Inject constructor(
             currentState.customerName
         } else ""
         
-        val subtotal = cart.subtotal
-        val discountAmount = (subtotal * discountPercent / 100).toLong()
-        val afterDiscount = subtotal - discountAmount
-        val taxAmount = (afterDiscount * taxPercent / 100).toLong()
-        val grandTotal = afterDiscount + taxAmount
-        
-        val paid = amountPaid.toLongOrNull() ?: 0
-        val changeAmount = if (paymentMethod == PaymentMethod.CASH && paid > grandTotal) {
-            paid - grandTotal
-        } else 0
+        val result = calculateCheckoutTotalsUseCase(
+            subtotal = cart.subtotal,
+            discountPercent = discountPercent,
+            taxPercent = taxPercent,
+            amountPaidStr = amountPaid,
+            paymentMethod = paymentMethod
+        )
         
         _uiState.value = CheckoutUiState.Ready(
             cart = cart,
-            subtotal = subtotal,
+            subtotal = result.subtotal,
             discountPercent = discountPercent,
-            discountAmount = discountAmount,
+            discountAmount = result.discountAmount,
             taxPercent = taxPercent,
-            taxAmount = taxAmount,
-            grandTotal = grandTotal,
+            taxAmount = result.taxAmount,
+            grandTotal = result.grandTotal,
             selectedPaymentMethod = paymentMethod,
             amountPaid = amountPaid,
-            changeAmount = changeAmount,
+            changeAmount = result.changeAmount,
             notes = notes,
             customerName = customerName
         )
@@ -137,6 +137,10 @@ class CheckoutViewModel @Inject constructor(
                 confirmPayment(currentState)
             }
             
+            is CheckoutEvent.DismissError -> {
+                _uiState.value = currentState.copy(paymentError = null)
+            }
+            
             is CheckoutEvent.CancelCheckout -> {
                 // Handled by navigation
             }
@@ -146,7 +150,7 @@ class CheckoutViewModel @Inject constructor(
     private fun confirmPayment(state: CheckoutUiState.Ready) {
         if (!state.canComplete) {
             _uiState.value = state.copy(
-                paymentError = "Jumlah bayar kurang dari total"
+                paymentError = context.getString(R.string.checkout_error_insufficient_amount)
             )
             return
         }
@@ -174,20 +178,35 @@ class CheckoutViewModel @Inject constructor(
                 Timber.e(error, "Failed to complete transaction")
                 _uiState.value = state.copy(
                     isProcessing = false,
-                    paymentError = error?.message ?: "Gagal menyimpan transaksi"
+                    paymentError = error?.message ?: context.getString(R.string.checkout_error_save_failed)
                 )
             }
         }
     }
     
     /**
-     * Quick amount buttons for common denominations.
+     * Quick amount buttons for common denominations (Additive).
+     * e.g. pressing 20,000 when current is 50,000 makes it 70,000.
      */
     fun setQuickAmount(amount: Long) {
         val currentState = _uiState.value
         if (currentState !is CheckoutUiState.Ready) return
         
-        _uiState.value = currentState.copy(amountPaid = amount.toString())
+        val currentAmount = currentState.amountPaid.filter { it.isDigit() }.toLongOrNull() ?: 0L
+        val newAmount = currentAmount + amount
+        
+        _uiState.value = currentState.copy(amountPaid = newAmount.toString())
+        calculateAndUpdateState()
+    }
+    
+    /**
+     * Resets the amount paid to empty.
+     */
+    fun clearAmount() {
+        val currentState = _uiState.value
+        if (currentState !is CheckoutUiState.Ready) return
+        
+        _uiState.value = currentState.copy(amountPaid = "")
         calculateAndUpdateState()
     }
     

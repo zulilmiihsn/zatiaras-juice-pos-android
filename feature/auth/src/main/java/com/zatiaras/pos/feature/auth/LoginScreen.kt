@@ -39,6 +39,7 @@ import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
@@ -69,6 +70,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.zatiaras.pos.core.ui.theme.LocalDimensions
+import com.zatiaras.pos.core.ui.util.CurrencyFormatter
 import com.zatiaras.pos.feature.auth.R
 import com.zatiaras.pos.core.ui.R as CoreUiR
 
@@ -93,8 +95,14 @@ fun LoginRoute(
             onLoginSuccess()
             viewModel.resetState()
         }
-        if (uiState is AuthUiState.Error) {
-            snackbarHostState.showSnackbar((uiState as AuthUiState.Error).message)
+    }
+    
+    // Logic to show error snackbar
+    val errorState = uiState as? AuthUiState.Error
+    if (errorState != null) {
+        val errorMessage = errorState.message.asString()
+        LaunchedEffect(errorState) {
+            snackbarHostState.showSnackbar(errorMessage)
             viewModel.resetState()
         }
     }
@@ -112,7 +120,7 @@ fun LoginRoute(
 @Composable
 fun LoginScreen(
     uiState: AuthUiState,
-    syncStatus: String?,
+    syncStatus: com.zatiaras.pos.core.ui.util.UiText?,
     onLoginClick: (String, String, String) -> Unit,
     onResyncClick: () -> Unit = {},
     snackbarHostState: SnackbarHostState
@@ -123,16 +131,15 @@ fun LoginScreen(
     
     // Branch Selection State
     var branchExpanded by remember { mutableStateOf(false) }
-    var selectedBranch by remember { mutableStateOf<String?>(null) }
+    var selectedBranch by remember { mutableStateOf<String?>("samarinda_juanda") }
     val branches = listOf(
-        "Samarinda" to stringResource(R.string.auth_branch_samarinda),
-        "Berau" to stringResource(R.string.auth_branch_berau),
-        "Balikpapan" to stringResource(R.string.auth_branch_balikpapan),
-        "Samarinda 2" to stringResource(R.string.auth_branch_samarinda2)
+        "samarinda_juanda" to stringResource(R.string.auth_branch_samarinda_juanda),
+        "samarinda_slamet" to stringResource(R.string.auth_branch_samarinda_slamet),
+        "berau" to stringResource(R.string.auth_branch_berau)
     )
 
     Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) }
+        snackbarHost = { com.zatiaras.pos.core.ui.components.ZatSnackbarHost(snackbarHostState) }
     ) { padding ->
         Box(
             modifier = Modifier
@@ -148,7 +155,6 @@ fun LoginScreen(
                 )
                 .padding(padding)
         ) {
-            val dimensions = LocalDimensions.current
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -173,7 +179,7 @@ fun LoginScreen(
                 ) {
                     Image(
                         painter = painterResource(id = CoreUiR.drawable.zatiaras_logo),
-                        contentDescription = "Zatiaras Juice Logo",
+                        contentDescription = stringResource(R.string.brand_logo_content_desc),
                         modifier = Modifier.size(120.dp)
                     )
                 }
@@ -189,7 +195,7 @@ fun LoginScreen(
                 )
                 
                 Text(
-                    text = "Point of Sale",
+                    text = stringResource(R.string.auth_pos_title),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -199,7 +205,7 @@ fun LoginScreen(
                 // Sync Status Badge - Compact and stylish
                 syncStatus?.let { status ->
                     SyncStatusBadge(
-                        status = status,
+                        statusText = status,
                         isSyncing = uiState is AuthUiState.Syncing,
                         onResyncClick = onResyncClick
                     )
@@ -247,7 +253,9 @@ fun LoginScreen(
                                     cursorColor = PrimaryPink
                                 ),
                                 shape = RoundedCornerShape(16.dp),
-                                modifier = Modifier.fillMaxWidth().menuAnchor()
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .menuAnchor(MenuAnchorType.PrimaryNotEditable)
                             )
 
                             ExposedDropdownMenu(
@@ -279,7 +287,7 @@ fun LoginScreen(
                         OutlinedTextField(
                             value = username,
                             onValueChange = { username = it },
-                            label = { Text("Username") },
+                            label = { Text(stringResource(R.string.auth_username)) },
                             leadingIcon = {
                                 Icon(
                                     Icons.Default.Person,
@@ -315,7 +323,7 @@ fun LoginScreen(
                                 IconButton(onClick = { passwordVisible = !passwordVisible }) {
                                     Icon(
                                         imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                        contentDescription = if (passwordVisible) "Hide password" else "Show password",
+                                        contentDescription = if (passwordVisible) stringResource(R.string.auth_hide_password) else stringResource(R.string.auth_show_password),
                                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
@@ -359,7 +367,7 @@ fun LoginScreen(
                             )
                             Spacer(modifier = Modifier.width(12.dp))
                             Text(
-                                if (uiState is AuthUiState.Syncing) "Sinkronisasi..." else "Masuk...",
+                                if (uiState is AuthUiState.Syncing) stringResource(R.string.auth_sync_progress) else stringResource(R.string.auth_login_progress),
                                 fontWeight = FontWeight.Bold
                             )
                         }
@@ -402,10 +410,11 @@ fun LoginScreen(
  */
 @Composable
 private fun SyncStatusBadge(
-    status: String,
+    statusText: com.zatiaras.pos.core.ui.util.UiText,
     isSyncing: Boolean,
     onResyncClick: () -> Unit
 ) {
+    val status = statusText.asString()
     val isOffline = status.contains("offline", ignoreCase = true) || 
                     status.contains("koneksi", ignoreCase = true)
     

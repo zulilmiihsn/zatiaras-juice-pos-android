@@ -6,13 +6,15 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Backspace
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Backspace
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import com.zatiaras.pos.feature.auth.R
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -47,6 +49,7 @@ fun OwnerPinSetupScreen(
     var hasError by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var isPinSet by remember { mutableStateOf(false) }
+    val pinMismatchMessage = stringResource(R.string.pin_setup_mismatch)
     
     // Handle PIN set success
     LaunchedEffect(isPinSet) {
@@ -62,16 +65,16 @@ fun OwnerPinSetupScreen(
                 title = { 
                     Text(
                         when (step) {
-                            OwnerPinSetupStep.ENTER_NEW_PIN -> if (uiState.ownerPinSet) "Ubah PIN Pemilik" else "Atur PIN Pemilik"
-                            OwnerPinSetupStep.CONFIRM_PIN -> "Konfirmasi PIN"
+                            OwnerPinSetupStep.ENTER_NEW_PIN -> if (uiState.ownerPinSet) stringResource(R.string.access_control_change_pin) else stringResource(R.string.access_control_set_new)
+                            OwnerPinSetupStep.CONFIRM_PIN -> stringResource(R.string.pin_setup_confirm)
                         }
                     ) 
                 },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
-                            imageVector = Icons.Filled.ArrowBack,
-                            contentDescription = "Kembali"
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.auth_back)
                         )
                     }
                 }
@@ -92,8 +95,8 @@ fun OwnerPinSetupScreen(
             // Instruction Text
             Text(
                 text = when (step) {
-                    OwnerPinSetupStep.ENTER_NEW_PIN -> "Masukkan PIN baru (4 digit)"
-                    OwnerPinSetupStep.CONFIRM_PIN -> "Masukkan ulang PIN untuk konfirmasi"
+                    OwnerPinSetupStep.ENTER_NEW_PIN -> stringResource(R.string.pin_setup_enter_new_4digit)
+                    OwnerPinSetupStep.CONFIRM_PIN -> stringResource(R.string.pin_setup_reenter_confirm)
                 },
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -139,7 +142,7 @@ fun OwnerPinSetupScreen(
                                 tint = MaterialTheme.colorScheme.primary
                             )
                             Text(
-                                text = "PIN Pemilik berhasil diatur!",
+                                text = stringResource(R.string.owner_pin_set_success),
                                 color = MaterialTheme.colorScheme.primary,
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Medium
@@ -182,7 +185,7 @@ fun OwnerPinSetupScreen(
                                     } else {
                                         // PINs don't match
                                         hasError = true
-                                        errorMessage = "PIN tidak cocok"
+                                        errorMessage = pinMismatchMessage
                                         currentPin = ""
                                         // Reset after delay
                                         delay(1500)
@@ -265,8 +268,8 @@ private fun OwnerPinKeypad(
                                 onClick = onBackspaceClick,
                                 content = {
                                     Icon(
-                                        imageVector = Icons.Filled.Backspace,
-                                        contentDescription = "Delete",
+                                        imageVector = Icons.AutoMirrored.Filled.Backspace,
+                                        contentDescription = stringResource(R.string.auth_delete),
                                         modifier = Modifier.size(28.dp)
                                     )
                                 }

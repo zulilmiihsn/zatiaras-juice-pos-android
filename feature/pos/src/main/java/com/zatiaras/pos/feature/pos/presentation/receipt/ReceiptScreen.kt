@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Print
 import androidx.compose.material.icons.filled.PrintDisabled
@@ -26,18 +27,23 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -45,6 +51,8 @@ import com.zatiaras.pos.feature.pos.domain.model.PaymentMethod
 import com.zatiaras.pos.feature.pos.domain.model.Transaction
 import com.zatiaras.pos.feature.pos.domain.model.TransactionItem
 import com.zatiaras.pos.core.ui.util.CurrencyFormatter
+import com.zatiaras.pos.core.domain.util.LocaleUtils
+import com.zatiaras.pos.feature.pos.R
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -54,9 +62,11 @@ import com.zatiaras.pos.core.ui.theme.LocalDimensions
 /**
  * Receipt Preview Screen shown after successful transaction.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReceiptScreen(
     transaction: Transaction,
+    onNavigateBack: () -> Unit,
     onNewTransaction: () -> Unit,
     onPrintReceipt: () -> Unit,
     isPrinting: Boolean = false,
@@ -65,10 +75,32 @@ fun ReceiptScreen(
     modifier: Modifier = Modifier
 ) {
     val priceFormatter = CurrencyFormatter.getCurrencyFormatter()
-    val dateFormatter = SimpleDateFormat("dd MMM yyyy, HH:mm", Locale("id", "ID"))
+    val dateFormatter = SimpleDateFormat("dd MMM yyyy, HH:mm", LocaleUtils.LOCALE_ID)
     
     Scaffold(
-        modifier = modifier
+        modifier = modifier,
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = {
+                    Text(
+                        text = stringResource(R.string.pos_receipt_detail_title),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                },
+                navigationIcon = {
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.pos_back)
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background
+                )
+            )
+        }
     ) { paddingValues ->
         val dimensions = LocalDimensions.current
         LazyColumn(
@@ -106,7 +138,7 @@ fun ReceiptScreen(
                     Spacer(modifier = Modifier.height(16.dp))
                     
                     Text(
-                        text = "Transaksi Berhasil!",
+                        text = stringResource(R.string.checkout_success),
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold
                     )
@@ -137,7 +169,7 @@ fun ReceiptScreen(
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Text(
-                                text = "ZATIARAS",
+                                text = stringResource(R.string.pos_receipt_store_name_default),
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold
                             )
@@ -167,21 +199,24 @@ fun ReceiptScreen(
                         
                         // Totals
                         ReceiptTotalRow(
-                            label = "Subtotal",
+                            label = stringResource(R.string.checkout_subtotal),
                             value = priceFormatter.format(transaction.subtotal)
                         )
                         
                         if (transaction.discountAmount > 0) {
                             ReceiptTotalRow(
-                                label = "Diskon (${transaction.discountPercent.toInt()}%)",
-                                value = "-${priceFormatter.format(transaction.discountAmount)}",
+                                label = stringResource(R.string.checkout_discount, transaction.discountPercent.toInt()),
+                                value = stringResource(
+                                    R.string.pos_receipt_discount_value,
+                                    priceFormatter.format(transaction.discountAmount)
+                                ),
                                 isDiscount = true
                             )
                         }
                         
                         if (transaction.taxAmount > 0) {
                             ReceiptTotalRow(
-                                label = "PPN (${transaction.taxPercent.toInt()}%)",
+                                label = stringResource(R.string.checkout_tax, transaction.taxPercent.toInt()),
                                 value = priceFormatter.format(transaction.taxAmount)
                             )
                         }
@@ -189,7 +224,7 @@ fun ReceiptScreen(
                         Spacer(modifier = Modifier.height(8.dp))
                         
                         ReceiptTotalRow(
-                            label = "TOTAL",
+                            label = stringResource(R.string.pos_receipt_total_upper),
                             value = priceFormatter.format(transaction.grandTotal),
                             isBold = true,
                             isPrimary = true
@@ -201,31 +236,51 @@ fun ReceiptScreen(
                         
                         // Payment Info
                         ReceiptTotalRow(
-                            label = "Metode Bayar",
+                            label = stringResource(R.string.checkout_payment_method),
                             value = transaction.paymentMethod.displayName
                         )
                         
                         ReceiptTotalRow(
-                            label = "Dibayar",
+                            label = stringResource(R.string.pos_receipt_paid),
                             value = priceFormatter.format(transaction.amountPaid)
                         )
                         
                         if (transaction.paymentMethod == PaymentMethod.CASH && transaction.changeAmount > 0) {
                             ReceiptTotalRow(
-                                label = "Kembalian",
+                                label = stringResource(R.string.checkout_change),
                                 value = priceFormatter.format(transaction.changeAmount),
                                 isPrimary = true
                             )
                         }
                         
-                        // Notes
-                        if (!transaction.notes.isNullOrBlank()) {
+                        // Customer Name
+                        if (!transaction.customerName.isNullOrBlank()) {
                             Spacer(modifier = Modifier.height(16.dp))
                             DashedDivider()
                             Spacer(modifier = Modifier.height(16.dp))
                             
                             Text(
-                                text = "Catatan:",
+                                text = stringResource(R.string.pos_receipt_customer),
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = transaction.customerName,
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+
+                        // Notes
+                        if (!transaction.notes.isNullOrBlank()) {
+                            if (transaction.customerName.isNullOrBlank()) {
+                                Spacer(modifier = Modifier.height(16.dp))
+                                DashedDivider()
+                            }
+                            Spacer(modifier = Modifier.height(16.dp))
+                            
+                            Text(
+                                text = stringResource(R.string.pos_receipt_notes),
                                 style = MaterialTheme.typography.labelMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -243,7 +298,7 @@ fun ReceiptScreen(
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Text(
-                                text = "Terima kasih atas kunjungan Anda!",
+                                text = stringResource(R.string.pos_receipt_thanks),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 textAlign = TextAlign.Center
@@ -271,7 +326,7 @@ fun ReceiptScreen(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Printer: $printerName",
+                            text = stringResource(R.string.pos_receipt_printer, printerName),
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -302,9 +357,9 @@ fun ReceiptScreen(
                         }
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            if (isPrinting) "Mencetak..." 
-                            else if (isPrinterConnected) "Cetak Struk" 
-                            else "Setup Printer"
+                            if (isPrinting) stringResource(R.string.pos_receipt_printing)
+                            else if (isPrinterConnected) stringResource(R.string.checkout_print_receipt)
+                            else stringResource(R.string.pos_receipt_setup_printer)
                         )
                     }
                     
@@ -322,7 +377,7 @@ fun ReceiptScreen(
                             modifier = Modifier.size(20.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Transaksi Baru")
+                        Text(stringResource(R.string.checkout_new_transaction))
                     }
                 }
             }
@@ -350,7 +405,11 @@ private fun ReceiptItemRow(
                 style = MaterialTheme.typography.bodyMedium
             )
             Text(
-                text = "${item.quantity}x ${priceFormatter.format(item.productPrice)}",
+                text = stringResource(
+                    R.string.pos_receipt_item_qty_price,
+                    item.quantity,
+                    priceFormatter.format(item.productPrice)
+                ),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
