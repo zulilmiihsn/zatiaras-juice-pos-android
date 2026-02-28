@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.zatiaras.pos.core.data.remote.ImageUploader
 import com.zatiaras.pos.core.domain.model.Product
+import com.zatiaras.pos.core.domain.repository.AddOnRepository
 import com.zatiaras.pos.core.domain.repository.ProductRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -27,6 +28,7 @@ import javax.inject.Inject
 @HiltViewModel
 class ProductDetailViewModel @Inject constructor(
     private val productRepository: ProductRepository,
+    private val addOnRepository: AddOnRepository,
     private val imageUploader: ImageUploader,
     @ApplicationContext private val context: Context,
     savedStateHandle: SavedStateHandle
@@ -44,7 +46,9 @@ class ProductDetailViewModel @Inject constructor(
     private fun loadData() {
         viewModelScope.launch {
             try {
+                // Load categories and add-ons first
                 val categories = productRepository.getCategories().first()
+                val addOns = addOnRepository.observeActiveAddOns().first()
                 
                 if (productId != null) {
                     // Edit mode - load existing product
@@ -55,9 +59,12 @@ class ProductDetailViewModel @Inject constructor(
                             name = product.name,
                             price = product.price.toString(),
                             categoryId = product.category?.id,
+                            type = product.type,
+                            ekstraIds = product.ekstraIds.toSet(),
                             imageUrl = product.imageUrl,
                             description = product.description ?: "",
-                            categories = categories
+                            categories = categories,
+                            availableAddOns = addOns
                         )
                     } else {
                         _uiState.value = ProductDetailUiState.Error("Produk tidak ditemukan")
@@ -65,7 +72,8 @@ class ProductDetailViewModel @Inject constructor(
                 } else {
                     // Create mode - empty form
                     _uiState.value = ProductDetailUiState.Form(
-                        categories = categories
+                        categories = categories,
+                        availableAddOns = addOns
                     )
                 }
             } catch (e: Exception) {
@@ -97,6 +105,18 @@ class ProductDetailViewModel @Inject constructor(
             is ProductDetailEvent.SetCategory -> {
                 _uiState.value = currentState.copy(categoryId = event.categoryId)
             }
+            is ProductDetailEvent.SetType -> {
+                _uiState.value = currentState.copy(type = event.type)
+            }
+            is ProductDetailEvent.ToggleAddOn -> {
+                val currentIds = currentState.ekstraIds
+                val newIds = if (currentIds.contains(event.addOnId)) {
+                    currentIds - event.addOnId
+                } else {
+                    currentIds + event.addOnId
+                }
+                _uiState.value = currentState.copy(ekstraIds = newIds)
+            }
             is ProductDetailEvent.SetDescription -> {
                 _uiState.value = currentState.copy(description = event.description)
             }
@@ -105,6 +125,7 @@ class ProductDetailViewModel @Inject constructor(
             }
             is ProductDetailEvent.Save -> saveProduct(currentState)
             is ProductDetailEvent.Delete -> deleteProduct(currentState)
+            is ProductDetailEvent.AddNewAddOn -> createAddOn(event.name, event.price)
         }
     }
 
@@ -122,6 +143,40 @@ class ProductDetailViewModel @Inject constructor(
             price.isBlank() -> "Harga wajib diisi"
             numericPrice <= 0 -> "Harga harus lebih dari 0"
             else -> null
+        }
+    }
+    
+    private fun createAddOn(name: String, price: Long) {
+        viewModelScope.launch {
+            try {
+                val result = addOnRepository.createAddOn(name, price)
+                
+                result.onSuccess { newAddOn ->
+                    // We need to launch a new coroutine or handle this outside onSuccess if we want to call suspend functions
+                    // But simpler is to use the result directly
+                }
+                
+                if (result.isSuccess) {
+                    val newAddOn = result.getOrThrow()
+                    // Reload add-ons to update list - call suspend function here
+                    val addOns = addOnRepository.observeActiveAddOns().first()
+                    
+                    val currentState = _uiState.value
+                    if (currentState is ProductDetailUiState.Form) {
+                        // Auto-select the newly created add-on
+                        val newIds = currentState.ekstraIds + newAddOn.id
+                        _uiState.value = currentState.copy(
+                            availableAddOns = addOns,
+                            ekstraIds = newIds
+                        )
+                    }
+                } else {
+                    val exception = result.exceptionOrNull()
+                    Timber.e(exception, "Failed to create add-on")
+                }
+            } catch (e: Exception) {
+                Timber.e(e, "Error creating add-on")
+            }
         }
     }
 
@@ -147,7 +202,6 @@ class ProductDetailViewModel @Inject constructor(
                 // Upload image if new image selected
                 val imageUrl: String? = if (formState.imageUri != null) {
                     Timber.d("Uploading new product image for product: $productId")
-                    Timber.d("Image URI: ${formState.imageUri}")
                     
                     val uploadResult = imageUploader.uploadProductImage(
                         context, 
@@ -156,28 +210,22 @@ class ProductDetailViewModel @Inject constructor(
                     )
                     
                     uploadResult.fold(
-                        onSuccess = { url ->
-                            Timber.d("Image uploaded successfully: $url")
-                            url
-                        },
-                        onFailure = { e ->
-                            Timber.e(e, "Image upload failed: ${e.message}")
-                            // Keep existing URL if upload fails, or null for new products
-                            formState.imageUrl
+                        onSuccess = { url -> url },
+                        onFailure = { 
+                            formState.imageUrl // Keep existing if failed
                         }
                     )
                 } else {
-                    // No new image selected, keep existing URL
                     formState.imageUrl
                 }
-                
-                Timber.d("Final imageUrl for product: $imageUrl")
                 
                 val product = Product(
                     id = productId,
                     name = formState.name.trim(),
                     price = formState.price.toLongOrNull() ?: 0,
                     category = formState.selectedCategory,
+                    type = formState.type,
+                    ekstraIds = formState.ekstraIds.toList(),
                     imageUrl = imageUrl,
                     description = formState.description.trim().ifBlank { null },
                     createdAt = System.currentTimeMillis(),

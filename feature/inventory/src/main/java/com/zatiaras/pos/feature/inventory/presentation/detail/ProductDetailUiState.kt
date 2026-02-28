@@ -1,7 +1,9 @@
 package com.zatiaras.pos.feature.inventory.presentation.detail
 
 import android.net.Uri
+import com.zatiaras.pos.core.domain.model.AddOn
 import com.zatiaras.pos.core.domain.model.Category
+import com.zatiaras.pos.core.domain.model.ProductType
 
 /**
  * UI State for Product Detail (Add/Edit) Screen.
@@ -23,10 +25,13 @@ sealed interface ProductDetailUiState {
         val name: String = "",
         val price: String = "",
         val categoryId: String? = null,
+        val type: ProductType = ProductType.MAKANAN,
+        val ekstraIds: Set<String> = emptySet(),
         val imageUri: Uri? = null,
         val imageUrl: String? = null,     // existing image URL (edit mode)
         val description: String = "",
         val categories: List<Category> = emptyList(),
+        val availableAddOns: List<AddOn> = emptyList(),
         val isSubmitting: Boolean = false,
         val nameError: String? = null,
         val priceError: String? = null
@@ -61,8 +66,11 @@ sealed interface ProductDetailEvent {
     data class SetName(val name: String) : ProductDetailEvent
     data class SetPrice(val price: String) : ProductDetailEvent
     data class SetCategory(val categoryId: String?) : ProductDetailEvent
+    data class SetType(val type: ProductType) : ProductDetailEvent
+    data class ToggleAddOn(val addOnId: String) : ProductDetailEvent
     data class SetDescription(val description: String) : ProductDetailEvent
     data class SetImageUri(val uri: Uri?) : ProductDetailEvent
     data object Save : ProductDetailEvent
     data object Delete : ProductDetailEvent
+    data class AddNewAddOn(val name: String, val price: Long) : ProductDetailEvent
 }

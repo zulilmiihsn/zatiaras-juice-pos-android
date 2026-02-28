@@ -11,7 +11,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Inventory2
+import compose.icons.EvaIcons
+import compose.icons.evaicons.Outline
+import compose.icons.evaicons.outline.Image
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -26,9 +28,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import coil.request.CachePolicy
 import com.zatiaras.pos.core.domain.model.Product
 import com.zatiaras.pos.core.ui.theme.AppShapes
 import com.zatiaras.pos.core.ui.theme.LocalDimensions
+import com.zatiaras.pos.core.ui.util.CurrencyFormatter
 
 /**
  * Card component to display a single product in the inventory grid.
@@ -50,12 +55,12 @@ fun ProductCard(
         modifier = modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
-        shape = AppShapes.L,
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
         ),
         elevation = CardDefaults.cardElevation(
-            defaultElevation = 2.dp
+            defaultElevation = 0.dp // Flat look, consistent with "cute" minimalist
         )
     ) {
         Column {
@@ -64,26 +69,53 @@ fun ProductCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .aspectRatio(1f)
-                    .clip(AppShapes.TopRounded)
+                    .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
                     .background(MaterialTheme.colorScheme.surfaceVariant),
                 contentAlignment = Alignment.Center
             ) {
                 if (product.imageUrl != null) {
                     AsyncImage(
-                        model = product.imageUrl,
+                        model = ImageRequest.Builder(androidx.compose.ui.platform.LocalContext.current)
+                            .data(product.imageUrl)
+                            .crossfade(true)
+                            .size(300, 300) // Downsample for grid card to save memory
+                            .diskCachePolicy(CachePolicy.ENABLED)
+                            .memoryCachePolicy(CachePolicy.ENABLED)
+                            .build(),
                         contentDescription = product.name,
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop
                     )
                 } else {
                     Icon(
-                        imageVector = Icons.Default.Inventory2,
+                        imageVector = EvaIcons.Outline.Image,
                         contentDescription = null,
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(dimensions.paddingXL),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                            .padding(32.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
                     )
+                }
+                
+                // Category Badge (Overlay)
+                product.category?.let { category ->
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopStart)
+                            .padding(8.dp)
+                            .background(
+                                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.9f),
+                                shape = RoundedCornerShape(8.dp)
+                            )
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            text = category.name,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
             }
 
@@ -94,28 +126,20 @@ fun ProductCard(
                     .padding(dimensions.paddingS),
                 verticalArrangement = Arrangement.spacedBy(dimensions.spacingXXS)
             ) {
-                // Category badge
-                product.category?.let { category ->
-                    Text(
-                        text = category.name,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
-
-                // Product name
+                // Product name (Fixed Height)
                 Text(
                     text = product.name,
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.SemiBold,
                     maxLines = 2,
+                    minLines = 2, // Ensures consistent height
                     overflow = TextOverflow.Ellipsis
                 )
 
                 // Price
                 Text(
-                    text = product.formattedPrice,
-                    style = MaterialTheme.typography.bodyLarge,
+                    text = CurrencyFormatter.formatIdr(product.price),
+                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
                 )

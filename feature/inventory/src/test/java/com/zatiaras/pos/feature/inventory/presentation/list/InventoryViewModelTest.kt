@@ -1,9 +1,9 @@
 package com.zatiaras.pos.feature.inventory.presentation.list
 
 import app.cash.turbine.test
-import com.zatiaras.pos.core.data.local.DatabaseSeeder
 import com.zatiaras.pos.core.domain.model.Category
 import com.zatiaras.pos.core.domain.model.Product
+import com.zatiaras.pos.core.domain.repository.AddOnRepository
 import com.zatiaras.pos.core.domain.repository.ProductRepository
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -11,7 +11,7 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -38,7 +38,7 @@ class InventoryViewModelTest {
     private val testDispatcher = StandardTestDispatcher()
 
     private lateinit var productRepository: ProductRepository
-    private lateinit var databaseSeeder: DatabaseSeeder
+    private lateinit var addOnRepository: AddOnRepository
     private lateinit var viewModel: InventoryViewModel
 
     private val testCategory1 = Category(id = "cat-1", name = "Minuman")
@@ -84,12 +84,13 @@ class InventoryViewModelTest {
         Dispatchers.setMain(testDispatcher)
         
         productRepository = mockk()
-        databaseSeeder = mockk(relaxed = true)
+        addOnRepository = mockk(relaxed = true)
         
-        // Default mock behavior
-        every { productRepository.getProducts() } returns flowOf(testProducts)
-        every { productRepository.getCategories() } returns flowOf(testCategories)
-        coEvery { databaseSeeder.seedIfEmpty() } returns Unit
+        // Use MutableStateFlow (hot, never completes) so combine stays alive
+        // flowOf completes after emission, killing combine's re-emission on control state changes
+        every { productRepository.getProducts() } returns MutableStateFlow(testProducts)
+        every { productRepository.getCategories() } returns MutableStateFlow(testCategories)
+        every { addOnRepository.observeActiveAddOns() } returns MutableStateFlow(emptyList())
     }
 
     @After
@@ -98,7 +99,7 @@ class InventoryViewModelTest {
     }
 
     private fun createViewModel(): InventoryViewModel {
-        return InventoryViewModel(productRepository, databaseSeeder)
+        return InventoryViewModel(productRepository, addOnRepository)
     }
 
     // ==================== Initialization Tests ====================
@@ -127,14 +128,6 @@ class InventoryViewModelTest {
         }
     }
 
-    @Test
-    fun `seeds database on init`() = runTest {
-        viewModel = createViewModel()
-        testDispatcher.scheduler.advanceUntilIdle()
-        
-        coVerify { databaseSeeder.seedIfEmpty() }
-    }
-
     // ==================== Search Tests ====================
 
     @Test
@@ -158,17 +151,17 @@ class InventoryViewModelTest {
     fun `empty search query is handled`() = runTest {
         viewModel = createViewModel()
         testDispatcher.scheduler.advanceUntilIdle()
-        
-        viewModel.uiState.test {
-            awaitItem()
-            
-            viewModel.onEvent(InventoryEvent.Search(""))
-            testDispatcher.scheduler.advanceUntilIdle()
-            
-            val state = awaitItem() as InventoryUiState.Success
-            assertEquals("", state.searchQuery)
-            cancelAndIgnoreRemainingEvents()
-        }
+
+        // First search for something (creates a real state change)
+        viewModel.onEvent(InventoryEvent.Search("test"))
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        // Then clear search back to empty
+        viewModel.onEvent(InventoryEvent.Search(""))
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val state = viewModel.uiState.value as InventoryUiState.Success
+        assertEquals("", state.searchQuery)
     }
 
     // ==================== Category Filter Tests ====================
@@ -218,30 +211,16 @@ class InventoryViewModelTest {
     @Test
     fun `refresh sets isRefreshing to true then false`() = runTest {
         coEvery { productRepository.syncFromRemote() } returns Result.success(Unit)
-        
+
         viewModel = createViewModel()
         testDispatcher.scheduler.advanceUntilIdle()
-        
-        viewModel.uiState.test {
-            awaitItem() // Initial success
-            
-            viewModel.onEvent(InventoryEvent.Refresh)
-            
-            // May see refreshing state
-            val refreshingState = awaitItem() as InventoryUiState.Success
-            // After completion should not be refreshing
-            testDispatcher.scheduler.advanceUntilIdle()
-            
-            var finalState = refreshingState
-            try {
-                finalState = awaitItem() as InventoryUiState.Success
-            } catch (e: Exception) {
-                // No more items, use last state
-            }
-            
-            assertFalse(finalState.isRefreshing)
-            cancelAndIgnoreRemainingEvents()
-        }
+
+        viewModel.onEvent(InventoryEvent.Refresh)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        // After refresh completes, isRefreshing should be false
+        val state = viewModel.uiState.value as InventoryUiState.Success
+        assertFalse(state.isRefreshing)
     }
 
     @Test

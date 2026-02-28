@@ -13,15 +13,25 @@ data class Product(
     val name: String,
     val price: Long,
     val category: Category? = null,
+    val type: ProductType = ProductType.MAKANAN,
+    val ekstraIds: List<String> = emptyList(),
     val imageUrl: String? = null,
     val description: String? = null,
     val isActive: Boolean = true,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()
 ) {
+
+    
     /**
-     * Formatted price for display (e.g., "Rp15.000")
+     * Returns true if this product is a beverage (minuman) and supports sugar/ice customization.
      */
-    val formattedPrice: String
-        get() = "Rp${String.format("%,d", price).replace(',', '.')}"
+    val supportsSugarIce: Boolean
+        get() = type.supportsSugarIce
+    
+    /**
+     * Returns true if this product has available add-ons.
+     */
+    val hasAddOns: Boolean
+        get() = ekstraIds.isNotEmpty()
 }

@@ -12,8 +12,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.zatiaras.pos.core.domain.model.Category
+import com.zatiaras.pos.feature.inventory.R
 import com.zatiaras.pos.core.ui.theme.LocalDimensions
 
 /**
@@ -41,7 +43,7 @@ fun CategoryFilterRow(
         FilterChip(
             selected = selectedCategoryId == null,
             onClick = { onCategorySelected(null) },
-            label = { Text("Semua") },
+            label = { Text(stringResource(R.string.category_all)) },
             colors = FilterChipDefaults.filterChipColors(
                 selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
                 selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer

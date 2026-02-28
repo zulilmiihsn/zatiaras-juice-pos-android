@@ -2,10 +2,10 @@ package com.zatiaras.pos.feature.inventory.presentation.components
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Search
+import compose.icons.EvaIcons
+import compose.icons.evaicons.Outline
+import compose.icons.evaicons.outline.Close
+import compose.icons.evaicons.outline.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -14,9 +14,10 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
 import com.zatiaras.pos.core.ui.theme.AppShapes
 import com.zatiaras.pos.core.ui.theme.LocalDimensions
+import com.zatiaras.pos.feature.inventory.R
 
 /**
  * Search bar component for filtering products.
@@ -31,7 +32,7 @@ fun InventorySearchBar(
     query: String,
     onQueryChange: (String) -> Unit,
     modifier: Modifier = Modifier,
-    placeholder: String = "Cari produk..."
+    placeholder: String = stringResource(R.string.inventory_search_placeholder)
 ) {
     val dimensions = LocalDimensions.current
     OutlinedTextField(
@@ -43,16 +44,16 @@ fun InventorySearchBar(
         placeholder = { Text(placeholder) },
         leadingIcon = {
             Icon(
-                imageVector = Icons.Default.Search,
-                contentDescription = "Search"
+                imageVector = EvaIcons.Outline.Search,
+                contentDescription = null
             )
         },
         trailingIcon = {
             if (query.isNotEmpty()) {
                 IconButton(onClick = { onQueryChange("") }) {
                     Icon(
-                        imageVector = Icons.Default.Close,
-                        contentDescription = "Clear"
+                        imageVector = EvaIcons.Outline.Close,
+                        contentDescription = null
                     )
                 }
             }

@@ -49,6 +49,26 @@ interface AddOnDao {
     suspend fun getAddOnById(id: String): AddOnEntity?
 
     /**
+     * Find an add-on by exact name (case-insensitive), including soft-deleted ones.
+     * Used to restore a previously deleted add-on instead of creating a duplicate.
+     */
+    @Query("SELECT * FROM add_ons WHERE LOWER(name) = LOWER(:name) LIMIT 1")
+    suspend fun getByName(name: String): AddOnEntity?
+
+    /**
+     * Get add-ons by list of IDs.
+     * Used to get available add-ons for a product based on ekstra_ids.
+     */
+    @Query("SELECT * FROM add_ons WHERE id IN (:ids) AND isActive = 1 AND isDeleted = 0 ORDER BY sortOrder, name")
+    suspend fun getAddOnsByIds(ids: List<String>): List<AddOnEntity>
+
+    /**
+     * Observe add-ons by list of IDs (Flow).
+     */
+    @Query("SELECT * FROM add_ons WHERE id IN (:ids) AND isActive = 1 AND isDeleted = 0 ORDER BY sortOrder, name")
+    fun observeAddOnsByIds(ids: List<String>): Flow<List<AddOnEntity>>
+
+    /**
      * Get all unique categories.
      */
     @Query("SELECT DISTINCT category FROM add_ons WHERE category IS NOT NULL AND isActive = 1 AND isDeleted = 0")
@@ -91,6 +111,12 @@ interface AddOnDao {
      */
     @Query("UPDATE add_ons SET isActive = NOT isActive, updatedAt = :timestamp, isSynced = 0 WHERE id = :id")
     suspend fun toggleActive(id: String, timestamp: Long = System.currentTimeMillis())
+
+    /**
+     * Update active status explicitly.
+     */
+    @Query("UPDATE add_ons SET isActive = :isActive, updatedAt = :timestamp, isSynced = 0 WHERE id = :id")
+    suspend fun updateStatus(id: String, isActive: Boolean, timestamp: Long = System.currentTimeMillis())
 
     /**
      * Hard delete all soft-deleted add-ons (cleanup).

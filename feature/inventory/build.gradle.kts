@@ -55,6 +55,9 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation("androidx.compose.material:material-icons-extended")
 
+    // Icons
+    implementation(libs.compose.icons.eva)
+
     // Hilt
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
@@ -68,6 +71,13 @@ dependencies {
 
     // Coil for image loading
     implementation("io.coil-kt:coil-compose:2.5.0")
+
+    // Test dependencies
+    testImplementation(libs.junit)
+    testImplementation(libs.test.mockk)
+    testImplementation(libs.test.coroutines)
+    testImplementation(libs.test.turbine)
+    testImplementation(libs.test.arch.core)
 
     debugImplementation(libs.androidx.ui.tooling)
 }

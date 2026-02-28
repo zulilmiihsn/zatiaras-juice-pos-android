@@ -41,6 +41,8 @@ class ProductRepositoryImpl @Inject constructor(
     private val categoryDao: CategoryDao,
     private val remoteDataSource: InventoryRemoteDataSource,
     private val syncPreferences: SyncPreferences,
+    private val productSyncer: com.zatiaras.pos.core.data.sync.ProductSyncer,
+    private val categorySyncer: com.zatiaras.pos.core.data.sync.CategorySyncer,
     @ApplicationScope private val applicationScope: CoroutineScope
 ) : ProductRepository {
 
@@ -153,8 +155,9 @@ class ProductRepositoryImpl @Inject constructor(
             Timber.d("Product created locally: ${newProduct.id}")
             
             // Attempt sync in background (non-blocking)
+            // We use ProductSyncer now to ensure consistent logic
             applicationScope.launch {
-                syncProductToRemote(newProduct.toEntity(isSynced = false))
+                productSyncer.sync()
             }
             
             Result.success(newProduct)
@@ -175,7 +178,7 @@ class ProductRepositoryImpl @Inject constructor(
             
             // Attempt sync in background
             applicationScope.launch {
-                syncProductToRemote(updatedProduct.toEntity(isSynced = false))
+                productSyncer.sync()
             }
             
             Result.success(updatedProduct)
@@ -191,10 +194,9 @@ class ProductRepositoryImpl @Inject constructor(
             Timber.d("Product soft-deleted: $id")
             
             // Sync deletion in background
+            // Sync deletion in background
             applicationScope.launch {
-                remoteDataSource.deleteProduct(id)
-                    .onSuccess { Timber.d("Product deletion synced: $id") }
-                    .onFailure { Timber.w("Failed to sync deletion, will retry: $id") }
+                productSyncer.sync()
             }
             
             Result.success(Unit)
@@ -212,6 +214,135 @@ class ProductRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun createCategory(name: String, icon: String?): Result<Category> {
+        return try {
+            // Check if a category with this name already exists (including soft-deleted)
+            val existing = categoryDao.getByName(name.trim())
+
+            // If already exists AND is active → do nothing, just notify caller
+            if (existing != null && existing.isActive) {
+                Timber.d("Category '${name.trim()}' already exists and is active, skipping")
+                return Result.failure(Exception("DUPLICATE_ACTIVE:${name.trim()}"))
+            }
+
+            val entity = if (existing != null) {
+                // Restore: reactivate the existing category instead of creating a duplicate
+                existing.copy(
+                    name = name.trim(),
+                    icon = icon ?: existing.icon,
+                    isActive = true,
+                    updatedAt = System.currentTimeMillis(),
+                    isSynced = false
+                )
+            } else {
+                // Create new category
+                com.zatiaras.pos.core.data.local.entity.CategoryEntity(
+                    id = UUID.randomUUID().toString(),
+                    name = name.trim(),
+                    icon = icon,
+                    createdAt = System.currentTimeMillis(),
+                    updatedAt = System.currentTimeMillis(),
+                    isSynced = false
+                )
+            }
+
+            categoryDao.insert(entity)
+            
+            if (existing != null) {
+                Timber.d("Category restored: ${entity.name} (id=${entity.id})")
+            } else {
+                Timber.d("Category created: ${entity.name} (id=${entity.id})")
+            }
+            
+            // Sync to remote
+            applicationScope.launch {
+                categorySyncer.sync()
+            }
+            
+            Result.success(entity.toDomain())
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to create category")
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun updateCategory(id: String, name: String, icon: String?): Result<Category> {
+        return try {
+            val existingEntity = categoryDao.getById(id)
+            if (existingEntity != null) {
+                val updatedEntity = existingEntity.copy(
+                    name = name,
+                    icon = icon ?: existingEntity.icon,
+                    updatedAt = System.currentTimeMillis(),
+                    isSynced = false
+                )
+                categoryDao.insert(updatedEntity) // upsert
+                Timber.d("Category updated locally: ${updatedEntity.name}")
+                
+                applicationScope.launch {
+                    categorySyncer.sync()
+                }
+                
+                Result.success(updatedEntity.toDomain())
+            } else {
+                Result.failure(Exception("Category not found: $id"))
+            }
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to update category: $id")
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun assignProductsToCategory(categoryId: String, productIds: List<String>): Result<Unit> {
+        return try {
+            // 1. Clear category from products that had this category but aren't in the new list
+            if (productIds.isNotEmpty()) {
+                productDao.clearCategoryExcept(categoryId, productIds)
+            }
+            
+            // 2. Set this category for the specified products
+            if (productIds.isNotEmpty()) {
+                productDao.setCategoryForProducts(categoryId, productIds)
+            }
+            
+            Timber.d("Assigned ${productIds.size} products to category: $categoryId")
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to assign products to category: $categoryId")
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun deleteCategory(id: String): Result<Unit> {
+        return try {
+            // 1. Clear category reference from products locally
+            productDao.clearCategoryFromProducts(id)
+            Timber.d("Cleared category $id from all products")
+
+            // 2. Soft delete the category locally
+            categoryDao.softDelete(id)
+            Timber.d("Category soft-deleted locally: $id")
+
+            // 3. Sync in background
+            //    Since CategorySyncer now uses SOFT DELETE (upsert with is_active=false),
+            //    there's no FK constraint issue. We don't need to sync products first.
+            applicationScope.launch {
+                try {
+                    categorySyncer.sync()
+                    // Also sync products so the cleared categoryId reaches Supabase
+                    productSyncer.sync()
+                } catch (e: Exception) {
+                    Timber.e(e, "Background sync after category delete failed")
+                }
+            }
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to delete category: $id")
+            Result.failure(e)
+        }
+    }
+
     // ==================== SYNC ====================
 
     /**
@@ -220,30 +351,19 @@ class ProductRepositoryImpl @Inject constructor(
      */
     override suspend fun syncFromRemote(): Result<Unit> {
         return try {
-            // 1. Sync categories (full sync, they rarely change)
-            remoteDataSource.fetchCategories()
-                .onSuccess { categories ->
-                    if (categories.isNotEmpty()) {
-                        categoryDao.insertAll(categories)
-                        syncPreferences.updateLastCategoriesSyncTimestamp()
-                        Timber.d("Synced ${categories.size} categories from remote")
-                    }
-                }
-                .onFailure { Timber.w(it, "Failed to sync categories") }
+            // 1. Sync Categories First
+            val catResult = categorySyncer.sync()
+            
+            // 2. Sync Products
+            val prodResult = productSyncer.sync()
+            
+            val totalFailed = catResult.failed + prodResult.failed
 
-            // 2. Sync products (delta sync)
-            val lastSync = syncPreferences.getLastProductsSyncTimestamp()
-            remoteDataSource.fetchProducts(lastSync)
-                .onSuccess { products ->
-                    if (products.isNotEmpty()) {
-                        productDao.insertAll(products)
-                        syncPreferences.updateLastProductsSyncTimestamp()
-                        Timber.d("Synced ${products.size} products from remote (since $lastSync)")
-                    }
-                }
-                .onFailure { Timber.w(it, "Failed to sync products") }
-
-            Result.success(Unit)
+            if (totalFailed > 0) {
+                Result.failure(Exception("Sync completed with $totalFailed errors"))
+            } else {
+                Result.success(Unit)
+            }
         } catch (e: Exception) {
             Timber.e(e, "Sync from remote failed")
             Result.failure(e)
@@ -255,22 +375,16 @@ class ProductRepositoryImpl @Inject constructor(
      */
     override suspend fun syncToRemote(): Result<Unit> {
         return try {
-            // Get all unsynced products
-            val unsyncedProducts = productDao.getUnsynced()
-            Timber.d("Found ${unsyncedProducts.size} unsynced products")
-
-            var successCount = 0
-            unsyncedProducts.forEach { product ->
-                remoteDataSource.upsertProduct(product)
-                    .onSuccess {
-                        productDao.markAsSynced(product.id)
-                        successCount++
-                    }
-                    .onFailure { Timber.w(it, "Failed to sync product: ${product.id}") }
+            val catResult = categorySyncer.sync()
+            val prodResult = productSyncer.sync()
+            
+            val totalFailed = catResult.failed + prodResult.failed
+            
+            if (totalFailed > 0) {
+                Result.failure(Exception("Sync with errors"))
+            } else {
+                Result.success(Unit)
             }
-
-            Timber.d("Synced $successCount/${unsyncedProducts.size} products to remote")
-            Result.success(Unit)
         } catch (e: Exception) {
             Timber.e(e, "Sync to remote failed")
             Result.failure(e)
@@ -280,15 +394,5 @@ class ProductRepositoryImpl @Inject constructor(
     /**
      * Helper to sync single product to remote.
      */
-    private suspend fun syncProductToRemote(product: com.zatiaras.pos.core.data.local.entity.ProductEntity) {
-        remoteDataSource.upsertProduct(product)
-            .onSuccess {
-                productDao.markAsSynced(product.id)
-                Timber.d("Product synced to remote: ${product.id}")
-            }
-            .onFailure {
-                Timber.w(it, "Failed to sync product ${product.id}, marked for retry")
-            }
-    }
+    // syncProductToRemote is removed as we use ProductSyncer now
 }
-
