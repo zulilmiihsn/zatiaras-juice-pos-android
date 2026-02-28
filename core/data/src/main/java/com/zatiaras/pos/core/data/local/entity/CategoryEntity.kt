@@ -16,5 +16,6 @@ data class CategoryEntity(
     val sortOrder: Int = 0,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis(),
+    val isActive: Boolean = true,
     val isSynced: Boolean = false
 )

@@ -87,6 +87,27 @@ interface ProductRepository {
      */
     fun getCategories(): Flow<List<Category>>
 
+    /**
+     * Create a new category.
+     */
+    suspend fun createCategory(name: String, icon: String? = null): Result<Category>
+
+    /**
+     * Update an existing category.
+     */
+    suspend fun updateCategory(id: String, name: String, icon: String? = null): Result<Category>
+
+    /**
+     * Assign products to a category.
+     * Clears old assignments and sets the given products to this category.
+     */
+    suspend fun assignProductsToCategory(categoryId: String, productIds: List<String>): Result<Unit>
+
+    /**
+     * Delete a category.
+     */
+    suspend fun deleteCategory(id: String): Result<Unit>
+
     // ==================== SYNC ====================
 
     /**

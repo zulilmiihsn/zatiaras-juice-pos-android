@@ -44,6 +44,10 @@ class SupabaseAuthRepository @Inject constructor(
         }
     }
 
+    override suspend fun changeCurrentUserPassword(currentPassword: String, newPassword: String): Result<Unit> {
+        return Result.Error(UnsupportedOperationException("Change password is not supported in SupabaseAuthRepository"))
+    }
+
     override suspend fun logout() {
         auth.signOut()
     }

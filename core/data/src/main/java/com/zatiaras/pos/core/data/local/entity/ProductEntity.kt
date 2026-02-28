@@ -11,6 +11,10 @@ import androidx.room.PrimaryKey
  * 
  * Foreign key to CategoryEntity with SET_NULL on delete.
  * Index on categoryId for faster queries.
+ * 
+ * New fields:
+ * - type: Product type ("minuman", "makanan", "snack")
+ * - ekstraIds: JSON array of add-on IDs as string
  */
 @Entity(
     tableName = "products",
@@ -22,7 +26,7 @@ import androidx.room.PrimaryKey
             onDelete = ForeignKey.SET_NULL
         )
     ],
-    indices = [Index(value = ["categoryId"])]
+    indices = [Index(value = ["categoryId"]), Index(value = ["type"])]
 )
 data class ProductEntity(
     @PrimaryKey
@@ -30,6 +34,8 @@ data class ProductEntity(
     val name: String,
     val price: Long,                    // IDR, no decimals
     val categoryId: String? = null,
+    val type: String = "makanan",       // "minuman", "makanan", "snack"
+    val ekstraIds: String? = null,      // JSON array as string: ["id1", "id2"]
     val imageUrl: String? = null,
     val description: String? = null,
     val isActive: Boolean = true,

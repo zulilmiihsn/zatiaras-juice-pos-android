@@ -126,6 +126,64 @@ class LocalAuthRepository @Inject constructor(
     fun getCurrentUser(): UserEntity? = _currentUser
 
     /**
+     * Change password for currently logged-in user.
+     *
+     * Flow:
+     * - Resolve current user from memory/session
+     * - Verify current password against local hash
+     * - Hash new password
+     * - Update remote first, then local
+     */
+    override suspend fun changeCurrentUserPassword(
+        currentPassword: String,
+        newPassword: String
+    ): Result<Unit> {
+        return try {
+            val user = resolveCurrentUser()
+                ?: return Result.Error(Exception("Sesi tidak ditemukan, silakan login ulang"))
+
+            if (!UserEntity.verifyPassword(currentPassword, user.passwordHash)) {
+                return Result.Error(Exception("Password saat ini salah"))
+            }
+
+            val newHash = UserEntity.hashPassword(newPassword)
+
+            when (val remoteResult = userRemoteDataSource.updatePasswordHash(user.id, newHash)) {
+                is Result.Error -> {
+                    return Result.Error(remoteResult.exception ?: Exception("Gagal memperbarui password di server"))
+                }
+                is Result.Loading -> {
+                    return Result.Error(Exception("Gagal memperbarui password di server"))
+                }
+                is Result.Success -> Unit
+            }
+
+            userDao.updatePassword(user.id, newHash)
+
+            val refreshedUser = user.copy(
+                passwordHash = newHash,
+                updatedAt = System.currentTimeMillis()
+            )
+            _currentUser = refreshedUser
+
+            Timber.d("Password changed successfully for user: ${user.username}")
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to change password")
+            Result.Error(Exception(e.message ?: "Gagal mengubah password"))
+        }
+    }
+
+    private suspend fun resolveCurrentUser(): UserEntity? {
+        _currentUser?.let { return it }
+
+        val userId = sessionPreferences.getUserId() ?: return null
+        val user = userDao.getUserById(userId)
+        _currentUser = user
+        return user
+    }
+
+    /**
      * Sync users from Supabase to local Room database.
      * Call this on app start when online.
      * 

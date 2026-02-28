@@ -35,6 +35,7 @@ import com.zatiaras.pos.core.ui.util.CurrencyFormatter
  * @param colors Text field colors
  * @param keyboardActions Keyboard actions
  * @param imeAction IME action for the keyboard
+ * @param supportingText Optional supporting text to be displayed below the text field
  */
 @Composable
 fun CurrencyTextField(
@@ -43,6 +44,7 @@ fun CurrencyTextField(
     modifier: Modifier = Modifier,
     label: @Composable (() -> Unit)? = null,
     placeholder: @Composable (() -> Unit)? = null,
+    supportingText: @Composable (() -> Unit)? = null,
     enabled: Boolean = true,
     isError: Boolean = false,
     showPrefix: Boolean = true,
@@ -78,6 +80,7 @@ fun CurrencyTextField(
         modifier = modifier,
         label = label,
         placeholder = placeholder,
+        supportingText = supportingText,
         enabled = enabled,
         isError = isError,
         prefix = if (showPrefix) {{ Text("Rp ") }} else null,
@@ -103,6 +106,7 @@ fun CurrencyTextField(
     modifier: Modifier = Modifier,
     label: @Composable (() -> Unit)? = null,
     placeholder: @Composable (() -> Unit)? = null,
+    supportingText: @Composable (() -> Unit)? = null,
     enabled: Boolean = true,
     isError: Boolean = false,
     showPrefix: Boolean = true,
@@ -123,6 +127,7 @@ fun CurrencyTextField(
         modifier = modifier,
         label = label,
         placeholder = placeholder,
+        supportingText = supportingText,
         enabled = enabled,
         isError = isError,
         showPrefix = showPrefix,

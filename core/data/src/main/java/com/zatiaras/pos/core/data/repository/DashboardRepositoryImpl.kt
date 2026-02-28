@@ -18,36 +18,47 @@ class DashboardRepositoryImpl @Inject constructor(
     private val transactionDao: TransactionDao
 ) : DashboardRepository {
 
-    override suspend fun getTodayRevenue(): Long {
+    /**
+     * Helper to get today's date range consistently.
+     * Avoids repeating DateUtils.getTodayRange() + DateUtils.getEndOfDay() across methods.
+     */
+    private fun todayRange(): Pair<Long, Long> {
+        val (startOfDay, _) = DateUtils.getTodayRange()
+        val endOfDay = DateUtils.getEndOfDay()
+        return startOfDay to endOfDay
+    }
+
+    override suspend fun getTodayRevenue(): Result<Long> {
         return try {
-            val (startOfDay, endOfDay) = DateUtils.getTodayRange()
-            val endOfDayActual = DateUtils.getEndOfDay()
-            transactionDao.getTotalRevenueForDay(startOfDay, endOfDayActual)
+            val (start, end) = todayRange()
+            val revenue = transactionDao.getTotalRevenueForDay(start, end)
+            Result.success(revenue)
         } catch (e: Exception) {
             Timber.e(e, "Failed to get today's revenue")
-            0L
+            Result.failure(e)
         }
     }
 
-    override suspend fun getTodayTransactionCount(): Int {
+    override suspend fun getTodayTransactionCount(): Result<Int> {
         return try {
-            val (startOfDay, _) = DateUtils.getTodayRange()
-            val endOfDayActual = DateUtils.getEndOfDay()
-            transactionDao.getTransactionCountForDay(startOfDay, endOfDayActual)
+            val (start, end) = todayRange()
+            val count = transactionDao.getTransactionCountForDay(start, end)
+            Result.success(count)
         } catch (e: Exception) {
             Timber.e(e, "Failed to get today's transaction count")
-            0
+            Result.failure(e)
         }
     }
 
-    override suspend fun getTodayItemsSold(): Int {
+    override suspend fun getTodayItemsSold(): Result<Int> {
         return try {
-            val (startOfDay, _) = DateUtils.getTodayRange()
-            val endOfDayActual = DateUtils.getEndOfDay()
-            transactionDao.getTotalItemsSoldForDay(startOfDay, endOfDayActual)
+            val (start, end) = todayRange()
+            val itemsSold = transactionDao.getTotalItemsSoldForDay(start, end)
+            Result.success(itemsSold)
         } catch (e: Exception) {
             Timber.e(e, "Failed to get today's items sold")
-            0
+            Result.failure(e)
         }
     }
 }
+

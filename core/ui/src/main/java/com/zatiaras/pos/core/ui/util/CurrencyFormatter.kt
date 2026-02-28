@@ -1,5 +1,6 @@
 package com.zatiaras.pos.core.ui.util
 
+import com.zatiaras.pos.core.domain.util.LocaleUtils
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
 import java.text.NumberFormat
@@ -17,7 +18,7 @@ import java.util.Locale
  */
 object CurrencyFormatter {
     
-    private val indonesiaLocale = Locale("id", "ID")
+    private val indonesiaLocale = LocaleUtils.LOCALE_ID
     
     private val currencyFormat: NumberFormat by lazy {
         NumberFormat.getCurrencyInstance(indonesiaLocale).apply {
@@ -60,6 +61,11 @@ object CurrencyFormatter {
             formatted
         }
     }
+
+    /**
+     * Alias for formatCurrency to match usage in the project.
+     */
+    fun formatIdr(amount: Long): String = formatCurrency(amount)
     
     /**
      * Format a number as Indonesian Rupiah currency (Double version).
@@ -67,6 +73,11 @@ object CurrencyFormatter {
     fun formatCurrency(amount: Double, includeSymbol: Boolean = true, addSpace: Boolean = true): String {
         return formatCurrency(amount.toLong(), includeSymbol, addSpace)
     }
+
+    /**
+     * Alias for formatCurrency to match usage in the project.
+     */
+    fun formatIdr(amount: Double): String = formatCurrency(amount.toLong())
     
     /**
      * Format a number as Indonesian Rupiah currency (Int version).
@@ -74,6 +85,11 @@ object CurrencyFormatter {
     fun formatCurrency(amount: Int, includeSymbol: Boolean = true, addSpace: Boolean = true): String {
         return formatCurrency(amount.toLong(), includeSymbol, addSpace)
     }
+
+    /**
+     * Alias for formatCurrency to match usage in the project.
+     */
+    fun formatIdr(amount: Int): String = formatCurrency(amount.toLong())
     
     /**
      * Format a number with thousands separator (without currency symbol).

@@ -59,4 +59,26 @@ class UserRemoteDataSource @Inject constructor(
             Result.Error(e)
         }
     }
+
+    /**
+     * Update user password hash on Supabase.
+     */
+    suspend fun updatePasswordHash(userId: String, newPasswordHash: String): Result<Unit> {
+        return try {
+            postgrest.from(TABLE_PENGGUNA).update(
+                mapOf(
+                    "password_hash" to newPasswordHash,
+                    "updated_at" to System.currentTimeMillis()
+                )
+            ) {
+                filter { eq("id", userId) }
+            }
+
+            Timber.d("Updated password hash on remote for user: $userId")
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to update password hash on Supabase for user: $userId")
+            Result.Error(e)
+        }
+    }
 }

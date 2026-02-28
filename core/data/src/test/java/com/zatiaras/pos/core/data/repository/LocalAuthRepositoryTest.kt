@@ -281,4 +281,51 @@ class LocalAuthRepositoryTest {
         
         assertEquals(2, result.size)
     }
+
+    // ==================== Change Password Tests ====================
+
+    @Test
+    fun `changeCurrentUserPassword with valid current password returns Success`() = runTest {
+        coEvery { userDao.getUserByUsername("admin") } returns testUser
+        every { sessionPreferences.getUserId() } returns testUser.id
+        coEvery { userRemoteDataSource.updatePasswordHash(eq(testUser.id), any()) } returns Result.Success(Unit)
+
+        repository.login("admin", "admin123")
+
+        val result = repository.changeCurrentUserPassword("admin123", "newpass123")
+
+        assertTrue(result is Result.Success)
+        coVerify(exactly = 1) { userDao.updatePassword(eq(testUser.id), any(), any()) }
+        coVerify(exactly = 1) { userRemoteDataSource.updatePasswordHash(eq(testUser.id), any()) }
+    }
+
+    @Test
+    fun `changeCurrentUserPassword with wrong current password returns Error`() = runTest {
+        coEvery { userDao.getUserByUsername("admin") } returns testUser
+        every { sessionPreferences.getUserId() } returns testUser.id
+
+        repository.login("admin", "admin123")
+
+        val result = repository.changeCurrentUserPassword("wrongpass", "newpass123")
+
+        assertTrue(result is Result.Error)
+        assertTrue((result as Result.Error).exception?.message?.contains("saat ini salah") == true)
+        coVerify(exactly = 0) { userDao.updatePassword(any(), any(), any()) }
+        coVerify(exactly = 0) { userRemoteDataSource.updatePasswordHash(any(), any()) }
+    }
+
+    @Test
+    fun `changeCurrentUserPassword fails when remote update fails`() = runTest {
+        coEvery { userDao.getUserByUsername("admin") } returns testUser
+        every { sessionPreferences.getUserId() } returns testUser.id
+        coEvery { userRemoteDataSource.updatePasswordHash(eq(testUser.id), any()) } returns Result.Error(Exception("Remote gagal"))
+
+        repository.login("admin", "admin123")
+
+        val result = repository.changeCurrentUserPassword("admin123", "newpass123")
+
+        assertTrue(result is Result.Error)
+        coVerify(exactly = 0) { userDao.updatePassword(any(), any(), any()) }
+        coVerify(exactly = 1) { userRemoteDataSource.updatePasswordHash(eq(testUser.id), any()) }
+    }
 }

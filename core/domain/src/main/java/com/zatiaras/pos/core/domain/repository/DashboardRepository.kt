@@ -11,15 +11,15 @@ interface DashboardRepository {
     /**
      * Get today's total revenue.
      */
-    suspend fun getTodayRevenue(): Long
+    suspend fun getTodayRevenue(): Result<Long>
     
     /**
      * Get today's transaction count.
      */
-    suspend fun getTodayTransactionCount(): Int
+    suspend fun getTodayTransactionCount(): Result<Int>
     
     /**
      * Get today's items sold count.
      */
-    suspend fun getTodayItemsSold(): Int
+    suspend fun getTodayItemsSold(): Result<Int>
 }

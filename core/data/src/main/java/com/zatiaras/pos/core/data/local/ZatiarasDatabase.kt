@@ -43,7 +43,7 @@ import com.zatiaras.pos.core.data.local.entity.UserEntity
  * - v3: Added CashRecords (Buku Kas)
  * - v4: Added Users (Offline Auth)
  * - v5: Added AppSettings and AddOns (Settings Sync + Toppings)
- * - v6: Added StoreSession (Buka/Tutup Toko)
+ * - v7: Updated Product schema (Type + AddOns)
  */
 @Database(
     entities = [
@@ -58,7 +58,7 @@ import com.zatiaras.pos.core.data.local.entity.UserEntity
         AddOnEntity::class,
         StoreSessionEntity::class
     ],
-    version = 6,
+    version = 11,
     exportSchema = true
 )
 @TypeConverters(LockedRoutesConverter::class)

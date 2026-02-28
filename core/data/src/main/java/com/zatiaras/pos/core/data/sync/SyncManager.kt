@@ -32,14 +32,18 @@ import javax.inject.Singleton
 class SyncManager @Inject constructor(
     @ApplicationContext private val context: Context,
     private val syncPreferences: SyncPreferences,
-    private val transactionSyncer: TransactionSyncer,
-    private val cashRecordSyncer: CashRecordSyncer
+    private val cashRecordSyncer: CashRecordSyncer,
+    private val productSyncer: ProductSyncer,
+    private val categorySyncer: CategorySyncer,
+    private val transactionSyncer: TransactionSyncer
 ) {
     private val _syncStatus = MutableStateFlow<SyncStatus>(SyncStatus.Idle)
     val syncStatus: StateFlow<SyncStatus> = _syncStatus.asStateFlow()
 
     // List of all syncers for iteration
     private val syncers: List<EntitySyncer> = listOf(
+        categorySyncer,
+        productSyncer,
         transactionSyncer,
         cashRecordSyncer
     )

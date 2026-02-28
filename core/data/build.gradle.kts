@@ -86,6 +86,7 @@ dependencies {
     api(libs.supabase.gotrue)
     api(libs.supabase.postgrest)
     api(libs.supabase.storage)
+    api(libs.supabase.functions)
     implementation(libs.ktor.client.cio)
     implementation(libs.ktor.client.core)
 
@@ -102,4 +103,9 @@ dependencies {
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.hilt.work)
     ksp(libs.androidx.hilt.compiler)
+
+    // Testing
+    testImplementation(libs.junit)
+    testImplementation(libs.test.mockk)
+    testImplementation(libs.test.coroutines)
 }

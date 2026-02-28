@@ -1,12 +1,12 @@
 {
   "formatVersion": 1,
   "database": {
-    "version": 6,
-    "identityHash": "8cb8e0b0885aa1783fafe477cc8142bc",
+    "version": 11,
+    "identityHash": "bfc136f7b29cf2ec0239d0403a1ed61c",
     "entities": [
       {
         "tableName": "categories",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `name` TEXT NOT NULL, `icon` TEXT, `sortOrder` INTEGER NOT NULL, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, `isSynced` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `name` TEXT NOT NULL, `icon` TEXT, `sortOrder` INTEGER NOT NULL, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, `isActive` INTEGER NOT NULL, `isSynced` INTEGER NOT NULL, PRIMARY KEY(`id`))",
         "fields": [
           {
             "fieldPath": "id",
@@ -41,6 +41,12 @@
           {
             "fieldPath": "updatedAt",
             "columnName": "updatedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isActive",
+            "columnName": "isActive",
             "affinity": "INTEGER",
             "notNull": true
           },
@@ -220,7 +226,7 @@
       },
       {
         "tableName": "transactions",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `transactionNumber` TEXT NOT NULL, `subtotal` INTEGER NOT NULL, `discountAmount` INTEGER NOT NULL, `discountPercent` REAL NOT NULL, `taxAmount` INTEGER NOT NULL, `taxPercent` REAL NOT NULL, `grandTotal` INTEGER NOT NULL, `paymentMethod` TEXT NOT NULL, `amountPaid` INTEGER NOT NULL, `changeAmount` INTEGER NOT NULL, `notes` TEXT, `sessionId` TEXT, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, `isSynced` INTEGER NOT NULL, `isDeleted` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `transactionNumber` TEXT NOT NULL, `subtotal` INTEGER NOT NULL, `discountAmount` INTEGER NOT NULL, `discountPercent` REAL NOT NULL, `taxAmount` INTEGER NOT NULL, `taxPercent` REAL NOT NULL, `grandTotal` INTEGER NOT NULL, `paymentMethod` TEXT NOT NULL, `amountPaid` INTEGER NOT NULL, `changeAmount` INTEGER NOT NULL, `notes` TEXT, `customerName` TEXT, `sessionId` TEXT, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, `isSynced` INTEGER NOT NULL, `isDeleted` INTEGER NOT NULL, PRIMARY KEY(`id`))",
         "fields": [
           {
             "fieldPath": "id",
@@ -291,6 +297,12 @@
           {
             "fieldPath": "notes",
             "columnName": "notes",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "customerName",
+            "columnName": "customerName",
             "affinity": "TEXT",
             "notNull": false
           },
@@ -646,7 +658,7 @@
       },
       {
         "tableName": "app_settings",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `ownerPinHash` TEXT, `lockedRoutes` TEXT NOT NULL, `storeName` TEXT NOT NULL, `storeAddress` TEXT, `storePhone` TEXT, `defaultPaperWidth` INTEGER NOT NULL, `receiptFooter` TEXT, `showLogoOnReceipt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, `isSynced` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `ownerPinHash` TEXT, `lockedRoutes` TEXT NOT NULL, `storeName` TEXT NOT NULL, `storeAddress` TEXT, `storePhone` TEXT, `defaultPaperWidth` INTEGER NOT NULL, `receiptFooter` TEXT, `showLogoOnReceipt` INTEGER NOT NULL, `defaultTaxPercentage` REAL NOT NULL, `lowPerformanceMode` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, `isSynced` INTEGER NOT NULL, PRIMARY KEY(`id`))",
         "fields": [
           {
             "fieldPath": "id",
@@ -699,6 +711,18 @@
           {
             "fieldPath": "showLogoOnReceipt",
             "columnName": "showLogoOnReceipt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "defaultTaxPercentage",
+            "columnName": "defaultTaxPercentage",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lowPerformanceMode",
+            "columnName": "lowPerformanceMode",
             "affinity": "INTEGER",
             "notNull": true
           },
@@ -932,7 +956,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '8cb8e0b0885aa1783fafe477cc8142bc')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'bfc136f7b29cf2ec0239d0403a1ed61c')"
     ]
   }
 }

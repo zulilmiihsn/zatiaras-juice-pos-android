@@ -138,7 +138,7 @@ object Migrations {
                     `id` TEXT NOT NULL PRIMARY KEY,
                     `ownerPinHash` TEXT,
                     `lockedRoutes` TEXT NOT NULL DEFAULT '',
-                    `storeName` TEXT NOT NULL DEFAULT 'ZATIARAS',
+                    `storeName` TEXT NOT NULL DEFAULT 'Zatiaras Juice',
                     `storeAddress` TEXT,
                     `storePhone` TEXT,
                     `defaultPaperWidth` INTEGER NOT NULL DEFAULT 58,
@@ -152,7 +152,7 @@ object Migrations {
             // Insert default settings row
             db.execSQL("""
                 INSERT OR IGNORE INTO `app_settings` (id, storeName, defaultPaperWidth, updatedAt, isSynced)
-                VALUES ('default', 'ZATIARAS', 58, ${System.currentTimeMillis()}, 0)
+                VALUES ('default', 'Zatiaras Juice', 58, ${System.currentTimeMillis()}, 0)
             """.trimIndent())
 
             // Create add_ons table
@@ -208,9 +208,63 @@ object Migrations {
 
             // Add sessionId column to transactions table
             db.execSQL("ALTER TABLE `transactions` ADD COLUMN `sessionId` TEXT")
-            
             // Create index for sessionId on transactions
             db.execSQL("CREATE INDEX IF NOT EXISTS `index_transactions_sessionId` ON `transactions` (`sessionId`)")
+        }
+    }
+
+    /**
+     * Migration from version 6 to 7.
+     * Placeholder migration - no schema changes in v7.
+     */
+    val MIGRATION_6_7 = object : Migration(6, 7) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            // No schema changes - version bumped for other reasons
+            // This migration exists to prevent data loss
+        }
+    }
+
+    /**
+     * Migration from version 7 to 8.
+     * Adds isActive column to categories table for soft delete support.
+     */
+    val MIGRATION_7_8 = object : Migration(7, 8) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            // Add isActive column to categories with default value true
+            db.execSQL("ALTER TABLE `categories` ADD COLUMN `isActive` INTEGER NOT NULL DEFAULT 1")
+        }
+    }
+
+    /**
+     * Migration from version 8 to 9.
+     * Adds defaultTaxPercentage column to app_settings table.
+     */
+    val MIGRATION_8_9 = object : Migration(8, 9) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            // Add defaultTaxPercentage column to app_settings with default value 0.5
+            db.execSQL("ALTER TABLE `app_settings` ADD COLUMN `defaultTaxPercentage` REAL NOT NULL DEFAULT 0.5")
+        }
+    }
+
+    /**
+     * Migration from version 9 to 10.
+     * Adds lowPerformanceMode column to app_settings table.
+     */
+    val MIGRATION_9_10 = object : Migration(9, 10) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            // Add lowPerformanceMode column to app_settings with default value 0 (false)
+            db.execSQL("ALTER TABLE `app_settings` ADD COLUMN `lowPerformanceMode` INTEGER NOT NULL DEFAULT 0")
+        }
+    }
+
+    /**
+     * Migration from version 10 to 11.
+     * Adds customerName column to transactions table.
+     */
+    val MIGRATION_10_11 = object : Migration(10, 11) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            // Add customerName column to transactions
+            db.execSQL("ALTER TABLE `transactions` ADD COLUMN `customerName` TEXT")
         }
     }
 
@@ -223,6 +277,11 @@ object Migrations {
         MIGRATION_2_3,
         MIGRATION_3_4,
         MIGRATION_4_5,
-        MIGRATION_5_6
+        MIGRATION_5_6,
+        MIGRATION_6_7,
+        MIGRATION_7_8,
+        MIGRATION_8_9,
+        MIGRATION_9_10,
+        MIGRATION_10_11
     )
 }

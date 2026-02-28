@@ -18,7 +18,7 @@ interface CategoryDao {
      * Get all categories ordered by sort order.
      * Returns Flow for reactive updates.
      */
-    @Query("SELECT * FROM categories ORDER BY sortOrder ASC")
+    @Query("SELECT * FROM categories WHERE isActive = 1 ORDER BY sortOrder ASC")
     fun getAll(): Flow<List<CategoryEntity>>
 
     /**
@@ -26,6 +26,13 @@ interface CategoryDao {
      */
     @Query("SELECT * FROM categories WHERE id = :id")
     suspend fun getById(id: String): CategoryEntity?
+
+    /**
+     * Find a category by exact name (case-insensitive), including soft-deleted ones.
+     * Used to restore a previously deleted category instead of creating a duplicate.
+     */
+    @Query("SELECT * FROM categories WHERE LOWER(name) = LOWER(:name) LIMIT 1")
+    suspend fun getByName(name: String): CategoryEntity?
 
     /**
      * Insert or replace categories (for sync).
@@ -40,6 +47,18 @@ interface CategoryDao {
     suspend fun insert(category: CategoryEntity)
 
     /**
+     * Delete a category by ID.
+     */
+    @Query("DELETE FROM categories WHERE id = :id")
+    suspend fun hardDelete(id: String)
+
+    /**
+     * Soft delete: set isActive = false.
+     */
+    @Query("UPDATE categories SET isActive = 0, updatedAt = :timestamp, isSynced = 0 WHERE id = :id")
+    suspend fun softDelete(id: String, timestamp: Long = System.currentTimeMillis())
+
+    /**
      * Delete all categories (for full refresh).
      */
     @Query("DELETE FROM categories")
@@ -52,8 +71,20 @@ interface CategoryDao {
     suspend fun getUnsynced(): List<CategoryEntity>
 
     /**
+     * Get count of unsynced categories (efficient COUNT instead of loading all).
+     */
+    @Query("SELECT COUNT(*) FROM categories WHERE isSynced = 0")
+    suspend fun getUnsyncedCount(): Int
+
+    /**
      * Mark category as synced.
      */
     @Query("UPDATE categories SET isSynced = 1 WHERE id = :id")
     suspend fun markAsSynced(id: String)
+
+    /**
+     * Mark multiple categories as synced after successful bulk upload.
+     */
+    @Query("UPDATE categories SET isSynced = 1 WHERE id IN (:ids)")
+    suspend fun markAsSynced(ids: List<String>)
 }

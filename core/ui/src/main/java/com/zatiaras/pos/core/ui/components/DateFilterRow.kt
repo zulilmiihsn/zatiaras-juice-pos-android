@@ -9,6 +9,7 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -17,25 +18,37 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import com.zatiaras.pos.core.ui.R
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.zatiaras.pos.core.domain.model.DatePeriod
+import com.zatiaras.pos.core.domain.util.LocaleUtils
 import com.zatiaras.pos.core.ui.theme.AppShapes
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -70,11 +83,11 @@ fun DateFilterRow(
         DatePeriod.LAST_30_DAYS
     )
 ) {
-    val dateFormat = SimpleDateFormat("dd MMM yyyy", Locale("id", "ID"))
+    val dateFormat = SimpleDateFormat("dd MMM yyyy", LocaleUtils.LOCALE_ID)
     
     Column(modifier = modifier.fillMaxWidth()) {
         Text(
-            text = "Periode",
+            text = stringResource(R.string.core_periode),
             style = MaterialTheme.typography.labelLarge,
             fontWeight = FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -84,8 +97,8 @@ fun DateFilterRow(
 
         // === PRIMARY: Date Range Selector ===
         DateRangeRow(
-            startDate = startDate?.let { dateFormat.format(Date(it)) } ?: "Pilih Tanggal",
-            endDate = endDate?.let { dateFormat.format(Date(it)) } ?: "Pilih Tanggal",
+            startDate = startDate?.let { dateFormat.format(Date(it)) } ?: stringResource(R.string.core_pilih_tanggal),
+            endDate = endDate?.let { dateFormat.format(Date(it)) } ?: stringResource(R.string.core_pilih_tanggal),
             onStartDateClick = onStartDateClick,
             onEndDateClick = onEndDateClick
         )
@@ -115,7 +128,7 @@ private fun DateRangeRow(
     ) {
         // Start Date Button
         DatePickerButton(
-            label = "Dari",
+            label = stringResource(R.string.core_dari),
             dateText = startDate,
             onClick = onStartDateClick,
             modifier = Modifier.weight(1f)
@@ -131,7 +144,7 @@ private fun DateRangeRow(
         
         // End Date Button
         DatePickerButton(
-            label = "Sampai",
+            label = stringResource(R.string.core_sampai),
             dateText = endDate,
             onClick = onEndDateClick,
             modifier = Modifier.weight(1f)
@@ -146,7 +159,7 @@ private fun DatePickerButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val isPlaceholder = dateText == "Pilih Tanggal"
+    val isPlaceholder = dateText == stringResource(R.string.core_pilih_tanggal)
     
     Box(
         modifier = modifier
@@ -274,91 +287,173 @@ fun DateRangePickerDialog(
     onDismiss: () -> Unit,
     onConfirm: (Long, Long) -> Unit
 ) {
-    val dateFormatter = SimpleDateFormat("dd MMM yyyy", Locale("id", "ID"))
+    val dateFormatter = SimpleDateFormat("dd MMM yyyy", LocaleUtils.LOCALE_ID)
     
     var startDate by remember { mutableStateOf<Long?>(null) }
     var endDate by remember { mutableStateOf<Long?>(null) }
     var showStartPicker by remember { mutableStateOf(false) }
     var showEndPicker by remember { mutableStateOf(false) }
-    
-    androidx.compose.material3.AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Text(
-                "Pilih Rentang Tanggal",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold
-            )
-        },
-        text = {
-            Column {
-                // Start Date
-                Text(
-                    "Dari:",
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.Medium
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                
-                androidx.compose.material3.OutlinedButton(
-                    onClick = { showStartPicker = true },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        startDate?.let { dateFormatter.format(Date(it)) } ?: "Pilih tanggal mulai",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
-                
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                // End Date
-                Text(
-                    "Sampai:",
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.Medium
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                
-                androidx.compose.material3.OutlinedButton(
-                    onClick = { showEndPicker = true },
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = startDate != null
-                ) {
-                    Text(
-                        endDate?.let { dateFormatter.format(Date(it)) } ?: "Pilih tanggal selesai",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
-                
-                if (startDate == null) {
-                    Spacer(modifier = Modifier.height(6.dp))
-                    Text(
-                        "Pilih tanggal mulai terlebih dahulu",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-        },
-        confirmButton = {
-            androidx.compose.material3.TextButton(
-                onClick = {
-                    if (startDate != null && endDate != null) {
-                        onConfirm(startDate!!, endDate!!)
-                    }
-                },
-                enabled = startDate != null && endDate != null
+
+    ZatDialog(
+        onDismissRequest = onDismiss
+    ) { dismiss ->
+        Box(
+            modifier = Modifier
+                .fillMaxWidth(0.95f)
+                .padding(vertical = 24.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            androidx.compose.material3.Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(28.dp),
+                colors = androidx.compose.material3.CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                ),
+                elevation = androidx.compose.material3.CardDefaults.cardElevation(defaultElevation = 8.dp)
             ) {
-                Text("Terapkan")
-            }
-        },
-        dismissButton = {
-            androidx.compose.material3.TextButton(onClick = onDismiss) {
-                Text("Batal")
+                Column(
+                    modifier = Modifier.padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    // Header Icon
+                    Box(
+                        modifier = Modifier
+                            .size(64.dp)
+                            .clip(CircleShape)
+                            .background(
+                                Brush.linearGradient(
+                                    colors = listOf(
+                                        MaterialTheme.colorScheme.primary,
+                                        MaterialTheme.colorScheme.secondary
+                                    )
+                                )
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.CalendarMonth,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(32.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Text(
+                        text = stringResource(R.string.core_rentang_tanggal),
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = stringResource(R.string.core_tentukan_periode),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center
+                    )
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    // Date Selection Inputs
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                stringResource(R.string.core_dari),
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
+                            )
+                            OutlinedButton(
+                                onClick = { showStartPicker = true },
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp),
+                                contentPadding = PaddingValues(12.dp)
+                            ) {
+                                Text(
+                                    startDate?.let { dateFormatter.format(Date(it)) } ?: stringResource(R.string.core_mulai),
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
+                        }
+
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                stringResource(R.string.core_sampai),
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
+                            )
+                            OutlinedButton(
+                                onClick = { showEndPicker = true },
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp),
+                                enabled = startDate != null,
+                                contentPadding = PaddingValues(12.dp)
+                            ) {
+                                Text(
+                                    endDate?.let { dateFormatter.format(Date(it)) } ?: stringResource(R.string.core_selesai),
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
+                        }
+                    }
+
+                    if (startDate == null) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            stringResource(R.string.core_pilih_tgl_mulai_dulu),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Action Buttons
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        OutlinedButton(
+                            onClick = dismiss,
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(14.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        ) {
+                            Text(stringResource(R.string.core_batal), fontWeight = FontWeight.Bold)
+                        }
+
+                        Button(
+                            onClick = {
+                                if (startDate != null && endDate != null) {
+                                    onConfirm(startDate!!, endDate!!)
+                                    dismiss()
+                                }
+                            },
+                            enabled = startDate != null && endDate != null,
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(14.dp)
+                        ) {
+                            Text(stringResource(R.string.core_terapkan), fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
             }
         }
-    )
+    }
     
     // Start Date Picker Dialog
     if (showStartPicker) {
@@ -384,7 +479,7 @@ fun DateRangePickerDialog(
             },
             dismissButton = {
                 androidx.compose.material3.TextButton(onClick = { showStartPicker = false }) {
-                    Text("Batal")
+                    Text(stringResource(R.string.core_batal))
                 }
             }
         ) {
@@ -415,7 +510,7 @@ fun DateRangePickerDialog(
             },
             dismissButton = {
                 androidx.compose.material3.TextButton(onClick = { showEndPicker = false }) {
-                    Text("Batal")
+                    Text(stringResource(R.string.core_batal))
                 }
             }
         ) {

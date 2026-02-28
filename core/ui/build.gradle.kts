@@ -37,5 +37,9 @@ dependencies {
     implementation(libs.androidx.material3)
     // Material Icons Extended for consistent icon set across the app
     api(libs.androidx.compose.material.icons.extended)
+    implementation(libs.compose.icons.eva)
     debugImplementation(libs.androidx.ui.tooling)
+
+    // Testing
+    testImplementation(libs.junit)
 }
