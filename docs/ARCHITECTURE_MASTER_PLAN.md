@@ -12,7 +12,7 @@ All developers must adhere to this stack. No deviations without Senior Architect
 
 | Component | Choice | Rationale |
 | :--- | :--- | :--- |
-| **Language** | Kotlin 2.0+ | Modern, type-safe, null-safe standard. |
+| **Language** | Kotlin 1.9.22 | Modern, type-safe, null-safe standard. |
 | **UI Toolkit** | Jetpack Compose | Declarative UI, essential for complex "Optimistic UI" states. |
 | **Local DB** | Room + FTS4 | Robust SQLite abstraction with Typo-tolerant search. |
 | **Networking** | Ktor Client | Kotlin-native, multiplatform-ready, Coroutine-first. |

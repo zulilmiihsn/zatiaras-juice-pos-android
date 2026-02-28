@@ -42,7 +42,7 @@ ZatiarasPOS adalah aplikasi **Point of Sale Native Android** untuk operasional b
 
 | Component | Choice |
 |-----------|--------|
-| Language | Kotlin 2.0+ |
+| Language | Kotlin 1.9.22 |
 | UI | Jetpack Compose (MD3) |
 | Local DB | Room + FTS4 |
 | Network | Ktor Client |
@@ -65,11 +65,10 @@ com.zatiaras.pos/
 │   └── domain/       # Entities, UseCases
 └── feature/
     ├── auth/         # Login, PIN
-    ├── pos/          # Catalog, Cart
-    ├── inventory/    # Product CRUD
-    ├── transactions/ # Buku Kas
-    ├── reports/      # Dashboard
-    └── ai_assistant/ # Smart features
+    ├── pos/          # Catalog, Cart, Checkout
+    ├── inventory/    # Product CRUD, Categories
+    ├── reports/      # Dashboard, P&L, AI Chat
+    └── printer/      # ESC/POS Receipt Printing
 ```
 
 ---
@@ -92,7 +91,7 @@ Config dipilih saat login, diinjeksi via Hilt.
 |----------|-----------|
 | **Room as Single Source of Truth** | UI always reads from local DB, never API directly |
 | **Delta Sync** | Only fetch changed rows to save bandwidth |
-| **BFF for AI** | OpenAI keys never stored in APK |
+| **BFF for AI** | AI API keys routed via Supabase Edge Function, never stored in APK |
 
 > 📖 **Detail teknis lengkap**: Lihat [ARCHITECTURE_MASTER_PLAN.md](./ARCHITECTURE_MASTER_PLAN.md)
 
