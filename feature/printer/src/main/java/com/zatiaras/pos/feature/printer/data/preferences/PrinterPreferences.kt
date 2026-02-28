@@ -131,7 +131,7 @@ class PrinterPreferences @Inject constructor(
      */
     suspend fun getStoreName(): String {
         val prefs = dataStore.data.first()
-        return prefs[KEY_STORE_NAME] ?: "ZATIARAS"
+        return prefs[KEY_STORE_NAME] ?: "Zatiaras Juice"
     }
     
     /**

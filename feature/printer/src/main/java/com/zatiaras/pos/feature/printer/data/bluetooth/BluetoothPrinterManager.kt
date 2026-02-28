@@ -6,6 +6,7 @@ import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothSocket
 import android.content.Context
+import com.zatiaras.pos.feature.printer.R
 import com.zatiaras.pos.feature.printer.domain.model.PrinterDevice
 import com.zatiaras.pos.feature.printer.domain.model.PrinterStatus
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -114,7 +115,7 @@ class BluetoothPrinterManager @Inject constructor(
         
         try {
             val bluetoothDevice: BluetoothDevice = bluetoothAdapter?.getRemoteDevice(device.address)
-                ?: return@withContext Result.failure(Exception("Bluetooth adapter not available"))
+                ?: return@withContext Result.failure(Exception(context.getString(R.string.printer_bluetooth_adapter_unavailable)))
             
             // Create socket
             val socket = bluetoothDevice.createRfcommSocketToServiceRecord(SPP_UUID)
@@ -132,7 +133,10 @@ class BluetoothPrinterManager @Inject constructor(
             } catch (e: IOException) {
                 Timber.e(e, "Failed to connect to printer")
                 _status.value = PrinterStatus.Error(
-                    message = "Gagal terhubung ke printer: ${e.message}",
+                    message = context.getString(
+                        R.string.printer_connect_failed_with_reason,
+                        e.message ?: context.getString(R.string.printer_error_unknown)
+                    ),
                     isRecoverable = true
                 )
                 return@withContext Result.failure(e)
@@ -150,14 +154,17 @@ class BluetoothPrinterManager @Inject constructor(
         } catch (e: SecurityException) {
             Timber.e(e, "Permission denied for Bluetooth connection")
             _status.value = PrinterStatus.Error(
-                message = "Izin Bluetooth tidak diberikan",
+                message = context.getString(R.string.printer_bluetooth_permission_denied),
                 isRecoverable = true
             )
             Result.failure(e)
         } catch (e: Exception) {
             Timber.e(e, "Unexpected error connecting to printer")
             _status.value = PrinterStatus.Error(
-                message = "Error: ${e.message}",
+                message = context.getString(
+                    R.string.printer_error_with_reason,
+                    e.message ?: context.getString(R.string.printer_error_unknown)
+                ),
                 isRecoverable = true
             )
             Result.failure(e)
@@ -201,7 +208,7 @@ class BluetoothPrinterManager @Inject constructor(
     suspend fun print(data: ByteArray): Result<Unit> = withContext(Dispatchers.IO) {
         val device = connectedDevice
         if (device == null || outputStream == null) {
-            val error = "Printer tidak terhubung"
+            val error = context.getString(R.string.printer_not_connected)
             _status.value = PrinterStatus.Error(message = error, isRecoverable = true)
             return@withContext Result.failure(Exception(error))
         }
@@ -240,7 +247,10 @@ class BluetoothPrinterManager @Inject constructor(
         } catch (e: IOException) {
             Timber.e(e, "Print failed")
             _status.value = PrinterStatus.Error(
-                message = "Gagal mencetak: ${e.message}",
+                message = context.getString(
+                    R.string.printer_print_failed_with_reason,
+                    e.message ?: context.getString(R.string.printer_error_unknown)
+                ),
                 isRecoverable = true
             )
             

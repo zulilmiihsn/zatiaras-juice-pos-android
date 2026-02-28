@@ -1,5 +1,6 @@
 package com.zatiaras.pos.feature.printer.presentation
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.zatiaras.pos.feature.printer.data.bluetooth.BluetoothPrinterManager
@@ -8,7 +9,9 @@ import com.zatiaras.pos.feature.printer.data.preferences.PrinterPreferences
 import com.zatiaras.pos.feature.printer.domain.model.PaperWidth
 import com.zatiaras.pos.feature.printer.domain.model.PrinterDevice
 import com.zatiaras.pos.feature.printer.domain.model.PrinterStatus
+import com.zatiaras.pos.feature.printer.R
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -24,7 +27,8 @@ import javax.inject.Inject
 class PrinterSettingsViewModel @Inject constructor(
     private val printerManager: BluetoothPrinterManager,
     private val printerPreferences: PrinterPreferences,
-    private val receiptFormatter: ReceiptFormatter
+    private val receiptFormatter: ReceiptFormatter,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow(PrinterSettingsUiState())
@@ -119,11 +123,22 @@ class PrinterSettingsViewModel @Inject constructor(
             printerManager.connect(device).fold(
                 onSuccess = {
                     printerPreferences.saveLastPrinter(device)
-                    _events.emit(PrinterEvent.ShowToast("Terhubung ke ${device.displayName}"))
+                    _events.emit(
+                        PrinterEvent.ShowToast(
+                            context.getString(R.string.printer_connected_to_device, device.displayName)
+                        )
+                    )
                     refreshPairedDevices()
                 },
                 onFailure = { error ->
-                    _events.emit(PrinterEvent.ShowToast("Gagal: ${error.message}"))
+                    _events.emit(
+                        PrinterEvent.ShowToast(
+                            context.getString(
+                                R.string.printer_failed_with_reason,
+                                error.message ?: context.getString(R.string.printer_error_unknown)
+                            )
+                        )
+                    )
                 }
             )
         }
@@ -132,7 +147,7 @@ class PrinterSettingsViewModel @Inject constructor(
     fun disconnect() {
         viewModelScope.launch {
             printerManager.disconnect()
-            _events.emit(PrinterEvent.ShowToast("Printer terputus"))
+            _events.emit(PrinterEvent.ShowToast(context.getString(R.string.printer_disconnected_toast)))
             refreshPairedDevices()
         }
     }
@@ -140,7 +155,7 @@ class PrinterSettingsViewModel @Inject constructor(
     fun printTestPage() {
         viewModelScope.launch {
             if (!printerManager.isConnected()) {
-                _events.emit(PrinterEvent.ShowToast("Printer tidak terhubung"))
+                _events.emit(PrinterEvent.ShowToast(context.getString(R.string.printer_not_connected)))
                 return@launch
             }
             
@@ -152,7 +167,14 @@ class PrinterSettingsViewModel @Inject constructor(
                     _events.emit(PrinterEvent.PrintComplete)
                 },
                 onFailure = { error ->
-                    _events.emit(PrinterEvent.ShowToast("Gagal cetak: ${error.message}"))
+                    _events.emit(
+                        PrinterEvent.ShowToast(
+                            context.getString(
+                                R.string.printer_print_failed_with_reason,
+                                error.message ?: context.getString(R.string.printer_error_unknown)
+                            )
+                        )
+                    )
                 }
             )
         }
@@ -181,7 +203,7 @@ class PrinterSettingsViewModel @Inject constructor(
                 address = state.storeAddress.ifBlank { null }
             )
             printerPreferences.saveStoreLogo(state.storeLogoUri)
-            _events.emit(PrinterEvent.ShowToast("Informasi toko disimpan"))
+            _events.emit(PrinterEvent.ShowToast(context.getString(R.string.printer_store_info_saved)))
         }
     }
     

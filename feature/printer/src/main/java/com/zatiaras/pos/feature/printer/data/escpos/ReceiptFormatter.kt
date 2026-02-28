@@ -2,6 +2,7 @@ package com.zatiaras.pos.feature.printer.data.escpos
 
 import com.zatiaras.pos.core.ui.util.CurrencyFormatter
 import com.zatiaras.pos.feature.pos.domain.model.Transaction
+import com.zatiaras.pos.core.domain.util.LocaleUtils
 import com.zatiaras.pos.feature.printer.domain.model.PaperWidth
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
@@ -18,7 +19,7 @@ class ReceiptFormatter @Inject constructor() {
     
     private val currencyFormat: NumberFormat = CurrencyFormatter.getCurrencyFormatter()
     
-    private val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale("id", "ID"))
+    private val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", LocaleUtils.LOCALE_ID)
     
     /**
      * Format a Transaction into ESC/POS bytes for printing.
@@ -30,7 +31,7 @@ class ReceiptFormatter @Inject constructor() {
      */
     fun formatReceipt(
         transaction: Transaction,
-        storeName: String = "ZATIARAS",
+        storeName: String = "Zatiaras Juice",
         storeAddress: String? = null,
         paperWidth: PaperWidth = PaperWidth.MM_58
     ): ByteArray {
@@ -127,7 +128,13 @@ class ReceiptFormatter @Inject constructor() {
                 appendTwoColumn("Kembalian", formatCurrency(transaction.changeAmount), charPerLine)
             }
             
-            // Notes if any
+            // Customer and Notes
+            if (!transaction.customerName.isNullOrBlank()) {
+                appendNewLine()
+                appendText("Pelanggan: ${transaction.customerName}")
+                appendNewLine()
+            }
+            
             if (!transaction.notes.isNullOrBlank()) {
                 appendNewLine()
                 appendText("Catatan: ${transaction.notes}")

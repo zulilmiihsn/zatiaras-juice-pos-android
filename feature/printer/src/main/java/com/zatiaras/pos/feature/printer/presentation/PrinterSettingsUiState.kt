@@ -13,7 +13,7 @@ data class PrinterSettingsUiState(
     val pairedDevices: List<PrinterDevice> = emptyList(),
     val selectedDevice: PrinterDevice? = null,
     val paperWidth: PaperWidth = PaperWidth.MM_58,
-    val storeName: String = "ZATIARAS",
+    val storeName: String = "Zatiaras Juice",
     val storeAddress: String = "",
     val storeLogoUri: String? = null, // null = use default app logo
     val autoConnect: Boolean = false,
@@ -36,17 +36,6 @@ data class PrinterSettingsUiState(
             is PrinterStatus.Printing -> printerStatus.device
             is PrinterStatus.PrintSuccess -> printerStatus.device
             else -> null
-        }
-    
-    val statusMessage: String
-        get() = when (val status = printerStatus) {
-            is PrinterStatus.Disconnected -> "Tidak terhubung"
-            is PrinterStatus.Scanning -> "Mencari printer..."
-            is PrinterStatus.Connecting -> "Menghubungkan ke ${status.device.displayName}..."
-            is PrinterStatus.Connected -> "Terhubung ke ${status.device.displayName}"
-            is PrinterStatus.Printing -> "Mencetak... ${status.progress}%"
-            is PrinterStatus.PrintSuccess -> "Berhasil dicetak!"
-            is PrinterStatus.Error -> status.message
         }
 }
 
