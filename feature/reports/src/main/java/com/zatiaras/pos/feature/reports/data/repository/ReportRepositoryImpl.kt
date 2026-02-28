@@ -1,16 +1,27 @@
 package com.zatiaras.pos.feature.reports.data.repository
 
+import com.zatiaras.pos.core.data.local.dao.CashRecordDao
 import com.zatiaras.pos.core.data.local.dao.TransactionDao
+import com.zatiaras.pos.core.data.local.entity.CashRecordEntity
+import com.zatiaras.pos.core.domain.model.CashCategories
 import com.zatiaras.pos.core.domain.util.DateUtils
 import com.zatiaras.pos.feature.reports.domain.model.DailyRevenue
 import com.zatiaras.pos.feature.reports.domain.model.DashboardStats
-import com.zatiaras.pos.feature.reports.domain.model.ProfitLossReport
+import com.zatiaras.pos.feature.reports.domain.model.ProductSaleItem
+import com.zatiaras.pos.feature.reports.domain.model.RawProfitLossData
+import com.zatiaras.pos.feature.reports.domain.model.ManualCashRecord
 import com.zatiaras.pos.feature.reports.domain.model.TopProduct
+import com.zatiaras.pos.feature.reports.domain.model.TransactionSummaryItem
+import com.zatiaras.pos.feature.reports.domain.model.CashFlowItem
 import com.zatiaras.pos.feature.reports.domain.repository.ReportRepository
 import timber.log.Timber
-import java.util.Calendar
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 
 /**
  * Implementation of ReportRepository.
@@ -19,10 +30,10 @@ import javax.inject.Singleton
 @Singleton
 class ReportRepositoryImpl @Inject constructor(
     private val transactionDao: TransactionDao,
-    private val cashRecordDao: com.zatiaras.pos.core.data.local.dao.CashRecordDao
+    private val cashRecordDao: CashRecordDao
 ) : ReportRepository {
 
-    override suspend fun getDashboardStats(): DashboardStats {
+    override suspend fun getDashboardStats(): Result<DashboardStats> {
         // Today's range
         val todayStart = DateUtils.getStartOfDay()
         val todayEnd = DateUtils.getEndOfDay()
@@ -36,69 +47,89 @@ class ReportRepositoryImpl @Inject constructor(
         // Previous week for comparison
         val (prevWeekStart, prevWeekEnd) = DateUtils.getPreviousWeekRange()
         
-        try {
-            val todayRevenue = transactionDao.getTotalRevenueForDay(todayStart, todayEnd)
-            val todayTransactions = transactionDao.getTransactionCountForDay(todayStart, todayEnd)
-            val todayItems = transactionDao.getTotalItemsSoldForDay(todayStart, todayEnd)
-            
-            val weeklySummary = transactionDao.getRevenueSummary(weekStart, weekEnd)
-            val monthlySummary = transactionDao.getRevenueSummary(monthStart, todayEnd)
-            val prevWeekSummary = transactionDao.getRevenueSummary(prevWeekStart, prevWeekEnd)
-            
-            // Calculate growth percentage
-            val growth = if (prevWeekSummary.totalRevenue > 0) {
-                ((weeklySummary.totalRevenue - prevWeekSummary.totalRevenue).toDouble() / 
-                    prevWeekSummary.totalRevenue) * 100
-            } else {
-                if (weeklySummary.totalRevenue > 0) 100.0 else 0.0
+        return try {
+            coroutineScope {
+                val todayRevenueDeferred = async { transactionDao.getTotalRevenueForDay(todayStart, todayEnd) }
+                val todayTransactionsDeferred = async { transactionDao.getTransactionCountForDay(todayStart, todayEnd) }
+                val todayItemsDeferred = async { transactionDao.getTotalItemsSoldForDay(todayStart, todayEnd) }
+                
+                val weeklySummaryDeferred = async { transactionDao.getRevenueSummary(weekStart, weekEnd) }
+                val monthlySummaryDeferred = async { transactionDao.getRevenueSummary(monthStart, todayEnd) }
+                val prevWeekSummaryDeferred = async { transactionDao.getRevenueSummary(prevWeekStart, prevWeekEnd) }
+
+                val todayRevenue = todayRevenueDeferred.await()
+                val todayTransactions = todayTransactionsDeferred.await()
+                val todayItems = todayItemsDeferred.await()
+                
+                val weeklySummary = weeklySummaryDeferred.await()
+                val monthlySummary = monthlySummaryDeferred.await()
+                val prevWeekSummary = prevWeekSummaryDeferred.await()
+                
+                // Calculate growth percentage
+                val growth = if (prevWeekSummary.totalRevenue > 0) {
+                    ((weeklySummary.totalRevenue - prevWeekSummary.totalRevenue).toDouble() / 
+                        prevWeekSummary.totalRevenue) * 100
+                } else {
+                    if (weeklySummary.totalRevenue > 0) 100.0 else 0.0
+                }
+                
+                val stats = DashboardStats(
+                    todayRevenue = todayRevenue,
+                    todayTransactions = todayTransactions,
+                    todayItemsSold = todayItems,
+                    weeklyRevenue = weeklySummary.totalRevenue,
+                    monthlyRevenue = monthlySummary.totalRevenue,
+                    revenueGrowthPercent = growth
+                )
+                Result.success(stats)
             }
-            
-            return DashboardStats(
-                todayRevenue = todayRevenue,
-                todayTransactions = todayTransactions,
-                todayItemsSold = todayItems,
-                weeklyRevenue = weeklySummary.totalRevenue,
-                monthlyRevenue = monthlySummary.totalRevenue,
-                revenueGrowthPercent = growth
-            )
         } catch (e: Exception) {
             Timber.e(e, "Failed to get dashboard stats")
-            return DashboardStats(0, 0, 0, 0, 0, 0.0)
+            Result.failure(e)
         }
     }
 
-    override suspend fun getDailyRevenueHistory(days: Int): List<DailyRevenue> {
+    override suspend fun getDailyRevenueHistory(days: Int): Result<List<DailyRevenue>> {
         val (startDate, endDate) = DateUtils.getLastNDaysRange(days)
         
-        try {
-            val entities = transactionDao.getDailyRevenue(startDate, endDate)
+        return try {
+            // Calculate timezone offset for SQL grouping
+            val timeOffset = java.util.TimeZone.getDefault().rawOffset.toLong()
             
-            // Fill in missing days with zero values
+            // Use SQL aggregation for better performance on large datasets
+            val dailyRevenueEntities = transactionDao.getDailyRevenue(startDate, endDate, timeOffset)
+            
+            // Map to a dictionary for fast lookup
+            val dailyMap = dailyRevenueEntities.associateBy { it.dayTimestamp }
+            
             val result = mutableListOf<DailyRevenue>()
-            val entityMap = entities.associateBy { it.dayTimestamp }
+            var currentDate = Instant.ofEpochMilli(startDate)
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate()
             
-            val iterCalendar = Calendar.getInstance()
-            iterCalendar.timeInMillis = startDate
-            
+            // Iterate through each day in the range to ensure continuous data (fill gaps with 0)
             repeat(days) {
-                val dayStart = DateUtils.getStartOfDay(iterCalendar.timeInMillis)
-                val entity = entityMap[dayStart]
+                val dayStart = currentDate
+                    .atStartOfDay(ZoneId.systemDefault())
+                    .toInstant()
+                    .toEpochMilli()
+                val dailyEntity = dailyMap[dayStart]
                 
                 result.add(
                     DailyRevenue(
                         date = dayStart,
-                        revenue = entity?.revenue ?: 0L,
-                        transactionCount = entity?.transactionCount ?: 0
+                        revenue = dailyEntity?.revenue ?: 0L,
+                        transactionCount = dailyEntity?.transactionCount ?: 0
                     )
                 )
                 
-                iterCalendar.add(Calendar.DAY_OF_YEAR, 1)
+                currentDate = currentDate.plusDays(1)
             }
             
-            return result
+            Result.success(result)
         } catch (e: Exception) {
             Timber.e(e, "Failed to get daily revenue history")
-            return emptyList()
+            Result.failure(e)
         }
     }
 
@@ -106,9 +137,9 @@ class ReportRepositoryImpl @Inject constructor(
         startDate: Long,
         endDate: Long,
         limit: Int
-    ): List<TopProduct> {
-        try {
-            return transactionDao.getTopSellingProducts(startDate, endDate, limit)
+    ): Result<List<TopProduct>> {
+        return try {
+            val products = transactionDao.getTopSellingProducts(startDate, endDate, limit)
                 .map { entity ->
                     TopProduct(
                         productId = entity.productId,
@@ -117,14 +148,15 @@ class ReportRepositoryImpl @Inject constructor(
                         totalRevenue = entity.totalRevenue
                     )
                 }
+            Result.success(products)
         } catch (e: Exception) {
             Timber.e(e, "Failed to get top selling products")
-            return emptyList()
+            Result.failure(e)
         }
     }
 
-    override suspend fun getProfitLossReport(startDate: Long, endDate: Long): ProfitLossReport {
-        try {
+    override suspend fun getRawProfitLossData(startDate: Long, endDate: Long): Result<RawProfitLossData> {
+        return try {
             // 1. Get POS Revenue
             val posSummary = transactionDao.getRevenueSummary(startDate, endDate)
             val posTransactions = transactionDao.getTransactionCountForDay(startDate, endDate)
@@ -132,7 +164,7 @@ class ReportRepositoryImpl @Inject constructor(
             // 2. Get Product Sales Breakdown
             val productSales = transactionDao.getTopSellingProducts(startDate, endDate, 100)
                 .map { entity ->
-                    com.zatiaras.pos.feature.reports.domain.model.ProductSaleItem(
+                    ProductSaleItem(
                         productId = entity.productId,
                         productName = entity.productName,
                         quantity = entity.totalQuantity,
@@ -140,157 +172,71 @@ class ReportRepositoryImpl @Inject constructor(
                     )
                 }
             
-            // 3. Get Manual Records & Aggregate
-            val manualRecords = cashRecordDao.getRecordsListByDateRange(startDate, endDate)
-            val manualSummary = aggregateManualRecords(manualRecords)
-            val expensesByCategory = aggregateExpensesByCategory(manualRecords)
+            // 3. Get Manual Records
+            val manualRecordsEntity = cashRecordDao.getRecordsListByDateRange(startDate, endDate)
+            val manualRecords = manualRecordsEntity.map { entity ->
+                ManualCashRecord(
+                    type = entity.type,
+                    category = entity.category,
+                    amount = entity.amount,
+                    description = entity.description,
+                    isDeleted = entity.isDeleted
+                )
+            }
             
-            // 4. Aggregate Manual Income Items (detailed breakdown)
-            val (manualIncomeItems, otherIncomeItems) = aggregateManualIncomeItems(manualRecords)
-            
-            // 5. Combine Data
-            val posNetRevenue = posSummary.grossRevenue - posSummary.totalDiscount
-            val operatingRevenue = posNetRevenue + manualSummary.operatingIncome
-            val otherRevenue = manualSummary.otherIncome
-            val totalRevenue = operatingRevenue + otherRevenue
-            
-            val totalExpenses = manualSummary.operatingExpense + manualSummary.otherExpense
-            
-            // 6. Calculate Profit & Tax (UMKM 0.5% on Gross Profit)
-            val grossProfit = totalRevenue - totalExpenses
-            val tax = if (grossProfit > 0) (grossProfit * 0.005).toLong() else 0L
-            val netProfit = grossProfit - tax
-            
-            return ProfitLossReport(
-                periodStart = startDate,
-                periodEnd = endDate,
-                operatingRevenue = operatingRevenue,
-                otherRevenue = otherRevenue,
-                grossRevenue = totalRevenue,
-                operatingExpenses = manualSummary.operatingExpense,
-                otherExpenses = manualSummary.otherExpense,
-                totalExpenses = totalExpenses,
-                grossProfit = grossProfit,
-                tax = tax,
-                netProfit = netProfit,
-                transactionCount = posTransactions + manualRecords.count { it.type == "INCOME" },
-                // Detailed breakdown
+            val rawData = RawProfitLossData(
+                posGrossRevenue = posSummary.grossRevenue,
+                posTotalDiscount = posSummary.totalDiscount,
+                posTransactions = posTransactions,
                 productSales = productSales,
-                posNetRevenue = posNetRevenue,
-                manualOperatingIncome = manualSummary.operatingIncome,
-                manualIncomeItems = manualIncomeItems,
-                otherIncomeItems = otherIncomeItems,
-                expensesByCategory = expensesByCategory
+                manualRecords = manualRecords
             )
-            
+            Result.success(rawData)
         } catch (e: Exception) {
-            Timber.e(e, "Failed to get profit/loss report")
-            return ProfitLossReport(
-                periodStart = startDate,
-                periodEnd = endDate,
-                operatingRevenue = 0,
-                otherRevenue = 0,
-                grossRevenue = 0,
-                operatingExpenses = 0,
-                otherExpenses = 0,
-                totalExpenses = 0,
-                grossProfit = 0,
-                tax = 0,
-                netProfit = 0,
-                transactionCount = 0
-            )
+            Timber.e(e, "Failed to get raw profit/loss report data")
+            Result.failure(e)
         }
     }
-    
-    // --- Helper Functions (KISS) ---
-    
-    private data class ManualRecordSummary(
-        val operatingIncome: Long,
-        val otherIncome: Long,
-        val operatingExpense: Long,
-        val otherExpense: Long
-    )
-    
-    private fun aggregateManualRecords(
-        records: List<com.zatiaras.pos.core.data.local.entity.CashRecordEntity>
-    ): ManualRecordSummary {
-        var operatingIncome = 0L
-        var otherIncome = 0L
-        var operatingExpense = 0L
-        var otherExpense = 0L
-        
-        records.forEach { record ->
-            when {
-                record.type == "INCOME" && record.category == com.zatiaras.pos.core.domain.model.CashCategories.OPERATING_INCOME -> 
-                    operatingIncome += record.amount
-                record.type == "INCOME" -> 
-                    otherIncome += record.amount
-                record.type == "EXPENSE" && com.zatiaras.pos.core.domain.model.CashCategories.OPERATING_EXPENSES.contains(record.category) -> 
-                    operatingExpense += record.amount
-                record.type == "EXPENSE" -> 
-                    otherExpense += record.amount
+
+    override suspend fun getTransactionsForAnalysis(
+        startDate: Long,
+        endDate: Long
+    ): Result<List<TransactionSummaryItem>> {
+        return try {
+            val entities = transactionDao.getTransactionsForReports(startDate, endDate)
+            val items = entities.map { entity ->
+                TransactionSummaryItem(
+                    createdAt = entity.createdAt,
+                    paymentMethod = entity.paymentMethod,
+                    grandTotal = entity.grandTotal
+                )
             }
+            Result.success(items)
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to get transactions for analysis")
+            Result.failure(e)
         }
-        
-        return ManualRecordSummary(operatingIncome, otherIncome, operatingExpense, otherExpense)
     }
-    
-    /**
-     * Aggregate expense records by category with individual items.
-     */
-    private fun aggregateExpensesByCategory(
-        records: List<com.zatiaras.pos.core.data.local.entity.CashRecordEntity>
-    ): List<com.zatiaras.pos.feature.reports.domain.model.ExpenseCategoryItem> {
-        val expenseRecords = records.filter { it.type == "EXPENSE" && !it.isDeleted }
-        
-        return expenseRecords
-            .groupBy { it.category ?: "Lainnya" }
-            .map { (category, items) ->
-                com.zatiaras.pos.feature.reports.domain.model.ExpenseCategoryItem(
-                    category = category,
-                    amount = items.sumOf { it.amount },
-                    items = items.map { record ->
-                        com.zatiaras.pos.feature.reports.domain.model.ExpenseDetailItem(
-                            description = record.description,
-                            amount = record.amount
-                        )
-                    }
+
+    override suspend fun getCashRecordsForAnalysis(
+        startDate: Long,
+        endDate: Long
+    ): Result<List<CashFlowItem>> {
+        return try {
+            val entities = cashRecordDao.getRecordsListByDateRange(startDate, endDate)
+            val items = entities.map { entity ->
+                CashFlowItem(
+                    type = entity.type,
+                    amount = entity.amount,
+                    description = entity.description,
+                    category = entity.category
                 )
             }
-            .sortedByDescending { it.amount }
+            Result.success(items)
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to get cash records for analysis")
+            Result.failure(e)
+        }
     }
-    
-    /**
-     * Aggregate manual income records by description.
-     * Returns Pair(operatingIncomeItems, otherIncomeItems)
-     */
-    private fun aggregateManualIncomeItems(
-        records: List<com.zatiaras.pos.core.data.local.entity.CashRecordEntity>
-    ): Pair<List<com.zatiaras.pos.feature.reports.domain.model.IncomeDetailItem>, List<com.zatiaras.pos.feature.reports.domain.model.IncomeDetailItem>> {
-        val incomeRecords = records.filter { it.type == "INCOME" && !it.isDeleted }
-        
-        val operatingIncomeItems = incomeRecords
-            .filter { it.category == com.zatiaras.pos.core.domain.model.CashCategories.OPERATING_INCOME }
-            .map { record ->
-                com.zatiaras.pos.feature.reports.domain.model.IncomeDetailItem(
-                    description = record.description,
-                    amount = record.amount,
-                    category = record.category
-                )
-            }
-            .sortedByDescending { it.amount }
-        
-        val otherIncomeItems = incomeRecords
-            .filter { it.category != com.zatiaras.pos.core.domain.model.CashCategories.OPERATING_INCOME }
-            .map { record ->
-                com.zatiaras.pos.feature.reports.domain.model.IncomeDetailItem(
-                    description = record.description,
-                    amount = record.amount,
-                    category = record.category
-                )
-            }
-            .sortedByDescending { it.amount }
-        
-        return Pair(operatingIncomeItems, otherIncomeItems)
-    }
+
 }

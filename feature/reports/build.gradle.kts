@@ -44,6 +44,7 @@ dependencies {
     implementation(project(":core:ui"))
     implementation(project(":core:domain"))
     implementation(project(":core:data"))
+    implementation(project(":feature:printer"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -55,6 +56,12 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation("androidx.compose.material:material-icons-extended")
 
+    // Coil for image loading
+    implementation(libs.coil.compose)
+
+    // Icons
+    implementation(libs.compose.icons.eva)
+
     // Hilt
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
@@ -65,6 +72,11 @@ dependencies {
 
     // Timber
     implementation(libs.timber)
+    
+    // Testing
+    testImplementation(libs.junit)
+    testImplementation(libs.test.mockk)
+    testImplementation(libs.test.coroutines)
 
     debugImplementation(libs.androidx.ui.tooling)
 }

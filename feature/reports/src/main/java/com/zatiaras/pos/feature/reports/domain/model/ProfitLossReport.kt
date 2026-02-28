@@ -40,7 +40,10 @@ data class ProfitLossReport(
     val otherIncomeItems: List<IncomeDetailItem> = emptyList(),
     
     // Expense breakdown by category
-    val expensesByCategory: List<ExpenseCategoryItem> = emptyList()
+    val expensesByCategory: List<ExpenseCategoryItem> = emptyList(),
+    
+    // Tax percentage applied
+    val taxPercentage: Double = 0.5
 )
 
 /**
