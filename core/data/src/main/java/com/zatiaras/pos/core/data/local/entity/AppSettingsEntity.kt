@@ -28,7 +28,7 @@ data class AppSettingsEntity(
     val lockedRoutes: List<String> = emptyList(),
     
     // Store Info (for receipt)
-    val storeName: String = "ZATIARAS",
+    val storeName: String = "Zatiaras Juice",
     val storeAddress: String? = null,
     val storePhone: String? = null,
     
@@ -38,6 +38,12 @@ data class AppSettingsEntity(
     // Receipt customization
     val receiptFooter: String? = "Terima kasih atas kunjungan Anda!",
     val showLogoOnReceipt: Boolean = true,
+    
+    // Tax defaults
+    val defaultTaxPercentage: Double = 0.5,
+    
+    // Performance
+    val lowPerformanceMode: Boolean = false,
     
     // Sync tracking
     val updatedAt: Long = System.currentTimeMillis(),

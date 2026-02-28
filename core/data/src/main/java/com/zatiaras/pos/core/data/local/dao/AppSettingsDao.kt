@@ -117,6 +117,18 @@ interface AppSettingsDao {
         updatedAt: Long = System.currentTimeMillis()
     )
 
+    /**
+     * Update default tax percentage.
+     */
+    @Query("UPDATE app_settings SET defaultTaxPercentage = :percentage, updatedAt = :updatedAt, isSynced = 0 WHERE id = 'default'")
+    suspend fun updateDefaultTaxPercentage(percentage: Double, updatedAt: Long = System.currentTimeMillis())
+
+    /**
+     * Update low performance mode.
+     */
+    @Query("UPDATE app_settings SET lowPerformanceMode = :enabled, updatedAt = :updatedAt, isSynced = 0 WHERE id = 'default'")
+    suspend fun updateLowPerformanceMode(enabled: Boolean, updatedAt: Long = System.currentTimeMillis())
+
     // ==================== SYNC ====================
 
     /**
@@ -150,7 +162,7 @@ interface AppSettingsDao {
             insertIfNotExists(
                 AppSettingsEntity(
                     id = "default",
-                    storeName = "ZATIARAS",
+                    storeName = "Zatiaras Juice",
                     defaultPaperWidth = 58,
                     updatedAt = timestamp,
                     isSynced = false

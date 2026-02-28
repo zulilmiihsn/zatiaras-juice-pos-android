@@ -1,16 +1,19 @@
 package com.zatiaras.pos.core.data.access
 
 import android.content.Context
+import android.content.SharedPreferences
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import androidx.security.crypto.EncryptedSharedPreferences
+import androidx.security.crypto.MasterKey
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import timber.log.Timber
 import java.security.MessageDigest
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -20,32 +23,51 @@ private val Context.accessControlDataStore: DataStore<Preferences> by preference
 )
 
 /**
- * Manages access control preferences for multi-role system.
+ * Manages access control preferences with sensitive data stored in EncryptedSharedPreferences.
  * 
  * Features:
- * - Owner PIN: A PIN set by the owner that kasir must enter to access locked screens
- * - Locked Routes: List of routes that require owner PIN for kasir access
- * 
- * This is SEPARATE from AppLockPreferences which handles app-level biometric/PIN lock.
- * This specifically handles role-based access control.
+ * - Owner PIN: Stored encrypted at rest using AES256.
+ * - Locked Routes: List of routes that require owner PIN.
  */
 @Singleton
 class AccessControlPreferences @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
+    private val masterKey = MasterKey.Builder(context)
+        .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+        .build()
+
+    private val encryptedPrefs: SharedPreferences by lazy {
+        try {
+            EncryptedSharedPreferences.create(
+                context,
+                SECURE_PREFS_FILE,
+                masterKey,
+                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+            )
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to create EncryptedSharedPreferences, falling back to regular prefs (Warning: Unencrypted)")
+            context.getSharedPreferences(SECURE_PREFS_FILE + "_fallback", Context.MODE_PRIVATE)
+        }
+    }
+
     companion object {
-        private val KEY_OWNER_PIN_HASH = stringPreferencesKey("owner_pin_hash")
+        private const val SECURE_PREFS_FILE = "secure_access_control"
+        private const val KEY_OWNER_PIN_HASH = "owner_pin_hash_v2" // Versioned to force re-entry
         private val KEY_LOCKED_ROUTES = stringSetPreferencesKey("locked_routes")
     }
 
-    // ==================== OWNER PIN ====================
+    // ==================== OWNER PIN (SECURE STORAGE) ====================
 
     /**
      * Check if owner PIN is set.
      */
     fun isOwnerPinSet(): Flow<Boolean> {
-        return context.accessControlDataStore.data.map { prefs ->
-            prefs[KEY_OWNER_PIN_HASH] != null
+        // Since SharedPreferences doesn't have a direct Flow, we wrap it
+        // and also allow for simple manual check
+        return context.accessControlDataStore.data.map {
+            encryptedPrefs.contains(KEY_OWNER_PIN_HASH)
         }
     }
 
@@ -53,29 +75,28 @@ class AccessControlPreferences @Inject constructor(
      * Check if owner PIN is set (suspend).
      */
     suspend fun isOwnerPinSetNow(): Boolean {
-        return isOwnerPinSet().first()
+        return encryptedPrefs.contains(KEY_OWNER_PIN_HASH)
     }
 
     /**
-     * Set owner PIN (stores hashed value).
-     * Only owner can set this PIN.
+     * Set owner PIN (stores hashed value in encrypted storage).
      */
     suspend fun setOwnerPin(pin: String) {
         val hashedPin = hashPin(pin)
+        encryptedPrefs.edit().putString(KEY_OWNER_PIN_HASH, hashedPin).apply()
+        
+        // Trigger a change in DataStore just to notify observers of isOwnerPinSet()
+        // This is a common pattern to bridge SharedPreferences items that UI observes via Flow
         context.accessControlDataStore.edit { prefs ->
-            prefs[KEY_OWNER_PIN_HASH] = hashedPin
+            prefs[stringSetPreferencesKey("pin_update_trigger")] = setOf(System.currentTimeMillis().toString())
         }
     }
 
     /**
      * Verify PIN against stored owner PIN hash.
-     * Used when kasir tries to access locked screens.
      */
     suspend fun verifyOwnerPin(pin: String): Boolean {
-        val storedHash = context.accessControlDataStore.data.map { prefs ->
-            prefs[KEY_OWNER_PIN_HASH]
-        }.first()
-
+        val storedHash = encryptedPrefs.getString(KEY_OWNER_PIN_HASH, null)
         if (storedHash == null) return false
         return hashPin(pin) == storedHash
     }
@@ -84,12 +105,11 @@ class AccessControlPreferences @Inject constructor(
      * Clear owner PIN.
      */
     suspend fun clearOwnerPin() {
-        context.accessControlDataStore.edit { prefs ->
-            prefs.remove(KEY_OWNER_PIN_HASH)
-        }
+        encryptedPrefs.edit().remove(KEY_OWNER_PIN_HASH).apply()
+        context.accessControlDataStore.edit { it.clear() }
     }
 
-    // ==================== LOCKED ROUTES ====================
+    // ==================== LOCKED ROUTES (DATASTORE) ====================
 
     /**
      * Get set of locked route strings.
@@ -133,7 +153,7 @@ class AccessControlPreferences @Inject constructor(
     }
 
     /**
-     * Set locked routes (replaces existing).
+     * Set locked routes.
      */
     suspend fun setLockedRoutes(routes: Set<String>) {
         context.accessControlDataStore.edit { prefs ->
@@ -172,22 +192,16 @@ class AccessControlPreferences @Inject constructor(
 
     // ==================== RESET ====================
 
-    /**
-     * Reset all access control settings.
-     */
     suspend fun resetAll() {
-        context.accessControlDataStore.edit { prefs ->
-            prefs.clear()
-        }
+        encryptedPrefs.edit().clear().apply()
+        context.accessControlDataStore.edit { it.clear() }
     }
 
     // ==================== HELPERS ====================
 
-    /**
-     * Hash PIN using SHA-256.
-     */
     private fun hashPin(pin: String): String {
         val bytes = MessageDigest.getInstance("SHA-256").digest(pin.toByteArray())
         return bytes.joinToString("") { "%02x".format(it) }
     }
 }
+

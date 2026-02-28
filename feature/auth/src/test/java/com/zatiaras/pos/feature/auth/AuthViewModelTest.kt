@@ -3,6 +3,7 @@ package com.zatiaras.pos.feature.auth
 import com.zatiaras.pos.core.data.repository.LocalAuthRepository
 import com.zatiaras.pos.core.domain.Result
 import com.zatiaras.pos.core.domain.usecase.LoginUseCase
+import com.zatiaras.pos.core.ui.util.UiText
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -44,7 +45,7 @@ class AuthViewModelTest {
         localAuthRepository = mockk(relaxed = true)
         
         // Mock sync-related methods
-        coEvery { localAuthRepository.syncUsersFromRemote() } returns 1
+        coEvery { localAuthRepository.syncUsersWithResult() } returns Result.Success(1)
         coEvery { localAuthRepository.getAllUsers() } returns emptyList()
         
         viewModel = AuthViewModel(loginUseCase, localAuthRepository)
@@ -56,19 +57,18 @@ class AuthViewModelTest {
     }
 
     @Test
-    fun `initial state is Syncing then Idle`() = runTest {
-        // Initially should be Syncing
-        assertEquals(AuthUiState.Syncing, viewModel.uiState.value)
-        
-        // After sync completes, should be Idle
+    fun `initial state transitions to Idle after sync`() = runTest {
+        // With StandardTestDispatcher, the init coroutine is queued, not started yet
+        // Initial MutableStateFlow value is Idle
+        // After advancing, sync completes and state returns to Idle
         advanceUntilIdle()
         assertEquals(AuthUiState.Idle, viewModel.uiState.value)
     }
 
     @Test
-    fun `syncUsersFromRemote is called on startup`() = runTest {
+    fun `syncUsersWithResult is called on startup`() = runTest {
         advanceUntilIdle()
-        coVerify { localAuthRepository.syncUsersFromRemote() }
+        coVerify { localAuthRepository.syncUsersWithResult() }
     }
 
     @Test
@@ -80,7 +80,7 @@ class AuthViewModelTest {
         coEvery { loginUseCase(any(), any()) } returns Result.Success(Unit)
         
         // When
-        viewModel.login("test@test.com", "password")
+        viewModel.login("test@test.com", "password", "branch-1")
         advanceUntilIdle()
         
         // Then
@@ -98,13 +98,15 @@ class AuthViewModelTest {
         coEvery { loginUseCase(any(), any()) } returns Result.Error(Exception(errorMessage))
         
         // When
-        viewModel.login("wrong@test.com", "wrongpass")
+        viewModel.login("wrong@test.com", "wrongpass", "branch-1")
         advanceUntilIdle()
         
         // Then
         val state = viewModel.uiState.value
         assertTrue(state is AuthUiState.Error)
-        assertEquals(errorMessage, (state as AuthUiState.Error).message)
+        val errorState = state as AuthUiState.Error
+        assertTrue(errorState.message is UiText.DynamicString)
+        assertEquals(errorMessage, (errorState.message as UiText.DynamicString).value)
     }
 
     @Test
@@ -116,7 +118,7 @@ class AuthViewModelTest {
         coEvery { loginUseCase(any(), any()) } returns Result.Success(Unit)
         
         // When
-        viewModel.login("test@test.com", "password")
+        viewModel.login("test@test.com", "password", "branch-1")
         
         // Then - during execution, state should be Loading
         // Note: With StandardTestDispatcher, we can check intermediate states
@@ -134,7 +136,7 @@ class AuthViewModelTest {
         
         // Given - login success first
         coEvery { loginUseCase(any(), any()) } returns Result.Success(Unit)
-        viewModel.login("test@test.com", "password")
+        viewModel.login("test@test.com", "password", "branch-1")
         advanceUntilIdle()
         assertEquals(AuthUiState.Success, viewModel.uiState.value)
         

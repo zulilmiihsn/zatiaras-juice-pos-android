@@ -181,7 +181,7 @@ data class PengaturanDto(
     val lockedRoutes: List<String>? = null,
     
     @SerialName("store_name")
-    val storeName: String = "ZATIARAS",
+    val storeName: String = "Zatiaras Juice",
     
     @SerialName("store_address")
     val storeAddress: String? = null,
@@ -198,6 +198,9 @@ data class PengaturanDto(
     @SerialName("show_logo_on_receipt")
     val showLogoOnReceipt: Boolean = true,
     
+    @SerialName("default_tax_percentage")
+    val defaultTaxPercentage: Double = 0.5,
+    
     @SerialName("updated_at")
     val updatedAt: Long = 0
 ) {
@@ -211,6 +214,7 @@ data class PengaturanDto(
         defaultPaperWidth = defaultPaperWidth,
         receiptFooter = receiptFooter,
         showLogoOnReceipt = showLogoOnReceipt,
+        defaultTaxPercentage = defaultTaxPercentage,
         updatedAt = updatedAt,
         isSynced = true // Came from remote
     )
@@ -229,5 +233,6 @@ fun AppSettingsEntity.toDto(): PengaturanDto = PengaturanDto(
     defaultPaperWidth = defaultPaperWidth,
     receiptFooter = receiptFooter,
     showLogoOnReceipt = showLogoOnReceipt,
+    defaultTaxPercentage = defaultTaxPercentage,
     updatedAt = updatedAt
 )

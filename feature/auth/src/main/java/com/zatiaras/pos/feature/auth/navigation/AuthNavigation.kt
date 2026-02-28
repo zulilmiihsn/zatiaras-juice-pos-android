@@ -56,11 +56,11 @@ fun NavGraphBuilder.appLockScreen(
  */
 fun NavGraphBuilder.settingsScreen(
     onNavigateBack: () -> Unit,
-    onNavigateToPinSetup: () -> Unit,
     onNavigateToPrinter: () -> Unit = {},
     onNavigateToInventory: () -> Unit = {},
     onNavigateToSecurity: () -> Unit = {},
     onNavigateToAccessControl: () -> Unit = {},
+    onNavigateToTransactionHistory: () -> Unit = {},
     onNavigateToSync: () -> Unit = {},
     onNavigateToAbout: () -> Unit = {},
     onLogout: () -> Unit,
@@ -76,11 +76,11 @@ fun NavGraphBuilder.settingsScreen(
             ) {
                 SettingsRoute(
                     onNavigateBack = onNavigateBack,
-                    onNavigateToPinSetup = onNavigateToPinSetup,
                     onNavigateToPrinter = onNavigateToPrinter,
                     onNavigateToInventory = onNavigateToInventory,
                     onNavigateToSecurity = onNavigateToSecurity,
                     onNavigateToAccessControl = onNavigateToAccessControl,
+                    onNavigateToTransactionHistory = onNavigateToTransactionHistory,
                     onNavigateToSync = onNavigateToSync,
                     onNavigateToAbout = onNavigateToAbout,
                     onLogout = onLogout
@@ -89,11 +89,11 @@ fun NavGraphBuilder.settingsScreen(
         } else {
             SettingsRoute(
                 onNavigateBack = onNavigateBack,
-                onNavigateToPinSetup = onNavigateToPinSetup,
                 onNavigateToPrinter = onNavigateToPrinter,
                 onNavigateToInventory = onNavigateToInventory,
                 onNavigateToSecurity = onNavigateToSecurity,
                 onNavigateToAccessControl = onNavigateToAccessControl,
+                onNavigateToTransactionHistory = onNavigateToTransactionHistory,
                 onNavigateToSync = onNavigateToSync,
                 onNavigateToAbout = onNavigateToAbout,
                 onLogout = onLogout

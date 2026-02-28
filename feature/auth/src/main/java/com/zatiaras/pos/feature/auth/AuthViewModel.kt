@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import com.zatiaras.pos.core.ui.util.UiText
 import javax.inject.Inject
 
 sealed interface AuthUiState {
@@ -19,7 +20,7 @@ sealed interface AuthUiState {
     data object Loading : AuthUiState
     data object Syncing : AuthUiState // Syncing users from Supabase
     data object Success : AuthUiState
-    data class Error(val message: String) : AuthUiState
+    data class Error(val message: UiText) : AuthUiState
 }
 
 @HiltViewModel
@@ -31,8 +32,8 @@ class AuthViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<AuthUiState>(AuthUiState.Idle)
     val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
     
-    private val _syncStatus = MutableStateFlow<String?>(null)
-    val syncStatus: StateFlow<String?> = _syncStatus.asStateFlow()
+    private val _syncStatus = MutableStateFlow<UiText?>(null)
+    val syncStatus: StateFlow<UiText?> = _syncStatus.asStateFlow()
 
     init {
         syncUsersOnStartup()
@@ -45,13 +46,13 @@ class AuthViewModel @Inject constructor(
     private fun syncUsersOnStartup() {
         viewModelScope.launch {
             _uiState.update { AuthUiState.Syncing }
-            _syncStatus.value = "Menyinkronkan data..."
+            _syncStatus.value = UiText.StringResource(R.string.auth_syncing_data)
             
             when (val result = localAuthRepository.syncUsersWithResult()) {
                 is Result.Success -> {
                     val syncedCount = result.data
                     Timber.d("User sync successful: $syncedCount users")
-                    _syncStatus.value = "Tersinkronkan ($syncedCount user)"
+                    _syncStatus.value = UiText.StringResource(R.string.auth_sync_success_count, syncedCount)
                 }
                 is Result.Error -> {
                     Timber.e(result.exception, "Sync failed: ${result.exception?.message}")
@@ -59,9 +60,9 @@ class AuthViewModel @Inject constructor(
                     // Check if we have local users for offline mode
                     val localUsers = localAuthRepository.getAllUsers()
                     if (localUsers.isEmpty()) {
-                        _syncStatus.value = "Tidak ada koneksi. Hubungkan ke internet."
+                        _syncStatus.value = UiText.StringResource(R.string.auth_no_connection)
                     } else {
-                        _syncStatus.value = "Mode offline (${localUsers.size} user tersedia)"
+                        _syncStatus.value = UiText.StringResource(R.string.auth_offline_mode, localUsers.size)
                     }
                 }
                 is Result.Loading -> {
@@ -83,7 +84,7 @@ class AuthViewModel @Inject constructor(
     fun login(username: String, password: String, branchId: String) {
         viewModelScope.launch {
             if (branchId.isEmpty()) {
-                _uiState.update { AuthUiState.Error("Silakan pilih cabang terlebih dahulu") }
+                _uiState.update { AuthUiState.Error(UiText.StringResource(R.string.auth_error_branch_required)) }
                 return@launch
             }
             
@@ -99,7 +100,13 @@ class AuthViewModel @Inject constructor(
                     _uiState.update { AuthUiState.Success }
                 }
                 is Result.Error -> {
-                    _uiState.update { AuthUiState.Error(result.exception?.message ?: "Login gagal") }
+                    val errorMessage = result.exception?.message ?: ""
+                    val uiError = if (errorMessage.isNotBlank()) {
+                        UiText.DynamicString(errorMessage)
+                    } else {
+                        UiText.StringResource(R.string.auth_error_login_failed)
+                    }
+                    _uiState.update { AuthUiState.Error(uiError) }
                 }
                 else -> Unit
             }

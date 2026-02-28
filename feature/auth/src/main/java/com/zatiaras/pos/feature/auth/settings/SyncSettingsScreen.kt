@@ -20,6 +20,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import com.zatiaras.pos.feature.auth.R
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Brush
@@ -53,7 +55,7 @@ fun SyncSettingsScreen(
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        text = "Sinkronisasi",
+                        text = stringResource(R.string.sync_title),
                         fontWeight = FontWeight.Bold
                     )
                 },
@@ -61,7 +63,7 @@ fun SyncSettingsScreen(
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Kembali"
+                            contentDescription = stringResource(R.string.auth_back)
                         )
                     }
                 },
@@ -80,7 +82,7 @@ fun SyncSettingsScreen(
         ) {
             // Header Description
             Text(
-                text = "Sinkronisasi data dengan server cloud",
+                text = stringResource(R.string.sync_desc),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(bottom = 20.dp)
@@ -97,8 +99,8 @@ fun SyncSettingsScreen(
 
             // Section Header
             SectionHeader(
-                title = "⚡ Aksi Cepat",
-                subtitle = "Sinkronisasi manual data"
+                title = stringResource(R.string.sync_action_title),
+                subtitle = stringResource(R.string.sync_action_desc)
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -107,9 +109,9 @@ fun SyncSettingsScreen(
             SyncActionCard(
                 icon = Icons.Outlined.Sync,
                 iconColor = SyncIconColor,
-                title = "Sync Sekarang",
-                subtitle = "Sinkronkan data pending ke server",
-                buttonText = if (uiState.isSyncing) "Menyinkronkan..." else "Sync",
+                title = stringResource(R.string.sync_now),
+                subtitle = stringResource(R.string.sync_now_desc),
+                buttonText = if (uiState.isSyncing) stringResource(R.string.sync_button_syncing) else stringResource(R.string.sync_now_btn),
                 isLoading = uiState.isSyncing,
                 enabled = !uiState.isSyncing,
                 onClick = { viewModel.syncNow() }
@@ -121,9 +123,9 @@ fun SyncSettingsScreen(
             SyncActionCard(
                 icon = Icons.Outlined.CloudSync,
                 iconColor = WarningColor,
-                title = "Force Full Sync",
-                subtitle = "Unduh ulang semua data dari server",
-                buttonText = "Full Sync",
+                title = stringResource(R.string.sync_full),
+                subtitle = stringResource(R.string.sync_full_desc),
+                buttonText = stringResource(R.string.sync_full_btn),
                 isLoading = false,
                 enabled = !uiState.isSyncing,
                 isOutlined = true,
@@ -134,8 +136,8 @@ fun SyncSettingsScreen(
 
             // Section Header for Info
             SectionHeader(
-                title = "📖 Tentang Sinkronisasi",
-                subtitle = "Cara kerja sinkronisasi data"
+                title = stringResource(R.string.sync_about),
+                subtitle = stringResource(R.string.sync_about_desc)
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -168,7 +170,7 @@ fun SyncSettingsScreen(
                         }
                         Spacer(modifier = Modifier.width(12.dp))
                         Text(
-                            text = "Cara Kerja",
+                            text = stringResource(R.string.sync_how_it_works),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = InfoColor
@@ -179,28 +181,28 @@ fun SyncSettingsScreen(
                     
                     InfoBulletPoint(
                         emoji = "🔄",
-                        text = "Sync otomatis berjalan di background"
+                        text = stringResource(R.string.sync_bg_sync)
                     )
                     
                     Spacer(modifier = Modifier.height(8.dp))
                     
                     InfoBulletPoint(
                         emoji = "💾",
-                        text = "Data penjualan tersimpan offline dahulu"
+                        text = stringResource(R.string.sync_offline_first)
                     )
                     
                     Spacer(modifier = Modifier.height(8.dp))
                     
                     InfoBulletPoint(
                         emoji = "☁️",
-                        text = "Force Full Sync mengunduh ulang semua data"
+                        text = stringResource(R.string.sync_full_desc_info)
                     )
                     
                     Spacer(modifier = Modifier.height(8.dp))
                     
                     InfoBulletPoint(
                         emoji = "⚠️",
-                        text = "Gunakan Force Sync hanya jika diperlukan"
+                        text = stringResource(R.string.sync_warn)
                     )
                 }
             }
@@ -215,7 +217,7 @@ fun SyncSettingsScreen(
  */
 @Composable
 private fun SyncStatusCard(
-    lastSyncInfo: String,
+    lastSyncInfo: LastSyncInfo,
     pendingCount: Int,
     isSyncing: Boolean
 ) {
@@ -290,16 +292,16 @@ private fun SyncStatusCard(
                     Column {
                         Text(
                             text = when {
-                                isSyncing -> "Sedang Sinkronisasi..."
-                                hasPending -> "Ada Data Pending"
-                                else -> "Tersinkronisasi ✓"
+                                isSyncing -> stringResource(R.string.sync_status_syncing)
+                                hasPending -> stringResource(R.string.sync_status_pending)
+                                else -> stringResource(R.string.sync_status_synced)
                             },
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             color = Color.White
                         )
                         Text(
-                            text = lastSyncInfo,
+                            text = lastSyncInfoText(lastSyncInfo),
                             style = MaterialTheme.typography.bodyMedium,
                             color = Color.White.copy(alpha = 0.85f)
                         )
@@ -327,7 +329,7 @@ private fun SyncStatusCard(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Data Pending",
+                            text = stringResource(R.string.sync_pending_data),
                             style = MaterialTheme.typography.bodyMedium,
                             color = Color.White.copy(alpha = 0.8f)
                         )
@@ -340,7 +342,7 @@ private fun SyncStatusCard(
                             .padding(horizontal = 12.dp, vertical = 4.dp)
                     ) {
                         Text(
-                            text = "$pendingCount item",
+                            text = stringResource(R.string.sync_pending_count, pendingCount),
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.Bold,
                             color = Color.White
@@ -349,6 +351,17 @@ private fun SyncStatusCard(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun lastSyncInfoText(lastSyncInfo: LastSyncInfo): String {
+    return when (lastSyncInfo.unit) {
+        LastSyncUnit.NEVER -> stringResource(R.string.sync_never)
+        LastSyncUnit.JUST_NOW -> stringResource(R.string.sync_just_now)
+        LastSyncUnit.MINUTES_AGO -> stringResource(R.string.sync_mins_ago, lastSyncInfo.value)
+        LastSyncUnit.HOURS_AGO -> stringResource(R.string.sync_hours_ago, lastSyncInfo.value)
+        LastSyncUnit.DAYS_AGO -> stringResource(R.string.sync_days_ago, lastSyncInfo.value)
     }
 }
 

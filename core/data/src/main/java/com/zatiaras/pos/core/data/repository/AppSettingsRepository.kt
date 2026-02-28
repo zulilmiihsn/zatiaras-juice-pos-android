@@ -63,7 +63,7 @@ class AppSettingsRepository @Inject constructor(
      * Get store name for receipt.
      */
     suspend fun getStoreName(): String {
-        return settingsDao.getStoreName() ?: "ZATIARAS"
+        return settingsDao.getStoreName() ?: "Zatiaras Juice"
     }
 
     /**
@@ -248,6 +248,43 @@ class AppSettingsRepository @Inject constructor(
     }
 
     // ==================== SYNC ====================
+
+    /**
+     * Get default tax percentage.
+     */
+    suspend fun getDefaultTaxPercentage(): Double {
+        return getSettings()?.defaultTaxPercentage ?: 0.5
+    }
+
+    /**
+     * Update default tax percentage.
+     */
+    suspend fun updateDefaultTaxPercentage(percentage: Double): Result<Unit> {
+        return try {
+            settingsDao.updateDefaultTaxPercentage(percentage)
+            syncSettingsToRemote()
+            Timber.d("Tax percentage updated: $percentage%")
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to update tax percentage")
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Update low performance mode.
+     */
+    suspend fun updateLowPerformanceMode(enabled: Boolean): Result<Unit> {
+        return try {
+            settingsDao.updateLowPerformanceMode(enabled)
+            syncSettingsToRemote()
+            Timber.d("Low performance mode updated: $enabled")
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to update low performance mode")
+            Result.failure(e)
+        }
+    }
 
     /**
      * Sync settings from remote to local.

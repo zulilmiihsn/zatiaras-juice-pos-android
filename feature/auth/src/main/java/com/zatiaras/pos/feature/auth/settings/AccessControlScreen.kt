@@ -15,6 +15,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import com.zatiaras.pos.feature.auth.R
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -66,7 +68,7 @@ fun AccessControlScreen(
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        text = "Kontrol Akses",
+                        text = stringResource(R.string.access_control_title),
                         fontWeight = FontWeight.Bold
                     )
                 },
@@ -74,7 +76,7 @@ fun AccessControlScreen(
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Kembali"
+                            contentDescription = stringResource(R.string.auth_back)
                         )
                     }
                 },
@@ -111,7 +113,7 @@ fun AccessControlScreen(
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
-                        text = "Kelola akses menu untuk kasir. Menu yang dikunci akan meminta PIN pemilik.",
+                        text = stringResource(R.string.access_control_desc),
                         style = MaterialTheme.typography.bodyMedium,
                         color = InfoColor
                     )
@@ -122,8 +124,8 @@ fun AccessControlScreen(
 
             // Section Header
             SectionHeader(
-                title = "🔑 PIN Pemilik",
-                subtitle = "PIN untuk membuka menu yang dikunci"
+                title = stringResource(R.string.access_control_owner_pin),
+                subtitle = stringResource(R.string.access_control_pin_hint)
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -180,9 +182,9 @@ fun AccessControlScreen(
                                 )
                                 Text(
                                     text = if (uiState.ownerPinSet) {
-                                        "✓ PIN sudah diatur"
+                                        stringResource(R.string.access_control_pin_set)
                                     } else {
-                                        "Belum ada PIN"
+                                        stringResource(R.string.access_control_no_pin)
                                     },
                                     style = MaterialTheme.typography.bodySmall,
                                     color = Color.White.copy(alpha = 0.85f)
@@ -199,7 +201,7 @@ fun AccessControlScreen(
                             shape = RoundedCornerShape(12.dp)
                         ) {
                             Text(
-                                if (uiState.ownerPinSet) "Ubah" else "Atur",
+                                if (uiState.ownerPinSet) stringResource(R.string.auth_change) else stringResource(R.string.auth_configure),
                                 fontWeight = FontWeight.SemiBold
                             )
                         }
@@ -211,8 +213,8 @@ fun AccessControlScreen(
 
             // Section Header for Lock Routes
             SectionHeader(
-                title = "🔒 Menu yang Dapat Dikunci",
-                subtitle = "Aktifkan untuk mengunci menu dari kasir"
+                title = stringResource(R.string.access_control_lock_menu_title),
+                subtitle = stringResource(R.string.access_control_lock_menu_desc)
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -264,7 +266,7 @@ fun AccessControlScreen(
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
-                        text = "💡 Kasir dapat mengakses menu yang dikunci dengan memasukkan PIN pemilik.",
+                        text = stringResource(R.string.access_control_hint),
                         style = MaterialTheme.typography.bodySmall,
                         color = Color(0xFF10B981)
                     )
@@ -359,7 +361,7 @@ private fun LockableRouteItem(
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
-                    text = if (isLocked) "🔒 Dikunci - Kasir perlu PIN" else "🔓 Tidak dikunci",
+                    text = if (isLocked) stringResource(R.string.access_control_locked) else stringResource(R.string.access_control_unlocked),
                     style = MaterialTheme.typography.bodySmall,
                     color = iconColor
                 )

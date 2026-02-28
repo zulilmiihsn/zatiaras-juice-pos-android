@@ -1,9 +1,12 @@
 package com.zatiaras.pos.feature.auth.lock
 
+import android.content.Context
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.zatiaras.pos.feature.auth.R
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -29,7 +32,8 @@ data class AppLockUiState(
 @HiltViewModel
 class AppLockViewModel @Inject constructor(
     private val appLockPreferences: AppLockPreferences,
-    private val biometricManager: AppBiometricManager
+    private val biometricManager: AppBiometricManager,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AppLockUiState())
@@ -115,7 +119,7 @@ class AppLockViewModel @Inject constructor(
                     state.copy(
                         enteredPin = "",
                         pinError = true,
-                        errorMessage = "PIN salah, coba lagi",
+                        errorMessage = context.getString(R.string.app_lock_pin_wrong),
                         isLoading = false
                     )
                 }
@@ -132,9 +136,9 @@ class AppLockViewModel @Inject constructor(
 
         biometricManager.authenticate(
             activity = activity,
-            title = "Buka Kunci Aplikasi",
-            subtitle = "Gunakan sidik jari untuk membuka ZatiarasPOS",
-            negativeButtonText = "Gunakan PIN"
+            title = context.getString(R.string.app_lock_title),
+            subtitle = context.getString(R.string.app_lock_bio_hint),
+            negativeButtonText = context.getString(R.string.bio_prompt_neg_button)
         ) { result ->
             when (result) {
                 is BiometricResult.Success -> {

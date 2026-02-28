@@ -1,34 +1,39 @@
 package com.zatiaras.pos.feature.auth.settings
 
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import com.zatiaras.pos.feature.auth.R
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.zatiaras.pos.core.data.access.LockableRoute
-import com.zatiaras.pos.core.ui.theme.LocalDimensions
+import com.zatiaras.pos.core.data.access.UserRole
 
 // Icon background colors for different categories
 private val SecurityIconColor = Color(0xFF6366F1) // Indigo
@@ -37,16 +42,17 @@ private val PrinterIconColor = Color(0xFF10B981) // Emerald
 private val MenuIconColor = Color(0xFFEC4899) // Pink (Brand)
 private val SyncIconColor = Color(0xFF3B82F6) // Blue
 private val AboutIconColor = Color(0xFF8B5CF6) // Purple
+private val TaxIconColor = Color(0xFFEF4444) // Red
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsRoute(
     onNavigateBack: () -> Unit,
-    onNavigateToPinSetup: () -> Unit,
     onNavigateToPrinter: () -> Unit = {},
     onNavigateToInventory: () -> Unit = {},
     onNavigateToSecurity: () -> Unit = {},
     onNavigateToAccessControl: () -> Unit = {},
+    onNavigateToTransactionHistory: () -> Unit = {},
     onNavigateToSync: () -> Unit = {},
     onNavigateToAbout: () -> Unit = {},
     onLogout: () -> Unit,
@@ -67,9 +73,12 @@ fun SettingsRoute(
         onNavigateToAccessControl = onNavigateToAccessControl,
         onNavigateToPrinter = onNavigateToPrinter,
         onNavigateToInventory = onNavigateToInventory,
+        onNavigateToTransactionHistory = onNavigateToTransactionHistory,
         onNavigateToSync = onNavigateToSync,
         onNavigateToAbout = onNavigateToAbout,
-        onLogoutClick = viewModel::logout
+        onLogoutClick = viewModel::logout,
+        onTaxPercentageChange = viewModel::updateTaxPercentage,
+        onLowPerformanceModeChange = viewModel::updateLowPerformanceMode
     )
 }
 
@@ -82,16 +91,19 @@ fun SettingsScreen(
     onNavigateToAccessControl: () -> Unit,
     onNavigateToPrinter: () -> Unit,
     onNavigateToInventory: () -> Unit,
+    onNavigateToTransactionHistory: () -> Unit,
     onNavigateToSync: () -> Unit,
     onNavigateToAbout: () -> Unit,
-    onLogoutClick: () -> Unit
+    onLogoutClick: () -> Unit,
+    onTaxPercentageChange: (Double) -> Unit = {},
+    onLowPerformanceModeChange: (Boolean) -> Unit = {}
 ) {
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
                 title = { 
                     Text(
-                        text = "Pengaturan",
+                        text = stringResource(R.string.settings_title),
                         fontWeight = FontWeight.Bold
                     )
                 },
@@ -99,7 +111,7 @@ fun SettingsScreen(
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Kembali"
+                            contentDescription = stringResource(R.string.auth_back)
                         )
                     }
                 },
@@ -117,7 +129,6 @@ fun SettingsScreen(
         ) {
             // Premium Profile Card with Gradient
             PremiumProfileCard(
-                userName = uiState.userName,
                 userEmail = uiState.userEmail,
                 userRole = uiState.userRole
             )
@@ -126,8 +137,8 @@ fun SettingsScreen(
 
             // Section: Keamanan & Akses
             SettingsSectionHeader(
-                title = "🔐 Keamanan & Akses",
-                subtitle = "Lindungi aplikasi dan data kamu"
+                title = stringResource(R.string.settings_sec_access),
+                subtitle = stringResource(R.string.settings_sec_desc)
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -136,9 +147,9 @@ fun SettingsScreen(
             EnhancedSettingsCard(
                 icon = Icons.Outlined.Security,
                 iconBackgroundColor = SecurityIconColor,
-                title = "Keamanan",
-                subtitle = "Kunci PIN & Sidik Jari",
-                statusBadge = if (uiState.lockEnabled) "Aktif ✓" else null,
+                title = stringResource(R.string.sec_title),
+                subtitle = stringResource(R.string.settings_security_subtitle),
+                statusBadge = if (uiState.lockEnabled) stringResource(R.string.settings_status_active) else null,
                 statusBadgeColor = if (uiState.lockEnabled) Color(0xFF10B981) else null,
                 onClick = onNavigateToSecurity
             )
@@ -149,9 +160,9 @@ fun SettingsScreen(
                 EnhancedSettingsCard(
                     icon = Icons.Outlined.AdminPanelSettings,
                     iconBackgroundColor = AccessIconColor,
-                    title = "Kontrol Akses",
-                    subtitle = "Atur menu yang bisa diakses kasir",
-                    statusBadge = "Pemilik",
+                    title = stringResource(R.string.access_control_title),
+                    subtitle = stringResource(R.string.access_control_desc),
+                    statusBadge = stringResource(R.string.user_role_owner),
                     statusBadgeColor = Color(0xFFF59E0B),
                     onClick = onNavigateToAccessControl
                 )
@@ -161,8 +172,8 @@ fun SettingsScreen(
 
             // Section: Perangkat & Operasional
             SettingsSectionHeader(
-                title = "🖨️ Perangkat & Toko",
-                subtitle = "Atur printer dan menu produk"
+                title = stringResource(R.string.settings_devices),
+                subtitle = stringResource(R.string.settings_devices_desc)
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -171,8 +182,8 @@ fun SettingsScreen(
             EnhancedSettingsCard(
                 icon = Icons.Outlined.Print,
                 iconBackgroundColor = PrinterIconColor,
-                title = "Printer Struk",
-                subtitle = "Hubungkan printer Bluetooth",
+                title = stringResource(R.string.settings_printer),
+                subtitle = stringResource(R.string.settings_printer_desc),
                 onClick = onNavigateToPrinter
             )
 
@@ -182,17 +193,33 @@ fun SettingsScreen(
             EnhancedSettingsCard(
                 icon = Icons.Outlined.Restaurant,
                 iconBackgroundColor = MenuIconColor,
-                title = "Kelola Menu",
-                subtitle = "Tambah, edit, hapus produk",
+                title = stringResource(R.string.settings_menu),
+                subtitle = stringResource(R.string.settings_menu_desc),
                 onClick = onNavigateToInventory
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Section: Laporan
+            SettingsSectionHeader(
+                title = stringResource(R.string.settings_reports_title),
+                subtitle = stringResource(R.string.settings_reports_desc)
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Tax Percentage
+            TaxPercentageCard(
+                currentPercentage = uiState.taxPercentage,
+                onPercentageChange = onTaxPercentageChange
             )
 
             Spacer(modifier = Modifier.height(24.dp))
 
             // Section: Data & Informasi
             SettingsSectionHeader(
-                title = "📱 Data & Informasi",
-                subtitle = "Sinkronisasi dan info aplikasi"
+                title = stringResource(R.string.settings_data_info),
+                subtitle = stringResource(R.string.settings_sync_desc)
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -201,20 +228,45 @@ fun SettingsScreen(
             EnhancedSettingsCard(
                 icon = Icons.Outlined.Sync,
                 iconBackgroundColor = SyncIconColor,
-                title = "Sinkronisasi Data",
-                subtitle = uiState.lastSyncInfo,
+                title = stringResource(R.string.settings_sync),
+                subtitle = lastSyncInfoText(uiState.lastSyncInfo),
                 onClick = onNavigateToSync
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // About
+            // History
+            EnhancedSettingsCard(
+                icon = Icons.Outlined.History,
+                iconBackgroundColor = Color(0xFF14B8A6), // Teal
+                title = stringResource(R.string.settings_history_title),
+                subtitle = stringResource(R.string.settings_history_desc),
+                onClick = onNavigateToTransactionHistory
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
             EnhancedSettingsCard(
                 icon = Icons.Outlined.Info,
                 iconBackgroundColor = AboutIconColor,
-                title = "Tentang Aplikasi",
-                subtitle = "Versi 1.0.0",
+                title = stringResource(R.string.settings_about),
+                subtitle = stringResource(R.string.settings_about_version, "1.0"),
                 onClick = onNavigateToAbout
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Section: Performa (New)
+            SettingsSectionHeader(
+                title = stringResource(R.string.settings_performance_title),
+                subtitle = stringResource(R.string.settings_performance_desc)
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            PerformanceModeCard(
+                enabled = uiState.lowPerformanceMode,
+                onEnabledChange = onLowPerformanceModeChange
             )
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -224,6 +276,17 @@ fun SettingsScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
         }
+    }
+}
+
+@Composable
+private fun lastSyncInfoText(lastSyncInfo: LastSyncInfo): String {
+    return when (lastSyncInfo.unit) {
+        LastSyncUnit.NEVER -> stringResource(R.string.sync_never)
+        LastSyncUnit.JUST_NOW -> stringResource(R.string.sync_just_now)
+        LastSyncUnit.MINUTES_AGO -> stringResource(R.string.sync_mins_ago, lastSyncInfo.value)
+        LastSyncUnit.HOURS_AGO -> stringResource(R.string.sync_hours_ago, lastSyncInfo.value)
+        LastSyncUnit.DAYS_AGO -> stringResource(R.string.sync_days_ago, lastSyncInfo.value)
     }
 }
 
@@ -351,28 +414,27 @@ private fun EnhancedSettingsCard(
 }
 
 /**
- * Premium profile card with gradient background
+ * Premium profile card with gradient background - Ultra Simple
  */
 @Composable
 private fun PremiumProfileCard(
-    userName: String,
     userEmail: String,
-    userRole: String
+    userRole: UserRole
 ) {
-    val gradientColors = listOf(
-        Color(0xFFEC4899), // Pink
-        Color(0xFFF472B6), // Light Pink
-        Color(0xFFFBCFE8)  // Very Light Pink
-    )
+    val isOwner = userRole.isOwner()
+    val userRoleLabel = when (userRole) {
+        UserRole.PEMILIK -> stringResource(R.string.user_role_owner)
+        UserRole.KASIR -> stringResource(R.string.user_role_cashier)
+    }
     
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp),
-        shape = RoundedCornerShape(20.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Box(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(
@@ -383,67 +445,40 @@ private fun PremiumProfileCard(
                         )
                     )
                 )
-                .padding(20.dp)
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Avatar circle
-                Box(
-                    modifier = Modifier
-                        .size(64.dp)
-                        .clip(CircleShape)
-                        .background(Color.White.copy(alpha = 0.2f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = userName.firstOrNull()?.uppercase() ?: "U",
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
-                }
-
-                Spacer(modifier = Modifier.width(16.dp))
-
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = userName.ifEmpty { "Pengguna" },
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
-                    
-                    Spacer(modifier = Modifier.height(4.dp))
-                    
-                    Text(
-                        text = userEmail,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Color.White.copy(alpha = 0.85f)
-                    )
-                    
-                    Spacer(modifier = Modifier.height(8.dp))
-                    
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(Color.White.copy(alpha = 0.25f))
-                            .padding(horizontal = 12.dp, vertical = 4.dp)
-                    ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (isOwner) {
                         Text(
-                            text = when (userRole.lowercase()) {
-                                "owner", "pemilik" -> "👑 Pemilik"
-                                "admin" -> "🔧 Admin"
-                                else -> "💼 Kasir"
-                            },
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.SemiBold,
-                            color = Color.White
+                            text = "👑",
+                            fontSize = 20.sp,
+                            modifier = Modifier.padding(end = 8.dp)
                         )
                     }
+                    Text(
+                        text = userRoleLabel,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = Color.White
+                    )
                 }
+                Text(
+                    text = userEmail,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.White.copy(alpha = 0.8f)
+                )
             }
+            
+            // Minimalist icon for the role
+            Icon(
+                imageVector = if (isOwner) Icons.Default.Stars else Icons.Default.Person,
+                contentDescription = null,
+                tint = Color.White.copy(alpha = 0.2f),
+                modifier = Modifier.size(40.dp)
+            )
         }
     }
 }
@@ -472,14 +507,14 @@ private fun LogoutButton(onClick: () -> Unit) {
             horizontalArrangement = Arrangement.Center
         ) {
             Icon(
-                imageVector = Icons.Outlined.Logout,
+                imageVector = Icons.AutoMirrored.Outlined.Logout,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.error,
                 modifier = Modifier.size(22.dp)
             )
             Spacer(modifier = Modifier.width(12.dp))
             Text(
-                text = "Keluar dari Akun",
+                text = stringResource(R.string.settings_logout),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.error
@@ -488,48 +523,35 @@ private fun LogoutButton(onClick: () -> Unit) {
     }
 }
 
-// Legacy components kept for backward compatibility
+/**
+ * Tax percentage setting card with inline editing
+ */
 @Composable
-private fun SettingsSection(
-    title: String,
-    content: @Composable ColumnScope.() -> Unit
+private fun TaxPercentageCard(
+    currentPercentage: Double,
+    onPercentageChange: (Double) -> Unit
 ) {
-    Column(modifier = Modifier.padding(vertical = 8.dp)) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleSmall,
-            fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-        )
-        content()
+    // Format nicely: avoid trailing zeros for whole numbers, keep decimals as-is
+    fun formatPercentage(value: Double): String {
+        return if (value == value.toLong().toDouble()) value.toLong().toString()
+        else value.toBigDecimal().stripTrailingZeros().toPlainString()
     }
-}
 
-@Composable
-private fun SettingsCategoryCard(
-    icon: ImageVector,
-    title: String,
-    subtitle: String,
-    onClick: (() -> Unit)?
-) {
+    var taxInput by remember(currentPercentage) { mutableStateOf(formatPercentage(currentPercentage)) }
+    val isDirty by remember(taxInput, currentPercentage) {
+        derivedStateOf {
+            val parsed = taxInput.replace(",", ".").toDoubleOrNull()
+            parsed != null && parsed >= 0 && parsed != currentPercentage
+        }
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 4.dp)
-            .then(
-                if (onClick != null) Modifier.clickable(onClick = onClick)
-                else Modifier
-            ),
-        colors = CardDefaults.cardColors(
-            containerColor = if (onClick != null) 
-                MaterialTheme.colorScheme.surface 
-            else 
-                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = if (onClick != null) 2.dp else 0.dp
-        )
+            .padding(horizontal = 16.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
             modifier = Modifier
@@ -537,68 +559,152 @@ private fun SettingsCategoryCard(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(24.dp)
-            )
+            // Icon
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(TaxIconColor.copy(alpha = 0.15f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Receipt,
+                    contentDescription = null,
+                    tint = TaxIconColor,
+                    modifier = Modifier.size(26.dp)
+                )
+            }
+
             Spacer(modifier = Modifier.width(16.dp))
+
+            // Label
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = title,
+                    text = stringResource(R.string.settings_tax_title),
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
+                Spacer(modifier = Modifier.height(2.dp))
                 Text(
-                    text = subtitle,
+                    text = stringResource(R.string.settings_tax_desc),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            if (onClick != null) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            // Input + Save row
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                OutlinedTextField(
+                    value = taxInput,
+                    onValueChange = { taxInput = it },
+                    modifier = Modifier
+                        .width(72.dp)
+                        .height(56.dp),
+                    singleLine = true,
+                    textStyle = androidx.compose.ui.text.TextStyle(
+                        textAlign = TextAlign.Center,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold
+                    ),
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Decimal,
+                        imeAction = ImeAction.Done
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onDone = {
+                            val newTax = taxInput.replace(",", ".").toDoubleOrNull()
+                            if (newTax != null && newTax >= 0) {
+                                onPercentageChange(newTax)
+                            }
+                        }
+                    ),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = if (isDirty) MaterialTheme.colorScheme.primary
+                                             else MaterialTheme.colorScheme.outline,
+                        unfocusedBorderColor = if (isDirty) MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+                                               else MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
+                    )
                 )
+
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "%",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                // Save button — only visible when value is changed
+                androidx.compose.animation.AnimatedVisibility(visible = isDirty) {
+                    Row {
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Button(
+                            onClick = {
+                                val newTax = taxInput.replace(",", ".").toDoubleOrNull()
+                                if (newTax != null && newTax >= 0) {
+                                    onPercentageChange(newTax)
+                                }
+                            },
+                            modifier = Modifier
+                                .height(56.dp)
+                                .width(56.dp),
+                            shape = RoundedCornerShape(10.dp),
+                            contentPadding = PaddingValues(0.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary
+                            )
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Check,
+                                contentDescription = stringResource(R.string.settings_save),
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                    }
+                }
             }
         }
     }
 }
 
+/**
+ * Card to toggle Low Performance Mode
+ */
 @Composable
-private fun ProfileCard(
-    userName: String,
-    userEmail: String,
-    userRole: String
+private fun PerformanceModeCard(
+    enabled: Boolean,
+    onEnabledChange: (Boolean) -> Unit
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer
-        )
+            .padding(horizontal = 16.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        val dimensions = LocalDimensions.current
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(dimensions.paddingM),
+                .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
                 modifier = Modifier
-                    .size(56.dp)
-                    .padding(4.dp),
+                    .size(48.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Color(0xFF6B7280).copy(alpha = 0.15f)), // Gray
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = Icons.Filled.AccountCircle,
+                    imageVector = Icons.Outlined.Speed,
                     contentDescription = null,
-                    modifier = Modifier.size(48.dp),
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer
+                    tint = Color(0xFF6B7280),
+                    modifier = Modifier.size(26.dp)
                 )
             }
 
@@ -606,130 +712,27 @@ private fun ProfileCard(
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = userName.ifEmpty { "User" },
+                    text = stringResource(R.string.settings_low_perf_title),
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
+                Spacer(modifier = Modifier.height(2.dp))
                 Text(
-                    text = userEmail,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                    text = stringResource(R.string.settings_low_perf_desc),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
-            AssistChip(
-                onClick = { },
-                label = { Text(userRole) },
-                colors = AssistChipDefaults.assistChipColors(
-                    containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+            Switch(
+                checked = enabled,
+                onCheckedChange = onEnabledChange,
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = MaterialTheme.colorScheme.primary,
+                    checkedTrackColor = MaterialTheme.colorScheme.primaryContainer
                 )
             )
         }
     }
 }
-
-@Composable
-private fun SwitchSettingItem(
-    icon: ImageVector,
-    title: String,
-    subtitle: String,
-    checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit,
-    enabled: Boolean = true
-) {
-    ListItem(
-        leadingContent = {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = if (enabled) {
-                    MaterialTheme.colorScheme.onSurfaceVariant
-                } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                }
-            )
-        },
-        headlineContent = {
-            Text(
-                text = title,
-                color = if (enabled) {
-                    MaterialTheme.colorScheme.onSurface
-                } else {
-                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-                }
-            )
-        },
-        supportingContent = {
-            Text(
-                text = subtitle,
-                color = if (enabled) {
-                    MaterialTheme.colorScheme.onSurfaceVariant
-                } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                }
-            )
-        },
-        trailingContent = {
-            Switch(
-                checked = checked,
-                onCheckedChange = onCheckedChange,
-                enabled = enabled
-            )
-        }
-    )
-}
-
-@Composable
-private fun ClickableSettingItem(
-    icon: ImageVector,
-    title: String,
-    subtitle: String,
-    onClick: () -> Unit
-) {
-    ListItem(
-        modifier = Modifier.clickable(onClick = onClick),
-        leadingContent = {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        },
-        headlineContent = { Text(title) },
-        supportingContent = { Text(subtitle) },
-        trailingContent = {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    )
-}
-
-@Composable
-private fun InfoSettingItem(
-    icon: ImageVector,
-    title: String,
-    value: String
-) {
-    ListItem(
-        leadingContent = {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        },
-        headlineContent = { Text(title) },
-        trailingContent = {
-            Text(
-                text = value,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    )
-}
-

@@ -5,6 +5,7 @@ import com.zatiaras.pos.core.data.repository.AppSettingsRepository
 import com.zatiaras.pos.core.data.session.SessionPreferences
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
@@ -198,7 +199,7 @@ class AccessControlManager @Inject constructor(
                 .map { settings -> settings?.ownerPinHash != null }
                 .catch { e ->
                     Timber.w(e, "Using local preferences for PIN set flow")
-                    emitAll(accessControlPreferences.isOwnerPinSet())
+                    accessControlPreferences.isOwnerPinSet().collect { emit(it) }
                 }
         } catch (e: Exception) {
             Timber.w(e, "Falling back to local preferences for PIN set")
@@ -230,11 +231,11 @@ class AccessControlManager @Inject constructor(
                 }
                 .catch { e ->
                     Timber.w(e, "Using local preferences for lockable routes")
-                    emitAll(accessControlPreferences.getLockedRoutes().map { lockedRoutes ->
+                    accessControlPreferences.getLockedRoutes().map { lockedRoutes ->
                         LockableRoute.all().map { route ->
                             route to lockedRoutes.contains(route.route)
                         }
-                    })
+                    }.collect { emit(it) }
                 }
         } catch (e: Exception) {
             Timber.w(e, "Falling back to local preferences for lockable routes")
@@ -255,7 +256,7 @@ class AccessControlManager @Inject constructor(
                 .map { settings -> settings?.lockedRoutes?.contains(route) ?: false }
                 .catch { e ->
                     Timber.w(e, "Using local preferences for route lock check")
-                    emitAll(accessControlPreferences.isRouteLocked(route))
+                    accessControlPreferences.isRouteLocked(route).collect { emit(it) }
                 }
         } catch (e: Exception) {
             Timber.w(e, "Falling back to local preferences for route lock")
@@ -353,9 +354,3 @@ class AccessControlManager @Inject constructor(
         }
     }
 }
-
-// Helper extension for Flow
-private suspend fun <T> kotlinx.coroutines.flow.FlowCollector<T>.emitAll(flow: Flow<T>) {
-    flow.collect { emit(it) }
-}
-

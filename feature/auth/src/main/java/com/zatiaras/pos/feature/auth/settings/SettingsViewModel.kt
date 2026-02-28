@@ -5,8 +5,11 @@ import androidx.lifecycle.viewModelScope
 import com.zatiaras.pos.core.data.access.AccessControlManager
 import com.zatiaras.pos.core.data.access.LockableRoute
 import com.zatiaras.pos.core.data.access.UserRole
+import com.zatiaras.pos.core.data.repository.AppSettingsRepository
 import com.zatiaras.pos.core.data.session.SessionPreferences
 import com.zatiaras.pos.core.data.sync.SyncManager
+import com.zatiaras.pos.core.domain.Result
+import com.zatiaras.pos.core.domain.usecase.ChangeCurrentUserPasswordUseCase
 import com.zatiaras.pos.feature.auth.lock.AppBiometricManager
 import com.zatiaras.pos.feature.auth.lock.AppLockPreferences
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -21,12 +24,34 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
+enum class PasswordChangeMessage {
+    REQUIRED_FIELDS,
+    MIN_LENGTH,
+    CONFIRMATION_MISMATCH,
+    SAME_AS_CURRENT,
+    PASSWORD_CHANGED,
+    GENERIC_FAILURE
+}
+
+enum class LastSyncUnit {
+    NEVER,
+    JUST_NOW,
+    MINUTES_AGO,
+    HOURS_AGO,
+    DAYS_AGO
+}
+
+data class LastSyncInfo(
+    val unit: LastSyncUnit,
+    val value: Int = 0
+)
+
 data class SettingsUiState(
     // Profile
     val userName: String = "",
     val userEmail: String = "",
-    val userRole: String = "Kasir",
-    val branchName: String = "Cabang Utama",
+    val userRole: UserRole = UserRole.KASIR,
+    val branchName: String = "",
     
     // Security
     val lockEnabled: Boolean = false,
@@ -40,13 +65,23 @@ data class SettingsUiState(
     val lockableRoutes: List<Pair<LockableRoute, Boolean>> = emptyList(),
     
     // Sync
-    val lastSyncInfo: String = "Belum pernah sync",
+    val lastSyncInfo: LastSyncInfo = LastSyncInfo(LastSyncUnit.NEVER),
     val pendingCount: Int = 0,
     val isSyncing: Boolean = false,
     
+    // Tax
+    val taxPercentage: Double = 0.5,
+    
+    // Performance
+    val lowPerformanceMode: Boolean = false,
+    
     // State
     val isLoggedOut: Boolean = false,
-    val isLoading: Boolean = false
+    val isLoading: Boolean = false,
+    val isChangingPassword: Boolean = false,
+    val passwordChangeError: PasswordChangeMessage? = null,
+    val passwordChangeErrorDetail: String? = null,
+    val passwordChangeSuccess: PasswordChangeMessage? = null
 )
 
 @HiltViewModel
@@ -56,7 +91,9 @@ class SettingsViewModel @Inject constructor(
     private val biometricManager: AppBiometricManager,
     private val syncManager: SyncManager,
     private val accessControlManager: AccessControlManager,
-    private val sessionPreferences: SessionPreferences
+    private val sessionPreferences: SessionPreferences,
+    private val appSettingsRepository: AppSettingsRepository,
+    private val changeCurrentUserPasswordUseCase: ChangeCurrentUserPasswordUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SettingsUiState())
@@ -66,6 +103,7 @@ class SettingsViewModel @Inject constructor(
         loadSettings()
         observeAccessControl()
         observeLockSettings()
+        observePerformanceSettings()
     }
 
     private fun loadSettings() {
@@ -79,8 +117,6 @@ class SettingsViewModel @Inject constructor(
                 // Load role info
                 val role = UserRole.fromString(sessionPreferences.getRole())
                 val isOwner = role.isOwner()
-                val userRoleDisplay = if (isOwner) "Pemilik" else "Kasir"
-
                 // Load biometric availability
                 val biometricAvailable = biometricManager.isBiometricAvailable()
 
@@ -102,11 +138,17 @@ class SettingsViewModel @Inject constructor(
                 val lastSync = try { syncManager.getLastSyncTimestamp() } catch (_: Exception) { 0L }
                 val lastSyncInfo = formatLastSync(lastSync)
 
+                // Load tax percentage
+                val taxPercentage = try { appSettingsRepository.getDefaultTaxPercentage() } catch (_: Exception) { 0.5 }
+
+                // Load performance mode
+                val lowPerformanceMode = try { appSettingsRepository.getSettings()?.lowPerformanceMode ?: false } catch (_: Exception) { false }
+
                 _uiState.update { state ->
                     state.copy(
                         userName = userName,
                         userEmail = userEmail,
-                        userRole = userRoleDisplay,
+                        userRole = role,
                         isOwner = isOwner,
                         lockEnabled = lockEnabled,
                         biometricEnabled = biometricEnabled,
@@ -115,7 +157,9 @@ class SettingsViewModel @Inject constructor(
                         ownerPinSet = ownerPinSet,
                         lockableRoutes = lockableRoutes,
                         pendingCount = pendingCount,
-                        lastSyncInfo = lastSyncInfo
+                        lastSyncInfo = lastSyncInfo,
+                        taxPercentage = taxPercentage,
+                        lowPerformanceMode = lowPerformanceMode
                     )
                 }
 
@@ -178,19 +222,27 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    private fun observePerformanceSettings() {
+        viewModelScope.launch {
+            appSettingsRepository.observeSettings().collect { settings ->
+                _uiState.update { it.copy(lowPerformanceMode = settings?.lowPerformanceMode ?: false) }
+            }
+        }
+    }
+
     private fun extractUserName(user: UserInfo): String {
         return user.email?.substringBefore("@")?.replaceFirstChar { it.uppercase() } ?: "User"
     }
 
-    private fun formatLastSync(timestamp: Long): String {
-        if (timestamp == 0L) return "Belum pernah sync"
+    private fun formatLastSync(timestamp: Long): LastSyncInfo {
+        if (timestamp == 0L) return LastSyncInfo(LastSyncUnit.NEVER)
         
         val diff = System.currentTimeMillis() - timestamp
         return when {
-            diff < 60_000 -> "Baru saja"
-            diff < 3600_000 -> "${diff / 60_000} menit lalu"
-            diff < 86400_000 -> "${diff / 3600_000} jam lalu"
-            else -> "${diff / 86400_000} hari lalu"
+            diff < 60_000 -> LastSyncInfo(LastSyncUnit.JUST_NOW)
+            diff < 3600_000 -> LastSyncInfo(LastSyncUnit.MINUTES_AGO, (diff / 60_000).toInt())
+            diff < 86400_000 -> LastSyncInfo(LastSyncUnit.HOURS_AGO, (diff / 3600_000).toInt())
+            else -> LastSyncInfo(LastSyncUnit.DAYS_AGO, (diff / 86400_000).toInt())
         }
     }
 
@@ -295,6 +347,120 @@ class SettingsViewModel @Inject constructor(
             if (!_uiState.value.isOwner) return@launch
             accessControlManager.setOwnerPin(pin)
             _uiState.update { it.copy(ownerPinSet = true) }
+        }
+    }
+
+    fun changePassword(currentPassword: String, newPassword: String, confirmPassword: String) {
+        when {
+            currentPassword.isBlank() || newPassword.isBlank() || confirmPassword.isBlank() -> {
+                _uiState.update {
+                    it.copy(
+                        passwordChangeError = PasswordChangeMessage.REQUIRED_FIELDS,
+                        passwordChangeErrorDetail = null,
+                        passwordChangeSuccess = null
+                    )
+                }
+                return
+            }
+            newPassword.length < 4 -> {
+                _uiState.update {
+                    it.copy(
+                        passwordChangeError = PasswordChangeMessage.MIN_LENGTH,
+                        passwordChangeErrorDetail = null,
+                        passwordChangeSuccess = null
+                    )
+                }
+                return
+            }
+            newPassword != confirmPassword -> {
+                _uiState.update {
+                    it.copy(
+                        passwordChangeError = PasswordChangeMessage.CONFIRMATION_MISMATCH,
+                        passwordChangeErrorDetail = null,
+                        passwordChangeSuccess = null
+                    )
+                }
+                return
+            }
+            currentPassword == newPassword -> {
+                _uiState.update {
+                    it.copy(
+                        passwordChangeError = PasswordChangeMessage.SAME_AS_CURRENT,
+                        passwordChangeErrorDetail = null,
+                        passwordChangeSuccess = null
+                    )
+                }
+                return
+            }
+        }
+
+        viewModelScope.launch {
+            _uiState.update {
+                it.copy(
+                    isChangingPassword = true,
+                    passwordChangeError = null,
+                    passwordChangeErrorDetail = null,
+                    passwordChangeSuccess = null
+                )
+            }
+
+            when (val result = changeCurrentUserPasswordUseCase(currentPassword, newPassword)) {
+                is Result.Success -> {
+                    _uiState.update {
+                        it.copy(
+                            isChangingPassword = false,
+                            passwordChangeSuccess = PasswordChangeMessage.PASSWORD_CHANGED,
+                            passwordChangeError = null
+                        )
+                    }
+                }
+                is Result.Error -> {
+                    _uiState.update {
+                        it.copy(
+                            isChangingPassword = false,
+                            passwordChangeError = PasswordChangeMessage.GENERIC_FAILURE,
+                            passwordChangeErrorDetail = result.exception?.message,
+                            passwordChangeSuccess = null
+                        )
+                    }
+                }
+                is Result.Loading -> {
+                    _uiState.update { it.copy(isChangingPassword = true) }
+                }
+            }
+        }
+    }
+
+    fun clearPasswordChangeMessage() {
+        _uiState.update {
+            it.copy(
+                passwordChangeError = null,
+                passwordChangeErrorDetail = null,
+                passwordChangeSuccess = null
+            )
+        }
+    }
+
+    fun updateTaxPercentage(percentage: Double) {
+        viewModelScope.launch {
+            try {
+                appSettingsRepository.updateDefaultTaxPercentage(percentage)
+                _uiState.update { it.copy(taxPercentage = percentage) }
+                Timber.d("Tax percentage updated to $percentage%")
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to update tax percentage")
+            }
+        }
+    }
+    fun updateLowPerformanceMode(enabled: Boolean) {
+        viewModelScope.launch {
+            try {
+                appSettingsRepository.updateLowPerformanceMode(enabled)
+                _uiState.update { it.copy(lowPerformanceMode = enabled) }
+                Timber.d("Low performance mode updated to $enabled")
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to update low performance mode")
+            }
         }
     }
 }
