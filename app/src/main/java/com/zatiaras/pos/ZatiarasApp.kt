@@ -12,6 +12,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import coil.ImageLoader
+import coil.ImageLoaderFactory
+import coil.disk.DiskCache
+import coil.memory.MemoryCache
+import coil.util.DebugLogger
 import javax.inject.Inject
 
 /**
@@ -24,7 +29,7 @@ import javax.inject.Inject
  * - AppSettingsRepository for settings
  */
 @HiltAndroidApp
-class ZatiarasApp : Application(), Configuration.Provider {
+class ZatiarasApp : Application(), Configuration.Provider, ImageLoaderFactory {
 
     @Inject
     lateinit var workerFactory: HiltWorkerFactory
@@ -68,5 +73,28 @@ class ZatiarasApp : Application(), Configuration.Provider {
                 else android.util.Log.INFO
             )
             .build()
-}
 
+    override fun newImageLoader(): ImageLoader {
+        return ImageLoader.Builder(this)
+            .memoryCache {
+                MemoryCache.Builder(this)
+                    .maxSizePercent(0.25) // Use 25% of available RAM
+                    .build()
+            }
+            .diskCache {
+                DiskCache.Builder()
+                    .directory(cacheDir.resolve("image_cache"))
+                    .maxSizeBytes(50 * 1024 * 1024) // 50MB disk cache
+                    .build()
+            }
+            .respectCacheHeaders(false) // Better performance, cache even if headers say otherwise
+            .crossfade(true) // Smooth transitions
+            .allowHardware(true) // Best performance
+            .apply {
+                if (BuildConfig.DEBUG) {
+                    logger(DebugLogger())
+                }
+            }
+            .build()
+    }
+}

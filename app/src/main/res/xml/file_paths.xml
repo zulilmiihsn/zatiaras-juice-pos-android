@@ -9,4 +9,9 @@
     <external-cache-path
         name="external_exports"
         path="." />
+        
+    <!-- Public external downloads for sharing -->
+    <external-path
+        name="downloads"
+        path="Download" />
 </paths>

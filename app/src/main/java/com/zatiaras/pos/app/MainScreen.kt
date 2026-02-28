@@ -53,6 +53,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.zatiaras.pos.NavRoutes
 import com.zatiaras.pos.feature.pos.domain.model.CartHolder
+import com.zatiaras.pos.feature.pos.domain.model.Transaction
 import com.zatiaras.pos.feature.pos.navigation.PosRoutes
 import com.zatiaras.pos.feature.pos.navigation.cashRecordScreen
 import com.zatiaras.pos.feature.pos.navigation.posScreen
@@ -98,6 +99,7 @@ fun MainScreen(
     onNavigateBackFromMain: () -> Unit,
     onNavigateToCheckout: () -> Unit,
     onNavigateToChat: () -> Unit,
+    onNavigateToReceipt: (Transaction) -> Unit,
     onNavigateToSettings: () -> Unit = {},
     accessControlManager: com.zatiaras.pos.core.data.access.AccessControlManager? = null
 ) {
@@ -162,6 +164,7 @@ fun MainScreen(
                         launchSingleTop = true
                     }
                 },
+                onNavigateToReceipt = onNavigateToReceipt,
                 accessControlManager = accessControlManager
             )
             
@@ -320,4 +323,3 @@ private fun RowScope.EnhancedNavigationBarItem(
         alwaysShowLabel = true
     )
 }
-

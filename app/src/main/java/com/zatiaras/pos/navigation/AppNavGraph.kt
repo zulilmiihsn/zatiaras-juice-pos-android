@@ -28,6 +28,7 @@ import com.zatiaras.pos.feature.auth.navigation.AuthRoutes
 import com.zatiaras.pos.feature.auth.navigation.pinSetupScreen
 import com.zatiaras.pos.feature.auth.navigation.settingsScreen
 import com.zatiaras.pos.feature.auth.navigation.securitySettingsScreen
+import com.zatiaras.pos.feature.pos.navigation.transactionHistoryScreen
 import com.zatiaras.pos.feature.auth.navigation.accessControlScreen
 import com.zatiaras.pos.feature.auth.navigation.ownerPinSetupScreen
 import com.zatiaras.pos.feature.auth.navigation.syncSettingsScreen
@@ -139,6 +140,10 @@ fun AppNavGraph(
                 onNavigateToChat = {
                     navController.navigateToReportChat()
                 },
+                onNavigateToReceipt = { transaction ->
+                    transactionHolder.setTransaction(transaction)
+                    navController.navigate(NavRoutes.RECEIPT)
+                },
                 onNavigateToSettings = {
                     navController.navigate(AuthRoutes.SETTINGS)
                 },
@@ -168,9 +173,6 @@ fun AppNavGraph(
             onNavigateBack = {
                 navController.popBackStack()
             },
-            onNavigateToPinSetup = {
-                navController.navigate(AuthRoutes.PIN_SETUP)
-            },
             onNavigateToPrinter = {
                 navController.navigateToPrinterSettings()
             },
@@ -182,6 +184,9 @@ fun AppNavGraph(
             },
             onNavigateToAccessControl = {
                 navController.navigate(AuthRoutes.SETTINGS_ACCESS_CONTROL)
+            },
+            onNavigateToTransactionHistory = {
+                navController.navigate(com.zatiaras.pos.feature.pos.navigation.PosRoutes.TRANSACTION_HISTORY)
             },
             onNavigateToSync = {
                 navController.navigate(AuthRoutes.SETTINGS_SYNC)
@@ -248,6 +253,17 @@ fun AppNavGraph(
                 navController.popBackStack()
             }
         )
+
+        // Transaction History (Full Screen)
+        transactionHistoryScreen(
+            onNavigateBack = {
+                navController.popBackStack()
+            },
+            onNavigateToReceipt = { transaction ->
+                transactionHolder.setTransaction(transaction)
+                navController.navigate(NavRoutes.RECEIPT)
+            }
+        )
         
         // Pin Setup
         pinSetupScreen(
@@ -300,11 +316,16 @@ private fun ReceiptRoute(
     val receiptViewModel: ReceiptViewModel = hiltViewModel()
     val receiptUiState by receiptViewModel.uiState.collectAsStateWithLifecycle()
     
-    var transaction by remember { mutableStateOf<Transaction?>(null) }
+    // Primary source of truth is the ViewModel's state
+    val transaction = receiptUiState.transaction
     
+    // Only attempt to consume from holder if we don't have a transaction in ViewModel yet
     LaunchedEffect(Unit) {
-        transaction = transactionHolder.consumeTransaction()
-        transaction?.let { receiptViewModel.setTransaction(it) }
+        if (receiptViewModel.uiState.value.transaction == null) {
+            transactionHolder.consumeTransaction()?.let {
+                receiptViewModel.setTransaction(it)
+            }
+        }
     }
     
     // Handle receipt events
@@ -326,7 +347,10 @@ private fun ReceiptRoute(
     
     if (transaction != null) {
         ReceiptScreen(
-            transaction = transaction!!,
+            transaction = transaction,
+            onNavigateBack = {
+                navController.popBackStack()
+            },
             onNewTransaction = {
                 // Navigate to HOME which contains the MainScreen with tabs
                 // POS is a tab inside MainScreen's nested NavHost
