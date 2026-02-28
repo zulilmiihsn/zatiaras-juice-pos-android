@@ -10,6 +10,7 @@ import com.zatiaras.pos.feature.pos.domain.model.PaymentMethod
 import com.zatiaras.pos.feature.pos.domain.model.Transaction
 import com.zatiaras.pos.feature.pos.domain.repository.TransactionRepository
 import com.zatiaras.pos.feature.pos.presentation.CheckoutEvent
+import com.zatiaras.pos.feature.pos.domain.usecase.CalculateCheckoutTotalsUseCase
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -41,6 +42,7 @@ class CheckoutViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private lateinit var transactionRepository: TransactionRepository
+    private lateinit var calculateCheckoutTotalsUseCase: CalculateCheckoutTotalsUseCase
     private lateinit var savedStateHandle: SavedStateHandle
     private lateinit var viewModel: CheckoutViewModel
 
@@ -71,8 +73,9 @@ class CheckoutViewModelTest {
     @Before
     fun setup() {
         transactionRepository = mockk()
+        calculateCheckoutTotalsUseCase = CalculateCheckoutTotalsUseCase()
         savedStateHandle = SavedStateHandle()
-        viewModel = CheckoutViewModel(transactionRepository, savedStateHandle)
+        viewModel = CheckoutViewModel(transactionRepository, calculateCheckoutTotalsUseCase, savedStateHandle)
     }
 
     // ==================== Initialization Tests ====================
@@ -138,7 +141,8 @@ class CheckoutViewModelTest {
             awaitItem() // Ready
             
             viewModel.onEvent(CheckoutEvent.SetAmountPaid("10000"))
-            awaitItem()
+            awaitItem() // intermediate
+            awaitItem() // recalculated
             
             viewModel.onEvent(CheckoutEvent.SetPaymentMethod(PaymentMethod.QRIS))
             
@@ -162,6 +166,7 @@ class CheckoutViewModelTest {
             
             viewModel.onEvent(CheckoutEvent.SetAmountPaid("10000"))
             
+            awaitItem() // intermediate state
             val state = awaitItem() as CheckoutUiState.Ready
             assertEquals("10000", state.amountPaid)
             assertEquals(10000L - state.grandTotal, state.changeAmount)
@@ -234,6 +239,7 @@ class CheckoutViewModelTest {
             
             viewModel.onEvent(CheckoutEvent.SetDiscountPercent("10"))
             
+            awaitItem() // intermediate state
             val state = awaitItem() as CheckoutUiState.Ready
             assertEquals(10.0, state.discountPercent, 0.01)
             assertEquals(500L, state.discountAmount) // 10% of 5000
@@ -368,6 +374,7 @@ class CheckoutViewModelTest {
             amountPaid = 10000,
             changeAmount = 4450,
             notes = null,
+            customerName = null,
             createdAt = System.currentTimeMillis(),
             isSynced = false
         )
@@ -382,7 +389,8 @@ class CheckoutViewModelTest {
             awaitItem() // Ready
             
             viewModel.setQuickAmount(10000)
-            awaitItem() // Updated amount
+            awaitItem() // intermediate amount
+            awaitItem() // recalculated amount
             
             viewModel.onEvent(CheckoutEvent.ConfirmPayment)
             

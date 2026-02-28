@@ -1,5 +1,6 @@
 package com.zatiaras.pos.feature.pos.presentation.cashrecord
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.zatiaras.pos.core.domain.model.DatePeriod
@@ -7,7 +8,9 @@ import com.zatiaras.pos.feature.pos.domain.model.CashRecordType
 import com.zatiaras.pos.feature.pos.domain.repository.CashRecordRepository
 import com.zatiaras.pos.feature.pos.domain.repository.CashSummary
 import com.zatiaras.pos.feature.pos.domain.repository.TransactionRepository
+import com.zatiaras.pos.feature.pos.R
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -18,7 +21,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import java.util.Calendar
+import com.zatiaras.pos.core.domain.util.DateUtils
 import javax.inject.Inject
 
 /**
@@ -29,7 +32,8 @@ import javax.inject.Inject
 @HiltViewModel
 class CashRecordViewModel @Inject constructor(
     private val cashRecordRepository: CashRecordRepository,
-    private val transactionRepository: TransactionRepository
+    private val transactionRepository: TransactionRepository,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(CashRecordUiState())
@@ -52,6 +56,7 @@ class CashRecordViewModel @Inject constructor(
         viewModelScope.launch {
             val (startDate, endDate) = getDateRange(_selectedDatePeriod.value)
             
+            // Calculate dynamic summary directly from combined streams based on date range
             // Combine POS transactions and manual cash records
             combine(
                 transactionRepository.getTransactionsByDateRange(startDate, endDate),
@@ -65,13 +70,15 @@ class CashRecordViewModel @Inject constructor(
                 val allItems = (transactionItems + cashRecordItems)
                     .sortedByDescending { it.createdAt }
                 
-                // Calculate summary including POS transactions
-                val manualSummary = cashRecordRepository.getTodaySummary()
                 val posRevenue = transactions.sumOf { it.grandTotal }
                 
-                // Total income = POS sales + manual income
-                val totalIncome = posRevenue + manualSummary.totalIncome
-                val totalExpense = manualSummary.totalExpense
+                // Calculate Dynamic Summary based on Date Range
+                val manualIncome = cashRecords.filter { it.type == CashRecordType.INCOME }.sumOf { it.amount }
+                val manualExpense = cashRecords.filter { it.type == CashRecordType.EXPENSE }.sumOf { it.amount }
+                
+                // Total income = POS sales + dynamic manual income
+                val totalIncome = posRevenue + manualIncome
+                val totalExpense = manualExpense
                 val netCash = totalIncome - totalExpense
                 
                 Triple(
@@ -84,7 +91,7 @@ class CashRecordViewModel @Inject constructor(
                 Timber.e(e, "Error loading cash records")
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    error = e.message ?: "Gagal memuat data"
+                    error = e.message ?: context.getString(R.string.cash_record_error_load)
                 )
             }
             .collect { (items, summary, posCount) ->
@@ -157,16 +164,16 @@ class CashRecordViewModel @Inject constructor(
     private fun validateAmount(amount: String): String? {
         val numericAmount = amount.toLongOrNull() ?: 0
         return when {
-            amount.isBlank() -> "Jumlah wajib diisi"
-            numericAmount <= 0 -> "Jumlah harus lebih dari 0"
+            amount.isBlank() -> context.getString(R.string.cash_record_error_amount_required)
+            numericAmount <= 0 -> context.getString(R.string.cash_record_error_amount_positive)
             else -> null
         }
     }
 
     private fun validateDescription(description: String): String? {
         return when {
-            description.isBlank() -> "Keterangan wajib diisi"
-            description.length < 3 -> "Keterangan minimal 3 karakter"
+            description.isBlank() -> context.getString(R.string.cash_record_error_description_required)
+            description.length < 3 -> context.getString(R.string.cash_record_error_description_min)
             else -> null
         }
     }
@@ -204,7 +211,7 @@ class CashRecordViewModel @Inject constructor(
                 Timber.e(e, "Failed to save cash record")
                 _formState.value = form.copy(isSubmitting = false)
                 _uiState.value = _uiState.value.copy(
-                    error = e.message ?: "Gagal menyimpan data"
+                    error = e.message ?: context.getString(R.string.cash_record_error_save)
                 )
             }
         }
@@ -214,7 +221,7 @@ class CashRecordViewModel @Inject constructor(
         // Only allow deleting manual cash records (not POS transactions)
         if (!id.startsWith("cash_")) {
             _uiState.value = _uiState.value.copy(
-                error = "Transaksi POS tidak bisa dihapus"
+                error = context.getString(R.string.cash_record_error_pos_not_deletable)
             )
             return
         }
@@ -228,7 +235,7 @@ class CashRecordViewModel @Inject constructor(
                 .onFailure { e ->
                     Timber.e(e, "Failed to delete cash record: $originalId")
                     _uiState.value = _uiState.value.copy(
-                        error = e.message ?: "Gagal menghapus data"
+                        error = e.message ?: context.getString(R.string.cash_record_error_delete)
                     )
                 }
         }
@@ -239,71 +246,16 @@ class CashRecordViewModel @Inject constructor(
     }
     
     private fun getDateRange(period: DatePeriod): Pair<Long, Long> {
-        val calendar = Calendar.getInstance()
-        calendar.set(Calendar.HOUR_OF_DAY, 0)
-        calendar.set(Calendar.MINUTE, 0)
-        calendar.set(Calendar.SECOND, 0)
-        calendar.set(Calendar.MILLISECOND, 0)
-        
         return when (period) {
-            DatePeriod.TODAY -> {
-                val start = calendar.timeInMillis
-                calendar.set(Calendar.HOUR_OF_DAY, 23)
-                calendar.set(Calendar.MINUTE, 59)
-                calendar.set(Calendar.SECOND, 59)
-                val end = calendar.timeInMillis
-                start to end
-            }
-            DatePeriod.YESTERDAY -> {
-                calendar.add(Calendar.DAY_OF_YEAR, -1)
-                val start = calendar.timeInMillis
-                calendar.set(Calendar.HOUR_OF_DAY, 23)
-                calendar.set(Calendar.MINUTE, 59)
-                calendar.set(Calendar.SECOND, 59)
-                val end = calendar.timeInMillis
-                start to end
-            }
-            DatePeriod.THIS_WEEK -> {
-                calendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
-                val start = calendar.timeInMillis
-                calendar.add(Calendar.DAY_OF_YEAR, 6)
-                calendar.set(Calendar.HOUR_OF_DAY, 23)
-                calendar.set(Calendar.MINUTE, 59)
-                calendar.set(Calendar.SECOND, 59)
-                val end = calendar.timeInMillis
-                start to end
-            }
-            DatePeriod.THIS_MONTH -> {
-                calendar.set(Calendar.DAY_OF_MONTH, 1)
-                val start = calendar.timeInMillis
-                calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH))
-                calendar.set(Calendar.HOUR_OF_DAY, 23)
-                calendar.set(Calendar.MINUTE, 59)
-                calendar.set(Calendar.SECOND, 59)
-                val end = calendar.timeInMillis
-                start to end
-            }
-            DatePeriod.LAST_7_DAYS -> {
-                calendar.add(Calendar.DAY_OF_YEAR, -6)
-                val start = calendar.timeInMillis
-                val endCalendar = Calendar.getInstance()
-                endCalendar.set(Calendar.HOUR_OF_DAY, 23)
-                endCalendar.set(Calendar.MINUTE, 59)
-                endCalendar.set(Calendar.SECOND, 59)
-                start to endCalendar.timeInMillis
-            }
-            DatePeriod.LAST_30_DAYS -> {
-                calendar.add(Calendar.DAY_OF_YEAR, -29)
-                val start = calendar.timeInMillis
-                val endCalendar = Calendar.getInstance()
-                endCalendar.set(Calendar.HOUR_OF_DAY, 23)
-                endCalendar.set(Calendar.MINUTE, 59)
-                endCalendar.set(Calendar.SECOND, 59)
-                start to endCalendar.timeInMillis
-            }
+            DatePeriod.TODAY -> DateUtils.getTodayRange()
+            DatePeriod.YESTERDAY -> DateUtils.getYesterdayRange()
+            DatePeriod.THIS_WEEK -> DateUtils.getThisWeekRange()
+            DatePeriod.THIS_MONTH -> DateUtils.getThisMonthRange()
+            DatePeriod.LAST_7_DAYS -> DateUtils.getLastNDaysRange(7)
+            DatePeriod.LAST_30_DAYS -> DateUtils.getLastNDaysRange(30)
             DatePeriod.CUSTOM -> {
-                val start = _uiState.value.customStartDate ?: calendar.timeInMillis
-                val end = _uiState.value.customEndDate ?: calendar.timeInMillis
+                val start = _uiState.value.customStartDate ?: DateUtils.getStartOfDay()
+                val end = _uiState.value.customEndDate ?: DateUtils.getEndOfDay()
                 start to end
             }
         }

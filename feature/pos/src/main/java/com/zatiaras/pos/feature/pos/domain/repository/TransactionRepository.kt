@@ -42,6 +42,16 @@ interface TransactionRepository {
     suspend fun getTransactionById(id: String): Transaction?
     
     /**
+     * Delete a transaction (soft delete).
+     */
+    suspend fun deleteTransaction(id: String): Result<Unit>
+    
+    /**
+     * Update payment method for a transaction.
+     */
+    suspend fun updatePaymentMethod(id: String, paymentMethod: PaymentMethod): Result<Unit>
+    
+    /**
      * Get all transactions from today.
      */
     fun getTodayTransactions(): Flow<List<Transaction>>

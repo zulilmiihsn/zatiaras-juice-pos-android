@@ -1,12 +1,5 @@
 package com.zatiaras.pos.feature.pos.presentation.components
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.SizeTransform
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,11 +11,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Image
-import androidx.compose.material.icons.filled.Remove
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.RoundedCornerShape
+import compose.icons.EvaIcons
+import compose.icons.evaicons.Outline
+import compose.icons.evaicons.outline.Image
+import compose.icons.evaicons.outline.Minus
+import compose.icons.evaicons.outline.Plus
+import compose.icons.evaicons.outline.Trash
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
@@ -30,15 +26,19 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import coil.request.CachePolicy
 import com.zatiaras.pos.feature.pos.domain.model.CartItem
 import com.zatiaras.pos.core.ui.theme.AppShapes
 import com.zatiaras.pos.core.ui.theme.LocalDimensions
@@ -46,7 +46,7 @@ import com.zatiaras.pos.core.ui.util.CurrencyFormatter
 
 /**
  * Cart item row for displaying items in the shopping cart.
- * Shows product info, quantity controls, and subtotal.
+ * Shows product info, customizations (add-ons, sugar/ice), quantity controls, and subtotal.
  * 
  * Features animated quantity counter for smooth micro-interactions.
  */
@@ -59,37 +59,44 @@ fun CartItemRow(
     modifier: Modifier = Modifier
 ) {
     val dimensions = LocalDimensions.current
-    val priceFormatter = CurrencyFormatter.getCurrencyFormatter()
+    val priceFormatter = remember { CurrencyFormatter.getCurrencyFormatter() }
     
     Surface(
         modifier = modifier.fillMaxWidth(),
         color = MaterialTheme.colorScheme.surface,
-        shape = AppShapes.M
+        shape = AppShapes.M,
+        shadowElevation = 1.dp
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(dimensions.paddingS),
-            verticalAlignment = Alignment.CenterVertically
+                .padding(12.dp),
+            verticalAlignment = Alignment.Top
         ) {
-            // Product Image (small thumbnail)
+            // Product Image
             Box(
                 modifier = Modifier
-                    .size(56.dp)
+                    .size(64.dp)
                     .clip(AppShapes.S)
                     .background(MaterialTheme.colorScheme.surfaceVariant),
                 contentAlignment = Alignment.Center
             ) {
                 if (cartItem.product.imageUrl != null) {
                     AsyncImage(
-                        model = cartItem.product.imageUrl,
+                        model = ImageRequest.Builder(androidx.compose.ui.platform.LocalContext.current)
+                            .data(cartItem.product.imageUrl)
+                            .crossfade(true)
+                            .size(120, 120)
+                            .diskCachePolicy(CachePolicy.ENABLED)
+                            .memoryCachePolicy(CachePolicy.ENABLED)
+                            .build(),
                         contentDescription = cartItem.product.name,
-                        modifier = Modifier.size(56.dp),
+                        modifier = Modifier.size(64.dp),
                         contentScale = ContentScale.Crop
                     )
                 } else {
                     Icon(
-                        imageVector = Icons.Default.Image,
+                        imageVector = EvaIcons.Outline.Image,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
                         modifier = Modifier.size(24.dp)
@@ -97,140 +104,98 @@ fun CartItemRow(
                 }
             }
             
-            Spacer(modifier = Modifier.width(dimensions.spacingS))
+            Spacer(modifier = Modifier.width(12.dp))
             
-            // Product Info - compact layout for sidebar
+            // Product Info & Controls
             Column(
                 modifier = Modifier.weight(1f)
             ) {
+                // Title
                 Text(
                     text = cartItem.product.name,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Medium,
-                    maxLines = 1,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
                 
-                Spacer(modifier = Modifier.height(2.dp))
-                
-                // Unit price - prevent wrapping
-                Text(
-                    text = priceFormatter.format(cartItem.product.price),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    softWrap = false
-                )
-                
-                Spacer(modifier = Modifier.height(2.dp))
-                
-                // Animated subtotal with slide animation - prevent wrapping
-                AnimatedContent(
-                    targetState = cartItem.subtotal,
-                    transitionSpec = {
-                        if (targetState > initialState) {
-                            // Sliding up when increasing
-                            (slideInVertically { height -> height } + fadeIn())
-                                .togetherWith(slideOutVertically { height -> -height } + fadeOut())
-                        } else {
-                            // Sliding down when decreasing  
-                            (slideInVertically { height -> -height } + fadeIn())
-                                .togetherWith(slideOutVertically { height -> height } + fadeOut())
-                        }.using(SizeTransform(clip = false))
-                    },
-                    label = "subtotal_animation"
-                ) { subtotal ->
+                // Customization summary (add-ons, sugar, ice, notes)
+                if (cartItem.hasCustomizations) {
                     Text(
-                        text = priceFormatter.format(subtotal),
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Bold,
-                        maxLines = 1,
-                        softWrap = false
+                        text = "+ ${cartItem.customizationSummary}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary, // Less overwhelming pink/color
+                        modifier = Modifier.padding(top = 4.dp),
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
-            }
-            
-            Spacer(modifier = Modifier.width(8.dp))
-            
-            // Quantity Controls - LARGER for Ibu-ibu (40dp instead of 32dp)
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                // Remove/Decrement button
-                IconButton(
-                    onClick = if (cartItem.quantity == 1) onRemove else onDecrement,
-                    modifier = Modifier.size(40.dp),
-                    colors = IconButtonDefaults.iconButtonColors(
-                        containerColor = if (cartItem.quantity == 1) {
-                            MaterialTheme.colorScheme.errorContainer
-                        } else {
-                            MaterialTheme.colorScheme.surfaceVariant
-                        }
-                    )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Bottom Row: Price & Quantity Controls
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Animated icon transition between delete and minus
-                    AnimatedContent(
-                        targetState = cartItem.quantity == 1,
-                        label = "delete_icon_animation"
-                    ) { isLastItem ->
-                        Icon(
-                            imageVector = if (isLastItem) {
-                                Icons.Default.Delete
-                            } else {
-                                Icons.Default.Remove
-                            },
-                            contentDescription = if (isLastItem) "Hapus" else "Kurangi",
-                            modifier = Modifier.size(20.dp),
-                            tint = if (isLastItem) {
-                                MaterialTheme.colorScheme.error
-                            } else {
-                                MaterialTheme.colorScheme.onSurfaceVariant
-                            }
-                        )
-                    }
-                }
-                
-                // Animated quantity display
-                AnimatedContent(
-                    targetState = cartItem.quantity,
-                    transitionSpec = {
-                        if (targetState > initialState) {
-                            // Sliding up when increasing
-                            (slideInVertically { height -> height } + fadeIn())
-                                .togetherWith(slideOutVertically { height -> -height } + fadeOut())
-                        } else {
-                            // Sliding down when decreasing  
-                            (slideInVertically { height -> -height } + fadeIn())
-                                .togetherWith(slideOutVertically { height -> height } + fadeOut())
-                        }.using(SizeTransform(clip = false))
-                    },
-                    label = "quantity_animation"
-                ) { quantity ->
+                    // Subtotal Price
                     Text(
-                        text = quantity.toString(),
+                        text = priceFormatter.format(cartItem.subtotal),
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.width(32.dp),
-                        textAlign = TextAlign.Center
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontWeight = FontWeight.SemiBold
                     )
-                }
-                
-                // Increment button - LARGER for Ibu-ibu
-                IconButton(
-                    onClick = onIncrement,
-                    modifier = Modifier.size(40.dp),
-                    colors = IconButtonDefaults.iconButtonColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer
-                    )
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "Tambah",
-                        modifier = Modifier.size(20.dp),
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
+
+                    // Quantity Controls
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        // Minus Button
+                        IconButton(
+                            onClick = if (cartItem.quantity == 1) onRemove else onDecrement,
+                            modifier = Modifier.size(28.dp),
+                            colors = IconButtonDefaults.iconButtonColors(
+                                containerColor = if (cartItem.quantity == 1) 
+                                    MaterialTheme.colorScheme.errorContainer 
+                                else MaterialTheme.colorScheme.surfaceVariant
+                            )
+                        ) {
+                            Icon(
+                                imageVector = if (cartItem.quantity == 1) EvaIcons.Outline.Trash else EvaIcons.Outline.Minus,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp),
+                                tint = if (cartItem.quantity == 1) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        
+                        // Quantity
+                        Text(
+                            text = cartItem.quantity.toString(),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.widthIn(min = 20.dp),
+                            textAlign = TextAlign.Center
+                        )
+                        
+                        // Plus Button
+                        IconButton(
+                            onClick = onIncrement,
+                            modifier = Modifier.size(28.dp),
+                            colors = IconButtonDefaults.iconButtonColors(
+                                containerColor = MaterialTheme.colorScheme.primary
+                            )
+                        ) {
+                            Icon(
+                                imageVector = EvaIcons.Outline.Plus,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp),
+                                tint = MaterialTheme.colorScheme.onPrimary
+                            )
+                        }
+                    }
                 }
             }
         }

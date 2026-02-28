@@ -3,7 +3,6 @@ package com.zatiaras.pos.feature.pos.presentation.cashrecord
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,19 +18,15 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.automirrored.filled.TrendingDown
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.ShoppingCart
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -44,8 +39,6 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -75,25 +68,30 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Modifier
+import com.zatiaras.pos.feature.pos.R
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.zatiaras.pos.core.domain.model.DatePeriod
+import com.zatiaras.pos.core.domain.util.LocaleUtils
 import com.zatiaras.pos.core.ui.components.CurrencyTextField
-import com.zatiaras.pos.core.ui.util.CurrencyFormatter
-import com.zatiaras.pos.feature.pos.domain.model.CashRecordType
 import com.zatiaras.pos.core.ui.components.DateFilterRow
+import com.zatiaras.pos.core.ui.components.ZatDialog
 import com.zatiaras.pos.core.ui.theme.ExpenseRed
 import com.zatiaras.pos.core.ui.theme.IncomeGreen
 import com.zatiaras.pos.core.ui.theme.LocalDimensions
+import com.zatiaras.pos.core.ui.util.CurrencyFormatter
+import com.zatiaras.pos.feature.pos.domain.model.CashRecordType
+import com.zatiaras.pos.feature.pos.domain.model.Transaction
 import kotlinx.coroutines.launch
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-
-import com.zatiaras.pos.core.domain.model.DatePeriod
 
 /**
  * Cash Record (Buku Kas) screen.
@@ -104,25 +102,29 @@ import com.zatiaras.pos.core.domain.model.DatePeriod
 @Composable
 fun CashRecordScreen(
     onNavigateBack: () -> Unit,
+    onNavigateToReceipt: (Transaction) -> Unit,
     viewModel: CashRecordViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val formState by viewModel.formState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+    val successMsg = stringResource(R.string.cash_record_saved)
     
     var showAddSheet by remember { mutableStateOf(false) }
+    var selectedManualRecord by remember { mutableStateOf<CashFlowItem.FromCashRecord?>(null) }
+    
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
     
     val priceFormatter = CurrencyFormatter.getCurrencyFormatter()
-    val timeFormatter = SimpleDateFormat("HH:mm", Locale("id", "ID"))
+    val timeFormatter = SimpleDateFormat("HH:mm", LocaleUtils.LOCALE_ID)
     
     // Listen for save success
     LaunchedEffect(Unit) {
         viewModel.saveSuccess.collect { success ->
             if (success) {
                 showAddSheet = false
-                snackbarHostState.showSnackbar("Data berhasil disimpan")
+                snackbarHostState.showSnackbar(successMsg)
             }
         }
     }
@@ -140,13 +142,13 @@ fun CashRecordScreen(
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        "Buku Kas",
+                        stringResource(R.string.cash_record_title),
                         fontWeight = FontWeight.Bold
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Kembali")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
@@ -162,10 +164,10 @@ fun CashRecordScreen(
                 },
                 containerColor = MaterialTheme.colorScheme.primary
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Tambah")
+                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.cash_record_add))
             }
         },
-        snackbarHost = { SnackbarHost(snackbarHostState) }
+        snackbarHost = { com.zatiaras.pos.core.ui.components.ZatSnackbarHost(snackbarHostState) }
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -187,10 +189,6 @@ fun CashRecordScreen(
             
             // Logic to handle date filter events
             var showDateRangePicker by remember { mutableStateOf(false) }
-            val dateFormatter = SimpleDateFormat("dd MMM yyyy", Locale("id", "ID"))
-            
-            // Since the new DateFilterRow component requires explicit date range values and handlers,
-            // we use the component but adapt it to use the ViewModel's state and events
             
             // Note: DateFilterRow component from core:ui implements its own specific UI.
             // We use it here to ensure consistency with Reports screen.
@@ -199,9 +197,6 @@ fun CashRecordScreen(
                 endDate = uiState.customEndDate,
                 activePeriod = selectedPeriod,
                 onStartDateClick = { 
-                    // To simplify, we trigger the custom date period selection which will show picker in the reusable component if needed.
-                    // However, the reusable component DateFilterRow handles start/end date clicks by calling the callback.
-                    // The actual date picking logic is not embedded in the component itself (it's stateless regarding picker dialog).
                     showDateRangePicker = true 
                 },
                 onEndDateClick = { showDateRangePicker = true },
@@ -211,13 +206,8 @@ fun CashRecordScreen(
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
             )
 
-            // Date Picker Dialog Logic (since we removed local implementation, we need a way to pick dates if needed)
+            // Date Picker Dialog Logic
             if (showDateRangePicker) {
-               // We need a DatePickerDialog here. 
-               // For now, let's use the DateRangePickerDialog from core:ui logic if we want to be fully reused,
-               // but DateFilterRow is just a UI component.
-               // We should implement a picker dialog or use a shared one.
-               // To keep it simple and consistent, we can reuse 'androidx.compose.material3.DatePickerDialog' directly here.
                com.zatiaras.pos.core.ui.components.DateRangePickerDialog(
                    onDismiss = { showDateRangePicker = false },
                    onConfirm = { start, end ->
@@ -249,11 +239,11 @@ fun CashRecordScreen(
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            text = "Belum ada catatan hari ini",
+                            text = stringResource(R.string.cash_record_empty),
                             style = MaterialTheme.typography.titleMedium
                         )
                         Text(
-                            text = "Transaksi POS otomatis tercatat di sini",
+                            text = stringResource(R.string.cash_record_empty_hint),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -275,6 +265,13 @@ fun CashRecordScreen(
                             timeFormatter = timeFormatter,
                             onDelete = {
                                 viewModel.onEvent(CashRecordEvent.DeleteRecord(item.id))
+                            },
+                            onClick = {
+                                if (item is CashFlowItem.FromTransaction) {
+                                    onNavigateToReceipt(item.transaction)
+                                } else if (item is CashFlowItem.FromCashRecord) {
+                                    selectedManualRecord = item
+                                }
                             }
                         )
                     }
@@ -306,658 +303,123 @@ fun CashRecordScreen(
             )
         }
     }
-}
 
-/**
- * Compact summary card with colored backgrounds.
- * Maintains visual clarity with reduced spacing for efficiency.
- */
-@Composable
-private fun CashSummaryCard(
-    totalIncome: Long,
-    totalExpense: Long,
-    netCash: Long,
-    posTransactionCount: Int,
-    priceFormatter: NumberFormat,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-    ) {
-        Column(
-            modifier = Modifier.padding(12.dp)
-        ) {
-            // Compact Header
-            Text(
-                text = "Ringkasan Hari Ini ($posTransactionCount Transaksi)",
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.SemiBold
-            )
-            
-            Spacer(modifier = Modifier.height(12.dp))
-            
-            // Income and Expense in compact colored cards
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                // MASUK Card
-                Card(
-                    modifier = Modifier.weight(1f),
-                    colors = CardDefaults.cardColors(
-                        containerColor = IncomeGreen.copy(alpha = 0.1f)
-                    ),
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(12.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.TrendingUp,
-                                contentDescription = null,
-                                tint = IncomeGreen,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = "MASUK",
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.SemiBold,
-                                color = IncomeGreen
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Text(
-                            text = priceFormatter.format(totalIncome),
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = IncomeGreen
-                        )
-                    }
-                }
-                
-                // KELUAR Card
-                Card(
-                    modifier = Modifier.weight(1f),
-                    colors = CardDefaults.cardColors(
-                        containerColor = ExpenseRed.copy(alpha = 0.1f)
-                    ),
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(12.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.TrendingDown,
-                                contentDescription = null,
-                                tint = ExpenseRed,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = "KELUAR",
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.SemiBold,
-                                color = ExpenseRed
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Text(
-                            text = priceFormatter.format(totalExpense),
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = ExpenseRed
-                        )
-                    }
-                }
-            }
-            
-            Spacer(modifier = Modifier.height(12.dp))
-            
-            // Subtle divider
-            Spacer(
+    // Detail Dialog for Manual Records
+    if (selectedManualRecord != null) {
+        val record = selectedManualRecord!!
+        ZatDialog(
+            onDismissRequest = { selectedManualRecord = null }
+        ) { dismiss ->
+            Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(1.dp)
-                    .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
-            )
-            
-            Spacer(modifier = Modifier.height(10.dp))
-            
-            // SALDO - Compact and clear
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                    .padding(horizontal = 24.dp),
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {
-                Text(
-                    text = "Saldo",
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Text(
-                    text = priceFormatter.format(netCash),
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = if (netCash >= 0) IncomeGreen else ExpenseRed
-                )
-            }
-        }
-    }
-}
-
-
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun CashFlowItemRow(
-    item: CashFlowItem,
-    priceFormatter: NumberFormat,
-    timeFormatter: SimpleDateFormat,
-    onDelete: () -> Unit
-) {
-    val canDelete = item is CashFlowItem.FromCashRecord
-    var showDeleteDialog by remember { mutableStateOf(false) }
-    
-    val dismissState = rememberSwipeToDismissBoxState(
-        confirmValueChange = { value ->
-            if (value == SwipeToDismissBoxValue.EndToStart && canDelete) {
-                showDeleteDialog = true
-            }
-            false
-        }
-    )
-    
-    if (canDelete) {
-        SwipeToDismissBox(
-            state = dismissState,
-            backgroundContent = {
-                val color by animateColorAsState(
-                    targetValue = when (dismissState.targetValue) {
-                        SwipeToDismissBoxValue.EndToStart -> ExpenseRed
-                        else -> androidx.compose.ui.graphics.Color.Transparent
-                    },
-                    label = "swipe_color"
-                )
-                
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(color, RoundedCornerShape(12.dp))
-                        .padding(horizontal = 20.dp),
-                    contentAlignment = Alignment.CenterEnd
+                Column(
+                    modifier = Modifier.padding(24.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Delete,
-                        contentDescription = "Hapus",
-                        tint = androidx.compose.ui.graphics.Color.White
-                    )
-                }
-            },
-            enableDismissFromStartToEnd = false
-        ) {
-            CashFlowItemCard(item, priceFormatter, timeFormatter)
-        }
-    } else {
-        CashFlowItemCard(item, priceFormatter, timeFormatter)
-    }
-    
-    // Delete confirmation dialog
-    if (showDeleteDialog) {
-        AlertDialog(
-            onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Hapus Catatan") },
-            text = { Text("Apakah Anda yakin ingin menghapus catatan ini?") },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        onDelete()
-                        showDeleteDialog = false
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = (if (record.isIncome) IncomeGreen else ExpenseRed).copy(alpha = 0.1f)
+                        ) {
+                            Icon(
+                                imageVector = if (record.isIncome) Icons.AutoMirrored.Filled.TrendingUp else Icons.AutoMirrored.Filled.TrendingDown,
+                                contentDescription = null,
+                                tint = if (record.isIncome) IncomeGreen else ExpenseRed,
+                                modifier = Modifier.padding(10.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Text(
+                            text = if (record.isIncome) {
+                                stringResource(R.string.cash_record_detail_income_title)
+                            } else {
+                                stringResource(R.string.cash_record_detail_expense_title)
+                            },
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
-                ) {
-                    Text("Hapus", color = MaterialTheme.colorScheme.error)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDeleteDialog = false }) {
-                    Text("Batal")
-                }
-            }
-        )
-    }
-}
 
-@Composable
-private fun CashFlowItemCard(
-    item: CashFlowItem,
-    priceFormatter: NumberFormat,
-    timeFormatter: SimpleDateFormat
-) {
-    val isTransactionItem = item is CashFlowItem.FromTransaction
-    val iconColor = if (item.isIncome) IncomeGreen else ExpenseRed
-    
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        )
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Type Icon
-            Surface(
-                shape = RoundedCornerShape(8.dp),
-                color = iconColor.copy(alpha = 0.1f)
-            ) {
-                Icon(
-                    imageVector = when {
-                        isTransactionItem -> Icons.Default.ShoppingCart
-                        item.isIncome -> Icons.AutoMirrored.Filled.TrendingUp
-                        else -> Icons.AutoMirrored.Filled.TrendingDown
-                    },
-                    contentDescription = null,
-                    tint = iconColor,
-                    modifier = Modifier.padding(8.dp)
-                )
-            }
-            
-            Spacer(modifier = Modifier.width(12.dp))
-            
-            // Details
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = item.description,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Medium
-                )
-                Row {
+                    Spacer(modifier = Modifier.height(24.dp))
+
                     Text(
-                        text = timeFormatter.format(Date(item.createdAt)),
-                        style = MaterialTheme.typography.bodySmall,
+                        text = stringResource(R.string.cash_record_detail_description_label),
+                        style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    
-                    // Show item count for transactions
-                    if (item is CashFlowItem.FromTransaction) {
+                    Text(
+                        text = record.description,
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+
+                    if (!record.category.isNullOrBlank()) {
+                        Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            text = " \u2022 ${item.itemCount} item",
-                            style = MaterialTheme.typography.bodySmall,
+                            text = stringResource(R.string.cash_record_detail_category_label),
+                            style = MaterialTheme.typography.labelLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                    }
-                    
-                    // Show category for manual records
-                    if (item is CashFlowItem.FromCashRecord && !item.category.isNullOrBlank()) {
                         Text(
-                            text = " \u2022 ${item.category}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            text = record.category!!,
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.padding(top = 4.dp)
                         )
                     }
-                }
-            }
-            
-            // Amount
-            Text(
-                text = "${if (item.isIncome) "+" else "-"}${priceFormatter.format(item.amount)}",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = iconColor
-            )
-        }
-    }
-}
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun AddCashRecordSheet(
-    formState: CashRecordFormState,
-    onEvent: (CashRecordEvent) -> Unit,
-    priceFormatter: NumberFormat,
-    onCancel: () -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(24.dp)
-    ) {
-        // Centered Title
-        Text(
-            text = "Tambah Catatan Manual",
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.fillMaxWidth(),
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center
-        )
-        
-        Spacer(modifier = Modifier.height(4.dp))
-        
-        Text(
-            text = "Untuk pemasukan/pengeluaran di luar POS",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.fillMaxWidth(),
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center
-        )
-        
-        Spacer(modifier = Modifier.height(24.dp))
-        
-        // Type Selection - LARGE Segmented Button Style
-        Text(
-            text = "Jenis Transaksi",
-            style = MaterialTheme.typography.labelLarge,
-            fontWeight = FontWeight.SemiBold
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-        
-        // Large segmented buttons for easy touch
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp), // Standard touch target
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            // PEMASUKAN Button
-            Surface(
-                onClick = { onEvent(CashRecordEvent.SetType(CashRecordType.INCOME)) },
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight(),
-                shape = RoundedCornerShape(16.dp),
-                color = if (formState.type == CashRecordType.INCOME) 
-                    IncomeGreen.copy(alpha = 0.15f)
-                else 
-                    MaterialTheme.colorScheme.surfaceVariant,
-                border = if (formState.type == CashRecordType.INCOME)
-                    androidx.compose.foundation.BorderStroke(2.dp, IncomeGreen)
-                else
-                    null
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxSize(),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.TrendingUp,
-                        contentDescription = null,
-                        tint = if (formState.type == CashRecordType.INCOME) 
-                            IncomeGreen 
-                        else 
-                            MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(24.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = "PEMASUKAN",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = if (formState.type == CashRecordType.INCOME) 
-                            IncomeGreen 
-                        else 
-                            MaterialTheme.colorScheme.onSurfaceVariant
+                        text = stringResource(R.string.cash_record_detail_time_label),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                }
-            }
-            
-            // PENGELUARAN Button
-            Surface(
-                onClick = { onEvent(CashRecordEvent.SetType(CashRecordType.EXPENSE)) },
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight(),
-                shape = RoundedCornerShape(16.dp),
-                color = if (formState.type == CashRecordType.EXPENSE) 
-                    ExpenseRed.copy(alpha = 0.15f)
-                else 
-                    MaterialTheme.colorScheme.surfaceVariant,
-                border = if (formState.type == CashRecordType.EXPENSE)
-                    androidx.compose.foundation.BorderStroke(2.dp, ExpenseRed)
-                else
-                    null
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxSize(),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.TrendingDown,
-                        contentDescription = null,
-                        tint = if (formState.type == CashRecordType.EXPENSE) 
-                            ExpenseRed 
-                        else 
-                            MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(24.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
+                    val dateStr = SimpleDateFormat("dd MMM yyyy, HH:mm", LocaleUtils.LOCALE_ID).format(Date(record.createdAt))
                     Text(
-                        text = "PENGELUARAN",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = if (formState.type == CashRecordType.EXPENSE) 
-                            ExpenseRed 
-                        else 
-                            MaterialTheme.colorScheme.onSurfaceVariant
+                        text = dateStr,
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.padding(top = 4.dp)
                     )
-                }
-            }
-        }
-        
-        Spacer(modifier = Modifier.height(16.dp))
-        
-        // Date Selection
-        val date = formState.date ?: System.currentTimeMillis()
-        val dateFormatter = SimpleDateFormat("dd MMMM yyyy", Locale("id", "ID"))
-        var showDatePicker by remember { mutableStateOf(false) }
 
-        Box(modifier = Modifier.fillMaxWidth()) {
-            OutlinedTextField(
-                value = dateFormatter.format(Date(date)),
-                onValueChange = {},
-                readOnly = true,
-                label = { Text("Tanggal") },
-                leadingIcon = {
-                    Icon(Icons.AutoMirrored.Filled.MenuBook, contentDescription = null)
-                },
-                trailingIcon = {
-                    IconButton(onClick = { showDatePicker = true }) {
-                        Icon(Icons.AutoMirrored.Filled.MenuBook, contentDescription = "Pilih Tanggal")
-                    }
-                },
-                modifier = Modifier.fillMaxWidth(),
-                colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
-                shape = RoundedCornerShape(12.dp)
-            )
-            
-            // Invisible clickable layer
-            Box(
-                modifier = Modifier
-                    .matchParentSize()
-                    .clickable { showDatePicker = true }
-            )
-        }
+                    Spacer(modifier = Modifier.height(24.dp))
 
-        if (showDatePicker) {
-            val datePickerState = rememberDatePickerState(
-                initialSelectedDateMillis = date
-            )
-            DatePickerDialog(
-                onDismissRequest = { showDatePicker = false },
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            datePickerState.selectedDateMillis?.let {
-                                onEvent(CashRecordEvent.SetDate(it))
-                            }
-                            showDatePicker = false
-                        }
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(
+                                color = (if (record.isIncome) IncomeGreen else ExpenseRed).copy(alpha = 0.1f),
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                            .padding(16.dp),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Text("OK")
+                        Text(
+                            text = stringResource(
+                                R.string.cash_flow_amount_signed,
+                                if (record.isIncome) "+" else "-",
+                                priceFormatter.format(record.amount)
+                            ),
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = if (record.isIncome) IncomeGreen else ExpenseRed
+                        )
                     }
-                },
-                dismissButton = {
-                    TextButton(onClick = { showDatePicker = false }) {
-                        Text("Batal")
-                    }
-                }
-            ) {
-                DatePicker(state = datePickerState)
-            }
-        }
-        
-        Spacer(modifier = Modifier.height(16.dp))
-        
-        // Amount with currency formatting
-        CurrencyTextField(
-            value = formState.amount,
-            onValueChange = { onEvent(CashRecordEvent.SetAmount(it)) },
-            modifier = Modifier.fillMaxWidth(),
-            label = { Text("Jumlah *") },
-            showPrefix = true,
-            isError = formState.amountError != null,
-            singleLine = true,
-            shape = RoundedCornerShape(12.dp)
-        )
-        
-        // Show error if any
-        if (formState.amountError != null) {
-            Text(
-                text = formState.amountError!!,
-                color = MaterialTheme.colorScheme.error,
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(start = 16.dp, top = 4.dp)
-            )
-        }
-        
-        Spacer(modifier = Modifier.height(8.dp))
-        
-        // Description
-        OutlinedTextField(
-            value = formState.description,
-            onValueChange = { onEvent(CashRecordEvent.SetDescription(it)) },
-            modifier = Modifier.fillMaxWidth(),
-            label = { Text("Keterangan *") },
-            placeholder = { Text("Contoh: Beli stok es batu") },
-            isError = formState.descriptionError != null,
-            supportingText = formState.descriptionError?.let { { Text(it) } },
-            singleLine = true,
-            shape = RoundedCornerShape(12.dp)
-        )
-        
-        Spacer(modifier = Modifier.height(8.dp))
-        
-        // Category (Dropdown)
-        val categories = if (formState.type == CashRecordType.INCOME) {
-            com.zatiaras.pos.core.domain.model.CashCategories.INCOME_CATEGORIES
-        } else {
-            com.zatiaras.pos.core.domain.model.CashCategories.EXPENSE_CATEGORIES
-        }
-        var expanded by remember { mutableStateOf(false) }
 
-        ExposedDropdownMenuBox(
-            expanded = expanded,
-            onExpandedChange = { expanded = !expanded },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            OutlinedTextField(
-                value = formState.category,
-                onValueChange = {},
-                readOnly = true,
-                label = { Text("Kategori (opsional)") },
-                placeholder = { Text("Pilih kategori") },
-                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .menuAnchor(MenuAnchorType.PrimaryNotEditable),
-                shape = RoundedCornerShape(12.dp)
-            )
+                    Spacer(modifier = Modifier.height(24.dp))
 
-            ExposedDropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false }
-            ) {
-                categories.forEach { category ->
-                    DropdownMenuItem(
-                        text = { Text(category) },
-                        onClick = {
-                            onEvent(CashRecordEvent.SetCategory(category))
-                            expanded = false
-                        }
-                    )
-                }
-            }
-        }
-        
-        Spacer(modifier = Modifier.height(8.dp))
-        
-        // Notes (optional)
-        OutlinedTextField(
-            value = formState.notes,
-            onValueChange = { onEvent(CashRecordEvent.SetNotes(it)) },
-            modifier = Modifier.fillMaxWidth(),
-            label = { Text("Catatan (opsional)") },
-            minLines = 2,
-            shape = RoundedCornerShape(12.dp)
-        )
-        
-        Spacer(modifier = Modifier.height(24.dp))
-        
-        // Buttons
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            OutlinedButton(
-                onClick = onCancel,
-                modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Text("Batal")
-            }
-            
-            Button(
-                onClick = { onEvent(CashRecordEvent.SaveRecord) },
-                modifier = Modifier.weight(1f),
-                enabled = formState.isValid && !formState.isSubmitting,
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = if (formState.type == CashRecordType.INCOME) {
-                        IncomeGreen
-                    } else {
-                        ExpenseRed
+                    Button(
+                        onClick = dismiss,
+                        modifier = Modifier.fillMaxWidth().height(50.dp),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text(stringResource(R.string.cash_record_close), fontWeight = FontWeight.Bold)
                     }
-                )
-            ) {
-                if (formState.isSubmitting) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(20.dp),
-                        strokeWidth = 2.dp,
-                        color = androidx.compose.ui.graphics.Color.White
-                    )
-                } else {
-                    Text("Simpan")
                 }
             }
         }
-        
-        Spacer(modifier = Modifier.height(32.dp))
     }
 }

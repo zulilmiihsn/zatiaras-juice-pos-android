@@ -44,7 +44,7 @@ interface CashRecordRepository {
     /**
      * Get today's cash summary.
      */
-    suspend fun getTodaySummary(): CashSummary
+    suspend fun getTodaySummary(): Result<CashSummary>
     
     /**
      * Push unsynced records to remote.

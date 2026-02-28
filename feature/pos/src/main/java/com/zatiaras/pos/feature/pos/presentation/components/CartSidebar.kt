@@ -16,9 +16,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.ShoppingCart
+import compose.icons.EvaIcons
+import compose.icons.evaicons.Outline
+import compose.icons.evaicons.outline.ShoppingCart
+import compose.icons.evaicons.outline.Trash
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -30,7 +31,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Modifier
+import com.zatiaras.pos.feature.pos.R
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -86,13 +89,13 @@ fun CartSidebar(
             ) {
                 items(
                     items = cart.items,
-                    key = { it.product.id }
+                    key = { it.uniqueKey }
                 ) { cartItem ->
                     CartItemRow(
                         cartItem = cartItem,
-                        onIncrement = { onIncrement(cartItem.product.id) },
-                        onDecrement = { onDecrement(cartItem.product.id) },
-                        onRemove = { onRemove(cartItem.product.id) }
+                        onIncrement = { onIncrement(cartItem.uniqueKey) },
+                        onDecrement = { onDecrement(cartItem.uniqueKey) },
+                        onRemove = { onRemove(cartItem.uniqueKey) }
                     )
                 }
             }
@@ -123,7 +126,7 @@ private fun CartHeader(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            text = "Keranjang ($itemCount)",
+            text = stringResource(R.string.pos_cart_title_with_count, itemCount),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold
         )
@@ -133,8 +136,8 @@ private fun CartHeader(
             modifier = Modifier.size(36.dp)
         ) {
             Icon(
-                imageVector = Icons.Default.Clear,
-                contentDescription = "Kosongkan",
+                imageVector = EvaIcons.Outline.Trash,
+                contentDescription = stringResource(R.string.cart_clear),
                 tint = MaterialTheme.colorScheme.error
             )
         }
@@ -161,7 +164,7 @@ private fun CartFooter(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Subtotal",
+                text = stringResource(R.string.pos_subtotal),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -188,13 +191,13 @@ private fun CartFooter(
             )
         ) {
             Icon(
-                imageVector = Icons.Default.ShoppingCart,
+                imageVector = EvaIcons.Outline.ShoppingCart,
                 contentDescription = null,
                 modifier = Modifier.size(24.dp)
             )
             Spacer(modifier = Modifier.width(10.dp))
             Text(
-                text = "Bayar",
+                text = stringResource(R.string.checkout_button),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )

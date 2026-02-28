@@ -86,6 +86,28 @@ class TransactionRepositoryImpl @Inject constructor(
         return entity.toDomain(items)
     }
 
+    override suspend fun deleteTransaction(id: String): Result<Unit> {
+        return try {
+            transactionDao.softDelete(id)
+            Timber.d("Transaction soft deleted: $id")
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to delete transaction: $id")
+            Result.Error(e)
+        }
+    }
+
+    override suspend fun updatePaymentMethod(id: String, paymentMethod: PaymentMethod): Result<Unit> {
+        return try {
+            transactionDao.updatePaymentMethod(id, paymentMethod.name)
+            Timber.d("Transaction payment method updated: $id to ${paymentMethod.name}")
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to update payment method for transaction: $id")
+            Result.Error(e)
+        }
+    }
+
     override fun getTodayTransactions(): Flow<List<Transaction>> {
         val (startOfDay, endOfDay) = DateUtils.getTodayRange()
         // Use @Relation-based query to avoid N+1 problem

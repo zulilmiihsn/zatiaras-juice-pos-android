@@ -32,6 +32,7 @@ fun TransactionEntity.toDomain(items: List<TransactionItemEntity>): Transaction 
         amountPaid = amountPaid,
         changeAmount = changeAmount,
         notes = notes,
+        customerName = customerName,
         createdAt = createdAt,
         isSynced = isSynced
     )
@@ -114,6 +115,7 @@ fun createTransactionEntity(
         amountPaid = if (paymentMethod == PaymentMethod.CASH) amountPaid else grandTotal,
         changeAmount = changeAmount,
         notes = notes,
+        customerName = customerName,
         isSynced = false
     )
 }

@@ -1,6 +1,8 @@
 package com.zatiaras.pos.feature.pos.presentation
 
+import com.zatiaras.pos.core.domain.model.IceLevel
 import com.zatiaras.pos.core.domain.model.Product
+import com.zatiaras.pos.core.domain.model.SugarLevel
 import com.zatiaras.pos.feature.pos.domain.model.PaymentMethod
 
 /**
@@ -11,12 +13,24 @@ sealed interface PosEvent {
     data class SearchQueryChanged(val query: String) : PosEvent
     data class CategorySelected(val categoryId: String?) : PosEvent
     
-    // Cart events
+    // Direct add to cart (for products without customizations)
     data class AddToCart(val product: Product) : PosEvent
-    data class IncrementItem(val productId: String) : PosEvent
-    data class DecrementItem(val productId: String) : PosEvent
-    data class RemoveFromCart(val productId: String) : PosEvent
-    data class UpdateItemQuantity(val productId: String, val quantity: Int) : PosEvent
+    
+    // Product Options Dialog events
+    data class ShowProductOptions(val product: Product) : PosEvent
+    data object HideProductOptions : PosEvent
+    data class ToggleAddOn(val addOnId: String) : PosEvent
+    data class SetSugarLevel(val level: SugarLevel) : PosEvent
+    data class SetIceLevel(val level: IceLevel) : PosEvent
+    data class SetProductNote(val note: String) : PosEvent
+    data class SetProductQuantity(val quantity: Int) : PosEvent
+    data object ConfirmAddToCart : PosEvent
+    
+    // Cart item manipulation (by uniqueKey)
+    data class IncrementItem(val uniqueKey: String) : PosEvent
+    data class DecrementItem(val uniqueKey: String) : PosEvent
+    data class RemoveFromCart(val uniqueKey: String) : PosEvent
+    data class UpdateItemQuantity(val uniqueKey: String, val quantity: Int) : PosEvent
     data object ClearCart : PosEvent
     
     // Navigation events
@@ -42,4 +56,5 @@ sealed interface CheckoutEvent {
     data class SetNotes(val notes: String) : CheckoutEvent
     data object ConfirmPayment : CheckoutEvent
     data object CancelCheckout : CheckoutEvent
+    data object DismissError : CheckoutEvent
 }

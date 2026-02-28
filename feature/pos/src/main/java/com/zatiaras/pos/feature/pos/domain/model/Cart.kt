@@ -1,6 +1,9 @@
 package com.zatiaras.pos.feature.pos.domain.model
 
+import com.zatiaras.pos.core.domain.model.AddOn
+import com.zatiaras.pos.core.domain.model.IceLevel
 import com.zatiaras.pos.core.domain.model.Product
+import com.zatiaras.pos.core.domain.model.SugarLevel
 
 /**
  * Represents the shopping cart.
@@ -8,6 +11,9 @@ import com.zatiaras.pos.core.domain.model.Product
  * This is an immutable data structure. All modifications return a new Cart instance.
  * The cart is stored in-memory only (not persisted to database).
  * This is intentional POS behavior - carts are session-based.
+ * 
+ * Items are uniquely identified by their uniqueKey (product + customizations).
+ * Same product with different customizations = different cart items.
  */
 data class Cart(
     val items: List<CartItem> = emptyList()
@@ -18,12 +24,13 @@ data class Cart(
     val itemCount: Int get() = items.sumOf { it.quantity }
     
     /**
-     * Number of unique products in cart.
+     * Number of unique line items in cart.
      */
     val uniqueItemCount: Int get() = items.size
     
     /**
      * Cart subtotal before tax and discounts.
+     * Includes product prices + add-on prices.
      */
     val subtotal: Long get() = items.sumOf { it.subtotal }
     
@@ -38,43 +45,84 @@ data class Cart(
     fun isNotEmpty(): Boolean = items.isNotEmpty()
     
     /**
-     * Adds a product to cart or increments quantity if already exists.
+     * Adds a product to cart with customizations.
+     * 
+     * If an item with the same uniqueKey exists, increments quantity.
+     * Otherwise, adds a new item to cart.
      * 
      * @param product The product to add
      * @param quantity Number to add (default 1)
+     * @param addOns Selected add-ons
+     * @param sugarLevel Sugar level customization
+     * @param iceLevel Ice level customization
+     * @param notes Special requests/notes
      * @return New Cart with updated items
      */
-    fun addItem(product: Product, quantity: Int = 1): Cart {
-        val existingIndex = items.indexOfFirst { it.product.id == product.id }
+    fun addItem(
+        product: Product,
+        quantity: Int = 1,
+        addOns: List<AddOn> = emptyList(),
+        sugarLevel: SugarLevel = SugarLevel.NORMAL,
+        iceLevel: IceLevel = IceLevel.NORMAL,
+        notes: String = ""
+    ): Cart {
+        val newItem = CartItem(
+            product = product,
+            quantity = quantity,
+            addOns = addOns,
+            sugarLevel = sugarLevel,
+            iceLevel = iceLevel,
+            notes = notes
+        )
+        
+        val existingIndex = items.indexOfFirst { it.uniqueKey == newItem.uniqueKey }
         
         return if (existingIndex >= 0) {
-            // Product exists, update quantity
+            // Item with same customizations exists, merge quantities
             val existingItem = items[existingIndex]
             val updatedItem = existingItem.copy(quantity = existingItem.quantity + quantity)
             copy(items = items.toMutableList().apply { 
                 set(existingIndex, updatedItem) 
             })
         } else {
-            // New product, add to cart
-            copy(items = items + CartItem(product, quantity))
+            // New item, add to cart
+            copy(items = items + newItem)
         }
     }
     
     /**
-     * Updates quantity of a specific product.
+     * Adds a pre-configured CartItem to cart.
+     * Merges with existing item if uniqueKey matches.
+     */
+    fun addItem(cartItem: CartItem): Cart {
+        val existingIndex = items.indexOfFirst { it.uniqueKey == cartItem.uniqueKey }
+        
+        return if (existingIndex >= 0) {
+            val existingItem = items[existingIndex]
+            val updatedItem = existingItem.copy(quantity = existingItem.quantity + cartItem.quantity)
+            copy(items = items.toMutableList().apply { 
+                set(existingIndex, updatedItem) 
+            })
+        } else {
+            copy(items = items + cartItem)
+        }
+    }
+    
+    /**
+     * Updates quantity of a specific cart item by its uniqueKey.
      * Removes item if quantity is 0 or less.
      * 
-     * @param productId Product ID to update
+     * @param uniqueKey The unique identifier for the cart item
      * @param quantity New quantity
      * @return New Cart with updated items
      */
-    fun updateQuantity(productId: String, quantity: Int): Cart {
+    fun updateQuantity(uniqueKey: String, quantity: Int): Cart {
         if (quantity <= 0) {
-            return removeItem(productId)
+            return removeItem(uniqueKey)
         }
         
         return copy(items = items.map { item ->
-            if (item.product.id == productId) {
+            if (item.uniqueKey == uniqueKey) {
                 item.copy(quantity = quantity)
             } else {
                 item
@@ -83,14 +131,14 @@ data class Cart(
     }
     
     /**
-     * Increments quantity of a specific product by 1.
+     * Increments quantity of a specific cart item by 1.
      * 
-     * @param productId Product ID to increment
+     * @param uniqueKey The unique identifier for the cart item
      * @return New Cart with updated items
      */
-    fun incrementItem(productId: String): Cart {
+    fun incrementItem(uniqueKey: String): Cart {
         return copy(items = items.map { item ->
-            if (item.product.id == productId) {
+            if (item.uniqueKey == uniqueKey) {
                 item.incrementQuantity()
             } else {
                 item
@@ -99,15 +147,15 @@ data class Cart(
     }
     
     /**
-     * Decrements quantity of a specific product by 1.
+     * Decrements quantity of a specific cart item by 1.
      * Removes item if quantity reaches 0.
      * 
-     * @param productId Product ID to decrement
+     * @param uniqueKey The unique identifier for the cart item
      * @return New Cart with updated items
      */
-    fun decrementItem(productId: String): Cart {
+    fun decrementItem(uniqueKey: String): Cart {
         val updatedItems = items.mapNotNull { item ->
-            if (item.product.id == productId) {
+            if (item.uniqueKey == uniqueKey) {
                 val decremented = item.decrementQuantity()
                 if (decremented.quantity > 0) decremented else null
             } else {
@@ -118,13 +166,13 @@ data class Cart(
     }
     
     /**
-     * Removes a product from cart entirely.
+     * Removes a cart item entirely.
      * 
-     * @param productId Product ID to remove
+     * @param uniqueKey The unique identifier for the cart item
      * @return New Cart without the specified item
      */
-    fun removeItem(productId: String): Cart {
-        return copy(items = items.filter { it.product.id != productId })
+    fun removeItem(uniqueKey: String): Cart {
+        return copy(items = items.filter { it.uniqueKey != uniqueKey })
     }
     
     /**
@@ -133,17 +181,29 @@ data class Cart(
     fun clear(): Cart = Cart()
     
     /**
-     * Gets the CartItem for a specific product, if it exists.
+     * Gets the CartItem by its uniqueKey, if it exists.
      */
-    fun getItem(productId: String): CartItem? {
-        return items.find { it.product.id == productId }
+    fun getItem(uniqueKey: String): CartItem? {
+        return items.find { it.uniqueKey == uniqueKey }
     }
     
     /**
-     * Returns the quantity of a specific product in cart.
-     * Returns 0 if product is not in cart.
+     * Gets all cart items for a specific product (regardless of customizations).
      */
-    fun getQuantity(productId: String): Int {
-        return getItem(productId)?.quantity ?: 0
+    fun getItemsForProduct(productId: String): List<CartItem> {
+        return items.filter { it.product.id == productId }
     }
+    
+    /**
+     * Returns the total quantity of a specific product in cart
+     * (across all customization variants).
+     */
+    fun getTotalQuantityForProduct(productId: String): Int {
+        return getItemsForProduct(productId).sumOf { it.quantity }
+    }
+
+    /**
+     * Alias for getTotalQuantityForProduct for compatibility.
+     */
+    fun getQuantity(productId: String): Int = getTotalQuantityForProduct(productId)
 }

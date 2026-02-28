@@ -95,6 +95,47 @@ interface ProductDao {
     @Query("DELETE FROM products")
     suspend fun deleteAll()
 
+    /**
+     * Set category for multiple products.
+     */
+    @Query("""
+        UPDATE products 
+        SET categoryId = :categoryId, updatedAt = :timestamp, isSynced = 0 
+        WHERE id IN (:productIds)
+    """)
+    suspend fun setCategoryForProducts(
+        categoryId: String, 
+        productIds: List<String>, 
+        timestamp: Long = System.currentTimeMillis()
+    )
+
+    /**
+     * Clear category from products that have this category but are not in the list.
+     */
+    @Query("""
+        UPDATE products 
+        SET categoryId = NULL, updatedAt = :timestamp, isSynced = 0 
+        WHERE categoryId = :categoryId AND id NOT IN (:keepProductIds)
+    """)
+    suspend fun clearCategoryExcept(
+        categoryId: String, 
+        keepProductIds: List<String>,
+        timestamp: Long = System.currentTimeMillis()
+    )
+
+    /**
+     * Clear category from products that have this category (e.g. when category is deleted).
+     */
+    @Query("""
+        UPDATE products 
+        SET categoryId = NULL, updatedAt = :timestamp, isSynced = 0 
+        WHERE categoryId = :categoryId
+    """)
+    suspend fun clearCategoryFromProducts(
+        categoryId: String, 
+        timestamp: Long = System.currentTimeMillis()
+    )
+
     // ==================== SYNC ====================
 
     /**
@@ -104,10 +145,22 @@ interface ProductDao {
     suspend fun getUnsynced(): List<ProductEntity>
 
     /**
+     * Get count of unsynced products (efficient COUNT instead of loading all).
+     */
+    @Query("SELECT COUNT(*) FROM products WHERE isSynced = 0")
+    suspend fun getUnsyncedCount(): Int
+
+    /**
      * Mark product as synced after successful upload.
      */
     @Query("UPDATE products SET isSynced = 1 WHERE id = :id")
     suspend fun markAsSynced(id: String)
+
+    /**
+     * Mark multiple products as synced after successful bulk upload.
+     */
+    @Query("UPDATE products SET isSynced = 1 WHERE id IN (:ids)")
+    suspend fun markAsSynced(ids: List<String>)
 
     // ==================== SEARCH (FTS4) ====================
 

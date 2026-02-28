@@ -22,6 +22,7 @@ object PosRoutes {
     const val CHECKOUT = "checkout"
     const val RECEIPT = "receipt/{transactionId}"
     const val CASH_RECORD = "cash_record"
+    const val TRANSACTION_HISTORY = "transaction_history"
     
     fun receipt(transactionId: String) = "receipt/$transactionId"
 }
@@ -57,6 +58,13 @@ fun NavController.navigateToReceipt(transactionId: String, navOptions: NavOption
  */
 fun NavController.navigateToCashRecord(navOptions: NavOptions? = null) {
     navigate(PosRoutes.CASH_RECORD, navOptions)
+}
+
+/**
+ * Navigate to Transaction History screen.
+ */
+fun NavController.navigateToTransactionHistory() {
+    navigate(PosRoutes.TRANSACTION_HISTORY)
 }
 
 /**
@@ -111,6 +119,7 @@ fun NavGraphBuilder.checkoutScreen(
  */
 fun NavGraphBuilder.cashRecordScreen(
     onNavigateBack: () -> Unit,
+    onNavigateToReceipt: (Transaction) -> Unit,
     accessControlManager: com.zatiaras.pos.core.data.access.AccessControlManager? = null
 ) {
     composable(route = PosRoutes.CASH_RECORD) {
@@ -122,14 +131,31 @@ fun NavGraphBuilder.cashRecordScreen(
                 onAccessDenied = onNavigateBack
             ) {
                 CashRecordScreen(
-                    onNavigateBack = onNavigateBack
+                    onNavigateBack = onNavigateBack,
+                    onNavigateToReceipt = onNavigateToReceipt
                 )
             }
         } else {
             CashRecordScreen(
-                onNavigateBack = onNavigateBack
+                onNavigateBack = onNavigateBack,
+                onNavigateToReceipt = onNavigateToReceipt
             )
         }
+    }
+}
+
+/**
+ * Add Transaction History screen to NavGraph.
+ */
+fun NavGraphBuilder.transactionHistoryScreen(
+    onNavigateBack: () -> Unit,
+    onNavigateToReceipt: (Transaction) -> Unit
+) {
+    composable(route = PosRoutes.TRANSACTION_HISTORY) {
+        com.zatiaras.pos.feature.pos.presentation.history.TransactionHistoryRoute(
+            onNavigateBack = onNavigateBack,
+            onNavigateToReceipt = onNavigateToReceipt
+        )
     }
 }
 

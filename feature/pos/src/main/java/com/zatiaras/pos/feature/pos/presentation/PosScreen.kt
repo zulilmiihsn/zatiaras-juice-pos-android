@@ -8,10 +8,11 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.ShoppingCart
-import androidx.compose.material.icons.outlined.Lock
+import compose.icons.EvaIcons
+import compose.icons.evaicons.Outline
+import compose.icons.evaicons.outline.ArrowIosForward
+import compose.icons.evaicons.outline.Lock
+import compose.icons.evaicons.outline.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -19,11 +20,13 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -34,6 +37,8 @@ import com.zatiaras.pos.core.ui.util.noRippleClickable
 import com.zatiaras.pos.feature.pos.R
 import com.zatiaras.pos.feature.pos.presentation.components.CartSidebar
 import com.zatiaras.pos.feature.pos.presentation.components.PagedProductCatalog
+import com.zatiaras.pos.feature.pos.presentation.components.ProductOptionsBottomSheet
+import kotlinx.coroutines.launch
 
 /**
  * Main POS Screen with product catalog and floating cart bar.
@@ -42,6 +47,7 @@ import com.zatiaras.pos.feature.pos.presentation.components.PagedProductCatalog
  * - Floating cart summary bar at bottom (like GoFood/GrabFood)
  * - Slide-in cart sidebar when tapped
  * - Full-width product catalog
+ * - Product options bottom sheet for add-ons, sugar/ice customization
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,6 +61,10 @@ fun PosScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     var isCartVisible by remember { mutableStateOf(false) }
     val dimensions = LocalDimensions.current
+    
+    // Bottom sheet state for product options
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val scope = rememberCoroutineScope()
     
     // Show error snackbar
     LaunchedEffect(uiState.error) {
@@ -90,7 +100,7 @@ fun PosScreen(
                 )
             )
         },
-        snackbarHost = { SnackbarHost(snackbarHostState) }
+        snackbarHost = { com.zatiaras.pos.core.ui.components.ZatSnackbarHost(snackbarHostState) }
     ) { paddingValues ->
         Box(
             modifier = Modifier
@@ -153,10 +163,36 @@ fun PosScreen(
                     onRemove = { viewModel.onEvent(PosEvent.RemoveFromCart(it)) },
                     onClearCart = { viewModel.onEvent(PosEvent.ClearCart) },
                     onCheckout = onProceedToCheckout,
-                    modifier = Modifier.width(dimensions.sidebarWidth)
+                    modifier = Modifier.fillMaxWidth(0.9f)
                 )
             }
         }
+    }
+    
+    // Product Options Bottom Sheet
+    if (uiState.showProductOptionsSheet && uiState.selectedProduct != null) {
+        ProductOptionsBottomSheet(
+            product = uiState.selectedProduct!!,
+            availableAddOns = uiState.availableAddOns,
+            selectedAddOnIds = uiState.selectedAddOnIds,
+            selectedSugarLevel = uiState.selectedSugarLevel,
+            selectedIceLevel = uiState.selectedIceLevel,
+            productNote = uiState.productNote,
+            quantity = uiState.productQuantity,
+            sheetState = sheetState,
+            onToggleAddOn = { viewModel.onEvent(PosEvent.ToggleAddOn(it)) },
+            onSugarLevelChange = { viewModel.onEvent(PosEvent.SetSugarLevel(it)) },
+            onIceLevelChange = { viewModel.onEvent(PosEvent.SetIceLevel(it)) },
+            onNoteChange = { viewModel.onEvent(PosEvent.SetProductNote(it)) },
+            onQuantityChange = { viewModel.onEvent(PosEvent.SetProductQuantity(it)) },
+            onConfirm = { 
+                scope.launch {
+                    sheetState.hide()
+                    viewModel.onEvent(PosEvent.ConfirmAddToCart)
+                }
+            },
+            onDismiss = { viewModel.onEvent(PosEvent.HideProductOptions) }
+        )
     }
 }
 
@@ -194,13 +230,13 @@ private fun FloatingCartBar(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Icon(
-                    imageVector = Icons.Default.ShoppingCart,
+                    imageVector = EvaIcons.Outline.ShoppingCart,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.onPrimary,
                     modifier = Modifier.size(24.dp)
                 )
                 Text(
-                    text = "$itemCount item",
+                    text = pluralStringResource(R.plurals.cart_item_count_plural, itemCount, itemCount),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onPrimary
@@ -219,8 +255,8 @@ private fun FloatingCartBar(
                     color = MaterialTheme.colorScheme.onPrimary
                 )
                 Icon(
-                    imageVector = Icons.Default.KeyboardArrowRight,
-                    contentDescription = "Lihat Keranjang",
+                    imageVector = EvaIcons.Outline.ArrowIosForward,
+                    contentDescription = stringResource(R.string.pos_view_cart),
                     tint = MaterialTheme.colorScheme.onPrimary
                 )
             }
@@ -243,7 +279,7 @@ private fun StoreClosedOverlay(onNavigateBack: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Icon(
-                imageVector = Icons.Outlined.Lock,
+                imageVector = EvaIcons.Outline.Lock,
                 contentDescription = null,
                 modifier = Modifier.size(64.dp),
                 tint = MaterialTheme.colorScheme.error

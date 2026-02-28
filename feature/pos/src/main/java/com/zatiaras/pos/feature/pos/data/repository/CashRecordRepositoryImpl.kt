@@ -1,6 +1,7 @@
 package com.zatiaras.pos.feature.pos.data.repository
 
 import com.zatiaras.pos.core.data.local.dao.CashRecordDao
+import com.zatiaras.pos.core.domain.util.DateUtils
 import com.zatiaras.pos.feature.pos.data.mapper.toDomain
 import com.zatiaras.pos.feature.pos.data.mapper.toDomainList
 import com.zatiaras.pos.feature.pos.data.mapper.toEntity
@@ -11,7 +12,6 @@ import com.zatiaras.pos.feature.pos.domain.repository.CashSummary
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import timber.log.Timber
-import java.util.Calendar
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -61,7 +61,7 @@ class CashRecordRepositoryImpl @Inject constructor(
     }
 
     override fun getTodayRecords(): Flow<List<CashRecord>> {
-        val (startOfDay, endOfDay) = getTodayRange()
+        val (startOfDay, endOfDay) = DateUtils.getTodayRange()
         return cashRecordDao.getByDateRange(startOfDay, endOfDay)
             .map { entities -> entities.toDomainList() }
     }
@@ -82,17 +82,23 @@ class CashRecordRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getTodaySummary(): CashSummary {
-        val (startOfDay, endOfDay) = getTodayRange()
-        
-        val totalIncome = cashRecordDao.getTotalIncomeForDay(startOfDay, endOfDay)
-        val totalExpense = cashRecordDao.getTotalExpenseForDay(startOfDay, endOfDay)
-        
-        return CashSummary(
-            totalIncome = totalIncome,
-            totalExpense = totalExpense,
-            netCash = totalIncome - totalExpense
-        )
+    override suspend fun getTodaySummary(): Result<CashSummary> {
+        return try {
+            val (startOfDay, endOfDay) = DateUtils.getTodayRange()
+            
+            val totalIncome = cashRecordDao.getTotalIncomeForDay(startOfDay, endOfDay)
+            val totalExpense = cashRecordDao.getTotalExpenseForDay(startOfDay, endOfDay)
+            
+            val summary = CashSummary(
+                totalIncome = totalIncome,
+                totalExpense = totalExpense,
+                netCash = totalIncome - totalExpense
+            )
+            Result.success(summary)
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to get today cash summary")
+            Result.failure(e)
+        }
     }
 
     override suspend fun syncToRemote(): Result<Unit> {
@@ -101,19 +107,5 @@ class CashRecordRepositoryImpl @Inject constructor(
         Timber.d("Found ${unsynced.size} unsynced cash records (sync not yet implemented)")
         return Result.success(Unit)
     }
-    
-    private fun getTodayRange(): Pair<Long, Long> {
-        val calendar = Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, 0)
-            set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-        }
-        val startOfDay = calendar.timeInMillis
-        
-        calendar.add(Calendar.DAY_OF_MONTH, 1)
-        val endOfDay = calendar.timeInMillis
-        
-        return startOfDay to endOfDay
-    }
 }
+

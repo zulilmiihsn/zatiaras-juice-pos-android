@@ -38,6 +38,7 @@ data class TransactionEntity(
     val amountPaid: Long,                       // Amount given by customer
     val changeAmount: Long,                     // Change returned
     val notes: String? = null,                  // Optional notes
+    val customerName: String? = null,           // Optional customer name
     val sessionId: String? = null,              // Linked Store Session
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis(),

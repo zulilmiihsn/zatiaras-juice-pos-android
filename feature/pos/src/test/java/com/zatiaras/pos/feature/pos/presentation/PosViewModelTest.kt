@@ -6,10 +6,12 @@ import com.zatiaras.pos.core.domain.model.Product
 import com.zatiaras.pos.core.domain.repository.ProductRepository
 import com.zatiaras.pos.core.domain.repository.StoreSessionRepository
 import com.zatiaras.pos.feature.pos.MainDispatcherRule
+import com.zatiaras.pos.core.domain.repository.AddOnRepository
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -34,9 +36,11 @@ class PosViewModelTest {
 
     private lateinit var productRepository: ProductRepository
     private lateinit var storeSessionRepository: StoreSessionRepository
+    private lateinit var addOnRepository: AddOnRepository
     private lateinit var viewModel: PosViewModel
 
     private val testCategory = Category(id = "cat-1", name = "Minuman")
+
     private val testProducts = listOf(
         Product(
             id = "prod-1",
@@ -64,11 +68,16 @@ class PosViewModelTest {
     fun setup() {
         productRepository = mockk()
         storeSessionRepository = mockk()
+        addOnRepository = mockk()
         every { productRepository.getProducts() } returns flowOf(testProducts)
         every { productRepository.getCategories() } returns flowOf(listOf(testCategory))
         every { productRepository.getProductCount() } returns flowOf(2)
         every { storeSessionRepository.getActiveSession() } returns flowOf(null)
-        viewModel = PosViewModel(productRepository, storeSessionRepository)
+        // Mock addOnRepository methods if necessary, or just rely on relaxed mocking if used
+        // Since getAddOnsByIds is suspended, we might need to mock it if it's called in init or tests
+        // But it's only called in showProductOptionsSheet which is triggered by an event, so initialization should be fine.
+        
+        viewModel = PosViewModel(productRepository, storeSessionRepository, addOnRepository)
     }
 
     @Test
@@ -92,149 +101,136 @@ class PosViewModelTest {
 
     @Test
     fun `addToCart adds product to cart`() = runTest {
-        viewModel.uiState.test {
-            // Skip initial states
-            skipItems(1)
-            
-            // When
-            viewModel.onEvent(PosEvent.AddToCart(testProducts[0]))
-            
-            // Then
-            val state = awaitItem()
-            assertEquals(1, state.cart.itemCount)
-            assertEquals(testProducts[0].id, state.cart.items[0].product.id)
-            cancelAndIgnoreRemainingEvents()
-        }
+        advanceUntilIdle() // let loadData complete
+        
+        viewModel.onEvent(PosEvent.AddToCart(testProducts[0]))
+        advanceUntilIdle() // let showProductOptionsSheet complete
+        
+        viewModel.onEvent(PosEvent.ConfirmAddToCart)
+        
+        val state = viewModel.uiState.value
+        assertEquals(1, state.cart.itemCount)
+        assertEquals(testProducts[0].id, state.cart.items[0].product.id)
     }
 
     @Test
     fun `addToCart increments quantity for existing product`() = runTest {
-        viewModel.uiState.test {
-            skipItems(1)
-            
-            // When - add same product twice
-            viewModel.onEvent(PosEvent.AddToCart(testProducts[0]))
-            awaitItem() // first add
-            viewModel.onEvent(PosEvent.AddToCart(testProducts[0]))
-            
-            // Then
-            val state = awaitItem()
-            assertEquals(1, state.cart.uniqueItemCount) // Still 1 unique item
-            assertEquals(2, state.cart.itemCount) // But quantity is 2
-            cancelAndIgnoreRemainingEvents()
-        }
+        advanceUntilIdle()
+        
+        // First add
+        viewModel.onEvent(PosEvent.AddToCart(testProducts[0]))
+        advanceUntilIdle()
+        viewModel.onEvent(PosEvent.ConfirmAddToCart)
+        
+        // Second add - same product
+        viewModel.onEvent(PosEvent.AddToCart(testProducts[0]))
+        advanceUntilIdle()
+        viewModel.onEvent(PosEvent.ConfirmAddToCart)
+        
+        val state = viewModel.uiState.value
+        assertEquals(1, state.cart.uniqueItemCount)
+        assertEquals(2, state.cart.itemCount)
     }
 
     @Test
     fun `incrementItem increases quantity by 1`() = runTest {
-        viewModel.uiState.test {
-            skipItems(1)
-            
-            viewModel.onEvent(PosEvent.AddToCart(testProducts[0]))
-            awaitItem()
-            
-            viewModel.onEvent(PosEvent.IncrementItem(testProducts[0].id))
-            
-            val state = awaitItem()
-            assertEquals(2, state.cart.getQuantity(testProducts[0].id))
-            cancelAndIgnoreRemainingEvents()
-        }
+        advanceUntilIdle()
+        
+        viewModel.onEvent(PosEvent.AddToCart(testProducts[0]))
+        advanceUntilIdle()
+        viewModel.onEvent(PosEvent.ConfirmAddToCart)
+        
+        val uniqueKey = viewModel.uiState.value.cart.items[0].uniqueKey
+        viewModel.onEvent(PosEvent.IncrementItem(uniqueKey))
+        
+        assertEquals(2, viewModel.uiState.value.cart.getQuantity(testProducts[0].id))
     }
 
     @Test
     fun `decrementItem decreases quantity by 1`() = runTest {
-        viewModel.uiState.test {
-            skipItems(1)
-            
-            // Add 2 items
-            viewModel.onEvent(PosEvent.AddToCart(testProducts[0]))
-            awaitItem()
-            viewModel.onEvent(PosEvent.IncrementItem(testProducts[0].id))
-            awaitItem()
-            
-            // Decrement
-            viewModel.onEvent(PosEvent.DecrementItem(testProducts[0].id))
-            
-            val state = awaitItem()
-            assertEquals(1, state.cart.getQuantity(testProducts[0].id))
-            cancelAndIgnoreRemainingEvents()
-        }
+        advanceUntilIdle()
+        
+        viewModel.onEvent(PosEvent.AddToCart(testProducts[0]))
+        advanceUntilIdle()
+        viewModel.onEvent(PosEvent.ConfirmAddToCart)
+        
+        val uniqueKey = viewModel.uiState.value.cart.items[0].uniqueKey
+        
+        viewModel.onEvent(PosEvent.IncrementItem(uniqueKey))
+        viewModel.onEvent(PosEvent.DecrementItem(uniqueKey))
+        
+        assertEquals(1, viewModel.uiState.value.cart.getQuantity(testProducts[0].id))
     }
 
     @Test
     fun `decrementItem removes item when quantity reaches 0`() = runTest {
-        viewModel.uiState.test {
-            skipItems(1)
-            
-            viewModel.onEvent(PosEvent.AddToCart(testProducts[0]))
-            awaitItem()
-            
-            viewModel.onEvent(PosEvent.DecrementItem(testProducts[0].id))
-            
-            val state = awaitItem()
-            assertTrue(state.cart.isEmpty())
-            cancelAndIgnoreRemainingEvents()
-        }
+        advanceUntilIdle()
+
+        viewModel.onEvent(PosEvent.AddToCart(testProducts[0]))
+        advanceUntilIdle()
+        viewModel.onEvent(PosEvent.ConfirmAddToCart)
+
+        val uniqueKey = viewModel.uiState.value.cart.items[0].uniqueKey
+        viewModel.onEvent(PosEvent.DecrementItem(uniqueKey))
+
+        assertTrue(viewModel.uiState.value.cart.isEmpty())
     }
 
     @Test
     fun `clearCart removes all items`() = runTest {
-        viewModel.uiState.test {
-            skipItems(1)
-            
-            viewModel.onEvent(PosEvent.AddToCart(testProducts[0]))
-            awaitItem()
-            viewModel.onEvent(PosEvent.AddToCart(testProducts[1]))
-            awaitItem()
-            
-            viewModel.onEvent(PosEvent.ClearCart)
-            
-            val state = awaitItem()
-            assertTrue(state.cart.isEmpty())
-            cancelAndIgnoreRemainingEvents()
-        }
+        advanceUntilIdle()
+
+        viewModel.onEvent(PosEvent.AddToCart(testProducts[0]))
+        advanceUntilIdle()
+        viewModel.onEvent(PosEvent.ConfirmAddToCart)
+
+        viewModel.onEvent(PosEvent.AddToCart(testProducts[1]))
+        advanceUntilIdle()
+        viewModel.onEvent(PosEvent.ConfirmAddToCart)
+
+        assertEquals(2, viewModel.uiState.value.cart.uniqueItemCount)
+
+        viewModel.onEvent(PosEvent.ClearCart)
+
+        assertTrue(viewModel.uiState.value.cart.isEmpty())
     }
 
     @Test
     fun `searchQueryChanged updates search query state`() = runTest {
-        viewModel.uiState.test {
-            skipItems(1)
-            
-            viewModel.onEvent(PosEvent.SearchQueryChanged("Kopi"))
-            
-            val state = awaitItem()
-            assertEquals("Kopi", state.searchQuery)
-            // Note: Actual product filtering is done via PagingData,
-            // not exposed in UiState directly
-            cancelAndIgnoreRemainingEvents()
-        }
+        advanceUntilIdle()
+
+        viewModel.onEvent(PosEvent.SearchQueryChanged("Kopi"))
+
+        val state = viewModel.uiState.value
+        assertEquals("Kopi", state.searchQuery)
+        // Note: Actual product filtering is done via PagingData,
+        // not exposed in UiState directly
     }
 
     @Test
     fun `categorySelected filters products by category`() = runTest {
-        viewModel.uiState.test {
-            skipItems(1)
-            
-            viewModel.onEvent(PosEvent.CategorySelected(testCategory.id))
-            
-            val state = awaitItem()
-            assertEquals(testCategory.id, state.selectedCategoryId)
-            cancelAndIgnoreRemainingEvents()
-        }
+        advanceUntilIdle()
+
+        viewModel.onEvent(PosEvent.CategorySelected(testCategory.id))
+
+        val state = viewModel.uiState.value
+        assertEquals(testCategory.id, state.selectedCategoryId)
     }
 
     @Test
     fun `cart calculates subtotal correctly`() = runTest {
-        viewModel.uiState.test {
-            skipItems(1)
-            
-            viewModel.onEvent(PosEvent.AddToCart(testProducts[0])) // 5000
-            awaitItem()
-            viewModel.onEvent(PosEvent.AddToCart(testProducts[1])) // 15000
-            
-            val state = awaitItem()
-            assertEquals(20000L, state.cart.subtotal)
-            cancelAndIgnoreRemainingEvents()
-        }
+        advanceUntilIdle()
+        
+        // Add first product (5000)
+        viewModel.onEvent(PosEvent.AddToCart(testProducts[0]))
+        advanceUntilIdle()
+        viewModel.onEvent(PosEvent.ConfirmAddToCart)
+        
+        // Add second product (15000)
+        viewModel.onEvent(PosEvent.AddToCart(testProducts[1]))
+        advanceUntilIdle()
+        viewModel.onEvent(PosEvent.ConfirmAddToCart)
+        
+        assertEquals(20000L, viewModel.uiState.value.cart.subtotal)
     }
 }

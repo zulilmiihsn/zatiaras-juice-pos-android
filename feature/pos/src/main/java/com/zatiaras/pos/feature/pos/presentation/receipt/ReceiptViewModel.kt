@@ -1,9 +1,12 @@
 package com.zatiaras.pos.feature.pos.presentation.receipt
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.zatiaras.pos.feature.pos.R
 import com.zatiaras.pos.feature.pos.domain.model.Transaction
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -42,7 +45,8 @@ sealed class ReceiptEvent {
  */
 @HiltViewModel
 class ReceiptViewModel @Inject constructor(
-    private val printerHelper: ReceiptPrinterHelper
+    private val printerHelper: ReceiptPrinterHelper,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow(ReceiptUiState())
@@ -78,7 +82,7 @@ class ReceiptViewModel @Inject constructor(
         
         viewModelScope.launch {
             if (!printerHelper.isConnected()) {
-                _events.emit(ReceiptEvent.ShowToast("Printer tidak terhubung. Silakan setup di Pengaturan."))
+                _events.emit(ReceiptEvent.ShowToast(context.getString(R.string.pos_receipt_printer_not_connected)))
                 _events.emit(ReceiptEvent.NavigateToPrinterSettings)
                 return@launch
             }
@@ -89,11 +93,16 @@ class ReceiptViewModel @Inject constructor(
                 onSuccess = {
                     Timber.d("Receipt printed successfully")
                     _events.emit(ReceiptEvent.PrintSuccess)
-                    _events.emit(ReceiptEvent.ShowToast("Struk berhasil dicetak!"))
+                    _events.emit(ReceiptEvent.ShowToast(context.getString(R.string.pos_receipt_print_success)))
                 },
                 onFailure = { error ->
                     Timber.e(error, "Failed to print receipt")
-                    _events.emit(ReceiptEvent.ShowToast("Gagal mencetak: ${error.message}"))
+                    val reason = error.message ?: context.getString(R.string.pos_receipt_print_failed_generic)
+                    _events.emit(
+                        ReceiptEvent.ShowToast(
+                            context.getString(R.string.pos_receipt_print_failed_with_reason, reason)
+                        )
+                    )
                 }
             )
             

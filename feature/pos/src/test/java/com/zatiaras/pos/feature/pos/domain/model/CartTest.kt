@@ -6,6 +6,9 @@ import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 
+/** Helper: generate uniqueKey for a product with default customizations */
+private fun keyFor(product: Product): String = CartItem(product, 1).uniqueKey
+
 /**
  * Unit tests for Cart domain model.
  * 
@@ -154,7 +157,7 @@ class CartTest {
     fun `incrementItem increases quantity by 1`() {
         val cart = Cart()
             .addItem(product1)
-            .incrementItem(product1.id)
+            .incrementItem(keyFor(product1))
         
         assertEquals(2, cart.getQuantity(product1.id))
     }
@@ -163,7 +166,7 @@ class CartTest {
     fun `decrementItem decreases quantity by 1`() {
         val cart = Cart()
             .addItem(product1, quantity = 3)
-            .decrementItem(product1.id)
+            .decrementItem(keyFor(product1))
         
         assertEquals(2, cart.getQuantity(product1.id))
     }
@@ -172,7 +175,7 @@ class CartTest {
     fun `decrementItem removes item when quantity reaches 0`() {
         val cart = Cart()
             .addItem(product1)
-            .decrementItem(product1.id)
+            .decrementItem(keyFor(product1))
         
         assertTrue(cart.isEmpty())
         assertEquals(0, cart.getQuantity(product1.id))
@@ -183,7 +186,7 @@ class CartTest {
         val cart = Cart()
             .addItem(product1, quantity = 2)
             .addItem(product2)
-            .decrementItem(product1.id)
+            .decrementItem(keyFor(product1))
         
         assertEquals(1, cart.getQuantity(product1.id))
         assertEquals(1, cart.getQuantity(product2.id))
@@ -195,7 +198,7 @@ class CartTest {
     fun `updateQuantity sets exact quantity`() {
         val cart = Cart()
             .addItem(product1)
-            .updateQuantity(product1.id, 5)
+            .updateQuantity(keyFor(product1), 5)
         
         assertEquals(5, cart.getQuantity(product1.id))
     }
@@ -204,7 +207,7 @@ class CartTest {
     fun `updateQuantity with 0 removes item`() {
         val cart = Cart()
             .addItem(product1)
-            .updateQuantity(product1.id, 0)
+            .updateQuantity(keyFor(product1), 0)
         
         assertTrue(cart.isEmpty())
     }
@@ -213,7 +216,7 @@ class CartTest {
     fun `updateQuantity with negative value removes item`() {
         val cart = Cart()
             .addItem(product1)
-            .updateQuantity(product1.id, -1)
+            .updateQuantity(keyFor(product1), -1)
         
         assertTrue(cart.isEmpty())
     }
@@ -224,10 +227,10 @@ class CartTest {
     fun `removeItem removes product entirely`() {
         val cart = Cart()
             .addItem(product1, quantity = 5)
-            .removeItem(product1.id)
+            .removeItem(keyFor(product1))
         
         assertTrue(cart.isEmpty())
-        assertNull(cart.getItem(product1.id))
+        assertNull(cart.getItem(keyFor(product1)))
     }
 
     @Test
@@ -235,11 +238,11 @@ class CartTest {
         val cart = Cart()
             .addItem(product1)
             .addItem(product2)
-            .removeItem(product1.id)
+            .removeItem(keyFor(product1))
         
         assertEquals(1, cart.uniqueItemCount)
         assertEquals(1, cart.getQuantity(product2.id))
-        assertNull(cart.getItem(product1.id))
+        assertNull(cart.getItem(keyFor(product1)))
     }
 
     @Test
@@ -269,7 +272,7 @@ class CartTest {
     @Test
     fun `getItem returns correct item`() {
         val cart = Cart().addItem(product1)
-        val item = cart.getItem(product1.id)
+        val item = cart.getItem(keyFor(product1))
         
         assertNotNull(item)
         assertEquals(product1.id, item?.product?.id)
@@ -304,7 +307,7 @@ class CartTest {
     @Test
     fun `removeItem returns new cart instance`() {
         val cart1 = Cart().addItem(product1)
-        val cart2 = cart1.removeItem(product1.id)
+        val cart2 = cart1.removeItem(keyFor(product1))
         
         assertNotSame(cart1, cart2)
         assertFalse(cart1.isEmpty())

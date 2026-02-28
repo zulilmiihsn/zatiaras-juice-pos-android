@@ -16,11 +16,11 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.SearchOff
 import androidx.compose.foundation.layout.size
+import compose.icons.EvaIcons
+import compose.icons.evaicons.Outline
+import compose.icons.evaicons.outline.Close
+import compose.icons.evaicons.outline.Search
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -31,7 +31,9 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Modifier
+import com.zatiaras.pos.feature.pos.R
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.zatiaras.pos.core.domain.model.Category
@@ -102,10 +104,10 @@ private fun SearchBar(
         value = query,
         onValueChange = onQueryChange,
         modifier = modifier,
-        placeholder = { Text("Cari produk...") },
+        placeholder = { Text(stringResource(R.string.pos_search_placeholder)) },
         leadingIcon = {
             Icon(
-                imageVector = Icons.Default.Search,
+                imageVector = EvaIcons.Outline.Search,
                 contentDescription = null
             )
         },
@@ -113,8 +115,8 @@ private fun SearchBar(
             if (query.isNotEmpty()) {
                 IconButton(onClick = { onQueryChange("") }) {
                     Icon(
-                        imageVector = Icons.Default.Clear,
-                        contentDescription = "Hapus"
+                        imageVector = EvaIcons.Outline.Close,
+                        contentDescription = stringResource(R.string.cart_item_remove)
                     )
                 }
             }
@@ -139,7 +141,7 @@ private fun CategoryChips(
         FilterChip(
             selected = selectedCategoryId == null,
             onClick = { onCategorySelect(null) },
-            label = { Text("Semua") },
+            label = { Text(stringResource(R.string.pos_category_all)) },
             colors = FilterChipDefaults.filterChipColors(
                 selectedContainerColor = MaterialTheme.colorScheme.primary,
                 selectedLabelColor = MaterialTheme.colorScheme.onPrimary
@@ -219,19 +221,19 @@ private fun EmptyState(
         verticalArrangement = Arrangement.Center
     ) {
         Icon(
-            imageVector = Icons.Default.SearchOff,
+            imageVector = EvaIcons.Outline.Search,
             contentDescription = null,
             modifier = Modifier.size(72.dp),
             tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            text = "Tidak ada produk",
+            text = stringResource(R.string.pos_empty_products),
             style = MaterialTheme.typography.titleMedium,
             textAlign = TextAlign.Center
         )
         Text(
-            text = "Coba ubah kata kunci atau kategori",
+            text = stringResource(R.string.pos_empty_products_hint),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center

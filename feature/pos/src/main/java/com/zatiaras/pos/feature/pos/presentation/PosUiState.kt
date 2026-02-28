@@ -1,7 +1,10 @@
 package com.zatiaras.pos.feature.pos.presentation
 
+import com.zatiaras.pos.core.domain.model.AddOn
 import com.zatiaras.pos.core.domain.model.Category
+import com.zatiaras.pos.core.domain.model.IceLevel
 import com.zatiaras.pos.core.domain.model.Product
+import com.zatiaras.pos.core.domain.model.SugarLevel
 import com.zatiaras.pos.feature.pos.domain.model.Cart
 
 /**
@@ -19,5 +22,15 @@ data class PosUiState(
     val productCount: Int = 0,
     val error: String? = null,
     val isStoreOpen: Boolean = true, // Default to true until session loaded
-    val isGridView: Boolean = true
+    val isGridView: Boolean = true,
+    
+    // Product Options Dialog State
+    val showProductOptionsSheet: Boolean = false,
+    val selectedProduct: Product? = null,
+    val availableAddOns: List<AddOn> = emptyList(),
+    val selectedAddOnIds: Set<String> = emptySet(),
+    val selectedSugarLevel: SugarLevel = SugarLevel.NORMAL,
+    val selectedIceLevel: IceLevel = IceLevel.NORMAL,
+    val productNote: String = "",
+    val productQuantity: Int = 1
 )

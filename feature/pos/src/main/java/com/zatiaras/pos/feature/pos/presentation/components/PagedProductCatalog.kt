@@ -27,15 +27,15 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Apps
-import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.FormatListBulleted
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.SearchOff
-import androidx.compose.material.icons.outlined.AddCircleOutline
-import androidx.compose.material.icons.outlined.Edit
+import compose.icons.EvaIcons
+import compose.icons.evaicons.Outline
+import compose.icons.evaicons.outline.Close
+import compose.icons.evaicons.outline.Edit2
+import compose.icons.evaicons.outline.Grid
+import compose.icons.evaicons.outline.List
+import compose.icons.evaicons.outline.PlusCircle
+import compose.icons.evaicons.outline.Refresh
+import compose.icons.evaicons.outline.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -75,6 +75,7 @@ import androidx.paging.compose.LazyPagingItems
 import com.zatiaras.pos.core.domain.model.Category
 import com.zatiaras.pos.core.domain.model.Product
 import com.zatiaras.pos.core.ui.components.CurrencyTextField
+import com.zatiaras.pos.core.ui.components.ZatDialog
 import com.zatiaras.pos.core.ui.util.CurrencyFormatter
 import com.zatiaras.pos.feature.pos.R
 import com.zatiaras.pos.feature.pos.domain.model.Cart
@@ -120,7 +121,7 @@ fun PagedProductCatalog(
             // View Toggle Button (Grid/List)
             IconButton(onClick = onToggleView) {
                 Icon(
-                    imageVector = if (isGridView) Icons.Default.FormatListBulleted else Icons.Default.Apps,
+                    imageVector = if (isGridView) EvaIcons.Outline.List else EvaIcons.Outline.Grid,
                     contentDescription = stringResource(if (isGridView) R.string.pos_to_list_view else R.string.pos_to_grid_view),
                     tint = MaterialTheme.colorScheme.tertiary
                 )
@@ -131,7 +132,7 @@ fun PagedProductCatalog(
             // Custom Item Button
             IconButton(onClick = { showCustomItemDialog = true }) {
                 Icon(
-                    imageVector = Icons.Outlined.AddCircleOutline,
+                    imageVector = EvaIcons.Outline.PlusCircle,
                     contentDescription = stringResource(R.string.pos_custom_item),
                     tint = MaterialTheme.colorScheme.tertiary
                 )
@@ -184,7 +185,7 @@ private fun SearchBar(
         placeholder = { Text(stringResource(R.string.pos_search_placeholder)) },
         leadingIcon = {
             Icon(
-                imageVector = Icons.Default.Search,
+                imageVector = EvaIcons.Outline.Search,
                 contentDescription = null
             )
         },
@@ -192,7 +193,7 @@ private fun SearchBar(
             if (query.isNotEmpty()) {
                 IconButton(onClick = { onQueryChange("") }) {
                     Icon(
-                        imageVector = Icons.Default.Clear,
+                        imageVector = EvaIcons.Outline.Close,
                         contentDescription = stringResource(R.string.pos_clear_search)
                     )
                 }
@@ -362,7 +363,7 @@ private fun EmptyState(
         verticalArrangement = Arrangement.Center
     ) {
         Icon(
-            imageVector = Icons.Default.SearchOff,
+            imageVector = EvaIcons.Outline.Search,
             contentDescription = null,
             modifier = Modifier.size(72.dp),
             tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
@@ -394,7 +395,7 @@ private fun ErrorState(
         verticalArrangement = Arrangement.Center
     ) {
         Icon(
-            imageVector = Icons.Default.Refresh,
+            imageVector = EvaIcons.Outline.Refresh,
             contentDescription = null,
             modifier = Modifier.size(72.dp),
             tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f)
@@ -426,209 +427,181 @@ fun CustomItemDialog(
     var name by remember { mutableStateOf("") }
     var priceText by remember { mutableStateOf("") }
     
-    // Animation state
-    var isVisible by remember { mutableStateOf(false) }
-    var pendingAction by remember { mutableStateOf<(() -> Unit)?>(null) }
-    
-    // Trigger enter animation
-    LaunchedEffect(Unit) { isVisible = true }
-    
-    // Handle exit actions
-    LaunchedEffect(pendingAction) {
-        pendingAction?.let { action ->
-            isVisible = false
-            delay(300) // Wait for animation
-            action()
-        }
-    }
-    
     // Brand color for custom items
     val customItemColor = Color(0xFFEC4899) // Pink
     
-    Dialog(
-        onDismissRequest = { pendingAction = { onDismiss() } },
-        properties = DialogProperties(usePlatformDefaultWidth = false)
-    ) {
-        AnimatedVisibility(
-            visible = isVisible,
-            enter = slideInVertically(
-                initialOffsetY = { it },
-                animationSpec = tween(300)
-            ) + fadeIn(animationSpec = tween(300)),
-            exit = slideOutVertically(
-                targetOffsetY = { it },
-                animationSpec = tween(300)
-            ) + fadeOut(animationSpec = tween(300))
+    ZatDialog(
+        onDismissRequest = onDismiss
+    ) { dismiss ->
+        Box(
+            modifier = Modifier.fillMaxWidth(0.95f),
+            contentAlignment = Alignment.Center
         ) {
-            Box(
-                modifier = Modifier.fillMaxWidth(0.95f),
-                contentAlignment = Alignment.Center
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(28.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
             ) {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(28.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surface
-                    ),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                Column(
+                    modifier = Modifier.padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Column(
-                        modifier = Modifier.padding(24.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        // Header with gradient icon
-                        Box(
-                            modifier = Modifier
-                                .size(80.dp)
-                                .clip(CircleShape)
-                                .background(
-                                    Brush.linearGradient(
-                                        colors = listOf(
-                                            customItemColor,
-                                            customItemColor.copy(alpha = 0.7f)
-                                        )
+                    // Header with gradient icon
+                    Box(
+                        modifier = Modifier
+                            .size(80.dp)
+                            .clip(CircleShape)
+                            .background(
+                                Brush.linearGradient(
+                                    colors = listOf(
+                                        customItemColor,
+                                        customItemColor.copy(alpha = 0.7f)
                                     )
-                                ),
-                            contentAlignment = Alignment.Center
+                                )
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = EvaIcons.Outline.Edit2,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(40.dp)
+                        )
+                    }
+                    
+                    Spacer(modifier = Modifier.height(20.dp))
+                    
+                    // Title
+                    Text(
+                        text = stringResource(R.string.pos_add_custom_item),
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    // Description
+                    Text(
+                        text = stringResource(R.string.pos_custom_item_add_hint),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center
+                    )
+                    
+                    Spacer(modifier = Modifier.height(24.dp))
+                    
+                    // Name Input Field
+                    OutlinedTextField(
+                        value = name,
+                        onValueChange = { name = it },
+                        label = { Text(stringResource(R.string.pos_custom_item_name)) },
+                        placeholder = { Text(stringResource(R.string.pos_custom_item_name_placeholder)) },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        shape = RoundedCornerShape(16.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = customItemColor,
+                            focusedLabelColor = customItemColor,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
+                        )
+                    )
+                    
+                    Spacer(modifier = Modifier.height(12.dp))
+                    
+                    // Price Input Field with formatting
+                    CurrencyTextField(
+                        value = priceText,
+                        onValueChange = { priceText = it },
+                        label = { Text(stringResource(R.string.pos_custom_item_price)) },
+                        modifier = Modifier.fillMaxWidth(),
+                        showPrefix = true,
+                        singleLine = true,
+                        shape = RoundedCornerShape(16.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = customItemColor,
+                            focusedLabelColor = customItemColor,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
+                        )
+                    )
+                    
+                    // Preview Card - shows when both fields are filled
+                    val price = priceText.toLongOrNull() ?: 0L
+                    if (name.isNotBlank() && price > 0) {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Card(
+                            colors = CardDefaults.cardColors(
+                                containerColor = customItemColor.copy(alpha = 0.1f)
+                            ),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(12.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = name,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Medium,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Text(
+                                    text = CurrencyFormatter.formatCurrency(price),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = customItemColor
+                                )
+                            }
+                        }
+                    }
+                    
+                    Spacer(modifier = Modifier.height(24.dp))
+                    
+                    // Action buttons
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        OutlinedButton(
+                            onClick = dismiss,
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(16.dp),
+                            contentPadding = PaddingValues(vertical = 16.dp)
+                        ) {
+                            Text(stringResource(R.string.dialog_cancel))
+                        }
+                        Button(
+                            onClick = {
+                                val finalPrice = priceText.toLongOrNull() ?: 0L
+                                if (name.isNotBlank() && finalPrice > 0) {
+                                    onAdd(name, finalPrice)
+                                    dismiss()
+                                }
+                            },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(16.dp),
+                            contentPadding = PaddingValues(vertical = 16.dp),
+                            enabled = name.isNotBlank() && priceText.isNotEmpty(),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = customItemColor
+                            )
                         ) {
                             Icon(
-                                imageVector = Icons.Outlined.Edit,
+                                imageVector = EvaIcons.Outline.PlusCircle,
                                 contentDescription = null,
-                                tint = Color.White,
-                                modifier = Modifier.size(40.dp)
+                                modifier = Modifier.size(20.dp)
                             )
-                        }
-                        
-                        Spacer(modifier = Modifier.height(20.dp))
-                        
-                        // Title
-                        Text(
-                            text = stringResource(R.string.pos_add_custom_item),
-                            style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        
-                        Spacer(modifier = Modifier.height(8.dp))
-                        
-                        // Description
-                        Text(
-                            text = "Tambahkan item yang tidak ada di menu",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textAlign = TextAlign.Center
-                        )
-                        
-                        Spacer(modifier = Modifier.height(24.dp))
-                        
-                        // Name Input Field
-                        OutlinedTextField(
-                            value = name,
-                            onValueChange = { name = it },
-                            label = { Text(stringResource(R.string.pos_custom_item_name)) },
-                            placeholder = { Text("Contoh: Es Jeruk Spesial") },
-                            modifier = Modifier.fillMaxWidth(),
-                            singleLine = true,
-                            shape = RoundedCornerShape(16.dp),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = customItemColor,
-                                focusedLabelColor = customItemColor,
-                                unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                stringResource(R.string.pos_add),
+                                fontWeight = FontWeight.SemiBold
                             )
-                        )
-                        
-                        Spacer(modifier = Modifier.height(12.dp))
-                        
-                        // Price Input Field with formatting
-                        CurrencyTextField(
-                            value = priceText,
-                            onValueChange = { priceText = it },
-                            label = { Text(stringResource(R.string.pos_custom_item_price)) },
-                            modifier = Modifier.fillMaxWidth(),
-                            showPrefix = true,
-                            singleLine = true,
-                            shape = RoundedCornerShape(16.dp),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = customItemColor,
-                                focusedLabelColor = customItemColor,
-                                unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
-                            )
-                        )
-                        
-                        // Preview Card - shows when both fields are filled
-                        val price = priceText.toLongOrNull() ?: 0L
-                        if (name.isNotBlank() && price > 0) {
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Card(
-                                colors = CardDefaults.cardColors(
-                                    containerColor = customItemColor.copy(alpha = 0.1f)
-                                ),
-                                shape = RoundedCornerShape(12.dp)
-                            ) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(12.dp),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(
-                                        text = name,
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        fontWeight = FontWeight.Medium,
-                                        color = MaterialTheme.colorScheme.onSurface
-                                    )
-                                    Text(
-                                        text = CurrencyFormatter.formatCurrency(price),
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Bold,
-                                        color = customItemColor
-                                    )
-                                }
-                            }
-                        }
-                        
-                        Spacer(modifier = Modifier.height(24.dp))
-                        
-                        // Action buttons
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            OutlinedButton(
-                                onClick = { pendingAction = { onDismiss() } },
-                                modifier = Modifier.weight(1f),
-                                shape = RoundedCornerShape(16.dp),
-                                contentPadding = PaddingValues(vertical = 16.dp)
-                            ) {
-                                Text(stringResource(R.string.dialog_cancel))
-                            }
-                            Button(
-                                onClick = {
-                                    val finalPrice = priceText.toLongOrNull() ?: 0L
-                                    if (name.isNotBlank() && finalPrice > 0) {
-                                        pendingAction = { onAdd(name, finalPrice) }
-                                    }
-                                },
-                                modifier = Modifier.weight(1f),
-                                shape = RoundedCornerShape(16.dp),
-                                contentPadding = PaddingValues(vertical = 16.dp),
-                                enabled = name.isNotBlank() && priceText.isNotEmpty(),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = customItemColor
-                                )
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Outlined.AddCircleOutline,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    stringResource(R.string.pos_add),
-                                    fontWeight = FontWeight.SemiBold
-                                )
-                            }
                         }
                     }
                 }

@@ -57,6 +57,13 @@ interface TransactionDao {
     suspend fun getTransactionItems(transactionId: String): List<TransactionItemEntity>
 
     /**
+     * Get items for multiple transactions in a single batch query.
+     * Avoids N+1 query problem when syncing multiple transactions.
+     */
+    @Query("SELECT * FROM transaction_items WHERE transactionId IN (:transactionIds)")
+    suspend fun getTransactionItemsByTransactionIds(transactionIds: List<String>): List<TransactionItemEntity>
+
+    /**
      * Get all transactions for today (reactive Flow).
      * Uses epoch milliseconds for date comparison.
      */
@@ -68,6 +75,18 @@ interface TransactionDao {
         ORDER BY createdAt DESC
     """)
     fun getTransactionsByDateRange(startOfDay: Long, endOfDay: Long): Flow<List<TransactionEntity>>
+
+    /**
+     * Get transactions list for reports (Synchronous suspend).
+     */
+    @Query("""
+        SELECT * FROM transactions 
+        WHERE createdAt >= :startDate 
+        AND createdAt < :endDate 
+        AND isDeleted = 0
+    """)
+    suspend fun getTransactionsForReports(startDate: Long, endDate: Long): List<TransactionEntity>
+
 
     /**
      * Get transactions with items in a single query.
@@ -123,8 +142,14 @@ interface TransactionDao {
     /**
      * Get all unsynced transactions.
      */
-    @Query("SELECT * FROM transactions WHERE isSynced = 0 AND isDeleted = 0")
+    @Query("SELECT * FROM transactions WHERE isSynced = 0")
     suspend fun getUnsyncedTransactions(): List<TransactionEntity>
+
+    /**
+     * Get count of unsynced transactions (efficient COUNT instead of loading all).
+     */
+    @Query("SELECT COUNT(*) FROM transactions WHERE isSynced = 0")
+    suspend fun getUnsyncedCount(): Int
 
     /**
      * Mark transaction as synced.
@@ -135,8 +160,14 @@ interface TransactionDao {
     /**
      * Soft delete a transaction.
      */
-    @Query("UPDATE transactions SET isDeleted = 1, updatedAt = :timestamp WHERE id = :id")
+    @Query("UPDATE transactions SET isDeleted = 1, isSynced = 0, updatedAt = :timestamp WHERE id = :id")
     suspend fun softDelete(id: String, timestamp: Long = System.currentTimeMillis())
+    
+    /**
+     * Update payment method for a transaction.
+     */
+    @Query("UPDATE transactions SET paymentMethod = :paymentMethod, isSynced = 0, updatedAt = :timestamp WHERE id = :id")
+    suspend fun updatePaymentMethod(id: String, paymentMethod: String, timestamp: Long = System.currentTimeMillis())
 
     // ==================== REPORTS ====================
 
@@ -146,7 +177,7 @@ interface TransactionDao {
      */
     @Query("""
         SELECT 
-            (createdAt / 86400000) * 86400000 as dayTimestamp,
+            ((createdAt + :timeOffset) / 86400000) * 86400000 - :timeOffset as dayTimestamp,
             COALESCE(SUM(grandTotal), 0) as revenue,
             COUNT(*) as transactionCount
         FROM transactions 
@@ -156,7 +187,11 @@ interface TransactionDao {
         GROUP BY dayTimestamp
         ORDER BY dayTimestamp ASC
     """)
-    suspend fun getDailyRevenue(startDate: Long, endDate: Long): List<DailyRevenueEntity>
+    suspend fun getDailyRevenue(
+        startDate: Long, 
+        endDate: Long, 
+        timeOffset: Long = 0L
+    ): List<DailyRevenueEntity>
 
     /**
      * Get top selling products by quantity sold.

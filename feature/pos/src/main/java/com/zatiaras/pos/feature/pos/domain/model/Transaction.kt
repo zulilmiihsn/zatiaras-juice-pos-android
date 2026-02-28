@@ -17,6 +17,7 @@ data class Transaction(
     val amountPaid: Long,
     val changeAmount: Long,
     val notes: String?,
+    val customerName: String?,
     val createdAt: Long,
     val isSynced: Boolean
 ) {

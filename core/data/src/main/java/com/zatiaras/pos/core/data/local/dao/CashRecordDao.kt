@@ -17,6 +17,9 @@ interface CashRecordDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(record: CashRecordEntity)
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAll(records: List<CashRecordEntity>)
+
     @Update
     suspend fun update(record: CashRecordEntity)
 
@@ -74,8 +77,14 @@ interface CashRecordDao {
     /**
      * Get all unsynced records.
      */
-    @Query("SELECT * FROM cash_records WHERE isSynced = 0 AND isDeleted = 0")
+    @Query("SELECT * FROM cash_records WHERE isSynced = 0")
     suspend fun getUnsynced(): List<CashRecordEntity>
+
+    /**
+     * Get count of unsynced records (efficient COUNT instead of loading all).
+     */
+    @Query("SELECT COUNT(*) FROM cash_records WHERE isSynced = 0")
+    suspend fun getUnsyncedCount(): Int
 
     /**
      * Mark record as synced.
