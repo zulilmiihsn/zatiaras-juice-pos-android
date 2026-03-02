@@ -43,7 +43,7 @@ private val DarkColorScheme = darkColorScheme(
 private val LightColorScheme = lightColorScheme(
     primary = Brand600,
     onPrimary = Slate50,
-    primaryContainer = Brand50,
+    primaryContainer = Slate50, // Replaced Brand50 to remove pink
     onPrimaryContainer = Brand900,
     // ShadCN "Secondary" is usually a dark button in light mode, or a muted gray.
     // Here we map it to Slate for neutral actions.
