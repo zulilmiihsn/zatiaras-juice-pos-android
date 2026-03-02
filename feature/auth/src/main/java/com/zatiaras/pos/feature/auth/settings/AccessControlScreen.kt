@@ -6,7 +6,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -21,20 +20,26 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.zatiaras.pos.core.data.access.LockableRoute
+import com.zatiaras.pos.core.ui.theme.AppShapes
+import com.zatiaras.pos.core.ui.theme.ErrorRed
+import com.zatiaras.pos.core.ui.theme.InfoBlue
+import com.zatiaras.pos.core.ui.theme.SuccessGreen
+import com.zatiaras.pos.core.ui.theme.WarningAmber
+import androidx.compose.foundation.border
 
 // Icon colors for consistent theming
-private val OwnerPinColor = Color(0xFFF59E0B) // Amber
-private val LockColor = Color(0xFFEF4444) // Red
-private val UnlockColor = Color(0xFF10B981) // Green
-private val InfoColor = Color(0xFF3B82F6) // Blue
+private val OwnerPinColor = WarningAmber
+private val LockColor = ErrorRed
+private val UnlockColor = SuccessGreen
+private val InfoColor = InfoBlue
 
 /**
  * Access Control Settings Sub-Screen (Owner Only)
@@ -64,6 +69,7 @@ fun AccessControlScreen(
     }
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
@@ -96,7 +102,7 @@ fun AccessControlScreen(
             // Description Badge
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
+                shape = AppShapes.L,
                 colors = CardDefaults.cardColors(
                     containerColor = InfoColor.copy(alpha = 0.1f)
                 )
@@ -132,9 +138,11 @@ fun AccessControlScreen(
 
             // Owner PIN Card - Premium gradient
             Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f), AppShapes.XL),
+                shape = AppShapes.XL,
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
             ) {
                 Box(
                     modifier = Modifier
@@ -162,13 +170,13 @@ fun AccessControlScreen(
                                 modifier = Modifier
                                     .size(48.dp)
                                     .clip(CircleShape)
-                                    .background(Color.White.copy(alpha = 0.2f)),
+                                    .background(MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.2f)),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
                                     imageVector = Icons.Outlined.Key,
                                     contentDescription = null,
-                                    tint = Color.White,
+                                    tint = MaterialTheme.colorScheme.onPrimary,
                                     modifier = Modifier.size(26.dp)
                                 )
                             }
@@ -178,7 +186,7 @@ fun AccessControlScreen(
                                     text = if (uiState.ownerPinSet) "Ubah PIN Pemilik" else "Atur PIN Pemilik",
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
-                                    color = Color.White
+                                    color = MaterialTheme.colorScheme.onPrimary
                                 )
                                 Text(
                                     text = if (uiState.ownerPinSet) {
@@ -187,7 +195,7 @@ fun AccessControlScreen(
                                         stringResource(R.string.access_control_no_pin)
                                     },
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = Color.White.copy(alpha = 0.85f)
+                                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f)
                                 )
                             }
                         }
@@ -195,10 +203,10 @@ fun AccessControlScreen(
                         Button(
                             onClick = onNavigateToOwnerPinSetup,
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = Color.White,
+                                containerColor = MaterialTheme.colorScheme.onPrimary,
                                 contentColor = OwnerPinColor
                             ),
-                            shape = RoundedCornerShape(12.dp)
+                            shape = AppShapes.M
                         ) {
                             Text(
                                 if (uiState.ownerPinSet) stringResource(R.string.auth_change) else stringResource(R.string.auth_configure),
@@ -221,12 +229,14 @@ fun AccessControlScreen(
 
             // Lockable Routes Cards
             Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f), AppShapes.XL),
+                shape = AppShapes.XL,
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surface
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
                 ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
             ) {
                 Column(modifier = Modifier.padding(8.dp)) {
                     uiState.lockableRoutes.forEachIndexed { index, (route, isLocked) ->
@@ -250,9 +260,9 @@ fun AccessControlScreen(
             // Info Card at bottom
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
+                shape = AppShapes.L,
                 colors = CardDefaults.cardColors(
-                    containerColor = Color(0xFF10B981).copy(alpha = 0.1f)
+                    containerColor = SuccessGreen.copy(alpha = 0.1f)
                 )
             ) {
                 Row(
@@ -261,14 +271,14 @@ fun AccessControlScreen(
                     Icon(
                         imageVector = Icons.Outlined.Lightbulb,
                         contentDescription = null,
-                        tint = Color(0xFF10B981),
+                        tint = SuccessGreen,
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
                         text = stringResource(R.string.access_control_hint),
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color(0xFF10B981)
+                        color = SuccessGreen
                     )
                 }
             }
@@ -339,7 +349,7 @@ private fun LockableRouteItem(
             Box(
                 modifier = Modifier
                     .size(44.dp)
-                    .clip(RoundedCornerShape(12.dp))
+                    .clip(AppShapes.M)
                     .background(backgroundColor),
                 contentAlignment = Alignment.Center
             ) {
@@ -372,9 +382,9 @@ private fun LockableRouteItem(
             checked = isLocked,
             onCheckedChange = { onToggle() },
             colors = SwitchDefaults.colors(
-                checkedThumbColor = Color.White,
+                checkedThumbColor = MaterialTheme.colorScheme.surface,
                 checkedTrackColor = LockColor,
-                uncheckedThumbColor = Color.White,
+                uncheckedThumbColor = MaterialTheme.colorScheme.surface,
                 uncheckedTrackColor = MaterialTheme.colorScheme.outline
             )
         )

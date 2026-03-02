@@ -55,7 +55,7 @@ fun ProductCard(
         modifier = modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
-        shape = RoundedCornerShape(16.dp),
+        shape = AppShapes.L,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerLow
         ),
@@ -69,7 +69,7 @@ fun ProductCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .aspectRatio(1f)
-                    .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
+                    .clip(AppShapes.TopRounded)
                     .background(MaterialTheme.colorScheme.surfaceVariant),
                 contentAlignment = Alignment.Center
             ) {
@@ -102,12 +102,12 @@ fun ProductCard(
                     Box(
                         modifier = Modifier
                             .align(Alignment.TopStart)
-                            .padding(8.dp)
+                            .padding(dimensions.paddingXS)
                             .background(
                                 color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.9f),
-                                shape = RoundedCornerShape(8.dp)
+                                shape = AppShapes.S
                             )
-                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                            .padding(horizontal = dimensions.paddingXS, vertical = dimensions.paddingXXS)
                     ) {
                         Text(
                             text = category.name,

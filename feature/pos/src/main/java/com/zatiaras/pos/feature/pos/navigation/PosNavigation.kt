@@ -12,7 +12,7 @@ import com.zatiaras.pos.feature.pos.domain.model.Transaction
 import com.zatiaras.pos.feature.pos.presentation.PosScreen
 import com.zatiaras.pos.feature.pos.presentation.PosViewModel
 import com.zatiaras.pos.feature.pos.presentation.cashrecord.CashRecordScreen
-import com.zatiaras.pos.feature.pos.presentation.checkout.CheckoutScreen
+import com.zatiaras.pos.feature.pos.presentation.checkout.CheckoutRoute
 
 /**
  * Route constants for POS feature screens.
@@ -101,10 +101,10 @@ fun NavGraphBuilder.checkoutScreen(
     composable(route = PosRoutes.CHECKOUT) {
         val cart by cartHolder.cart.collectAsState()
         
-        CheckoutScreen(
+        CheckoutRoute(
             cart = cart,
             onNavigateBack = onNavigateBack,
-            onTransactionComplete = { transaction ->
+            onPaymentSuccess = { transaction ->
                 // Clear cart after successful transaction
                 cartHolder.clearCart()
                 onTransactionComplete(transaction)

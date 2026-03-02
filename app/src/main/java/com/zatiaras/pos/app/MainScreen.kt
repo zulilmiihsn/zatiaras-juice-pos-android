@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Analytics
 import androidx.compose.material.icons.filled.Home
@@ -52,6 +51,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.zatiaras.pos.NavRoutes
+import com.zatiaras.pos.core.ui.theme.AppShapes
 import com.zatiaras.pos.feature.pos.domain.model.CartHolder
 import com.zatiaras.pos.feature.pos.domain.model.Transaction
 import com.zatiaras.pos.feature.pos.navigation.PosRoutes
@@ -111,6 +111,7 @@ fun MainScreen(
     )
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
             val navBackStackEntry by navController.currentBackStackEntryAsState()
             val currentDestination = navBackStackEntry?.destination
@@ -288,7 +289,7 @@ private fun RowScope.EnhancedNavigationBarItem(
                         .size(width = indicatorWidth, height = 3.dp)
                         .background(
                             color = MaterialTheme.colorScheme.primary,
-                            shape = RoundedCornerShape(bottomStart = 2.dp, bottomEnd = 2.dp)
+                            shape = AppShapes.XS
                         )
                 )
                 

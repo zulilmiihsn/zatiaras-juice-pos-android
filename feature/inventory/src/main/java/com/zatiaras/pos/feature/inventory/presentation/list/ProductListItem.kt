@@ -3,7 +3,6 @@ package com.zatiaras.pos.feature.inventory.presentation.list
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import compose.icons.EvaIcons
 import compose.icons.evaicons.Outline
 import compose.icons.evaicons.outline.Image
@@ -20,6 +19,7 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import coil.request.CachePolicy
 import com.zatiaras.pos.core.domain.model.Product
+import com.zatiaras.pos.core.ui.theme.AppShapes
 import com.zatiaras.pos.core.ui.util.CurrencyFormatter
 
 @Composable
@@ -32,7 +32,7 @@ fun ProductListItem(
         modifier = modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
-        shape = RoundedCornerShape(16.dp),
+        shape = AppShapes.L,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerLow
         ),
@@ -49,7 +49,7 @@ fun ProductListItem(
             Box(
                 modifier = Modifier
                     .size(64.dp)
-                    .clip(RoundedCornerShape(12.dp))
+                    .clip(AppShapes.M)
                     .background(MaterialTheme.colorScheme.surfaceVariant),
                 contentAlignment = Alignment.Center
             ) {
@@ -103,7 +103,7 @@ fun ProductListItem(
                 ) {
                     product.category?.let { category ->
                         Surface(
-                            shape = RoundedCornerShape(6.dp),
+                            shape = AppShapes.XS,
                             color = MaterialTheme.colorScheme.secondaryContainer
                         ) {
                             Text(
@@ -116,7 +116,7 @@ fun ProductListItem(
                     }
                     
                     Surface(
-                        shape = RoundedCornerShape(6.dp),
+                        shape = AppShapes.XS,
                         color = MaterialTheme.colorScheme.tertiaryContainer
                     ) {
                         Text(

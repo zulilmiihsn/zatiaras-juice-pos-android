@@ -56,6 +56,7 @@ class CashRecordRemoteDataSource @Inject constructor(
 
     // ==================== PULL ====================
 
+    @Suppress("UNUSED_PARAMETER")
     suspend fun fetchCashRecords(lastSyncTimestamp: Long = 0): Result<List<CashRecordEntity>> =
         withContext(Dispatchers.IO) {
             try {

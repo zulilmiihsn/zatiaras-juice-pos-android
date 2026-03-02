@@ -120,6 +120,7 @@ fun InventoryScreen(
     }
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text(stringResource(R.string.inventory_title), fontWeight = androidx.compose.ui.text.font.FontWeight.Bold) },

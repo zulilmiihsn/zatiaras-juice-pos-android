@@ -58,10 +58,11 @@ private fun PeriodChip(
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
+    val dimensions = LocalDimensions.current
     val backgroundColor = if (isSelected) {
         MaterialTheme.colorScheme.primary
     } else {
-        MaterialTheme.colorScheme.surfaceVariant
+        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
     }
     
     val textColor = if (isSelected) {
@@ -75,7 +76,7 @@ private fun PeriodChip(
             .clip(AppShapes.XL)
             .background(backgroundColor)
             .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            .padding(horizontal = dimensions.paddingL, vertical = dimensions.paddingS),
         contentAlignment = Alignment.Center
     ) {
         Text(

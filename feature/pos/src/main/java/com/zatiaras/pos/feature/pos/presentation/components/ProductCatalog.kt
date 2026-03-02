@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import com.zatiaras.pos.core.domain.model.Category
 import com.zatiaras.pos.core.domain.model.Product
 import com.zatiaras.pos.feature.pos.domain.model.Cart
+import com.zatiaras.pos.core.ui.theme.AppShapes
 import com.zatiaras.pos.core.ui.theme.LocalDimensions
 
 /**
@@ -122,7 +123,7 @@ private fun SearchBar(
             }
         },
         singleLine = true,
-        shape = RoundedCornerShape(12.dp)
+        shape = AppShapes.M
     )
 }
 

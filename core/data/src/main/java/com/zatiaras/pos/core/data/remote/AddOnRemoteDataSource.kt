@@ -31,6 +31,7 @@ class AddOnRemoteDataSource @Inject constructor(
 
     // ==================== PULL ====================
 
+    @Suppress("UNUSED_PARAMETER")
     suspend fun fetchAddOns(lastSyncTimestamp: Long = 0): Result<List<AddOnEntity>> = 
         withContext(Dispatchers.IO) {
             try {

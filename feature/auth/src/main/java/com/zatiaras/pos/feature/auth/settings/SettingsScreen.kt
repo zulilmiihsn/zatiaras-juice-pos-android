@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -33,16 +32,27 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.zatiaras.pos.core.ui.theme.AppShapes
 import com.zatiaras.pos.core.data.access.UserRole
+import com.zatiaras.pos.core.ui.theme.Brand500
+import com.zatiaras.pos.core.ui.theme.Brand600
+import com.zatiaras.pos.core.ui.theme.ErrorRed
+import com.zatiaras.pos.core.ui.theme.IconColors
+import com.zatiaras.pos.core.ui.theme.IndigoAccent
+import com.zatiaras.pos.core.ui.theme.InfoBlue
+import com.zatiaras.pos.core.ui.theme.Slate500
+import com.zatiaras.pos.core.ui.theme.SuccessGreen
+import com.zatiaras.pos.core.ui.theme.WarningAmber
+import androidx.compose.foundation.border
 
 // Icon background colors for different categories
-private val SecurityIconColor = Color(0xFF6366F1) // Indigo
-private val AccessIconColor = Color(0xFFF59E0B) // Amber
-private val PrinterIconColor = Color(0xFF10B981) // Emerald
-private val MenuIconColor = Color(0xFFEC4899) // Pink (Brand)
-private val SyncIconColor = Color(0xFF3B82F6) // Blue
-private val AboutIconColor = Color(0xFF8B5CF6) // Purple
-private val TaxIconColor = Color(0xFFEF4444) // Red
+private val SecurityIconColor = IconColors.Settings
+private val AccessIconColor = WarningAmber
+private val PrinterIconColor = IconColors.Printer
+private val MenuIconColor = IconColors.Store
+private val SyncIconColor = InfoBlue
+private val AboutIconColor = IconColors.Preview
+private val TaxIconColor = ErrorRed
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -99,6 +109,7 @@ fun SettingsScreen(
     onLowPerformanceModeChange: (Boolean) -> Unit = {}
 ) {
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             CenterAlignedTopAppBar(
                 title = { 
@@ -150,7 +161,7 @@ fun SettingsScreen(
                 title = stringResource(R.string.sec_title),
                 subtitle = stringResource(R.string.settings_security_subtitle),
                 statusBadge = if (uiState.lockEnabled) stringResource(R.string.settings_status_active) else null,
-                statusBadgeColor = if (uiState.lockEnabled) Color(0xFF10B981) else null,
+                statusBadgeColor = if (uiState.lockEnabled) SuccessGreen else null,
                 onClick = onNavigateToSecurity
             )
 
@@ -163,7 +174,7 @@ fun SettingsScreen(
                     title = stringResource(R.string.access_control_title),
                     subtitle = stringResource(R.string.access_control_desc),
                     statusBadge = stringResource(R.string.user_role_owner),
-                    statusBadgeColor = Color(0xFFF59E0B),
+                    statusBadgeColor = WarningAmber,
                     onClick = onNavigateToAccessControl
                 )
             }
@@ -238,7 +249,7 @@ fun SettingsScreen(
             // History
             EnhancedSettingsCard(
                 icon = Icons.Outlined.History,
-                iconBackgroundColor = Color(0xFF14B8A6), // Teal
+                iconBackgroundColor = IndigoAccent,
                 title = stringResource(R.string.settings_history_title),
                 subtitle = stringResource(R.string.settings_history_desc),
                 onClick = onNavigateToTransactionHistory
@@ -332,12 +343,13 @@ private fun EnhancedSettingsCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(16.dp),
+            .clickable(onClick = onClick)
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f), AppShapes.L),
+        shape = AppShapes.L,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
             modifier = Modifier
@@ -349,7 +361,7 @@ private fun EnhancedSettingsCard(
             Box(
                 modifier = Modifier
                     .size(48.dp)
-                    .clip(RoundedCornerShape(12.dp))
+                    .clip(AppShapes.M)
                     .background(iconBackgroundColor.copy(alpha = 0.15f)),
                 contentAlignment = Alignment.Center
             ) {
@@ -379,7 +391,7 @@ private fun EnhancedSettingsCard(
                     if (statusBadge != null && statusBadgeColor != null) {
                         Box(
                             modifier = Modifier
-                                .clip(RoundedCornerShape(8.dp))
+                                .clip(AppShapes.S)
                                 .background(statusBadgeColor.copy(alpha = 0.15f))
                                 .padding(horizontal = 8.dp, vertical = 2.dp)
                         ) {
@@ -430,9 +442,10 @@ private fun PremiumProfileCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f), AppShapes.L),
+        shape = AppShapes.L,
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
             modifier = Modifier
@@ -440,8 +453,8 @@ private fun PremiumProfileCard(
                 .background(
                     brush = Brush.linearGradient(
                         colors = listOf(
-                            Color(0xFFEC4899),
-                            Color(0xFFDB2777)
+                            Brand500,
+                            Brand600
                         )
                     )
                 )
@@ -462,13 +475,13 @@ private fun PremiumProfileCard(
                         text = userRoleLabel,
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.ExtraBold,
-                        color = Color.White
+                        color = MaterialTheme.colorScheme.onPrimary
                     )
                 }
                 Text(
                     text = userEmail,
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color.White.copy(alpha = 0.8f)
+                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
                 )
             }
             
@@ -476,7 +489,7 @@ private fun PremiumProfileCard(
             Icon(
                 imageVector = if (isOwner) Icons.Default.Stars else Icons.Default.Person,
                 contentDescription = null,
-                tint = Color.White.copy(alpha = 0.2f),
+                tint = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.2f),
                 modifier = Modifier.size(40.dp)
             )
         }
@@ -493,7 +506,7 @@ private fun LogoutButton(onClick: () -> Unit) {
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
             .clickable(onClick = onClick),
-        shape = RoundedCornerShape(16.dp),
+        shape = AppShapes.L,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
         ),
@@ -548,10 +561,11 @@ private fun TaxPercentageCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            .padding(horizontal = 16.dp)
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f), AppShapes.L),
+        shape = AppShapes.L,
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
             modifier = Modifier
@@ -563,7 +577,7 @@ private fun TaxPercentageCard(
             Box(
                 modifier = Modifier
                     .size(48.dp)
-                    .clip(RoundedCornerShape(12.dp))
+                    .clip(AppShapes.M)
                     .background(TaxIconColor.copy(alpha = 0.15f)),
                 contentAlignment = Alignment.Center
             ) {
@@ -621,7 +635,7 @@ private fun TaxPercentageCard(
                             }
                         }
                     ),
-                    shape = RoundedCornerShape(10.dp),
+                    shape = AppShapes.M,
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = if (isDirty) MaterialTheme.colorScheme.primary
                                              else MaterialTheme.colorScheme.outline,
@@ -652,7 +666,7 @@ private fun TaxPercentageCard(
                             modifier = Modifier
                                 .height(56.dp)
                                 .width(56.dp),
-                            shape = RoundedCornerShape(10.dp),
+                            shape = AppShapes.M,
                             contentPadding = PaddingValues(0.dp),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.primary
@@ -682,10 +696,11 @@ private fun PerformanceModeCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            .padding(horizontal = 16.dp)
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f), AppShapes.L),
+        shape = AppShapes.L,
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
             modifier = Modifier
@@ -696,14 +711,14 @@ private fun PerformanceModeCard(
             Box(
                 modifier = Modifier
                     .size(48.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(Color(0xFF6B7280).copy(alpha = 0.15f)), // Gray
+                    .clip(AppShapes.M)
+                    .background(Slate500.copy(alpha = 0.15f)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Outlined.Speed,
                     contentDescription = null,
-                    tint = Color(0xFF6B7280),
+                    tint = Slate500,
                     modifier = Modifier.size(26.dp)
                 )
             }

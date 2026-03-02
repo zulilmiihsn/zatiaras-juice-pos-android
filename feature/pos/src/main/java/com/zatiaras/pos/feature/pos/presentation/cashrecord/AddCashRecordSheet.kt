@@ -52,6 +52,7 @@ import androidx.compose.ui.unit.dp
 import com.zatiaras.pos.feature.pos.R
 import com.zatiaras.pos.core.domain.util.LocaleUtils
 import com.zatiaras.pos.core.ui.components.CurrencyTextField
+import com.zatiaras.pos.core.ui.theme.AppShapes
 import com.zatiaras.pos.core.ui.theme.ExpenseRed
 import com.zatiaras.pos.core.ui.theme.IncomeGreen
 import com.zatiaras.pos.feature.pos.domain.model.CashRecordType
@@ -115,7 +116,7 @@ internal fun AddCashRecordSheet(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight(),
-                shape = RoundedCornerShape(16.dp),
+                shape = AppShapes.L,
                 color = if (formState.type == CashRecordType.INCOME) 
                     IncomeGreen.copy(alpha = 0.15f)
                 else 
@@ -158,7 +159,7 @@ internal fun AddCashRecordSheet(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight(),
-                shape = RoundedCornerShape(16.dp),
+                shape = AppShapes.L,
                 color = if (formState.type == CashRecordType.EXPENSE) 
                     ExpenseRed.copy(alpha = 0.15f)
                 else 
@@ -222,7 +223,7 @@ internal fun AddCashRecordSheet(
                 },
                 modifier = Modifier.fillMaxWidth(),
                 colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
-                shape = RoundedCornerShape(12.dp)
+                shape = AppShapes.M
             )
             
             // Invisible clickable layer
@@ -272,7 +273,7 @@ internal fun AddCashRecordSheet(
             showPrefix = true,
             isError = formState.amountError != null,
             singleLine = true,
-            shape = RoundedCornerShape(12.dp)
+            shape = AppShapes.M
         )
         
         // Show error if any
@@ -297,7 +298,7 @@ internal fun AddCashRecordSheet(
             isError = formState.descriptionError != null,
             supportingText = formState.descriptionError?.let { { Text(it) } },
             singleLine = true,
-            shape = RoundedCornerShape(12.dp)
+            shape = AppShapes.M
         )
         
         Spacer(modifier = Modifier.height(8.dp))
@@ -326,7 +327,7 @@ internal fun AddCashRecordSheet(
                 modifier = Modifier
                     .fillMaxWidth()
                     .menuAnchor(MenuAnchorType.PrimaryNotEditable),
-                shape = RoundedCornerShape(12.dp)
+                shape = AppShapes.M
             )
 
             ExposedDropdownMenu(
@@ -354,7 +355,7 @@ internal fun AddCashRecordSheet(
             modifier = Modifier.fillMaxWidth(),
             label = { Text(stringResource(R.string.cash_record_notes)) },
             minLines = 2,
-            shape = RoundedCornerShape(12.dp)
+            shape = AppShapes.M
         )
         
         Spacer(modifier = Modifier.height(24.dp))
@@ -367,7 +368,7 @@ internal fun AddCashRecordSheet(
             OutlinedButton(
                 onClick = onCancel,
                 modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(12.dp)
+                shape = AppShapes.M
             ) {
                 Text(stringResource(R.string.dialog_cancel))
             }
@@ -376,7 +377,7 @@ internal fun AddCashRecordSheet(
                 onClick = { onEvent(CashRecordEvent.SaveRecord) },
                 modifier = Modifier.weight(1f),
                 enabled = formState.isValid && !formState.isSubmitting,
-                shape = RoundedCornerShape(12.dp),
+                shape = AppShapes.M,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = if (formState.type == CashRecordType.INCOME) {
                         IncomeGreen
@@ -389,7 +390,7 @@ internal fun AddCashRecordSheet(
                     CircularProgressIndicator(
                         modifier = Modifier.size(20.dp),
                         strokeWidth = 2.dp,
-                        color = Color.White
+                        color = MaterialTheme.colorScheme.onPrimary
                     )
                 } else {
                     Text(stringResource(R.string.cash_record_save))

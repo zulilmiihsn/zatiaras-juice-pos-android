@@ -56,6 +56,7 @@ import androidx.compose.ui.res.stringResource
 import com.zatiaras.pos.feature.reports.R
 import androidx.compose.ui.draw.clip
 import com.zatiaras.pos.core.ui.theme.PdfRed
+import com.zatiaras.pos.core.ui.theme.AppShapes
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -221,6 +222,7 @@ fun PnlReportScreen(
     }
     
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
@@ -320,7 +322,7 @@ fun PnlReportScreen(
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clip(RoundedCornerShape(12.dp))
+                                .clip(AppShapes.M)
                                 .background(MaterialTheme.colorScheme.errorContainer)
                                 .padding(16.dp)
                         ) {
@@ -371,7 +373,7 @@ private fun ExportSection(
                 if (isExporting) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(16.dp),
-                        color = androidx.compose.ui.graphics.Color.White,
+                        color = MaterialTheme.colorScheme.onPrimary,
                         strokeWidth = 2.dp
                     )
                     Spacer(modifier = Modifier.width(8.dp))

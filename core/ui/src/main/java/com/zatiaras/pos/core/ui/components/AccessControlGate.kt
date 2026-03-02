@@ -8,7 +8,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -16,7 +15,6 @@ import androidx.compose.ui.res.stringResource
 import com.zatiaras.pos.core.ui.R
 import com.zatiaras.pos.core.data.access.AccessCheckResult
 import com.zatiaras.pos.core.data.access.AccessControlManager
-import kotlinx.coroutines.launch
 
 /**
  * State for access control gate.
@@ -66,7 +64,6 @@ fun AccessControlGate(
 ) {
     var gateState by remember { mutableStateOf<AccessGateState>(AccessGateState.Loading) }
     var showPinDialog by remember { mutableStateOf(false) }
-    val scope = rememberCoroutineScope()
 
     // Check access on first composition
     LaunchedEffect(route) {

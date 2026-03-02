@@ -47,12 +47,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.zatiaras.pos.core.ui.components.ZatDialog
+import com.zatiaras.pos.core.ui.theme.AppShapes
 import com.zatiaras.pos.core.ui.theme.ExpenseRed
 import com.zatiaras.pos.core.ui.theme.IncomeGreen
 import com.zatiaras.pos.feature.pos.R
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.Date
+import androidx.compose.foundation.border
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -90,14 +92,14 @@ internal fun CashFlowItemRow(
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(color, RoundedCornerShape(12.dp))
+                        .background(color, AppShapes.M)
                         .padding(horizontal = 20.dp),
                     contentAlignment = Alignment.CenterEnd
                 ) {
                     Icon(
                         imageVector = Icons.Default.Delete,
                         contentDescription = stringResource(R.string.cash_record_delete),
-                        tint = Color.White
+                        tint = MaterialTheme.colorScheme.onPrimary
                     )
                 }
             },
@@ -115,12 +117,17 @@ internal fun CashFlowItemRow(
             onDismissRequest = { showDeleteDialog = false }
         ) { dismiss ->
             Card(
-                modifier = Modifier.fillMaxWidth(0.9f),
-                shape = RoundedCornerShape(24.dp),
+                modifier = Modifier.fillMaxWidth(0.9f)
+                    .border(
+                        1.dp,
+                        MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                        AppShapes.XXL
+                    ),
+                shape = AppShapes.XXL,
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surface
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
                 ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
             ) {
                 Column(
                     modifier = Modifier.padding(24.dp),
@@ -160,7 +167,7 @@ internal fun CashFlowItemRow(
                         OutlinedButton(
                             onClick = dismiss,
                             modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(12.dp)
+                            shape = AppShapes.M
                         ) {
                             Text(stringResource(R.string.dialog_cancel))
                         }
@@ -174,7 +181,7 @@ internal fun CashFlowItemRow(
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.error
                             ),
-                            shape = RoundedCornerShape(12.dp)
+                            shape = AppShapes.M
                         ) {
                             Text(stringResource(R.string.cash_record_delete))
                         }
@@ -211,7 +218,7 @@ private fun CashFlowItemCard(
         ) {
             // Type Icon
             Surface(
-                shape = RoundedCornerShape(8.dp),
+                shape = AppShapes.S,
                 color = iconColor.copy(alpha = 0.1f)
             ) {
                 Icon(

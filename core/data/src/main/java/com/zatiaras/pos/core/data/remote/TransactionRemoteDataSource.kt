@@ -88,6 +88,7 @@ class TransactionRemoteDataSource @Inject constructor(
     /**
      * Fetch transactions with items (delta sync supported).
      */
+    @Suppress("UNUSED_PARAMETER")
     suspend fun fetchTransactionsExtended(
         lastSyncTimestamp: Long = 0,
         page: Int = 0,

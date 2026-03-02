@@ -159,6 +159,9 @@ object AppShapes {
     
     /** 20.dp - Extra large radius for chips */
     val XL = RoundedCornerShape(20.dp)
+
+    /** 24.dp - XXL radius for dialogs/sheets */
+    val XXL = RoundedCornerShape(24.dp)
     
     /** 50% - Fully rounded (circles, pills) */
     val Full = RoundedCornerShape(percent = 50)
@@ -173,6 +176,25 @@ object AppShapes {
         bottomStart = 0.dp,
         bottomEnd = 0.dp
     )
+
+    /** Left panel rounded on start side only */
+    val StartPanel = RoundedCornerShape(
+        topStart = 24.dp,
+        topEnd = 0.dp,
+        bottomStart = 24.dp,
+        bottomEnd = 0.dp
+    )
+
+    /** Bottom panel rounded on top side only */
+    val TopPanel = RoundedCornerShape(
+        topStart = 24.dp,
+        topEnd = 24.dp,
+        bottomStart = 0.dp,
+        bottomEnd = 0.dp
+    )
+
+    /** Corner notch used on overlays/badges */
+    val BottomStartNotch = RoundedCornerShape(bottomStart = 16.dp)
 }
 
 /**

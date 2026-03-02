@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
@@ -50,9 +49,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.zatiaras.pos.core.domain.model.AddOn
 import com.zatiaras.pos.core.domain.model.Category
+import com.zatiaras.pos.core.ui.theme.AppShapes
 import com.zatiaras.pos.core.ui.components.CurrencyTextField
 import com.zatiaras.pos.core.ui.components.ZatDialog
 import com.zatiaras.pos.core.ui.util.CurrencyFormatter
+import androidx.compose.foundation.border
 
 @Composable
 fun InventoryTabs(
@@ -63,12 +64,17 @@ fun InventoryTabs(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        shape = RoundedCornerShape(16.dp),
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .border(
+                1.dp,
+                MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                AppShapes.L
+            ),
+        shape = AppShapes.L,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainer
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         TabRow(
             selectedTabIndex = selectedTab.ordinal,
@@ -82,7 +88,7 @@ fun InventoryTabs(
                             .tabIndicatorOffset(tabPositions[selectedTab.ordinal])
                             .height(4.dp)
                             .padding(horizontal = 24.dp)
-                            .clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
+                            .clip(AppShapes.XS)
                             .background(MaterialTheme.colorScheme.primary)
                     )
                 }

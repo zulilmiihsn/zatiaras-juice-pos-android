@@ -2,6 +2,7 @@ package com.zatiaras.pos.feature.pos.presentation.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -16,10 +17,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import compose.icons.EvaIcons
-import compose.icons.evaicons.Outline
-import compose.icons.evaicons.outline.ShoppingCart
-import compose.icons.evaicons.outline.Trash
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -31,25 +28,34 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Modifier
-import com.zatiaras.pos.feature.pos.R
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.zatiaras.pos.feature.pos.domain.model.Cart
+import compose.icons.EvaIcons
+import compose.icons.evaicons.Outline
+import compose.icons.evaicons.outline.ArrowForward
+import compose.icons.evaicons.outline.ShoppingCart
+import compose.icons.evaicons.outline.Trash
 import com.zatiaras.pos.core.ui.theme.AppShapes
+import com.zatiaras.pos.core.ui.theme.Brand400
+import com.zatiaras.pos.core.ui.theme.Brand500
 import com.zatiaras.pos.core.ui.theme.LocalDimensions
+import com.zatiaras.pos.core.ui.theme.Slate50
+import com.zatiaras.pos.core.ui.theme.Slate200
 import com.zatiaras.pos.core.ui.util.CurrencyFormatter
+import com.zatiaras.pos.feature.pos.R
+import com.zatiaras.pos.feature.pos.domain.model.Cart
 import java.text.NumberFormat
 
 /**
- * Cart sidebar component for POS screen.
- * 
- * UX optimized for Ibu-ibu:
- * - Large, prominent checkout button
- * - Clear pricing
- * - Easy-to-read typography
+ * Premium Cart Sidebar
+ * - Clean white surface
+ * - Pink gradient header
+ * - Large checkout button
  */
 @Composable
 fun CartSidebar(
@@ -61,51 +67,96 @@ fun CartSidebar(
     onCheckout: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val priceFormatter = remember { CurrencyFormatter.getCurrencyFormatter() }
-    
     val dimensions = LocalDimensions.current
-    
+
     Surface(
         modifier = modifier.fillMaxHeight(),
-        color = MaterialTheme.colorScheme.surfaceContainer,
-        shape = AppShapes.CartSidebar
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+        shadowElevation = 0.dp,
+        shape = AppShapes.StartPanel
     ) {
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
-            // Header
-            CartHeader(
-                itemCount = cart.itemCount,
-                onClearCart = onClearCart
-            )
-            
-            HorizontalDivider()
-            
-            // Cart Items
-            LazyColumn(
-                modifier = Modifier.weight(1f),
-                contentPadding = PaddingValues(dimensions.paddingM),
-                verticalArrangement = Arrangement.spacedBy(dimensions.spacingS)
-            ) {
-                items(
-                    items = cart.items,
-                    key = { it.uniqueKey }
-                ) { cartItem ->
-                    CartItemRow(
-                        cartItem = cartItem,
-                        onIncrement = { onIncrement(cartItem.uniqueKey) },
-                        onDecrement = { onDecrement(cartItem.uniqueKey) },
-                        onRemove = { onRemove(cartItem.uniqueKey) }
+            // Premium Header with Gradient
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        brush = Brush.horizontalGradient(
+                            colors = listOf(Brand500, Brand400)
+                        )
                     )
+                    .padding(dimensions.paddingL)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text(
+                            text = stringResource(R.string.cart_title),
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                        Text(
+                            text = pluralStringResource(R.plurals.cart_item_count_plural, cart.itemCount, cart.itemCount),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
+                        )
+                    }
+
+                    if (cart.items.isNotEmpty()) {
+                        IconButton(
+                            onClick = onClearCart,
+                            modifier = Modifier
+                                .size(40.dp)
+                                .background(Slate50.copy(alpha = 0.2f), AppShapes.M)
+                        ) {
+                            Icon(
+                                imageVector = EvaIcons.Outline.Trash,
+                                contentDescription = stringResource(R.string.cart_clear),
+                                tint = MaterialTheme.colorScheme.onPrimary
+                            )
+                        }
+                    }
                 }
             }
-            
-            HorizontalDivider()
-            
-            // Footer with Total and Checkout - LARGER for Ibu-ibu
+
+            // Cart Items List
+            if (cart.items.isEmpty()) {
+                EmptyCartView()
+            } else {
+                LazyColumn(
+                    modifier = Modifier.weight(1f),
+                    contentPadding = PaddingValues(top = dimensions.paddingM, bottom = dimensions.paddingM),
+                    verticalArrangement = Arrangement.spacedBy(dimensions.spacingS)
+                ) {
+                    items(
+                        items = cart.items,
+                        key = { it.uniqueKey }
+                    ) { cartItem ->
+                        CartItemRow(
+                            cartItem = cartItem,
+                            onIncrement = { onIncrement(cartItem.uniqueKey) },
+                            onDecrement = { onDecrement(cartItem.uniqueKey) },
+                            onRemove = { onRemove(cartItem.uniqueKey) }
+                        )
+                        if (cart.items.last() != cartItem) {
+                            HorizontalDivider(
+                                modifier = Modifier.padding(horizontal = dimensions.paddingL),
+                                color = Slate200
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Footer
             CartFooter(
                 subtotal = cart.subtotal,
-                priceFormatter = priceFormatter,
                 onCheckout = onCheckout
             )
         }
@@ -113,94 +164,109 @@ fun CartSidebar(
 }
 
 @Composable
-private fun CartHeader(
-    itemCount: Int,
-    onClearCart: () -> Unit
-) {
-    val dimensions = LocalDimensions.current
-    Row(
+private fun EmptyCartView() {
+    Column(
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = dimensions.paddingM, vertical = dimensions.paddingS),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+            .fillMaxSize()
+            .padding(32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
-        Text(
-            text = stringResource(R.string.pos_cart_title_with_count, itemCount),
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold
-        )
-        
-        IconButton(
-            onClick = onClearCart,
-            modifier = Modifier.size(36.dp)
+        Box(
+            modifier = Modifier
+                .size(120.dp)
+                .background(Slate50, androidx.compose.foundation.shape.CircleShape),
+            contentAlignment = Alignment.Center
         ) {
             Icon(
-                imageVector = EvaIcons.Outline.Trash,
-                contentDescription = stringResource(R.string.cart_clear),
-                tint = MaterialTheme.colorScheme.error
+                imageVector = EvaIcons.Outline.ShoppingCart,
+                contentDescription = null,
+                modifier = Modifier.size(64.dp),
+                tint = Brand400.copy(alpha = 0.5f)
             )
         }
+        Spacer(modifier = Modifier.height(24.dp))
+        Text(
+            text = stringResource(R.string.cart_empty),
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = stringResource(R.string.cart_empty_hint),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+        )
     }
 }
 
 @Composable
 private fun CartFooter(
     subtotal: Long,
-    priceFormatter: NumberFormat,
     onCheckout: () -> Unit
 ) {
+    val priceFormatter = remember { CurrencyFormatter.getCurrencyFormatter() }
     val dimensions = LocalDimensions.current
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surface)
-            .padding(dimensions.paddingM)
+
+    Surface(
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+        shadowElevation = 0.dp,
+        shape = AppShapes.TopPanel
     ) {
-        // Subtotal row - larger text
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = stringResource(R.string.pos_subtotal),
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Text(
-                text = priceFormatter.format(subtotal),
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
-            )
-        }
-        
-        Spacer(modifier = Modifier.height(16.dp))
-        
-        // Checkout Button - LARGE and GREEN for Ibu-ibu
-        Button(
-            onClick = onCheckout,
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(56.dp),
-            shape = RoundedCornerShape(14.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFF10B981),
-                contentColor = Color.White
-            )
+                .padding(dimensions.paddingL)
         ) {
-            Icon(
-                imageVector = EvaIcons.Outline.ShoppingCart,
-                contentDescription = null,
-                modifier = Modifier.size(24.dp)
-            )
-            Spacer(modifier = Modifier.width(10.dp))
-            Text(
-                text = stringResource(R.string.checkout_button),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = stringResource(R.string.pos_total),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = priceFormatter.format(subtotal),
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = Brand500
+                )
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Button(
+                onClick = onCheckout,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                shape = AppShapes.L,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Brand500,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                ),
+                elevation = ButtonDefaults.buttonElevation(
+                    defaultElevation = 0.dp,
+                    pressedElevation = 0.dp
+                )
+            ) {
+                Text(
+                    text = stringResource(R.string.checkout_button),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Icon(
+                    imageVector = EvaIcons.Outline.ArrowForward,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
         }
     }
 }

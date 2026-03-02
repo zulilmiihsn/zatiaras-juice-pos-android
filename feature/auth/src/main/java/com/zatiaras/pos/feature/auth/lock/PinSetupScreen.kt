@@ -69,6 +69,7 @@ fun PinSetupScreen(
     onNavigateBack: () -> Unit
 ) {
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             CenterAlignedTopAppBar(
                 title = { 

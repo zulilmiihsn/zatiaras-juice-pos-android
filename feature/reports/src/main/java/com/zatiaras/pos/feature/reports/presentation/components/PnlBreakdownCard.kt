@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
@@ -46,14 +45,18 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.zatiaras.pos.core.ui.theme.AppShapes
+import com.zatiaras.pos.core.ui.theme.ErrorRedDark
 import com.zatiaras.pos.core.ui.theme.LossRed
 import com.zatiaras.pos.core.ui.theme.ProfitGreen
 import com.zatiaras.pos.core.ui.theme.ProfitGreenDark
 import com.zatiaras.pos.core.ui.theme.ProfitGreenLight
 import com.zatiaras.pos.core.ui.theme.TaxBlue
+import com.zatiaras.pos.core.ui.theme.WarningAmberDark
 import com.zatiaras.pos.feature.reports.domain.model.ExpenseCategoryItem
 import com.zatiaras.pos.feature.reports.domain.model.ProductSaleItem
 import com.zatiaras.pos.feature.reports.domain.model.ProfitLossReport
+import androidx.compose.foundation.border
 
 /**
  * Comprehensive P&L breakdown card.
@@ -66,12 +69,13 @@ fun PnlBreakdownCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .animateContentSize(),
-        shape = RoundedCornerShape(16.dp),
+            .animateContentSize()
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f), AppShapes.L),
+        shape = AppShapes.L,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier.padding(16.dp)
@@ -211,7 +215,7 @@ fun PnlBreakdownCard(
                         label = stringResource(R.string.pnl_other_expenses),
                         amount = report.otherExpenses,
                         icon = Icons.Default.ArrowDownward,
-                        iconColor = Color(0xFFFF5722),
+                        iconColor = WarningAmberDark,
                         isNegative = true
                     )
                 }
@@ -275,7 +279,7 @@ private fun SectionHeader(
         Box(
             modifier = Modifier
                 .size(4.dp, 16.dp)
-                .clip(RoundedCornerShape(2.dp))
+                .clip(AppShapes.XS)
                 .background(color)
         )
         
@@ -357,7 +361,7 @@ private fun GrandTotalRow(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
+            .clip(AppShapes.M)
             .background(MaterialTheme.colorScheme.primaryContainer)
             .padding(16.dp)
     ) {
@@ -398,13 +402,13 @@ private fun ProfitRow(
     val textColor = if (isProfit) {
         ProfitGreenDark
     } else {
-        Color(0xFFC62828)
+        ErrorRedDark
     }
     
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
+            .clip(AppShapes.M)
             .background(backgroundColor)
             .padding(16.dp)
     ) {

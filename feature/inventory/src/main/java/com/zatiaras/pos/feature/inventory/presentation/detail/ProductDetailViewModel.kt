@@ -151,11 +151,6 @@ class ProductDetailViewModel @Inject constructor(
             try {
                 val result = addOnRepository.createAddOn(name, price)
                 
-                result.onSuccess { newAddOn ->
-                    // We need to launch a new coroutine or handle this outside onSuccess if we want to call suspend functions
-                    // But simpler is to use the result directly
-                }
-                
                 if (result.isSuccess) {
                     val newAddOn = result.getOrThrow()
                     // Reload add-ons to update list - call suspend function here

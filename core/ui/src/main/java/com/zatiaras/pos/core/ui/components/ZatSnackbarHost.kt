@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Snackbar
@@ -25,6 +24,8 @@ import compose.icons.evaicons.Outline
 import compose.icons.evaicons.outline.AlertTriangle
 import compose.icons.evaicons.outline.CheckmarkCircle2
 import compose.icons.evaicons.outline.Info
+import com.zatiaras.pos.core.ui.theme.AppShapes
+import com.zatiaras.pos.core.ui.theme.SuccessGreen
 
 /**
  * A reusable premium SnackbarHost wrapper that styles messages according to their type
@@ -60,13 +61,13 @@ fun ZatSnackbarHost(
             
         val containerColor = when {
             isError -> MaterialTheme.colorScheme.errorContainer
-            isSuccess -> Color(0xFF10B981) // SuccessGreen
+            isSuccess -> SuccessGreen
             else -> MaterialTheme.colorScheme.inverseSurface
         }
         
         val contentColor = when {
             isError -> MaterialTheme.colorScheme.onErrorContainer
-            isSuccess -> Color.White
+            isSuccess -> MaterialTheme.colorScheme.onPrimary
             else -> MaterialTheme.colorScheme.inverseOnSurface
         }
         
@@ -80,7 +81,7 @@ fun ZatSnackbarHost(
             modifier = Modifier.padding(16.dp),
             containerColor = containerColor,
             contentColor = contentColor,
-            shape = RoundedCornerShape(16.dp),
+            shape = AppShapes.L,
             action = null // Custom minimal look, no default action button
         ) {
             Row(

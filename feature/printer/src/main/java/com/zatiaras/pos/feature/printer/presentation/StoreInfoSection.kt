@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
@@ -43,6 +42,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.zatiaras.pos.core.ui.theme.AppShapes
 import com.zatiaras.pos.core.ui.theme.IconColors
 import com.zatiaras.pos.feature.printer.R
 
@@ -61,12 +61,14 @@ internal fun StoreLogoCard(
     val context = LocalContext.current
     
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f), AppShapes.L),
+        shape = AppShapes.L,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier.padding(16.dp)
@@ -78,7 +80,7 @@ internal fun StoreLogoCard(
                 Box(
                     modifier = Modifier
                         .size(40.dp)
-                        .clip(RoundedCornerShape(10.dp))
+                        .clip(AppShapes.M)
                         .background(LogoIconColor.copy(alpha = 0.1f)),
                     contentAlignment = Alignment.Center
                 ) {
@@ -115,12 +117,12 @@ internal fun StoreLogoCard(
                 Box(
                     modifier = Modifier
                         .size(100.dp)
-                        .clip(RoundedCornerShape(12.dp))
+                        .clip(AppShapes.M)
                         .background(MaterialTheme.colorScheme.surfaceVariant)
                         .border(
                             2.dp,
                             if (logoUri != null) StoreIconColor else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
-                            RoundedCornerShape(12.dp)
+                            AppShapes.M
                         ),
                     contentAlignment = Alignment.Center
                 ) {
@@ -134,7 +136,7 @@ internal fun StoreLogoCard(
                             modifier = Modifier
                                 .fillMaxSize()
                                 .padding(8.dp)
-                                .clip(RoundedCornerShape(8.dp)),
+                                .clip(AppShapes.S),
                             contentScale = ContentScale.Fit
                         )
                     } else {
@@ -162,7 +164,7 @@ internal fun StoreLogoCard(
                     OutlinedButton(
                         onClick = onClearLogo,
                         modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = AppShapes.M
                     ) {
                         Icon(Icons.Default.Close, null, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(8.dp))
@@ -173,7 +175,7 @@ internal fun StoreLogoCard(
                 Button(
                     onClick = onSelectLogo,
                     modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(12.dp),
+                    shape = AppShapes.M,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = LogoIconColor
                     )
@@ -206,12 +208,14 @@ internal fun EnhancedStoreInfoCard(
     onSave: () -> Unit
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f), AppShapes.L),
+        shape = AppShapes.L,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier.padding(16.dp)
@@ -223,7 +227,7 @@ internal fun EnhancedStoreInfoCard(
                 Box(
                     modifier = Modifier
                         .size(40.dp)
-                        .clip(RoundedCornerShape(10.dp))
+                        .clip(AppShapes.M)
                         .background(StoreIconColor.copy(alpha = 0.1f)),
                     contentAlignment = Alignment.Center
                 ) {
@@ -259,7 +263,7 @@ internal fun EnhancedStoreInfoCard(
                 placeholder = { Text(stringResource(R.string.printer_store_name_placeholder)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                shape = RoundedCornerShape(12.dp)
+                shape = AppShapes.M
             )
             
             Spacer(modifier = Modifier.height(12.dp))
@@ -273,7 +277,7 @@ internal fun EnhancedStoreInfoCard(
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = false,
                 maxLines = 2,
-                shape = RoundedCornerShape(12.dp)
+                shape = AppShapes.M
             )
             
             Spacer(modifier = Modifier.height(16.dp))
@@ -281,7 +285,7 @@ internal fun EnhancedStoreInfoCard(
             Button(
                 onClick = onSave,
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
+                shape = AppShapes.M,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = StoreIconColor
                 )

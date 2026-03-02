@@ -16,6 +16,10 @@ val Brand800 = Color(0xFF9D174D)
 val Brand900 = Color(0xFF831843)
 val Brand950 = Color(0xFF500724) // Primary Dark
 
+// Compatibility aliases for legacy naming still used in feature modules
+val LightPink = Brand100
+val SurfacePink = Brand50
+
 // ==================== NEUTRAL COLORS ====================
 // Slate - ShadCN Style
 val Slate50 = Color(0xFFF8FAFC)

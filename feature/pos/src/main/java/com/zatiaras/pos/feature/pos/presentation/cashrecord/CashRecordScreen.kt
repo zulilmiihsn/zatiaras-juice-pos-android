@@ -81,6 +81,7 @@ import com.zatiaras.pos.core.domain.util.LocaleUtils
 import com.zatiaras.pos.core.ui.components.CurrencyTextField
 import com.zatiaras.pos.core.ui.components.DateFilterRow
 import com.zatiaras.pos.core.ui.components.ZatDialog
+import com.zatiaras.pos.core.ui.theme.AppShapes
 import com.zatiaras.pos.core.ui.theme.ExpenseRed
 import com.zatiaras.pos.core.ui.theme.IncomeGreen
 import com.zatiaras.pos.core.ui.theme.LocalDimensions
@@ -138,6 +139,7 @@ fun CashRecordScreen(
     }
     
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
@@ -314,7 +316,7 @@ fun CashRecordScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 24.dp),
-                shape = RoundedCornerShape(24.dp),
+                shape = AppShapes.XXL,
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {
                 Column(
@@ -322,7 +324,7 @@ fun CashRecordScreen(
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Surface(
-                            shape = RoundedCornerShape(12.dp),
+                            shape = AppShapes.M,
                             color = (if (record.isIncome) IncomeGreen else ExpenseRed).copy(alpha = 0.1f)
                         ) {
                             Icon(
@@ -392,7 +394,7 @@ fun CashRecordScreen(
                             .fillMaxWidth()
                             .background(
                                 color = (if (record.isIncome) IncomeGreen else ExpenseRed).copy(alpha = 0.1f),
-                                shape = RoundedCornerShape(12.dp)
+                                shape = AppShapes.M
                             )
                             .padding(16.dp),
                         contentAlignment = Alignment.Center
@@ -414,7 +416,7 @@ fun CashRecordScreen(
                     Button(
                         onClick = dismiss,
                         modifier = Modifier.fillMaxWidth().height(50.dp),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = AppShapes.M
                     ) {
                         Text(stringResource(R.string.cash_record_close), fontWeight = FontWeight.Bold)
                     }

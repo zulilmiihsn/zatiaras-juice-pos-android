@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -26,6 +25,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.zatiaras.pos.core.ui.theme.LocalDimensions
+import com.zatiaras.pos.core.ui.theme.AppShapes
 import com.zatiaras.pos.core.ui.theme.ErrorRed
 import com.zatiaras.pos.core.ui.theme.SuccessGreen
 import com.zatiaras.pos.core.ui.util.CurrencyFormatter
@@ -45,17 +46,18 @@ fun StatisticsSection(
     modifier: Modifier = Modifier
 ) {
     val formatCurrency = CurrencyFormatter.getCurrencyFormatter()
+    val dimensions = LocalDimensions.current
     
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
+        shape = AppShapes.L,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
-            modifier = Modifier.padding(20.dp)
+            modifier = Modifier.padding(dimensions.paddingL)
         ) {
             Text(
                 text = stringResource(R.string.reports_stats),
@@ -63,14 +65,14 @@ fun StatisticsSection(
                 fontWeight = FontWeight.SemiBold
             )
             
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(dimensions.spacingM))
             
             // Row 1: Rata-rata transaksi & Jam paling ramai
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(IntrinsicSize.Min),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalArrangement = Arrangement.spacedBy(dimensions.spacingM)
             ) {
                 StatItem(
                     value = if (averageTransactions > 0) averageTransactions.toString() else null,
@@ -89,14 +91,14 @@ fun StatisticsSection(
                 )
             }
             
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(dimensions.spacingM))
             
             // Row 2: AOV & Items per transaksi
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(IntrinsicSize.Min),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalArrangement = Arrangement.spacedBy(dimensions.spacingM)
             ) {
                 StatItem(
                     value = if (averageOrderValue > 0) formatCurrency.format(averageOrderValue) else null,
@@ -115,14 +117,14 @@ fun StatisticsSection(
                 )
             }
             
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(dimensions.spacingM))
             
             // Row 3: Growth & Busiest day
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(IntrinsicSize.Min),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalArrangement = Arrangement.spacedBy(dimensions.spacingM)
             ) {
                 StatItem(
                     value = growthPercent?.let { 
@@ -159,12 +161,13 @@ private fun StatItem(
     sublabel: String? = null,
     valueColor: Color? = null
 ) {
+    val dimensions = LocalDimensions.current
     Box(
         modifier = modifier
-            .clip(RoundedCornerShape(12.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+            .clip(AppShapes.L)
+            .background(MaterialTheme.colorScheme.surface)
             .fillMaxHeight()
-            .padding(horizontal = 12.dp, vertical = 16.dp),
+            .padding(horizontal = dimensions.paddingM, vertical = dimensions.paddingL),
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -174,7 +177,7 @@ private fun StatItem(
                 // Has data - show value prominently
                 Text(
                     text = value,
-                    style = MaterialTheme.typography.headlineSmall,
+                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = valueColor ?: MaterialTheme.colorScheme.primary,
                     textAlign = TextAlign.Center,
@@ -192,7 +195,7 @@ private fun StatItem(
                 )
             }
             
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(dimensions.spacingXS))
             
             Text(
                 text = label,

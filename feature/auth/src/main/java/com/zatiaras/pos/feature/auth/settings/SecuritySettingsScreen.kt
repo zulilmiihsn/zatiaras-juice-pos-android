@@ -5,7 +5,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -19,7 +18,6 @@ import com.zatiaras.pos.feature.auth.R
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -27,14 +25,22 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.zatiaras.pos.core.ui.theme.AppShapes
+import com.zatiaras.pos.core.ui.theme.Brand500
+import com.zatiaras.pos.core.ui.theme.InfoBlue
+import com.zatiaras.pos.core.ui.theme.PurpleAccent
+import com.zatiaras.pos.core.ui.theme.SuccessGreen
+import com.zatiaras.pos.core.ui.theme.WarningAmber
+import androidx.compose.foundation.border
 
 // Icon colors for consistent theming
-private val LockIconColor = Color(0xFFEC4899) // Pink
-private val BiometricIconColor = Color(0xFF8B5CF6) // Purple
-private val PinIconColor = Color(0xFF3B82F6) // Blue
-private val PasswordIconColor = Color(0xFFF97316) // Orange
-private val SuccessColor = Color(0xFF10B981) // Emerald
-private val InfoColor = Color(0xFF06B6D4) // Cyan
+private val LockIconColor = Brand500
+private val BiometricIconColor = PurpleAccent
+private val PinIconColor = InfoBlue
+private val PasswordIconColor = WarningAmber
+private val SuccessColor = SuccessGreen
+private val InfoColor = InfoBlue
 
 /**
  * Security Settings Sub-Screen - Enhanced with premium styling
@@ -65,6 +71,7 @@ fun SecuritySettingsScreen(
     }
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
@@ -113,12 +120,14 @@ fun SecuritySettingsScreen(
 
             // Main Security Card - Enhanced
             Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f), AppShapes.XL),
+                shape = AppShapes.XL,
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surface
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
                 ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
             ) {
                 Column(modifier = Modifier.padding(4.dp)) {
                     // App Lock Toggle
@@ -133,7 +142,7 @@ fun SecuritySettingsScreen(
                                 checked = uiState.lockEnabled,
                                 onCheckedChange = { viewModel.setLockEnabled(it) },
                                 colors = SwitchDefaults.colors(
-                                    checkedThumbColor = Color.White,
+                                    checkedThumbColor = MaterialTheme.colorScheme.surface,
                                     checkedTrackColor = LockIconColor
                                 )
                             )
@@ -163,7 +172,7 @@ fun SecuritySettingsScreen(
                                     onCheckedChange = { viewModel.setBiometricEnabled(it) },
                                     enabled = uiState.biometricAvailable,
                                     colors = SwitchDefaults.colors(
-                                        checkedThumbColor = Color.White,
+                                        checkedThumbColor = MaterialTheme.colorScheme.surface,
                                         checkedTrackColor = BiometricIconColor
                                     )
                                 )
@@ -195,7 +204,7 @@ fun SecuritySettingsScreen(
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = PinIconColor
                                 ),
-                                shape = RoundedCornerShape(12.dp),
+                                shape = AppShapes.M,
                                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
                             ) {
                                 Text(
@@ -232,7 +241,7 @@ fun SecuritySettingsScreen(
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = PasswordIconColor
                                 ),
-                                shape = RoundedCornerShape(12.dp),
+                                shape = AppShapes.M,
                                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
                             ) {
                                 Text(
@@ -250,7 +259,7 @@ fun SecuritySettingsScreen(
             // Info Box - Enhanced
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
+                shape = AppShapes.L,
                 colors = CardDefaults.cardColors(
                     containerColor = InfoColor.copy(alpha = 0.1f)
                 )
@@ -262,7 +271,7 @@ fun SecuritySettingsScreen(
                     Box(
                         modifier = Modifier
                             .size(36.dp)
-                            .clip(RoundedCornerShape(10.dp))
+                            .clip(AppShapes.M)
                             .background(InfoColor.copy(alpha = 0.15f)),
                         contentAlignment = Alignment.Center
                     ) {
@@ -464,7 +473,7 @@ private fun SecurityStatusHeader(
     isBiometricEnabled: Boolean
 ) {
     val statusColor by animateColorAsState(
-        targetValue = if (isLockEnabled) SuccessColor else Color(0xFFF59E0B),
+        targetValue = if (isLockEnabled) SuccessColor else WarningAmber,
         animationSpec = tween(300),
         label = "statusColor"
     )
@@ -478,7 +487,7 @@ private fun SecurityStatusHeader(
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
+        shape = AppShapes.L,
         colors = CardDefaults.cardColors(
             containerColor = statusColor.copy(alpha = 0.1f)
         )
@@ -492,7 +501,7 @@ private fun SecurityStatusHeader(
             Box(
                 modifier = Modifier
                     .size(48.dp)
-                    .clip(RoundedCornerShape(12.dp))
+                    .clip(AppShapes.M)
                     .background(statusColor.copy(alpha = 0.2f)),
                 contentAlignment = Alignment.Center
             ) {
@@ -522,7 +531,7 @@ private fun SecurityStatusHeader(
             
             Box(
                 modifier = Modifier
-                    .clip(RoundedCornerShape(8.dp))
+                    .clip(AppShapes.S)
                     .background(statusColor.copy(alpha = 0.15f))
                     .padding(horizontal = 12.dp, vertical = 6.dp)
             ) {
@@ -616,7 +625,7 @@ private fun EnhancedSecurityItem(
             Box(
                 modifier = Modifier
                     .size(48.dp)
-                    .clip(RoundedCornerShape(12.dp))
+                    .clip(AppShapes.M)
                     .background(bgColorAlpha),
                 contentAlignment = Alignment.Center
             ) {

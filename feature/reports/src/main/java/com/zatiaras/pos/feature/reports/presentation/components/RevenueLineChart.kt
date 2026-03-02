@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -33,7 +32,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.zatiaras.pos.core.ui.theme.AppShapes
 import com.zatiaras.pos.core.ui.theme.GradientColors
+import com.zatiaras.pos.core.ui.theme.LocalDimensions
 import com.zatiaras.pos.core.domain.util.LocaleUtils
 import com.zatiaras.pos.feature.reports.domain.model.DailyRevenue
 import java.text.SimpleDateFormat
@@ -49,6 +50,8 @@ fun RevenueLineChart(
     data: List<DailyRevenue>,
     modifier: Modifier = Modifier
 ) {
+    val dimensions = LocalDimensions.current
+    
     // Animation
     val animationProgress = remember { Animatable(0f) }
     
@@ -65,7 +68,7 @@ fun RevenueLineChart(
             modifier = modifier
                 .fillMaxWidth()
                 .height(200.dp)
-                .clip(RoundedCornerShape(16.dp))
+                .clip(AppShapes.L)
                 .background(MaterialTheme.colorScheme.surfaceVariant),
             contentAlignment = Alignment.Center
         ) {
@@ -86,14 +89,14 @@ fun RevenueLineChart(
     
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
+        shape = AppShapes.L,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(dimensions.paddingL)
         ) {
             Text(
                 text = stringResource(R.string.reports_chart_title),
@@ -102,7 +105,7 @@ fun RevenueLineChart(
                 color = MaterialTheme.colorScheme.onSurface
             )
             
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(dimensions.spacingL))
             
             Canvas(
                 modifier = Modifier

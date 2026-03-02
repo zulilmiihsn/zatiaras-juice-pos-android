@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
@@ -51,9 +50,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.zatiaras.pos.core.domain.model.AddOn
 import com.zatiaras.pos.core.domain.model.Category
+import com.zatiaras.pos.core.ui.theme.AppShapes
 import com.zatiaras.pos.core.ui.components.CurrencyTextField
 import com.zatiaras.pos.core.ui.components.ZatDialog
 import com.zatiaras.pos.core.ui.util.CurrencyFormatter
+import androidx.compose.foundation.border
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -76,12 +77,17 @@ fun EditCategoryDialog(
         onDismissRequest = onDismiss
     ) { dismiss ->
         Card(
-                modifier = Modifier.fillMaxWidth(0.95f),
-                shape = RoundedCornerShape(24.dp),
+                modifier = Modifier.fillMaxWidth(0.95f)
+                    .border(
+                        1.dp,
+                        MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                        AppShapes.XXL
+                    ),
+                shape = AppShapes.XXL,
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surface
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
                 ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
             ) {
                 Column(
                     modifier = Modifier
@@ -107,7 +113,7 @@ fun EditCategoryDialog(
                         isError = error != null,
                         supportingText = error?.let { { Text(it) } },
                         singleLine = true,
-                        shape = RoundedCornerShape(12.dp),
+                        shape = AppShapes.M,
                         modifier = Modifier.fillMaxWidth()
                     )
                     
@@ -123,7 +129,7 @@ fun EditCategoryDialog(
                             fontWeight = FontWeight.SemiBold
                         )
                         Surface(
-                            shape = RoundedCornerShape(8.dp),
+                            shape = AppShapes.S,
                             color = MaterialTheme.colorScheme.primaryContainer
                         ) {
                             Text(
@@ -153,7 +159,7 @@ fun EditCategoryDialog(
                         onValueChange = { productSearchQuery = it },
                         label = { Text(stringResource(R.string.inventory_search_placeholder)) },
                         singleLine = true,
-                        shape = RoundedCornerShape(12.dp),
+                        shape = AppShapes.M,
                         modifier = Modifier.fillMaxWidth()
                     )
                     
@@ -377,7 +383,7 @@ fun EditCategoryDialog(
                         OutlinedButton(
                             onClick = dismiss,
                             modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(12.dp)
+                            shape = AppShapes.M
                         ) {
                             Text(stringResource(R.string.inventory_action_cancel))
                         }
@@ -392,7 +398,7 @@ fun EditCategoryDialog(
                                 }
                             },
                             modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(12.dp)
+                            shape = AppShapes.M
                         ) {
                             Text(stringResource(R.string.inventory_action_save))
                         }

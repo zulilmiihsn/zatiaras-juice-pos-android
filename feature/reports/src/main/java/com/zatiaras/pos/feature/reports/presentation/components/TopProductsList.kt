@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Card
@@ -38,7 +37,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.zatiaras.pos.core.ui.theme.LocalDimensions
 import com.zatiaras.pos.core.ui.theme.MedalColors
+import com.zatiaras.pos.core.ui.theme.AppShapes
 import com.zatiaras.pos.feature.reports.domain.model.TopProduct
 
 /**
@@ -49,18 +50,19 @@ fun TopProductsList(
     products: List<TopProduct>,
     modifier: Modifier = Modifier
 ) {
+    val dimensions = LocalDimensions.current
     val maxQuantity = products.maxOfOrNull { it.quantitySold } ?: 1
     
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
+        shape = AppShapes.L,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(dimensions.paddingL)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -77,11 +79,11 @@ fun TopProductsList(
                     imageVector = Icons.Default.Star,
                     contentDescription = null,
                     tint = MedalColors.Star,
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(dimensions.iconSizeM)
                 )
             }
             
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(dimensions.spacingM))
             
             if (products.isEmpty()) {
                 Box(
@@ -105,7 +107,7 @@ fun TopProductsList(
                     )
                     
                     if (index < products.size - 1) {
-                        Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(dimensions.spacingM))
                     }
                 }
             }
@@ -119,6 +121,7 @@ private fun TopProductItem(
     product: TopProduct,
     progress: Float
 ) {
+    val dimensions = LocalDimensions.current
     var animationPlayed by remember { mutableStateOf(false) }
     val animatedProgress by animateFloatAsState(
         targetValue = if (animationPlayed) progress else 0f,
@@ -159,13 +162,13 @@ private fun TopProductItem(
             Text(
                 text = rankDisplay,
                 style = MaterialTheme.typography.headlineSmall,
-                modifier = Modifier.size(32.dp)
+                modifier = Modifier.size(32.dp) // Maintain emoji text boundary
             )
         } else {
             // Show number badge for rank 4+
             Box(
                 modifier = Modifier
-                    .size(28.dp)
+                    .size(dimensions.iconSizeL)
                     .clip(CircleShape)
                     .background(rankColor.copy(alpha = 0.15f)),
                 contentAlignment = Alignment.Center
@@ -179,7 +182,7 @@ private fun TopProductItem(
             }
         }
         
-        Spacer(modifier = Modifier.width(12.dp))
+        Spacer(modifier = Modifier.width(dimensions.spacingM))
         
         Column(modifier = Modifier.weight(1f)) {
             Row(
@@ -202,19 +205,19 @@ private fun TopProductItem(
                 )
             }
             
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(dimensions.spacingXS))
             
             LinearProgressIndicator(
                 progress = { animatedProgress },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(6.dp)
-                    .clip(RoundedCornerShape(3.dp)),
+                    .clip(AppShapes.XS),
                 color = rankColor,
-                trackColor = rankColor.copy(alpha = 0.1f)
+                trackColor = MaterialTheme.colorScheme.surfaceVariant
             )
             
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(dimensions.spacingXXS))
             
             Text(
                 text = formatRupiah(product.totalRevenue),

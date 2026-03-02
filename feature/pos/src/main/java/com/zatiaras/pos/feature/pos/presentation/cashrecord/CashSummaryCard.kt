@@ -26,6 +26,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.zatiaras.pos.feature.pos.R
+import com.zatiaras.pos.core.ui.theme.AppShapes
 import com.zatiaras.pos.core.ui.theme.ExpenseRed
 import com.zatiaras.pos.core.ui.theme.IncomeGreen
 import java.text.NumberFormat
@@ -46,9 +47,9 @@ internal fun CashSummaryCard(
     Card(
         modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier.padding(12.dp)
@@ -73,7 +74,7 @@ internal fun CashSummaryCard(
                     colors = CardDefaults.cardColors(
                         containerColor = IncomeGreen.copy(alpha = 0.1f)
                     ),
-                    shape = RoundedCornerShape(8.dp)
+                    shape = AppShapes.S
                 ) {
                     Column(
                         modifier = Modifier
@@ -112,7 +113,7 @@ internal fun CashSummaryCard(
                     colors = CardDefaults.cardColors(
                         containerColor = ExpenseRed.copy(alpha = 0.1f)
                     ),
-                    shape = RoundedCornerShape(8.dp)
+                    shape = AppShapes.S
                 ) {
                     Column(
                         modifier = Modifier

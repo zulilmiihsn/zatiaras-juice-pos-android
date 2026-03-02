@@ -90,8 +90,9 @@ fun HomeDashboardScreen(
     // PIN Verification State
     var showPinDialog by remember { mutableStateOf(false) }
     var pendingStoreAction by remember { mutableStateOf<StoreAction?>(null) }
-    
+        val dimensions = LocalDimensions.current
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
@@ -110,7 +111,8 @@ fun HomeDashboardScreen(
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
+                    containerColor = MaterialTheme.colorScheme.background,
+                    scrolledContainerColor = MaterialTheme.colorScheme.background
                 )
             )
         }
@@ -141,11 +143,10 @@ fun HomeDashboardScreen(
                 enter = fadeIn(),
                 exit = fadeOut()
             ) {
-                val dimensions = LocalDimensions.current
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(dimensions.paddingM),
-                    verticalArrangement = Arrangement.spacedBy(dimensions.spacingM)
+                    contentPadding = PaddingValues(dimensions.paddingL),
+                    verticalArrangement = Arrangement.spacedBy(dimensions.spacingL)
                 ) {
                     // Error Display
                     if (uiState.error != null) {
@@ -213,7 +214,7 @@ fun HomeDashboardScreen(
                     
                     // Bottom spacing
                     item {
-                        Spacer(modifier = Modifier.height(32.dp))
+                        Spacer(modifier = Modifier.height(dimensions.paddingXXL))
                     }
                 }
             }

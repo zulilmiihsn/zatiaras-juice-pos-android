@@ -53,6 +53,7 @@ class InventoryRemoteDataSource @Inject constructor(
      * Fetch all products from Supabase (full sync).
      * No delta filter to avoid timestamp type mismatch issues.
      */
+    @Suppress("UNUSED_PARAMETER")
     suspend fun fetchProducts(lastSyncTimestamp: Long = 0): Result<List<ProductEntity>> = withContext(Dispatchers.IO) {
         try {
             val response = postgrest.from(TABLE_PRODUK)

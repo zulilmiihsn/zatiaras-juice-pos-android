@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
@@ -30,6 +29,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.zatiaras.pos.core.domain.model.AddOn
 import com.zatiaras.pos.core.domain.model.ProductType
+import com.zatiaras.pos.core.ui.theme.AppShapes
 import com.zatiaras.pos.core.ui.components.CurrencyTextField
 import com.zatiaras.pos.core.ui.components.ZatDialog
 import kotlinx.coroutines.delay
@@ -64,9 +64,9 @@ fun ProductTypeSelector(
                     modifier = Modifier
                         .weight(1f)
                         .height(48.dp)
-                        .clip(RoundedCornerShape(12.dp))
+                        .clip(AppShapes.M)
                         .background(containerColor)
-                        .border(1.dp, borderColor, RoundedCornerShape(12.dp))
+                        .border(1.dp, borderColor, AppShapes.M)
                         .clickable { onTypeSelected(type) },
                     contentAlignment = Alignment.Center
                 ) {
@@ -201,12 +201,17 @@ fun AddNewAddOnDialog(
         }
         
         Card(
-            modifier = Modifier.fillMaxWidth(0.92f),
-            shape = RoundedCornerShape(24.dp),
+            modifier = Modifier.fillMaxWidth(0.92f)
+                .border(
+                    1.dp,
+                    MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                    AppShapes.XXL
+                ),
+            shape = AppShapes.XXL,
             colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surface
+                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
             ),
-            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
             Column(
                 modifier = Modifier.padding(24.dp),
@@ -229,7 +234,7 @@ fun AddNewAddOnDialog(
                     isError = nameError != null,
                     supportingText = nameError?.let { { Text(it) } },
                     singleLine = true,
-                    shape = RoundedCornerShape(12.dp),
+                    shape = AppShapes.M,
                     modifier = Modifier.fillMaxWidth()
                 )
                 
@@ -244,7 +249,7 @@ fun AddNewAddOnDialog(
                     supportingText = priceError?.let { { Text(it) } },
                     showPrefix = true,
                     singleLine = true,
-                    shape = RoundedCornerShape(12.dp),
+                    shape = AppShapes.M,
                     modifier = Modifier.fillMaxWidth()
                 )
                 
@@ -255,14 +260,14 @@ fun AddNewAddOnDialog(
                     OutlinedButton(
                         onClick = dismiss,
                         modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = AppShapes.M
                     ) {
                         Text(stringResource(R.string.inventory_action_cancel))
                     }
                     Button(
                         onClick = { validateAndSubmit() },
                         modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = AppShapes.M
                     ) {
                         Text(stringResource(R.string.inventory_action_save))
                     }

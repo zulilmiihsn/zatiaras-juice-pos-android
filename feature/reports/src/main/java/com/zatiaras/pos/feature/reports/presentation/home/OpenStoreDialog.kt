@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.LockOpen
 import androidx.compose.material3.Button
@@ -43,9 +42,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.zatiaras.pos.core.ui.components.CurrencyTextField
 import com.zatiaras.pos.core.ui.components.ZatDialog
+import com.zatiaras.pos.core.ui.theme.AppShapes
 import com.zatiaras.pos.core.ui.theme.SuccessGreen
 import com.zatiaras.pos.core.ui.theme.SuccessGreenLight
 import com.zatiaras.pos.core.ui.util.CurrencyFormatter
+import androidx.compose.foundation.border
 
 @Composable
 internal fun OpenStoreDialog(
@@ -64,12 +65,14 @@ internal fun OpenStoreDialog(
             contentAlignment = Alignment.Center
         ) {
             Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(28.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f), AppShapes.XXL),
+                shape = AppShapes.XXL,
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surface
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
                 ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
             ) {
                 Column(
                     modifier = Modifier.padding(24.dp),
@@ -93,7 +96,7 @@ internal fun OpenStoreDialog(
                         Icon(
                             imageVector = Icons.Outlined.LockOpen,
                             contentDescription = null,
-                            tint = Color.White,
+                            tint = MaterialTheme.colorScheme.onPrimary,
                             modifier = Modifier.size(40.dp)
                         )
                     }
@@ -198,7 +201,7 @@ internal fun OpenStoreDialog(
                         label = { Text(stringResource(R.string.store_open_custom_amount)) },
                         showPrefix = true,
                         singleLine = true,
-                        shape = RoundedCornerShape(16.dp),
+                        shape = AppShapes.L,
                         modifier = Modifier.fillMaxWidth(),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = MaterialTheme.colorScheme.primary,
@@ -213,7 +216,7 @@ internal fun OpenStoreDialog(
                             colors = CardDefaults.cardColors(
                                 containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
                             ),
-                            shape = RoundedCornerShape(12.dp)
+                            shape = AppShapes.M
                         ) {
                             Row(
                                 modifier = Modifier
@@ -247,7 +250,7 @@ internal fun OpenStoreDialog(
                         OutlinedButton(
                             onClick = dismiss,
                             modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(16.dp),
+                            shape = AppShapes.L,
                             contentPadding = PaddingValues(vertical = 16.dp)
                         ) {
                             Text(stringResource(R.string.reports_cancel))
@@ -258,7 +261,7 @@ internal fun OpenStoreDialog(
                                 dismiss()
                             },
                             modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(16.dp),
+                            shape = AppShapes.L,
                             contentPadding = PaddingValues(vertical = 16.dp),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = SuccessGreen
@@ -289,7 +292,7 @@ internal fun AmountChip(
     Card(
         onClick = onClick,
         modifier = modifier,
-        shape = RoundedCornerShape(12.dp),
+        shape = AppShapes.M,
         colors = CardDefaults.cardColors(
             containerColor = if (isSelected) 
                 MaterialTheme.colorScheme.primary 

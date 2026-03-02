@@ -1,67 +1,45 @@
 package com.zatiaras.pos.feature.pos.presentation.receipt
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Print
-import androidx.compose.material.icons.filled.PrintDisabled
 import androidx.compose.material.icons.filled.Receipt
-import androidx.compose.material.icons.filled.ShoppingCart
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material.icons.filled.Store
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.zatiaras.pos.feature.pos.domain.model.PaymentMethod
+import com.zatiaras.pos.core.ui.theme.AppShapes
+import com.zatiaras.pos.core.ui.theme.Slate50
+import com.zatiaras.pos.core.ui.theme.Brand500
+import com.zatiaras.pos.core.ui.theme.ErrorRed
+import com.zatiaras.pos.core.ui.theme.Slate200
+import com.zatiaras.pos.core.ui.theme.Slate400
+import com.zatiaras.pos.core.ui.theme.Slate500
+import com.zatiaras.pos.core.ui.theme.Slate700
+import com.zatiaras.pos.core.ui.theme.Slate900
+import com.zatiaras.pos.core.ui.util.CurrencyFormatter
 import com.zatiaras.pos.feature.pos.domain.model.Transaction
 import com.zatiaras.pos.feature.pos.domain.model.TransactionItem
-import com.zatiaras.pos.core.ui.util.CurrencyFormatter
-import com.zatiaras.pos.core.domain.util.LocaleUtils
-import com.zatiaras.pos.feature.pos.R
-import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import com.zatiaras.pos.core.ui.theme.LocalDimensions
 
-/**
- * Receipt Preview Screen shown after successful transaction.
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReceiptScreen(
@@ -74,389 +52,343 @@ fun ReceiptScreen(
     printerName: String? = null,
     modifier: Modifier = Modifier
 ) {
-    val priceFormatter = CurrencyFormatter.getCurrencyFormatter()
-    val dateFormatter = SimpleDateFormat("dd MMM yyyy, HH:mm", LocaleUtils.LOCALE_ID)
-    
+    val dateFormatter = SimpleDateFormat("dd MMM yyyy, HH:mm", Locale("id", "ID"))
+
     Scaffold(
         modifier = modifier,
+        containerColor = Slate50,
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        text = stringResource(R.string.pos_receipt_detail_title),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
+                        text = "Receipt Detail",
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = Brand500
+                        )
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.pos_back)
+                            contentDescription = "Back",
+                            tint = Brand500
                         )
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
+                    containerColor = MaterialTheme.colorScheme.surface
                 )
             )
         }
     ) { paddingValues ->
-        val dimensions = LocalDimensions.current
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues),
-            contentPadding = PaddingValues(dimensions.paddingM),
-            verticalArrangement = Arrangement.spacedBy(dimensions.spacingM)
+                .padding(paddingValues)
+                .padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Success Header
             item {
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.padding(top = 8.dp)
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(80.dp)
-                            .background(
-                                color = MaterialTheme.colorScheme.primaryContainer,
-                                shape = RoundedCornerShape(50)
-                            ),
+                            .size(72.dp)
+                            .clip(CircleShape)
+                            .background(Brand500),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = Icons.Default.CheckCircle,
+                            imageVector = Icons.Default.Check,
                             contentDescription = null,
-                            modifier = Modifier.size(48.dp),
-                            tint = MaterialTheme.colorScheme.primary
+                            modifier = Modifier.size(40.dp),
+                            tint = MaterialTheme.colorScheme.onPrimary
                         )
                     }
-                    
                     Spacer(modifier = Modifier.height(16.dp))
-                    
                     Text(
-                        text = stringResource(R.string.checkout_success),
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold
+                        text = "Transaction Successful",
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = Brand500
+                        )
                     )
-                    
                     Text(
                         text = transaction.transactionNumber,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            color = Slate500
+                        )
                     )
                 }
             }
-            
-            // Receipt Card
+
+            // Receipt Paper Effect
             item {
                 Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surface
-                    ),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)),
+                    shape = AppShapes.L,
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Column(
-                        modifier = Modifier.padding(dimensions.paddingM)
-                    ) {
-                        // Store Header (placeholder)
+                    Column(modifier = Modifier.padding(24.dp)) {
+                        // Store Info
                         Column(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalAlignment = Alignment.CenterHorizontally
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text(
-                                text = stringResource(R.string.pos_receipt_store_name_default),
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text(
-                                text = dateFormatter.format(Date(transaction.createdAt)),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                        
-                        Spacer(modifier = Modifier.height(16.dp))
-                        DashedDivider()
-                        Spacer(modifier = Modifier.height(16.dp))
-                        
-                        // Items List
-                        transaction.items.forEach { item ->
-                            ReceiptItemRow(
-                                item = item,
-                                priceFormatter = priceFormatter
+                            Icon(
+                                imageVector = Icons.Default.Store,
+                                contentDescription = null,
+                                tint = Brand500,
+                                modifier = Modifier.size(24.dp)
                             )
                             Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                "Zatiara Assets",
+                                style = MaterialTheme.typography.titleLarge.copy(
+                                    fontWeight = FontWeight.Black,
+                                    color = Slate900
+                                )
+                            )
+                            Text(
+                                "Jalan Raya Hankam No. 12",
+                                style = MaterialTheme.typography.bodySmall.copy(color = Slate500),
+                                textAlign = TextAlign.Center
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                dateFormatter.format(Date(transaction.createdAt)),
+                                style = MaterialTheme.typography.bodySmall.copy(color = Slate500)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(24.dp))
+                        GenerateDashedDivider()
+                        Spacer(modifier = Modifier.height(24.dp))
+
+                        // Items
+                        transaction.items.forEach { item ->
+                            ReceiptItemRow(item)
+                            Spacer(modifier = Modifier.height(12.dp))
+                        }
+
+                        Spacer(modifier = Modifier.height(24.dp))
+                        GenerateDashedDivider()
+                        Spacer(modifier = Modifier.height(24.dp))
+
+                        // Totals
+                        ReceiptTotalRow("Payment Method", transaction.paymentMethod.displayName)
+                        
+                        if (transaction.customerName != null) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            ReceiptTotalRow("Customer", transaction.customerName)
                         }
                         
                         Spacer(modifier = Modifier.height(8.dp))
-                        DashedDivider()
-                        Spacer(modifier = Modifier.height(16.dp))
-                        
-                        // Totals
-                        ReceiptTotalRow(
-                            label = stringResource(R.string.checkout_subtotal),
-                            value = priceFormatter.format(transaction.subtotal)
-                        )
+                        ReceiptTotalRow("Subtotal", CurrencyFormatter.formatCurrency(transaction.subtotal))
                         
                         if (transaction.discountAmount > 0) {
+                            Spacer(modifier = Modifier.height(8.dp))
                             ReceiptTotalRow(
-                                label = stringResource(R.string.checkout_discount, transaction.discountPercent.toInt()),
-                                value = stringResource(
-                                    R.string.pos_receipt_discount_value,
-                                    priceFormatter.format(transaction.discountAmount)
-                                ),
-                                isDiscount = true
+                                "Discount", 
+                                "- ${CurrencyFormatter.formatCurrency(transaction.discountAmount)}",
+                                valueColor = ErrorRed
                             )
                         }
                         
                         if (transaction.taxAmount > 0) {
-                            ReceiptTotalRow(
-                                label = stringResource(R.string.checkout_tax, transaction.taxPercent.toInt()),
-                                value = priceFormatter.format(transaction.taxAmount)
-                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            ReceiptTotalRow("Tax", CurrencyFormatter.formatCurrency(transaction.taxAmount))
                         }
                         
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(12.dp))
+                        HorizontalDivider(color = Slate50)
+                        Spacer(modifier = Modifier.height(12.dp))
                         
                         ReceiptTotalRow(
-                            label = stringResource(R.string.pos_receipt_total_upper),
-                            value = priceFormatter.format(transaction.grandTotal),
-                            isBold = true,
-                            isPrimary = true
+                            "Total", 
+                            CurrencyFormatter.formatCurrency(transaction.grandTotal),
+                            isTotal = true
                         )
-                        
-                        Spacer(modifier = Modifier.height(16.dp))
-                        DashedDivider()
-                        Spacer(modifier = Modifier.height(16.dp))
-                        
-                        // Payment Info
-                        ReceiptTotalRow(
-                            label = stringResource(R.string.checkout_payment_method),
-                            value = transaction.paymentMethod.displayName
-                        )
-                        
-                        ReceiptTotalRow(
-                            label = stringResource(R.string.pos_receipt_paid),
-                            value = priceFormatter.format(transaction.amountPaid)
-                        )
-                        
-                        if (transaction.paymentMethod == PaymentMethod.CASH && transaction.changeAmount > 0) {
-                            ReceiptTotalRow(
-                                label = stringResource(R.string.checkout_change),
-                                value = priceFormatter.format(transaction.changeAmount),
-                                isPrimary = true
-                            )
-                        }
-                        
-                        // Customer Name
-                        if (!transaction.customerName.isNullOrBlank()) {
-                            Spacer(modifier = Modifier.height(16.dp))
-                            DashedDivider()
-                            Spacer(modifier = Modifier.height(16.dp))
-                            
-                            Text(
-                                text = stringResource(R.string.pos_receipt_customer),
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Text(
-                                text = transaction.customerName,
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-
-                        // Notes
-                        if (!transaction.notes.isNullOrBlank()) {
-                            if (transaction.customerName.isNullOrBlank()) {
-                                Spacer(modifier = Modifier.height(16.dp))
-                                DashedDivider()
-                            }
-                            Spacer(modifier = Modifier.height(16.dp))
-                            
-                            Text(
-                                text = stringResource(R.string.pos_receipt_notes),
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Text(
-                                text = transaction.notes,
-                                style = MaterialTheme.typography.bodyMedium
-                            )
-                        }
-                        
-                        Spacer(modifier = Modifier.height(24.dp))
-                        
-                        // Footer
-                        Column(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Text(
-                                text = stringResource(R.string.pos_receipt_thanks),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                textAlign = TextAlign.Center
-                            )
-                        }
                     }
                 }
             }
             
-            // Action Buttons
-            item {
-                // Printer Status Indicator
-                if (isPrinterConnected && printerName != null) {
+            // Printer Status if connected
+            if (isPrinterConnected) {
+                item {
                     Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(bottom = 8.dp),
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
+                            .padding(horizontal = 16.dp)
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .size(8.dp)
-                                .background(Color(0xFF4CAF50), RoundedCornerShape(4.dp))
+                        Icon(
+                            imageVector = Icons.Default.Print,
+                            contentDescription = null,
+                            tint = Slate500,
+                            modifier = Modifier.size(16.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = stringResource(R.string.pos_receipt_printer, printerName),
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            text = "Connected to ${printerName ?: "Printer"}",
+                            style = MaterialTheme.typography.bodySmall.copy(color = Slate500)
                         )
                     }
                 }
-                
-                Row(
+            }
+
+            // Action Buttons
+            item {
+                Column(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(dimensions.spacingS)
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    OutlinedButton(
+                    Button(
                         onClick = onPrintReceipt,
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp),
+                        shape = AppShapes.L,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Brand500
+                        ),
                         enabled = !isPrinting
                     ) {
                         if (isPrinting) {
                             CircularProgressIndicator(
-                                modifier = Modifier.size(20.dp),
+                                modifier = Modifier.size(24.dp),
+                                color = MaterialTheme.colorScheme.onPrimary,
                                 strokeWidth = 2.dp
                             )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Printing...", fontWeight = FontWeight.Bold)
                         } else {
-                            Icon(
-                                imageVector = if (isPrinterConnected) Icons.Default.Print else Icons.Default.PrintDisabled,
-                                contentDescription = null,
-                                modifier = Modifier.size(20.dp)
-                            )
+                            Icon(Icons.Default.Print, contentDescription = null)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Print Receipt", fontWeight = FontWeight.Bold)
                         }
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            if (isPrinting) stringResource(R.string.pos_receipt_printing)
-                            else if (isPrinterConnected) stringResource(R.string.checkout_print_receipt)
-                            else stringResource(R.string.pos_receipt_setup_printer)
-                        )
                     }
-                    
-                    Button(
+
+                    OutlinedButton(
                         onClick = onNewTransaction,
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary
-                        )
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp),
+                        shape = AppShapes.L,
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = Brand500
+                        ),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Brand500)
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.ShoppingCart,
-                            contentDescription = null,
-                            modifier = Modifier.size(20.dp)
-                        )
+                        Icon(Icons.Default.Receipt, contentDescription = null)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(stringResource(R.string.checkout_new_transaction))
+                        Text("New Transaction", fontWeight = FontWeight.Bold)
                     }
                 }
             }
             
-            // Bottom spacing
+             // Bottom Spacer
             item {
-                Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(24.dp))
             }
         }
     }
 }
 
 @Composable
-private fun ReceiptItemRow(
-    item: TransactionItem,
-    priceFormatter: NumberFormat
-) {
+fun ReceiptItemRow(item: TransactionItem) {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.Top
     ) {
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = item.productName,
-                style = MaterialTheme.typography.bodyMedium
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontWeight = FontWeight.Medium,
+                    color = Slate900
+                )
             )
-            Text(
-                text = stringResource(
-                    R.string.pos_receipt_item_qty_price,
-                    item.quantity,
-                    priceFormatter.format(item.productPrice)
-                ),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            if (item.quantity > 1) {
+                Text(
+                    text = "${item.quantity}x @ ${CurrencyFormatter.formatCurrency(item.productPrice)}",
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        color = Slate500
+                    )
+                )
+            }
+            if (!item.notes.isNullOrBlank()) {
+                Text(
+                   text = "Note: ${item.notes}",
+                   style = MaterialTheme.typography.labelSmall.copy(
+                       color = Slate500,
+                       fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
+                   )
+                )
+            }
         }
         Text(
-            text = priceFormatter.format(item.subtotal),
-            style = MaterialTheme.typography.bodyMedium
+            text = CurrencyFormatter.formatCurrency(item.subtotal),
+            style = MaterialTheme.typography.bodyMedium.copy(
+                fontWeight = FontWeight.SemiBold,
+                color = Slate900
+            )
         )
     }
 }
 
 @Composable
-private fun ReceiptTotalRow(
-    label: String,
-    value: String,
-    isBold: Boolean = false,
-    isPrimary: Boolean = false,
-    isDiscount: Boolean = false
+fun ReceiptTotalRow(
+    label: String, 
+    value: String, 
+    isTotal: Boolean = false,
+    valueColor: Color? = null
 ) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 2.dp),
+        modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(
             text = label,
-            style = if (isBold) MaterialTheme.typography.titleMedium else MaterialTheme.typography.bodyMedium,
-            fontWeight = if (isBold) FontWeight.Bold else FontWeight.Normal
+            style = if (isTotal) MaterialTheme.typography.titleMedium else MaterialTheme.typography.bodyMedium,
+            fontWeight = if (isTotal) FontWeight.Bold else FontWeight.Normal,
+            color = if (isTotal) Slate900 else Slate500
         )
         Text(
             text = value,
-            style = if (isBold) MaterialTheme.typography.titleMedium else MaterialTheme.typography.bodyMedium,
-            fontWeight = if (isBold) FontWeight.Bold else FontWeight.Normal,
-            color = when {
-                isDiscount -> MaterialTheme.colorScheme.error
-                isPrimary -> MaterialTheme.colorScheme.primary
-                else -> MaterialTheme.colorScheme.onSurface
-            }
+            style = if (isTotal) MaterialTheme.typography.titleMedium else MaterialTheme.typography.bodyMedium,
+            fontWeight = if (isTotal) FontWeight.Bold else FontWeight.Medium,
+            color = valueColor ?: (if (isTotal) Brand500 else Slate900)
         )
     }
 }
 
 @Composable
-private fun DashedDivider() {
-    HorizontalDivider(
-        modifier = Modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.outlineVariant
-    )
+fun GenerateDashedDivider(
+    color: Color = Slate200,
+    thickness: Dp = 1.dp,
+    interval: Float = 10f
+) {
+    Canvas(modifier = Modifier
+        .fillMaxWidth()
+        .height(thickness)
+    ) {
+        drawLine(
+            color = color,
+            start = Offset(0f, 0f),
+            end = Offset(size.width, 0f),
+            pathEffect = PathEffect.dashPathEffect(floatArrayOf(interval, interval), 0f),
+            strokeWidth = thickness.toPx()
+        )
+    }
 }
+

@@ -5,14 +5,26 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
-import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Rect
 import android.graphics.pdf.PdfDocument
 import android.net.Uri
 import android.provider.MediaStore
+import androidx.compose.ui.graphics.toArgb
 import androidx.core.content.FileProvider
 import com.zatiaras.pos.core.domain.util.LocaleUtils
+import com.zatiaras.pos.core.ui.theme.Brand50
+import com.zatiaras.pos.core.ui.theme.Brand500
+import com.zatiaras.pos.core.ui.theme.Brand600
+import com.zatiaras.pos.core.ui.theme.ErrorRed
+import com.zatiaras.pos.core.ui.theme.ErrorRedDark
+import com.zatiaras.pos.core.ui.theme.Slate200
+import com.zatiaras.pos.core.ui.theme.Slate400
+import com.zatiaras.pos.core.ui.theme.Slate600
+import com.zatiaras.pos.core.ui.theme.Slate900
+import com.zatiaras.pos.core.ui.theme.SuccessGreen
+import com.zatiaras.pos.core.ui.theme.SuccessGreenDark
+import com.zatiaras.pos.core.ui.theme.SuccessGreenLight
 import com.zatiaras.pos.core.ui.util.CurrencyFormatter
 import com.zatiaras.pos.feature.reports.domain.model.ProfitLossReport
 import timber.log.Timber
@@ -37,47 +49,47 @@ class PdfExportService @Inject constructor() {
     private val lineHeight = 24f
     
     private val titlePaint = Paint().apply {
-        color = Color.BLACK
+        color = Slate900.toArgb()
         textSize = 24f
         isFakeBoldText = true
     }
     
     private val headerPaint = Paint().apply {
-        color = Color.rgb(102, 126, 234) // Primary Blue
+        color = Brand500.toArgb()
         textSize = 14f
         isFakeBoldText = true
     }
     
     private val expenseHeaderPaint = Paint().apply {
-        color = Color.rgb(239, 68, 68) // ErrorRed
+        color = ErrorRed.toArgb()
         textSize = 14f
         isFakeBoldText = true
     }
     
     private val incomeHeaderPaint = Paint().apply {
-        color = Color.rgb(16, 185, 129) // SuccessGreen
+        color = SuccessGreen.toArgb()
         textSize = 14f
         isFakeBoldText = true
     }
     
     private val labelPaint = Paint().apply {
-        color = Color.DKGRAY
+        color = Slate600.toArgb()
         textSize = 12f
     }
     
     private val valuePaint = Paint().apply {
-        color = Color.BLACK
+        color = Slate900.toArgb()
         textSize = 12f
     }
     
     private val totalPaint = Paint().apply {
-        color = Color.BLACK
+        color = Slate900.toArgb()
         textSize = 14f
         isFakeBoldText = true
     }
     
     private val negativePaint = Paint().apply {
-        color = Color.rgb(239, 68, 68) // ErrorRed
+        color = ErrorRed.toArgb()
         textSize = 12f
     }
     
@@ -184,199 +196,182 @@ class PdfExportService @Inject constructor() {
     
     private fun drawPage(context: Context, document: PdfDocument, canvas: Canvas, report: ProfitLossReport, periodName: String, storeLogoUri: String?) {
         var currentCanvas = canvas
-        
-        // Brand Pink color reference
-        val brandPink = Color.rgb(236, 72, 153) // Brand500
-        val brandPinkDark = Color.rgb(219, 39, 119) // Brand600
-        
-        // --- 1. Top Pink Accent Stripe ---
+
+        val brandPink = Brand500.toArgb()
+        val brandPinkDark = Brand600.toArgb()
+
         val accentPaint = Paint().apply {
             color = brandPink
             style = Paint.Style.FILL
         }
         currentCanvas.drawRect(0f, 0f, pageWidth.toFloat(), 12f, accentPaint)
-        
-        // --- 2. Title Area ---
+
         var yPos = margin + 50f
-        
-        // Title text in bold black
+
         val titleBlackPaint = Paint().apply {
-            color = Color.BLACK
+            color = Slate900.toArgb()
             textSize = 26f
             isFakeBoldText = true
         }
         currentCanvas.drawText("LAPORAN LABA RUGI", margin, yPos, titleBlackPaint)
-        
-        // Try drawing the store logo on the right
-        var logoDrawn = false
+
         if (!storeLogoUri.isNullOrEmpty()) {
             try {
                 val uri = Uri.parse(storeLogoUri)
                 val isContentUri = uri.scheme == "content" || uri.scheme == "file"
-                
+
                 val bitmap: Bitmap? = if (isContentUri) {
                     val stream = context.contentResolver.openInputStream(uri)
                     BitmapFactory.decodeStream(stream)
                 } else null
-                
+
                 if (bitmap != null) {
                     val targetHeight = 50f
                     val aspectRatio = bitmap.width.toFloat() / bitmap.height.toFloat()
                     val targetWidth = targetHeight * aspectRatio
-                    
+
                     val destRect = Rect(
                         (pageWidth - margin - targetWidth).toInt(),
                         (yPos - 35f).toInt(),
                         (pageWidth - margin).toInt(),
                         (yPos + 15f).toInt()
                     )
-                    
-                    val paint = Paint()
-                    paint.isAntiAlias = true
-                    paint.isFilterBitmap = true
-                    
-                    currentCanvas.drawBitmap(bitmap, null, destRect, paint)
-                    logoDrawn = true
+
+                    val bitmapPaint = Paint().apply {
+                        isAntiAlias = true
+                        isFilterBitmap = true
+                    }
+
+                    currentCanvas.drawBitmap(bitmap, null, destRect, bitmapPaint)
                     bitmap.recycle()
                 }
             } catch (e: Exception) {
                 Timber.w(e, "Gagal meload storeLogoUri untuk PDF export: $storeLogoUri")
             }
         }
-        
-        // --- 3. Pink divider line under the title ---
+
         yPos += 18f
         val pinkLinePaint = Paint().apply {
             color = brandPinkDark
             strokeWidth = 2.5f
         }
         currentCanvas.drawLine(margin, yPos, pageWidth - margin, yPos, pinkLinePaint)
-        
-        // Setup spacing for the subtitle
+
         yPos += 28f
-        
-        // Subtitle - Period
+
         labelPaint.textSize = 12f
         currentCanvas.drawText("Periode: $periodName", margin, yPos, labelPaint)
         yPos += lineHeight * 1.2f
-        
-        // Generated date
+
         currentCanvas.drawText("Dibuat: ${dateFormat.format(Date())}", margin, yPos, labelPaint)
         yPos += lineHeight * 1.2f
-        
-        // Transaction count
+
         currentCanvas.drawText("Jumlah Transaksi: ${report.transactionCount}", margin, yPos, labelPaint)
         yPos += lineHeight * 2f
-        
-        // Divider line
+
         val linePaint = Paint().apply {
-            color = Color.rgb(226, 232, 240) // Slate200 (Subtle gray)
+            color = Slate200.toArgb()
             strokeWidth = 2f
         }
         currentCanvas.drawLine(margin, yPos, pageWidth - margin, yPos, linePaint)
         yPos += lineHeight
-        
-        // === PENDAPATAN SECTION ===
+
         val (canvas1, yPos1) = checkAndStartNewPage(document, yPos)
         currentCanvas = canvas1
         yPos = yPos1
-        
+
         currentCanvas.drawText("PENDAPATAN", margin, yPos, incomeHeaderPaint)
         yPos += lineHeight * 1.2f
-        
-        val result2 = drawLineItemWithPagination(document, currentCanvas, "Pendapatan Operasional", report.operatingRevenue, yPos, false)
+
+        val result2 = drawLineItemWithPagination(document, "Pendapatan Operasional", report.operatingRevenue, yPos, false)
         currentCanvas = result2.first
         yPos = result2.second
-        
-        val result3 = drawLineItemWithPagination(document, currentCanvas, "Pendapatan Lainnya", report.otherRevenue, yPos, false)
+
+        val result3 = drawLineItemWithPagination(document, "Pendapatan Lainnya", report.otherRevenue, yPos, false)
         currentCanvas = result3.first
         yPos = result3.second
-        
+
         yPos += lineHeight * 0.5f
         currentCanvas.drawLine(margin, yPos, pageWidth - margin, yPos, linePaint)
         yPos += lineHeight
-        
-        val result4 = drawLineItemWithPagination(document, currentCanvas, "Total Pendapatan", report.grossRevenue, yPos, false, true)
-        currentCanvas = result4.first
+
+        val result4 = drawLineItemWithPagination(document, "Total Pendapatan", report.grossRevenue, yPos, false, true)
         yPos = result4.second
         yPos += lineHeight
-        
-        // === BEBAN SECTION ===
+
         val (canvas5, yPos5) = checkAndStartNewPage(document, yPos)
         currentCanvas = canvas5
         yPos = yPos5
-        
+
         currentCanvas.drawText("BEBAN", margin, yPos, expenseHeaderPaint)
         yPos += lineHeight * 1.2f
-        
-        val result6 = drawLineItemWithPagination(document, currentCanvas, "Beban Operasional", -report.operatingExpenses, yPos, true)
+
+        val result6 = drawLineItemWithPagination(document, "Beban Operasional", -report.operatingExpenses, yPos, true)
         currentCanvas = result6.first
         yPos = result6.second
-        
-        val result7 = drawLineItemWithPagination(document, currentCanvas, "Beban Lainnya", -report.otherExpenses, yPos, true)
+
+        val result7 = drawLineItemWithPagination(document, "Beban Lainnya", -report.otherExpenses, yPos, true)
         currentCanvas = result7.first
         yPos = result7.second
-        
+
         yPos += lineHeight * 0.5f
         currentCanvas.drawLine(margin, yPos, pageWidth - margin, yPos, linePaint)
         yPos += lineHeight
-        
-        val result8 = drawLineItemWithPagination(document, currentCanvas, "Total Beban", -report.totalExpenses, yPos, true, true)
-        currentCanvas = result8.first
+
+        val result8 = drawLineItemWithPagination(document, "Total Beban", -report.totalExpenses, yPos, true, true)
         yPos = result8.second
         yPos += lineHeight
-        
-        // === LABA SECTION ===
+
         val (canvas9, yPos9) = checkAndStartNewPage(document, yPos)
         currentCanvas = canvas9
         yPos = yPos9
-        
+
         currentCanvas.drawText("RINGKASAN LABA", margin, yPos, headerPaint)
-        yPos += lineHeight        // Profit/Tax
-        yPos -= 10f
-        val result10 = drawLineItemWithPagination(document, currentCanvas, "Laba Kotor", report.grossProfit, yPos, true)
-        currentCanvas = result10.first; yPos = result10.second
-        
-        val result11 = drawLineItemWithPagination(document, currentCanvas, "Pajak (${report.taxPercentage}%)", -report.tax, yPos, true)
-        currentCanvas = result11.first; yPos = result11.second
-        
         yPos += lineHeight
-        
-        // Ensure there's space for the profit box
+        yPos -= 10f
+
+        val result10 = drawLineItemWithPagination(document, "Laba Kotor", report.grossProfit, yPos, true)
+        currentCanvas = result10.first
+        yPos = result10.second
+
+        val result11 = drawLineItemWithPagination(document, "Pajak (${report.taxPercentage}%)", -report.tax, yPos, true)
+        yPos = result11.second
+
+        yPos += lineHeight
+
         val (canvasFinal, yPosFinal) = checkAndStartNewPage(document, yPos + 70f)
         currentCanvas = canvasFinal
         yPos = yPosFinal
-        
-        // Draw net profit box
+
         val isProfit = report.netProfit >= 0
-        // Profit green = 16, 185, 129, Loss red = Brand50 background / ErrorRed Foreground
         val boxPaint = Paint().apply {
-            color = if (isProfit) Color.rgb(209, 250, 229) else Color.rgb(253, 242, 248) 
+            color = if (isProfit) SuccessGreenLight.copy(alpha = 0.22f).toArgb() else Brand50.toArgb()
             style = Paint.Style.FILL
         }
-        // Make the rect slightly taller and rounded
         currentCanvas.drawRoundRect(
-            margin, yPos - 25f, 
-            pageWidth - margin, yPos + 35f, 
-            8f, 8f, 
+            margin,
+            yPos - 25f,
+            pageWidth - margin,
+            yPos + 35f,
+            8f,
+            8f,
             boxPaint
         )
-        
+
         val profitPaint = Paint().apply {
-            color = if (isProfit) Color.rgb(5, 150, 105) else Color.rgb(225, 29, 72)
+            color = if (isProfit) SuccessGreenDark.toArgb() else ErrorRedDark.toArgb()
             textSize = 16f
             isFakeBoldText = true
         }
-        
+
         currentCanvas.drawText(if (isProfit) "Laba Bersih" else "Rugi Bersih", margin + 15f, yPos + 12f, profitPaint)
         val profitValue = currencyFormat.format(report.netProfit)
         val profitWidth = profitPaint.measureText(profitValue)
         currentCanvas.drawText(profitValue, pageWidth - margin - 15f - profitWidth, yPos + 12f, profitPaint)
-        
-        // Footer (Bottom center of last page)
+
         val footerY = pageHeight - margin
         val footerPaint = Paint().apply {
-            color = Color.rgb(148, 163, 184) // Slate400
+            color = Slate400.toArgb()
             textSize = 11f
             textAlign = Paint.Align.CENTER
         }
@@ -388,7 +383,6 @@ class PdfExportService @Inject constructor() {
      */
     private fun drawLineItemWithPagination(
         document: PdfDocument,
-        canvas: Canvas,
         label: String,
         amount: Long,
         yPos: Float,

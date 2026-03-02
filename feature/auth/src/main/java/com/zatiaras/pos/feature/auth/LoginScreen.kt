@@ -2,6 +2,7 @@ package com.zatiaras.pos.feature.auth
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -16,7 +17,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CloudDone
@@ -69,17 +69,28 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.zatiaras.pos.core.ui.theme.AppShapes
+import com.zatiaras.pos.core.ui.theme.Brand100
+import com.zatiaras.pos.core.ui.theme.Brand200
+import com.zatiaras.pos.core.ui.theme.Brand50
+import com.zatiaras.pos.core.ui.theme.Brand500
+import com.zatiaras.pos.core.ui.theme.Brand600
 import com.zatiaras.pos.core.ui.theme.LocalDimensions
+import com.zatiaras.pos.core.ui.theme.Slate50
+import com.zatiaras.pos.core.ui.theme.Slate200
+import com.zatiaras.pos.core.ui.theme.SuccessGreen
+import com.zatiaras.pos.core.ui.theme.WarningAmber
 import com.zatiaras.pos.core.ui.util.CurrencyFormatter
 import com.zatiaras.pos.feature.auth.R
 import com.zatiaras.pos.core.ui.R as CoreUiR
 
 // Brand colors
-private val PrimaryPink = Color(0xFFEC4899)
-private val DarkPink = Color(0xFFDB2777)
-private val LightPink = Color(0xFFFCE7F3)
-private val SuccessGreen = Color(0xFF10B981)
-private val WarningOrange = Color(0xFFF59E0B)
+private val PrimaryPink = Brand500
+private val DarkPink = Brand600
+private val LightPink = Slate50
+private val SurfacePink = androidx.compose.ui.graphics.Color.White
+private val InputBackground = Slate50
+private val WarningOrange = WarningAmber
 
 @Composable
 fun LoginRoute(
@@ -125,6 +136,7 @@ fun LoginScreen(
     onResyncClick: () -> Unit = {},
     snackbarHostState: SnackbarHostState
 ) {
+    val dimensions = LocalDimensions.current
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
@@ -139,6 +151,7 @@ fun LoginScreen(
     )
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         snackbarHost = { com.zatiaras.pos.core.ui.components.ZatSnackbarHost(snackbarHostState) }
     ) { padding ->
         Box(
@@ -147,9 +160,9 @@ fun LoginScreen(
                 .background(
                     brush = Brush.verticalGradient(
                         colors = listOf(
-                            LightPink.copy(alpha = 0.3f),
-                            MaterialTheme.colorScheme.background,
-                            MaterialTheme.colorScheme.background
+                            LightPink,
+                            SurfacePink,
+                            MaterialTheme.colorScheme.surface
                         )
                     )
                 )
@@ -158,14 +171,14 @@ fun LoginScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 24.dp),
+                    .padding(horizontal = dimensions.paddingXL),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // Logo with glow effect
                 Box(
                     modifier = Modifier
-                        .size(140.dp)
+                        .size(dimensions.iconSizeHero + dimensions.paddingXL)
                         .clip(CircleShape)
                         .background(
                             brush = Brush.radialGradient(
@@ -180,11 +193,11 @@ fun LoginScreen(
                     Image(
                         painter = painterResource(id = CoreUiR.drawable.zatiaras_logo),
                         contentDescription = stringResource(R.string.brand_logo_content_desc),
-                        modifier = Modifier.size(120.dp)
+                        modifier = Modifier.size(dimensions.iconSizeHero + dimensions.paddingM)
                     )
                 }
                 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(dimensions.spacingL))
                 
                 // App title with gradient text effect (simulated)
                 Text(
@@ -200,7 +213,7 @@ fun LoginScreen(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(dimensions.spacingM))
                 
                 // Sync Status Badge - Compact and stylish
                 syncStatus?.let { status ->
@@ -211,21 +224,29 @@ fun LoginScreen(
                     )
                 }
                 
-                Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(dimensions.paddingXXL))
 
                 // Login Card with premium feel
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(24.dp),
+                    shape = AppShapes.L,
                     colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surface
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
                     ),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                    border = BorderStroke(1.dp, Slate200),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                 ) {
                     Column(
-                        modifier = Modifier.padding(24.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                        modifier = Modifier.padding(dimensions.paddingXL),
+                        verticalArrangement = Arrangement.spacedBy(dimensions.spacingM)
                     ) {
+                        Text(
+                            text = stringResource(R.string.auth_login_button),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = PrimaryPink
+                        )
+
                         // Branch Selection Dropdown - Enhanced
                         ExposedDropdownMenuBox(
                             expanded = branchExpanded,
@@ -250,9 +271,12 @@ fun LoginScreen(
                                 colors = OutlinedTextFieldDefaults.colors(
                                     focusedBorderColor = PrimaryPink,
                                     focusedLabelColor = PrimaryPink,
-                                    cursorColor = PrimaryPink
+                                    cursorColor = PrimaryPink,
+                                    unfocusedBorderColor = Brand200,
+                                    unfocusedContainerColor = InputBackground,
+                                    focusedContainerColor = MaterialTheme.colorScheme.surface
                                 ),
-                                shape = RoundedCornerShape(16.dp),
+                                shape = AppShapes.M,
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .menuAnchor(MenuAnchorType.PrimaryNotEditable)
@@ -302,9 +326,12 @@ fun LoginScreen(
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = PrimaryPink,
                                 focusedLabelColor = PrimaryPink,
-                                cursorColor = PrimaryPink
+                                cursorColor = PrimaryPink,
+                                unfocusedBorderColor = Brand200,
+                                unfocusedContainerColor = InputBackground,
+                                focusedContainerColor = MaterialTheme.colorScheme.surface
                             ),
-                            shape = RoundedCornerShape(16.dp)
+                            shape = AppShapes.M
                         )
 
                         // Password Field - Enhanced with visibility toggle
@@ -336,14 +363,17 @@ fun LoginScreen(
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = PrimaryPink,
                                 focusedLabelColor = PrimaryPink,
-                                cursorColor = PrimaryPink
+                                cursorColor = PrimaryPink,
+                                unfocusedBorderColor = Brand200,
+                                unfocusedContainerColor = InputBackground,
+                                focusedContainerColor = MaterialTheme.colorScheme.surface
                             ),
-                            shape = RoundedCornerShape(16.dp)
+                            shape = AppShapes.M
                         )
                     }
                 }
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(dimensions.spacingL))
 
                 // Login Button - Premium gradient style
                 when (uiState) {
@@ -352,17 +382,17 @@ fun LoginScreen(
                             onClick = {},
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(56.dp),
-                            shape = RoundedCornerShape(16.dp),
+                                .height(dimensions.buttonHeightLarge),
+                            shape = AppShapes.M,
                             enabled = false,
                             colors = ButtonDefaults.buttonColors(
                                 disabledContainerColor = PrimaryPink.copy(alpha = 0.5f),
-                                disabledContentColor = Color.White
+                                disabledContentColor = MaterialTheme.colorScheme.onPrimary
                             )
                         ) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(24.dp),
-                                color = Color.White,
+                                color = MaterialTheme.colorScheme.onPrimary,
                                 strokeWidth = 2.dp
                             )
                             Spacer(modifier = Modifier.width(12.dp))
@@ -381,13 +411,17 @@ fun LoginScreen(
                             },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(56.dp),
+                                .height(dimensions.buttonHeightLarge),
                             enabled = username.isNotEmpty() && password.isNotEmpty() && selectedBranch != null,
-                            shape = RoundedCornerShape(16.dp),
+                            shape = AppShapes.M,
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = PrimaryPink,
-                                contentColor = Color.White,
+                                contentColor = MaterialTheme.colorScheme.onPrimary,
                                 disabledContainerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
+                            ),
+                            elevation = ButtonDefaults.buttonElevation(
+                                defaultElevation = 0.dp,
+                                pressedElevation = 0.dp
                             )
                         ) {
                             Text(
@@ -399,7 +433,7 @@ fun LoginScreen(
                     }
                 }
                 
-                Spacer(modifier = Modifier.height(48.dp))
+                Spacer(modifier = Modifier.height(dimensions.paddingXXL + dimensions.spacingM))
             }
         }
     }
@@ -414,6 +448,7 @@ private fun SyncStatusBadge(
     isSyncing: Boolean,
     onResyncClick: () -> Unit
 ) {
+    val dimensions = LocalDimensions.current
     val status = statusText.asString()
     val isOffline = status.contains("offline", ignoreCase = true) || 
                     status.contains("koneksi", ignoreCase = true)
@@ -435,12 +470,12 @@ private fun SyncStatusBadge(
     }
     
     Card(
-        shape = RoundedCornerShape(20.dp),
+        shape = AppShapes.XL,
         colors = CardDefaults.cardColors(containerColor = backgroundColor),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+            modifier = Modifier.padding(horizontal = dimensions.paddingM, vertical = dimensions.paddingXS),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
         ) {

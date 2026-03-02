@@ -39,11 +39,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.zatiaras.pos.core.ui.theme.AppShapes
 import com.zatiaras.pos.core.ui.theme.IconColors
+import com.zatiaras.pos.core.ui.theme.LocalDimensions
 import com.zatiaras.pos.core.ui.theme.SuccessGreen
 import com.zatiaras.pos.feature.printer.domain.model.PrinterDevice
 import com.zatiaras.pos.feature.printer.domain.model.PrinterStatus
 import com.zatiaras.pos.feature.printer.R
+import androidx.compose.foundation.border
 
 private val PrinterIconColor = IconColors.Printer
 
@@ -54,23 +57,30 @@ internal fun EnhancedConnectionStatusCard(
     onDisconnect: () -> Unit,
     onPrintTest: () -> Unit
 ) {
+    val dimensions = LocalDimensions.current
     val isConnected = status is PrinterStatus.Connected || 
                       status is PrinterStatus.Printing ||
                       status is PrinterStatus.PrintSuccess
     
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(
+                1.dp,
+                if (isConnected) SuccessGreen.copy(alpha = 0.5f) else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                AppShapes.XL
+            ),
+        shape = AppShapes.XL,
         colors = CardDefaults.cardColors(
             containerColor = if (isConnected) 
-                SuccessGreen.copy(alpha = 0.1f) 
+                SuccessGreen.copy(alpha = 0.05f) 
             else 
-                MaterialTheme.colorScheme.surfaceVariant
+                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = if (isConnected) 4.dp else 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
-            modifier = Modifier.padding(20.dp)
+            modifier = Modifier.padding(dimensions.paddingL)
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically
@@ -79,7 +89,7 @@ internal fun EnhancedConnectionStatusCard(
                 Box(
                     modifier = Modifier
                         .size(56.dp)
-                        .clip(RoundedCornerShape(16.dp))
+                        .clip(AppShapes.L)
                         .background(
                             if (isConnected) SuccessGreen.copy(alpha = 0.2f)
                             else MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
@@ -98,7 +108,7 @@ internal fun EnhancedConnectionStatusCard(
                     )
                 }
                 
-                Spacer(modifier = Modifier.width(16.dp))
+                Spacer(modifier = Modifier.width(dimensions.spacingM))
                 
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
@@ -124,9 +134,9 @@ internal fun EnhancedConnectionStatusCard(
             }
             
             if (isConnected) {
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(dimensions.spacingL))
                 HorizontalDivider(color = SuccessGreen.copy(alpha = 0.2f))
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(dimensions.spacingM))
                 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -135,7 +145,7 @@ internal fun EnhancedConnectionStatusCard(
                     OutlinedButton(
                         onClick = onDisconnect,
                         modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = AppShapes.M
                     ) {
                         Text(stringResource(R.string.printer_disconnect))
                     }
@@ -144,7 +154,7 @@ internal fun EnhancedConnectionStatusCard(
                         onClick = onPrintTest,
                         modifier = Modifier.weight(1f),
                         enabled = status !is PrinterStatus.Printing,
-                        shape = RoundedCornerShape(12.dp),
+                        shape = AppShapes.M,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = SuccessGreen
                         )
@@ -165,30 +175,36 @@ internal fun EnhancedPrinterDeviceItem(
     isConnecting: Boolean,
     onClick: () -> Unit
 ) {
+    val dimensions = LocalDimensions.current
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(enabled = !isConnecting && !device.isConnected, onClick = onClick),
-        shape = RoundedCornerShape(16.dp),
+            .clickable(enabled = !isConnecting && !device.isConnected, onClick = onClick)
+            .border(
+                1.dp,
+                if (device.isConnected) SuccessGreen.copy(alpha = 0.5f) else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                AppShapes.L
+            ),
+        shape = AppShapes.L,
         colors = CardDefaults.cardColors(
             containerColor = if (device.isConnected) 
-                SuccessGreen.copy(alpha = 0.1f)
+                SuccessGreen.copy(alpha = 0.05f)
             else 
-                MaterialTheme.colorScheme.surface
+                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(dimensions.paddingM),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Icon with background
             Box(
                 modifier = Modifier
                     .size(48.dp)
-                    .clip(RoundedCornerShape(12.dp))
+                    .clip(AppShapes.M)
                     .background(
                         if (device.isConnected) SuccessGreen.copy(alpha = 0.15f)
                         else PrinterIconColor.copy(alpha = 0.1f)
@@ -203,7 +219,7 @@ internal fun EnhancedPrinterDeviceItem(
                 )
             }
             
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(dimensions.spacingM))
             
             Column(modifier = Modifier.weight(1f)) {
                 Text(
@@ -230,7 +246,7 @@ internal fun EnhancedPrinterDeviceItem(
                         Icon(
                             imageVector = Icons.Default.Check,
                             contentDescription = stringResource(R.string.printer_connected),
-                            tint = Color.White,
+                            tint = MaterialTheme.colorScheme.onPrimary,
                             modifier = Modifier.size(18.dp)
                         )
                     }
@@ -248,9 +264,10 @@ internal fun EnhancedPrinterDeviceItem(
 
 @Composable
 internal fun EnhancedEmptyDevicesCard(isBluetoothEnabled: Boolean) {
+    val dimensions = LocalDimensions.current
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
+        shape = AppShapes.L,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
         )
@@ -258,7 +275,7 @@ internal fun EnhancedEmptyDevicesCard(isBluetoothEnabled: Boolean) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(32.dp),
+                .padding(dimensions.paddingXXL),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Box(
@@ -275,7 +292,7 @@ internal fun EnhancedEmptyDevicesCard(isBluetoothEnabled: Boolean) {
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(dimensions.spacingM))
             Text(
                 text = if (isBluetoothEnabled) 
                     stringResource(R.string.printer_no_devices_found)

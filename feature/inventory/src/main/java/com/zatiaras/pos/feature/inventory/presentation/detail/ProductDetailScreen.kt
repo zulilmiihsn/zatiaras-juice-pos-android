@@ -67,6 +67,7 @@ import coil.compose.AsyncImage
 import com.zatiaras.pos.core.domain.model.Category
 import com.zatiaras.pos.core.ui.components.CurrencyTextField
 import com.zatiaras.pos.core.ui.components.ZatDialog
+import com.zatiaras.pos.core.ui.theme.AppShapes
 import com.zatiaras.pos.core.ui.theme.LocalDimensions
 
 /**
@@ -121,6 +122,7 @@ fun ProductDetailScreen(
     }
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
@@ -231,7 +233,7 @@ private fun FormContent(
             isError = state.nameError != null,
             supportingText = state.nameError?.let { { Text(it) } },
             singleLine = true,
-            shape = RoundedCornerShape(12.dp)
+            shape = AppShapes.M
         )
 
         // Price Field with currency formatting
@@ -243,7 +245,7 @@ private fun FormContent(
             isError = state.priceError != null,
             showPrefix = true,
             singleLine = true,
-            shape = RoundedCornerShape(12.dp)
+            shape = AppShapes.M
         )
         
         // Show price error if any
@@ -299,7 +301,7 @@ private fun FormContent(
             label = { Text(stringResource(R.string.product_desc_label)) },
             placeholder = { Text(stringResource(R.string.product_desc_placeholder)) },
             maxLines = 4,
-            shape = RoundedCornerShape(12.dp)
+            shape = AppShapes.M
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -311,7 +313,7 @@ private fun FormContent(
                 .fillMaxWidth()
                 .height(56.dp),
             enabled = !state.isSubmitting,
-            shape = RoundedCornerShape(12.dp)
+            shape = AppShapes.M
         ) {
             if (state.isSubmitting) {
                 CircularProgressIndicator(
@@ -341,12 +343,12 @@ private fun ImagePickerBox(
         modifier = Modifier
             .fillMaxWidth()
             .aspectRatio(16f / 9f)
-            .clip(RoundedCornerShape(16.dp))
+            .clip(AppShapes.L)
             .background(MaterialTheme.colorScheme.surfaceVariant)
             .border(
                 width = 2.dp,
                 color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
-                shape = RoundedCornerShape(16.dp)
+                shape = AppShapes.L
             )
             .clickable(onClick = onImageClick),
         contentAlignment = Alignment.Center
@@ -414,7 +416,7 @@ private fun CategoryDropdown(
             label = { Text(stringResource(R.string.product_category_label)) },
             placeholder = { Text(stringResource(R.string.product_category_placeholder)) },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-            shape = RoundedCornerShape(12.dp)
+            shape = AppShapes.M
         )
 
         ExposedDropdownMenu(
@@ -452,12 +454,17 @@ private fun DeleteConfirmationDialog(
         onDismissRequest = onDismiss
     ) { dismiss ->
         Card(
-            modifier = Modifier.fillMaxWidth(0.9f),
-            shape = RoundedCornerShape(24.dp),
+            modifier = Modifier.fillMaxWidth(0.9f)
+                .border(
+                    1.dp,
+                    MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                    AppShapes.XXL
+                ),
+            shape = AppShapes.XXL,
             colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surface
+                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
             ),
-            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
             Column(
                 modifier = Modifier.padding(24.dp),
@@ -497,7 +504,7 @@ private fun DeleteConfirmationDialog(
                     OutlinedButton(
                         onClick = dismiss,
                         modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = AppShapes.M
                     ) {
                         Text(stringResource(R.string.inventory_action_cancel))
                     }
@@ -511,7 +518,7 @@ private fun DeleteConfirmationDialog(
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.error
                         ),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = AppShapes.M
                     ) {
                         Text(stringResource(R.string.inventory_action_delete))
                     }

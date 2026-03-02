@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -24,8 +23,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.zatiaras.pos.core.ui.theme.AppShapes
 
 /**
  * Shimmer effect modifier for loading placeholders.
@@ -66,7 +67,7 @@ fun ShimmerBox(
     modifier: Modifier = Modifier,
     width: Dp? = null,
     height: Dp = 20.dp,
-    shape: RoundedCornerShape = RoundedCornerShape(8.dp)
+    shape: Shape = AppShapes.S
 ) {
     Box(
         modifier = modifier
@@ -86,14 +87,14 @@ fun ShimmerProductCard(
 ) {
     Column(
         modifier = modifier
-            .clip(RoundedCornerShape(12.dp))
+            .clip(AppShapes.M)
             .background(MaterialTheme.colorScheme.surface)
             .padding(8.dp)
     ) {
         // Image placeholder
         ShimmerBox(
             height = 120.dp,
-            shape = RoundedCornerShape(8.dp)
+            shape = AppShapes.S
         )
         
         Spacer(modifier = Modifier.height(8.dp))
@@ -101,7 +102,7 @@ fun ShimmerProductCard(
         // Title placeholder
         ShimmerBox(
             height = 16.dp,
-            shape = RoundedCornerShape(4.dp)
+            shape = AppShapes.XS
         )
         
         Spacer(modifier = Modifier.height(4.dp))
@@ -110,7 +111,7 @@ fun ShimmerProductCard(
         ShimmerBox(
             width = 80.dp,
             height = 14.dp,
-            shape = RoundedCornerShape(4.dp)
+            shape = AppShapes.XS
         )
     }
 }
@@ -131,7 +132,7 @@ fun ShimmerCartItem(
         Box(
             modifier = Modifier
                 .size(56.dp)
-                .clip(RoundedCornerShape(8.dp))
+                .clip(AppShapes.S)
                 .background(shimmerBrush())
         )
         
@@ -141,7 +142,7 @@ fun ShimmerCartItem(
             // Title
             ShimmerBox(
                 height = 14.dp,
-                shape = RoundedCornerShape(4.dp)
+                shape = AppShapes.XS
             )
             
             Spacer(modifier = Modifier.height(6.dp))
@@ -150,7 +151,7 @@ fun ShimmerCartItem(
             ShimmerBox(
                 width = 60.dp,
                 height = 12.dp,
-                shape = RoundedCornerShape(4.dp)
+                shape = AppShapes.XS
             )
         }
         
@@ -160,7 +161,7 @@ fun ShimmerCartItem(
         Box(
             modifier = Modifier
                 .size(80.dp, 32.dp)
-                .clip(RoundedCornerShape(8.dp))
+                .clip(AppShapes.S)
                 .background(shimmerBrush())
         )
     }
@@ -192,7 +193,7 @@ fun ShimmerListItem(
             // Title
             ShimmerBox(
                 height = 16.dp,
-                shape = RoundedCornerShape(4.dp)
+                shape = AppShapes.XS
             )
             
             Spacer(modifier = Modifier.height(8.dp))
@@ -201,7 +202,7 @@ fun ShimmerListItem(
             ShimmerBox(
                 width = 120.dp,
                 height = 12.dp,
-                shape = RoundedCornerShape(4.dp)
+                shape = AppShapes.XS
             )
         }
     }
@@ -216,7 +217,7 @@ fun ShimmerStatCard(
 ) {
     Column(
         modifier = modifier
-            .clip(RoundedCornerShape(12.dp))
+            .clip(AppShapes.M)
             .background(MaterialTheme.colorScheme.surface)
             .padding(16.dp)
     ) {
@@ -234,7 +235,7 @@ fun ShimmerStatCard(
         ShimmerBox(
             width = 80.dp,
             height = 24.dp,
-            shape = RoundedCornerShape(4.dp)
+            shape = AppShapes.XS
         )
         
         Spacer(modifier = Modifier.height(4.dp))
@@ -243,7 +244,7 @@ fun ShimmerStatCard(
         ShimmerBox(
             width = 60.dp,
             height = 12.dp,
-            shape = RoundedCornerShape(4.dp)
+            shape = AppShapes.XS
         )
     }
 }

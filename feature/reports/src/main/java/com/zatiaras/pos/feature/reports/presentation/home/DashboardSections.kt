@@ -37,6 +37,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.zatiaras.pos.core.ui.theme.AppShapes
 import com.zatiaras.pos.core.ui.theme.GradientColors
 import com.zatiaras.pos.core.ui.theme.LocalDimensions
 import com.zatiaras.pos.core.ui.theme.SuccessGreen
@@ -64,7 +65,8 @@ internal fun StoreStatusBanner(
             else 
                 MaterialTheme.colorScheme.errorContainer
         ),
-        shape = RoundedCornerShape(16.dp)
+        shape = AppShapes.L,
+        elevation = CardDefaults.cardElevation(0.dp)
     ) {
         Row(
             modifier = Modifier
@@ -77,14 +79,14 @@ internal fun StoreStatusBanner(
                 // Status indicator dot
                 Box(
                     modifier = Modifier
-                        .size(12.dp)
+                        .size(dimensions.spacingM)
                         .clip(CircleShape)
                         .background(
                             if (isStoreOpen) SuccessGreen
                             else ErrorRed
                         )
                 )
-                Spacer(modifier = Modifier.width(12.dp))
+                Spacer(modifier = Modifier.width(dimensions.spacingS))
                 Column {
                     Text(
                         text = if (isStoreOpen) stringResource(R.string.store_is_open) else stringResource(R.string.store_is_closed),
@@ -115,7 +117,7 @@ internal fun StoreStatusBanner(
                     MaterialTheme.colorScheme.onPrimaryContainer 
                 else 
                     MaterialTheme.colorScheme.onErrorContainer,
-                modifier = Modifier.size(28.dp)
+                modifier = Modifier.size(dimensions.iconSizeL)
             )
         }
     }
@@ -128,8 +130,10 @@ internal fun TodayStatsSection(uiState: HomeDashboardUiState) {
             text = stringResource(R.string.period_today),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.padding(bottom = 12.dp)
+            modifier = Modifier.padding(bottom = LocalDimensions.current.spacingS)
         )
+        
+        val dimensions = LocalDimensions.current
         
         // Main revenue card
         StatCard(
@@ -137,17 +141,20 @@ internal fun TodayStatsSection(uiState: HomeDashboardUiState) {
             value = formatRupiah(uiState.stats.todayRevenue),
             icon = Icons.Default.AccountBalanceWallet,
             trendPercent = uiState.stats.revenueGrowthPercent,
-            gradientColors = GradientColors.Revenue
+            containerColor = MaterialTheme.colorScheme.primary,
+            contentColor = MaterialTheme.colorScheme.onPrimary,
+            iconContainerColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.2f),
+            iconTintColor = MaterialTheme.colorScheme.onPrimary
         )
         
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(dimensions.spacingM))
         
         // Transaction and items sold row
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(IntrinsicSize.Min),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(dimensions.spacingM)
         ) {
             StatCard(
                 title = stringResource(R.string.stat_transactions),
@@ -156,7 +163,10 @@ internal fun TodayStatsSection(uiState: HomeDashboardUiState) {
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight(),
-                gradientColors = GradientColors.Transaction
+                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                iconContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                iconTintColor = MaterialTheme.colorScheme.primary
             )
             
             StatCard(
@@ -166,7 +176,10 @@ internal fun TodayStatsSection(uiState: HomeDashboardUiState) {
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight(),
-                gradientColors = GradientColors.ProductSold
+                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                iconContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                iconTintColor = MaterialTheme.colorScheme.primary
             )
         }
     }
@@ -179,14 +192,15 @@ internal fun PeriodSummarySection(uiState: HomeDashboardUiState) {
             text = stringResource(R.string.pnl_period),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.padding(bottom = 12.dp)
+            modifier = Modifier.padding(bottom = LocalDimensions.current.spacingS)
         )
         
+        val dimensions = LocalDimensions.current
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(IntrinsicSize.Min),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(dimensions.spacingM)
         ) {
             PeriodCard(
                 title = stringResource(R.string.period_this_week),
@@ -194,7 +208,8 @@ internal fun PeriodSummarySection(uiState: HomeDashboardUiState) {
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight(),
-                gradientColors = GradientColors.WeeklyPeriod
+                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                contentColor = MaterialTheme.colorScheme.onSecondaryContainer
             )
             
             PeriodCard(
@@ -203,7 +218,8 @@ internal fun PeriodSummarySection(uiState: HomeDashboardUiState) {
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight(),
-                gradientColors = GradientColors.MonthlyPeriod
+                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                contentColor = MaterialTheme.colorScheme.onSecondaryContainer
             )
         }
     }
@@ -214,31 +230,31 @@ internal fun PeriodCard(
     title: String,
     value: String,
     modifier: Modifier = Modifier,
-    gradientColors: List<Color>
+    containerColor: Color = MaterialTheme.colorScheme.surfaceVariant,
+    contentColor: Color = MaterialTheme.colorScheme.onSurfaceVariant
 ) {
+    val dimensions = LocalDimensions.current
     Box(
         modifier = modifier
-            .clip(RoundedCornerShape(16.dp))
-            .background(
-                brush = Brush.linearGradient(gradientColors)
-            )
+            .clip(AppShapes.L)
+            .background(containerColor)
             .fillMaxHeight()
-            .padding(16.dp)
+            .padding(dimensions.paddingM)
     ) {
         Column {
             Text(
                 text = title,
                 style = MaterialTheme.typography.bodySmall,
-                color = Color.White.copy(alpha = 0.8f)
+                color = contentColor.copy(alpha = 0.8f)
             )
             
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(dimensions.spacingXS))
             
             Text(
                 text = value,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = Color.White
+                color = contentColor
             )
         }
     }

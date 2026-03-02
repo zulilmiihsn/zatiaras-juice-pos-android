@@ -60,6 +60,7 @@ fun OwnerPinSetupScreen(
     }
     
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             CenterAlignedTopAppBar(
                 title = { 

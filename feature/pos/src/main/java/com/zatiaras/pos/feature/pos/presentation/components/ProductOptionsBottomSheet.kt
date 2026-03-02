@@ -1,104 +1,68 @@
 package com.zatiaras.pos.feature.pos.presentation.components
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Remove
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.FilledTonalIconButton
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.SheetState
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Modifier
-import com.zatiaras.pos.feature.pos.R
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.zatiaras.pos.core.domain.model.AddOn
-import com.zatiaras.pos.core.domain.model.IceLevel
+import com.zatiaras.pos.core.ui.theme.AppShapes
+import com.zatiaras.pos.core.ui.theme.Slate50
+import com.zatiaras.pos.core.ui.theme.Brand500
+import com.zatiaras.pos.core.ui.theme.Slate100
+import com.zatiaras.pos.core.ui.theme.Slate200
+import com.zatiaras.pos.core.ui.theme.Slate500
+import com.zatiaras.pos.core.ui.theme.Slate600
+import com.zatiaras.pos.core.ui.theme.Slate700
+import com.zatiaras.pos.core.ui.util.CurrencyFormatter
+import com.zatiaras.pos.feature.pos.R
 import com.zatiaras.pos.core.domain.model.Product
-import com.zatiaras.pos.core.domain.model.SugarLevel
-import com.zatiaras.pos.core.ui.theme.ZatiarasPink
 
-/**
- * Bottom sheet for selecting product options:
- * - Add-ons (ekstra/topping)
- * - Sugar level (for beverages)
- * - Ice level (for beverages)
- * - Notes
- * - Quantity
- */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun ProductOptionsBottomSheet(
     product: Product,
-    availableAddOns: List<AddOn>,
-    selectedAddOnIds: Set<String>,
-    selectedSugarLevel: SugarLevel,
-    selectedIceLevel: IceLevel,
-    productNote: String,
-    quantity: Int,
-    sheetState: SheetState,
-    onToggleAddOn: (String) -> Unit,
-    onSugarLevelChange: (SugarLevel) -> Unit,
-    onIceLevelChange: (IceLevel) -> Unit,
-    onNoteChange: (String) -> Unit,
-    onQuantityChange: (Int) -> Unit,
-    onConfirm: () -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    onAddToCart: (Product, Int, String) -> Unit
 ) {
-    // Calculate total price
-    val addOnTotal = availableAddOns.filter { selectedAddOnIds.contains(it.id) }.sumOf { it.price }
-    val unitPrice = product.price + addOnTotal
-    val totalPrice = unitPrice * quantity
+    val modalBottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     
+    var quantity by remember { mutableIntStateOf(1) }
+    var notes by remember { mutableStateOf("") }
+    
+    // Hardcoded options for UI demo - in real app, these would come from Product domain
+    var selectedSugarLevel by remember { mutableStateOf("Normal") }
+    var selectedIceLevel by remember { mutableStateOf("Normal") }
+    val sugarLevels = listOf("0%", "50%", "Normal", "Extra")
+    val iceLevels = listOf("No Ice", "Less", "Normal", "Extra")
+
+    val totalPrice = product.price * quantity
+
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        sheetState = sheetState,
+        sheetState = modalBottomSheetState,
+        shape = AppShapes.TopPanel,
         containerColor = MaterialTheme.colorScheme.surface,
-        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+        dragHandle = { BottomSheetDefaults.DragHandle() }
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(max = 600.dp)
-                .padding(horizontal = 20.dp)
+                .padding(horizontal = 24.dp)
+                .verticalScroll(rememberScrollState())
         ) {
-            // Header with product name and price
+            // Header
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -107,156 +71,185 @@ fun ProductOptionsBottomSheet(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = product.name,
-                        style = MaterialTheme.typography.titleLarge,
+                        style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = com.zatiaras.pos.core.ui.util.CurrencyFormatter.formatCurrency(product.price),
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = ZatiarasPink
+                        text = CurrencyFormatter.formatCurrency(product.price),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = Brand500,
+                        fontWeight = FontWeight.SemiBold
                     )
                 }
+                
                 IconButton(onClick = onDismiss) {
-                    Icon(Icons.Default.Close, contentDescription = stringResource(R.string.pos_close))
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Close",
+                        tint = Slate600
+                    )
                 }
             }
             
-            Spacer(modifier = Modifier.height(16.dp))
-            HorizontalDivider()
-            Spacer(modifier = Modifier.height(16.dp))
+            HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp), color = Slate200.copy(alpha = 0.6f))
             
-            Column(
-                modifier = Modifier
-                    .weight(1f, fill = false)
-                    .verticalScroll(rememberScrollState())
+            // Options: Sugar Level
+            Text(
+                text = "Sugar Level",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(bottom = 12.dp)
+            )
+            
+            FlowRow(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                // Sugar Level Section (only for beverages)
-                if (product.supportsSugarIce) {
-                    SectionTitle(stringResource(R.string.pos_sugar_level))
-                    Spacer(modifier = Modifier.height(8.dp))
-                    
-                    FlowRow(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        SugarLevel.entries.forEach { level ->
-                            OptionChip(
-                                text = level.label,
-                                isSelected = selectedSugarLevel == level,
-                                onClick = { onSugarLevelChange(level) }
-                            )
-                        }
-                    }
-                    
-                    Spacer(modifier = Modifier.height(20.dp))
-                    
-                    // Ice Level Section
-                    SectionTitle(stringResource(R.string.pos_ice_level))
-                    Spacer(modifier = Modifier.height(8.dp))
-                    
-                    FlowRow(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        IceLevel.entries.forEach { level ->
-                            OptionChip(
-                                text = level.label,
-                                isSelected = selectedIceLevel == level,
-                                onClick = { onIceLevelChange(level) }
-                            )
-                        }
-                    }
-                    
-                    Spacer(modifier = Modifier.height(20.dp))
+                sugarLevels.forEach { level ->
+                    OptionChip(
+                        text = level,
+                        isSelected = selectedSugarLevel == level,
+                        onClick = { selectedSugarLevel = level }
+                    )
                 }
-                
-                // Add-ons Section
-                if (availableAddOns.isNotEmpty()) {
-                    SectionTitle(stringResource(R.string.pos_addons))
-                    Spacer(modifier = Modifier.height(8.dp))
-                    
-                    FlowRow(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        availableAddOns.forEach { addOn ->
-                            AddOnChip(
-                                addOn = addOn,
-                                isSelected = selectedAddOnIds.contains(addOn.id),
-                                onClick = { onToggleAddOn(addOn.id) }
-                            )
-                        }
-                    }
-                    
-                    Spacer(modifier = Modifier.height(20.dp))
-                }
-                
-                // Notes Section
-                SectionTitle(stringResource(R.string.pos_notes))
-                Spacer(modifier = Modifier.height(8.dp))
-                
-                OutlinedTextField(
-                    value = productNote,
-                    onValueChange = onNoteChange,
-                    modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text(stringResource(R.string.pos_notes_hint)) },
-                    maxLines = 2,
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                    shape = RoundedCornerShape(12.dp)
-                )
-                
-                Spacer(modifier = Modifier.height(20.dp))
-                
-                // Quantity Section
-                SectionTitle(stringResource(R.string.pos_quantity))
-                Spacer(modifier = Modifier.height(8.dp))
-                
-                QuantitySelector(
-                    quantity = quantity,
-                    onIncrement = { onQuantityChange(quantity + 1) },
-                    onDecrement = { if (quantity > 1) onQuantityChange(quantity - 1) }
-                )
-                
-                Spacer(modifier = Modifier.height(20.dp))
             }
             
-            // Footer with total and confirm button
-            HorizontalDivider()
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(24.dp))
             
-            // Total price display
+            // Options: Ice Level
+            Text(
+                text = "Ice Level",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(bottom = 12.dp)
+            )
+            
+            FlowRow(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                iceLevels.forEach { level ->
+                    OptionChip(
+                        text = level,
+                        isSelected = selectedIceLevel == level,
+                        onClick = { selectedIceLevel = level }
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Notes
+            Text(
+                text = stringResource(R.string.pos_notes),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(bottom = 12.dp)
+            )
+            
+            OutlinedTextField(
+                value = notes,
+                onValueChange = { notes = it },
+                modifier = Modifier.fillMaxWidth(),
+                placeholder = { Text("Add special instructions...", color = Slate500) },
+                shape = AppShapes.M,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Brand500,
+                    unfocusedBorderColor = Slate200,
+                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surface
+                ),
+                maxLines = 3
+            )
+            
+            Spacer(modifier = Modifier.height(24.dp))
+            
+            // Quantity & Total
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = stringResource(R.string.pos_total),
-                    style = MaterialTheme.typography.titleMedium
-                )
-                Text(
-                    text = com.zatiaras.pos.core.ui.util.CurrencyFormatter.formatCurrency(totalPrice),
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = ZatiarasPink
-                )
+                // Quantity Selector
+                Surface(
+                    shape = AppShapes.L,
+                    color = Slate100,
+                    modifier = Modifier.height(50.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(horizontal = 8.dp)
+                    ) {
+                        IconButton(
+                            onClick = { if (quantity > 1) quantity-- },
+                            enabled = quantity > 1
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Remove, 
+                                contentDescription = "Decrease",
+                                tint = if (quantity > 1) Slate700 else Slate500
+                            )
+                        }
+                        
+                        Text(
+                            text = quantity.toString(),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(horizontal = 12.dp)
+                        )
+                        
+                        IconButton(onClick = { quantity++ }) {
+                            Icon(
+                                imageVector = Icons.Default.Add, 
+                                contentDescription = "Increase",
+                                tint = Brand500
+                            )
+                        }
+                    }
+                }
+                
+                // Total Price
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(
+                        text = "Total Price",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Slate600
+                    )
+                    Text(
+                        text = CurrencyFormatter.formatCurrency(totalPrice),
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = Brand500
+                    )
+                }
             }
             
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(24.dp))
             
-            // Confirm button
+            // Add to Cart Button
             Button(
-                onClick = onConfirm,
+                onClick = { 
+                    val finalNotes = buildString {
+                        if (selectedSugarLevel != "Normal") append("Sugar: $selectedSugarLevel, ")
+                        if (selectedIceLevel != "Normal") append("Ice: $selectedIceLevel, ")
+                        if (notes.isNotEmpty()) append(notes)
+                    }.removeSuffix(", ")
+                    
+                    onAddToCart(product, quantity, finalNotes) 
+                },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = ZatiarasPink)
+                    .height(56.dp)
+                    .padding(bottom = 24.dp),
+                shape = AppShapes.L,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Brand500,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                ),
+                elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp)
             ) {
                 Text(
                     text = stringResource(R.string.pos_add_to_cart),
@@ -264,20 +257,8 @@ fun ProductOptionsBottomSheet(
                     fontWeight = FontWeight.Bold
                 )
             }
-            
-            Spacer(modifier = Modifier.height(24.dp))
         }
     }
-}
-
-@Composable
-private fun SectionTitle(text: String) {
-    Text(
-        text = text,
-        style = MaterialTheme.typography.titleMedium,
-        fontWeight = FontWeight.SemiBold,
-        color = MaterialTheme.colorScheme.onSurface
-    )
 }
 
 @Composable
@@ -286,97 +267,27 @@ private fun OptionChip(
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
-    val backgroundColor = if (isSelected) ZatiarasPink else Color.White
-    val borderColor = if (isSelected) ZatiarasPink else Color.LightGray
-    val textColor = if (isSelected) Color.White else ZatiarasPink
-    
-    Box(
-        modifier = Modifier
-            .clip(RoundedCornerShape(12.dp))
-            .background(backgroundColor)
-            .border(1.5.dp, borderColor, RoundedCornerShape(12.dp))
-            .clickable { onClick() }
-            .padding(horizontal = 16.dp, vertical = 10.dp)
+    Surface(
+        onClick = onClick,
+        shape = AppShapes.M,
+        color = if (isSelected) Slate50 else MaterialTheme.colorScheme.surface,
+        border = BorderStroke(
+            width = if (isSelected) 1.5.dp else 1.dp,
+            color = if (isSelected) Brand500 else Slate200
+        ),
+        modifier = Modifier.height(40.dp)
     ) {
-        Text(
-            text = text,
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.Medium,
-            color = textColor
-        )
-    }
-}
-
-@Composable
-private fun AddOnChip(
-    addOn: AddOn,
-    isSelected: Boolean,
-    onClick: () -> Unit
-) {
-    val backgroundColor = if (isSelected) ZatiarasPink else Color.White
-    val borderColor = if (isSelected) ZatiarasPink else Color.LightGray
-    val textColor = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface
-    val priceColor = if (isSelected) Color.White.copy(alpha = 0.9f) else ZatiarasPink
-    
-    Box(
-        modifier = Modifier
-            .clip(RoundedCornerShape(12.dp))
-            .background(backgroundColor)
-            .border(1.5.dp, borderColor, RoundedCornerShape(12.dp))
-            .clickable { onClick() }
-            .padding(horizontal = 14.dp, vertical = 10.dp)
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier.padding(horizontal = 16.dp)
         ) {
             Text(
-                text = addOn.name,
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Medium,
-                color = textColor,
-                textAlign = TextAlign.Center
-            )
-            Text(
-                text = "+${com.zatiaras.pos.core.ui.util.CurrencyFormatter.formatCurrency(addOn.price)}",
-                style = MaterialTheme.typography.labelSmall,
-                color = priceColor
+                text = text,
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                color = if (isSelected) Brand500 else Slate600
             )
         }
     }
 }
 
-@Composable
-private fun QuantitySelector(
-    quantity: Int,
-    onIncrement: () -> Unit,
-    onDecrement: () -> Unit
-) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center,
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        FilledTonalIconButton(
-            onClick = onDecrement,
-            enabled = quantity > 1
-        ) {
-            Icon(Icons.Default.Remove, contentDescription = stringResource(R.string.cart_item_decrease))
-        }
-        
-        Spacer(modifier = Modifier.width(24.dp))
-        
-        Text(
-            text = quantity.toString(),
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.width(48.dp),
-            textAlign = TextAlign.Center
-        )
-        
-        Spacer(modifier = Modifier.width(24.dp))
-        
-        FilledTonalIconButton(onClick = onIncrement) {
-            Icon(Icons.Default.Add, contentDescription = stringResource(R.string.pos_add))
-        }
-    }
-}

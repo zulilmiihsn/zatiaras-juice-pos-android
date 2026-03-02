@@ -1,44 +1,40 @@
 package com.zatiaras.pos.feature.pos.presentation.components
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Text
-import compose.icons.EvaIcons
-import compose.icons.evaicons.Outline
-import compose.icons.evaicons.outline.Checkmark
-import compose.icons.evaicons.outline.Image
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -46,20 +42,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import coil.request.ImageRequest
 import coil.request.CachePolicy
+import coil.request.ImageRequest
+import compose.icons.EvaIcons
+import compose.icons.evaicons.Outline
+import compose.icons.evaicons.outline.Image
 import com.zatiaras.pos.core.domain.model.Product
+import com.zatiaras.pos.core.ui.theme.Brand500
+import com.zatiaras.pos.core.ui.theme.AppShapes
+import com.zatiaras.pos.core.ui.theme.LocalDimensions
+import com.zatiaras.pos.core.ui.theme.Slate50
 import com.zatiaras.pos.core.ui.util.CurrencyFormatter
 
-/**
- * Product card optimized for POS catalog grid.
- * 
- * Design principles:
- * - Clean, minimal card design
- * - Tap anywhere to add to cart
- * - Quantity badge appears as pill when item is in cart
- * - No redundant + button (card tap = add to cart)
- */
 @Composable
 fun PosProductCard(
     product: Product,
@@ -67,6 +61,7 @@ fun PosProductCard(
     onAddToCart: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val dimensions = LocalDimensions.current
     val priceFormatter = remember { CurrencyFormatter.getCurrencyFormatter() }
     
     // Animation for press effect
@@ -79,160 +74,117 @@ fun PosProductCard(
     )
     
     val isInCart = quantityInCart > 0
-    
-    
+
     Card(
-        onClick = onAddToCart,
         modifier = modifier
             .fillMaxWidth()
-            .scale(scale),
-        shape = RoundedCornerShape(16.dp),
+            .scale(scale)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onAddToCart
+            ),
+        shape = AppShapes.XL,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
         ),
         elevation = CardDefaults.cardElevation(
             defaultElevation = 0.dp,
-            pressedElevation = 2.dp
-        ),
-        interactionSource = interactionSource
+            pressedElevation = 0.dp
+        )
     ) {
-        Box {
-            Column {
-                // Product Image with gradient overlay when in cart
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .aspectRatio(1f)
-                        .background(MaterialTheme.colorScheme.surfaceVariant),
-                    contentAlignment = Alignment.Center
-                ) {
-                    if (product.imageUrl != null) {
-                        AsyncImage(
-                            model = ImageRequest.Builder(LocalContext.current)
-                                .data(product.imageUrl)
-                                .crossfade(true)
-                                .size(300, 300)
-                                .diskCachePolicy(CachePolicy.ENABLED)
-                                .memoryCachePolicy(CachePolicy.ENABLED)
-                                .build(),
-                            contentDescription = product.name,
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop
-                        )
-                    } else {
-                        Icon(
-                            imageVector = EvaIcons.Outline.Image,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f),
-                            modifier = Modifier.size(48.dp)
-                        )
-                    }
-                    
-                    // Subtle gradient overlay when item is in cart
-                    if (isInCart) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .background(
-                                    Brush.verticalGradient(
-                                        colors = listOf(
-                                            Color.Transparent,
-                                            MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
-                                        )
-                                    )
-                                )
-                        )
-                    }
-                    
-                    // Category Badge (Overlay)
-                    product.category?.let { category ->
-                        Box(
-                            modifier = Modifier
-                                .align(Alignment.TopStart)
-                                .padding(8.dp)
-                                .background(
-                                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.9f),
-                                    shape = RoundedCornerShape(8.dp)
-                                )
-                                .padding(horizontal = 8.dp, vertical = 4.dp)
+        Column {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(1.1f)
+                    .background(Slate50),
+                contentAlignment = Alignment.Center
+            ) {
+                if (product.imageUrl != null) {
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(product.imageUrl)
+                            .crossfade(true)
+                            .size(300, 300)
+                            .diskCachePolicy(CachePolicy.ENABLED)
+                            .memoryCachePolicy(CachePolicy.ENABLED)
+                            .build(),
+                        contentDescription = product.name,
+                        modifier = Modifier
+                            .fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Icon(
+                        imageVector = EvaIcons.Outline.Image,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f),
+                        modifier = Modifier.size(48.dp)
+                    )
+                }
+                
+                // Overlay for Items in Cart
+                if (isInCart) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Brand500.copy(alpha = 0.1f)),
+                        contentAlignment = Alignment.TopEnd
+                    ) {
+                        Surface(
+                            shape = AppShapes.BottomStartNotch,
+                            color = Brand500,
+                            modifier = Modifier.padding(0.dp)
                         ) {
                             Text(
-                                text = category.name,
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                fontWeight = FontWeight.Bold
+                                text = "${quantityInCart}x",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(horizontal = dimensions.paddingM, vertical = dimensions.paddingXXS)
                             )
                         }
                     }
-                }
-                
-                // Product Info
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    // Product name
-                    Text(
-                        text = product.name,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        fontWeight = FontWeight.Medium,
-                        maxLines = 2,
-                        minLines = 2, // Fixed height consistency
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    
-                    // Price
-                    Text(
-                        text = priceFormatter.format(product.price),
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Bold
-                    )
                 }
             }
             
-            // Quantity Badge - Floating pill style (only when in cart)
-            AnimatedContent(
-                targetState = quantityInCart,
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(8.dp),
-                transitionSpec = {
-                    (scaleIn(initialScale = 0.8f) + fadeIn())
-                        .togetherWith(scaleOut(targetScale = 0.8f) + fadeOut())
-                        .using(SizeTransform(clip = false))
-                },
-                label = "quantity_badge_animation"
-            ) { quantity ->
-                if (quantity > 0) {
-                    Surface(
-                        shape = RoundedCornerShape(20.dp),
-                        color = MaterialTheme.colorScheme.primary,
-                        shadowElevation = 4.dp
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Icon(
-                                imageVector = EvaIcons.Outline.Checkmark,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onPrimary,
-                                modifier = Modifier.size(14.dp)
-                            )
-                            Text(
-                                text = quantity.toString(),
-                                style = MaterialTheme.typography.labelLarge,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onPrimary
-                            )
-                        }
-                    }
+            Column(
+                modifier = Modifier.padding(dimensions.paddingM)
+            ) {
+                // CATEGORY
+                product.category?.let { categoryName ->
+                     Text(
+                        text = categoryName.name.uppercase(),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Spacer(modifier = Modifier.height(dimensions.spacingXS))
                 }
+                
+                // NAME
+                Text(
+                    text = product.name,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.height(40.dp) // Maintain fixed height for consistent card sizes
+                )
+                
+                Spacer(modifier = Modifier.height(dimensions.spacingS))
+                
+                // PRICE
+                Text(
+                    text = priceFormatter.format(product.price),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Brand500,
+                    fontWeight = FontWeight.ExtraBold
+                )
             }
         }
     }

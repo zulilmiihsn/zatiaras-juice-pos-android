@@ -1,7 +1,8 @@
 package com.zatiaras.pos.feature.reports.presentation.home
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,7 +15,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.Inventory2
@@ -40,6 +40,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.zatiaras.pos.core.ui.components.ZatDialog
+import com.zatiaras.pos.core.ui.theme.AppShapes
 import com.zatiaras.pos.core.ui.theme.ErrorRed
 import com.zatiaras.pos.core.ui.theme.ErrorRedLight
 import com.zatiaras.pos.core.ui.theme.SuccessGreen
@@ -65,12 +66,14 @@ internal fun CloseStoreDialog(
             contentAlignment = Alignment.Center
         ) {
             Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(28.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f), AppShapes.XXL),
+                shape = AppShapes.XXL,
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surface
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
                 ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
             ) {
                 Column(
                     modifier = Modifier.padding(24.dp),
@@ -94,7 +97,7 @@ internal fun CloseStoreDialog(
                         Icon(
                             imageVector = Icons.Outlined.Lock,
                             contentDescription = null,
-                            tint = Color.White,
+                            tint = MaterialTheme.colorScheme.onPrimary,
                             modifier = Modifier.size(40.dp)
                         )
                     }
@@ -125,7 +128,7 @@ internal fun CloseStoreDialog(
                         colors = CardDefaults.cardColors(
                             containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
                         ),
-                        shape = RoundedCornerShape(16.dp)
+                        shape = AppShapes.L
                     ) {
                         Column(
                             modifier = Modifier
@@ -242,7 +245,7 @@ internal fun CloseStoreDialog(
                         colors = CardDefaults.cardColors(
                             containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
                         ),
-                        shape = RoundedCornerShape(16.dp),
+                        shape = AppShapes.L,
                         border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
                     ) {
                         Column(
@@ -319,7 +322,7 @@ internal fun CloseStoreDialog(
                         colors = CardDefaults.cardColors(
                             containerColor = WarningAmberBg
                         ),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = AppShapes.M
                     ) {
                         Row(
                             modifier = Modifier
@@ -350,7 +353,7 @@ internal fun CloseStoreDialog(
                         OutlinedButton(
                             onClick = dismiss,
                             modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(16.dp),
+                            shape = AppShapes.L,
                             contentPadding = PaddingValues(vertical = 16.dp)
                         ) {
                             Text(stringResource(R.string.reports_cancel))
@@ -361,7 +364,7 @@ internal fun CloseStoreDialog(
                                 dismiss()
                             },
                             modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(16.dp),
+                            shape = AppShapes.L,
                             contentPadding = PaddingValues(vertical = 16.dp),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = ErrorRed

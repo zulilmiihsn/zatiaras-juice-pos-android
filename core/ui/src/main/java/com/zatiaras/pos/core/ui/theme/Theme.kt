@@ -1,6 +1,7 @@
 package com.zatiaras.pos.core.ui.theme
 
 import android.app.Activity
+import androidx.compose.ui.graphics.Color
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
@@ -11,7 +12,6 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
@@ -31,38 +31,38 @@ private val DarkColorScheme = darkColorScheme(
     background = Slate950,
     onBackground = Slate50,
     surface = Slate950,
-    onSurface = Slate50,
+    onsurface = Color.White,
     surfaceVariant = Slate900,
     onSurfaceVariant = Slate400,
     outline = Slate800,
     outlineVariant = Slate900,
     error = ErrorRed,
-    onError = Color.White
+    onError = Slate50
 )
 
 private val LightColorScheme = lightColorScheme(
     primary = Brand600,
-    onPrimary = Color.White,
+    onPrimary = Slate50,
     primaryContainer = Brand50,
     onPrimaryContainer = Brand900,
     // ShadCN "Secondary" is usually a dark button in light mode, or a muted gray.
     // Here we map it to Slate for neutral actions.
     secondary = Slate900,
-    onSecondary = Color.White,
+    onSecondary = Slate50,
     secondaryContainer = Slate100,
     onSecondaryContainer = Slate900,
     tertiary = Brand600,
-    onTertiary = Color.White,
+    onTertiary = Slate50,
     background = Color.White,
     onBackground = Slate950,
     surface = Color.White,
     onSurface = Slate950,
-    surfaceVariant = Slate50, // Subtle card backgrounds
+    surfaceVariant = Slate50, // Subtle gray containers
     onSurfaceVariant = Slate500, // Muted text
     outline = Slate200, // Thin borders
     outlineVariant = Slate100,
     error = ErrorRed,
-    onError = Color.White
+    onError = Slate50
 )
 
 @Composable
@@ -100,3 +100,4 @@ fun ZatiarasPOSTheme(
         )
     }
 }
+

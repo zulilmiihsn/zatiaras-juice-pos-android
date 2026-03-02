@@ -51,10 +51,10 @@ fun StatCard(
     modifier: Modifier = Modifier,
     subtitle: String? = null,
     trendPercent: Double? = null,
-    gradientColors: List<Color> = listOf(
-        MaterialTheme.colorScheme.primary,
-        MaterialTheme.colorScheme.tertiary
-    )
+    containerColor: Color = MaterialTheme.colorScheme.surface,
+    contentColor: Color = MaterialTheme.colorScheme.onSurface,
+    iconContainerColor: Color = MaterialTheme.colorScheme.primaryContainer,
+    iconTintColor: Color = MaterialTheme.colorScheme.primary
 ) {
     val dimensions = LocalDimensions.current
     
@@ -62,15 +62,16 @@ fun StatCard(
         modifier = modifier
             .animateContentSize(),
         shape = AppShapes.L,
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = containerColor,
+            contentColor = contentColor
+        )
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .fillMaxHeight()
-                .background(
-                    brush = Brush.linearGradient(gradientColors)
-                )
                 .padding(dimensions.paddingM)
         ) {
             Column {
@@ -83,7 +84,7 @@ fun StatCard(
                         Text(
                             text = title,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = Color.White.copy(alpha = 0.8f)
+                            color = contentColor.copy(alpha = 0.8f)
                         )
                         
                         Spacer(modifier = Modifier.height(dimensions.spacingXS))
@@ -92,15 +93,15 @@ fun StatCard(
                             text = value,
                             style = MaterialTheme.typography.headlineMedium,
                             fontWeight = FontWeight.Bold,
-                            color = Color.White
+                            color = contentColor
                         )
                         
                         if (subtitle != null) {
-                            Spacer(modifier = Modifier.height(4.dp))
+                            Spacer(modifier = Modifier.height(dimensions.spacingXS))
                             Text(
                                 text = subtitle,
                                 style = MaterialTheme.typography.bodySmall,
-                                color = Color.White.copy(alpha = 0.7f)
+                                color = contentColor.copy(alpha = 0.7f)
                             )
                         }
                     }
@@ -109,13 +110,13 @@ fun StatCard(
                         modifier = Modifier
                             .size(48.dp)
                             .clip(CircleShape)
-                            .background(Color.White.copy(alpha = 0.2f)),
+                            .background(iconContainerColor),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = icon,
                             contentDescription = null,
-                            tint = Color.White,
+                            tint = iconTintColor,
                             modifier = Modifier.size(24.dp)
                         )
                     }
@@ -123,7 +124,7 @@ fun StatCard(
                 
                 // Trend indicator
                 if (trendPercent != null) {
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(dimensions.spacingM))
                     
                     Row(
                         verticalAlignment = Alignment.CenterVertically
@@ -139,7 +140,7 @@ fun StatCard(
                             modifier = Modifier
                                 .clip(AppShapes.XS)
                                 .background(trendColor.copy(alpha = 0.2f))
-                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                                .padding(horizontal = dimensions.spacingS, vertical = 2.dp)
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Icon(
@@ -148,7 +149,7 @@ fun StatCard(
                                     tint = trendColor,
                                     modifier = Modifier.size(14.dp)
                                 )
-                                Spacer(modifier = Modifier.width(4.dp))
+                                Spacer(modifier = Modifier.width(dimensions.spacingXS))
                                 Text(
                                     text = "${if (isPositive) "+" else ""}${String.format(Locale.getDefault(), "%.1f", trendPercent)}%",
                                     style = MaterialTheme.typography.labelSmall,
@@ -158,12 +159,12 @@ fun StatCard(
                             }
                         }
                         
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(dimensions.spacingS))
                         
                         Text(
                             text = stringResource(R.string.reports_vs_last_week),
                             style = MaterialTheme.typography.labelSmall,
-                            color = Color.White.copy(alpha = 0.6f)
+                            color = contentColor.copy(alpha = 0.6f)
                         )
                     }
                 }

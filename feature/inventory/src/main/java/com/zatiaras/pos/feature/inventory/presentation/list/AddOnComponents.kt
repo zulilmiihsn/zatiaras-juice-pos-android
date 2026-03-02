@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
@@ -54,9 +53,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.zatiaras.pos.core.domain.model.AddOn
 import com.zatiaras.pos.core.domain.model.Category
+import com.zatiaras.pos.core.ui.theme.AppShapes
 import com.zatiaras.pos.core.ui.components.CurrencyTextField
 import com.zatiaras.pos.core.ui.components.ZatDialog
 import com.zatiaras.pos.core.ui.util.CurrencyFormatter
+import androidx.compose.foundation.border
 
 @Composable
 fun AddOnListContent(
@@ -101,10 +102,10 @@ fun AddOnListContent(
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surface
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
                     ),
-                    shape = RoundedCornerShape(16.dp),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                    shape = AppShapes.L,
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                 ) {
                     Row(
                         modifier = Modifier
@@ -204,12 +205,17 @@ fun AddAddOnDialog(
         }
         
         Card(
-            modifier = Modifier.fillMaxWidth(0.92f),
-            shape = RoundedCornerShape(24.dp),
+            modifier = Modifier.fillMaxWidth(0.92f)
+                .border(
+                    1.dp,
+                    MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                    AppShapes.XXL
+                ),
+            shape = AppShapes.XXL,
             colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surface
+                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
             ),
-            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
             Column(
                 modifier = Modifier.padding(24.dp),
@@ -231,7 +237,7 @@ fun AddAddOnDialog(
                     isError = nameError != null,
                     supportingText = nameError?.let { { Text(it) } },
                     singleLine = true,
-                    shape = RoundedCornerShape(12.dp),
+                    shape = AppShapes.M,
                     modifier = Modifier.fillMaxWidth()
                 )
                 
@@ -246,7 +252,7 @@ fun AddAddOnDialog(
                     supportingText = priceError?.let { { Text(it) } },
                     showPrefix = true,
                     singleLine = true,
-                    shape = RoundedCornerShape(12.dp),
+                    shape = AppShapes.M,
                     modifier = Modifier.fillMaxWidth()
                 )
                 
@@ -257,14 +263,14 @@ fun AddAddOnDialog(
                     OutlinedButton(
                         onClick = dismiss,
                         modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = AppShapes.M
                     ) {
                         Text(stringResource(R.string.inventory_action_cancel))
                     }
                     Button(
                         onClick = { validateAndSubmit() },
                         modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = AppShapes.M
                     ) {
                         Text(stringResource(R.string.inventory_action_save))
                     }
@@ -305,12 +311,17 @@ fun EditAddOnDialog(
         }
         
         Card(
-            modifier = Modifier.fillMaxWidth(0.92f),
-            shape = RoundedCornerShape(24.dp),
+            modifier = Modifier.fillMaxWidth(0.92f)
+                .border(
+                    1.dp,
+                    MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                    AppShapes.XXL
+                ),
+            shape = AppShapes.XXL,
             colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surface
+                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
             ),
-            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
             Column(
                 modifier = Modifier.padding(24.dp),
@@ -332,7 +343,7 @@ fun EditAddOnDialog(
                     isError = nameError != null,
                     supportingText = nameError?.let { { Text(it) } },
                     singleLine = true,
-                    shape = RoundedCornerShape(12.dp),
+                    shape = AppShapes.M,
                     modifier = Modifier.fillMaxWidth()
                 )
                 
@@ -347,7 +358,7 @@ fun EditAddOnDialog(
                     supportingText = priceError?.let { { Text(it) } },
                     showPrefix = true,
                     singleLine = true,
-                    shape = RoundedCornerShape(12.dp),
+                    shape = AppShapes.M,
                     modifier = Modifier.fillMaxWidth()
                 )
                 
@@ -358,14 +369,14 @@ fun EditAddOnDialog(
                     OutlinedButton(
                         onClick = dismiss,
                         modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = AppShapes.M
                     ) {
                         Text(stringResource(R.string.inventory_action_cancel))
                     }
                     Button(
                         onClick = { validateAndSubmit() },
                         modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = AppShapes.M
                     ) {
                         Text(stringResource(R.string.inventory_action_save))
                     }
@@ -385,12 +396,17 @@ fun DeleteAddOnConfirmDialog(
         onDismissRequest = onDismiss
     ) { dismiss ->
         Card(
-            modifier = Modifier.fillMaxWidth(0.9f),
-            shape = RoundedCornerShape(24.dp),
+            modifier = Modifier.fillMaxWidth(0.9f)
+                .border(
+                    1.dp,
+                    MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                    AppShapes.XXL
+                ),
+            shape = AppShapes.XXL,
             colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surface
+                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
             ),
-            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
             Column(
                 modifier = Modifier.padding(24.dp),
@@ -430,7 +446,7 @@ fun DeleteAddOnConfirmDialog(
                     OutlinedButton(
                         onClick = dismiss,
                         modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = AppShapes.M
                     ) {
                         Text(stringResource(R.string.inventory_action_cancel))
                     }
@@ -443,7 +459,7 @@ fun DeleteAddOnConfirmDialog(
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.error
                         ),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = AppShapes.M
                     ) {
                         Text(stringResource(R.string.inventory_action_delete))
                     }

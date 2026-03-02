@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.DateRange
@@ -163,12 +162,12 @@ private fun DatePickerButton(
     
     Box(
         modifier = modifier
-            .clip(RoundedCornerShape(10.dp))
+            .clip(AppShapes.M)
             .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
             .border(
                 width = 1.dp,
                 color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
-                shape = RoundedCornerShape(10.dp)
+                shape = AppShapes.M
             )
             .clickable(onClick = onClick)
             .padding(horizontal = 10.dp, vertical = 8.dp)
@@ -304,12 +303,14 @@ fun DateRangePickerDialog(
             contentAlignment = Alignment.Center
         ) {
             androidx.compose.material3.Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(28.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f), AppShapes.XXL),
+                shape = AppShapes.XXL,
                 colors = androidx.compose.material3.CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surface
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
                 ),
-                elevation = androidx.compose.material3.CardDefaults.cardElevation(defaultElevation = 8.dp)
+                elevation = androidx.compose.material3.CardDefaults.cardElevation(defaultElevation = 0.dp)
             ) {
                 Column(
                     modifier = Modifier.padding(24.dp),
@@ -333,7 +334,7 @@ fun DateRangePickerDialog(
                         Icon(
                             imageVector = Icons.Default.CalendarMonth,
                             contentDescription = null,
-                            tint = Color.White,
+                            tint = MaterialTheme.colorScheme.onPrimary,
                             modifier = Modifier.size(32.dp)
                         )
                     }
@@ -373,7 +374,7 @@ fun DateRangePickerDialog(
                             OutlinedButton(
                                 onClick = { showStartPicker = true },
                                 modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(12.dp),
+                                shape = AppShapes.M,
                                 contentPadding = PaddingValues(12.dp)
                             ) {
                                 Text(
@@ -393,7 +394,7 @@ fun DateRangePickerDialog(
                             OutlinedButton(
                                 onClick = { showEndPicker = true },
                                 modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(12.dp),
+                                shape = AppShapes.M,
                                 enabled = startDate != null,
                                 contentPadding = PaddingValues(12.dp)
                             ) {
@@ -428,7 +429,7 @@ fun DateRangePickerDialog(
                         OutlinedButton(
                             onClick = dismiss,
                             modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(14.dp),
+                            shape = AppShapes.M,
                             colors = ButtonDefaults.outlinedButtonColors(
                                 contentColor = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -445,7 +446,7 @@ fun DateRangePickerDialog(
                             },
                             enabled = startDate != null && endDate != null,
                             modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(14.dp)
+                            shape = AppShapes.M
                         ) {
                             Text(stringResource(R.string.core_terapkan), fontWeight = FontWeight.Bold)
                         }

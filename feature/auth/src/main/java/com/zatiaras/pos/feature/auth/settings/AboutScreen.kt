@@ -5,7 +5,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -26,14 +25,22 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.zatiaras.pos.core.ui.theme.AppShapes
+import com.zatiaras.pos.core.ui.theme.Brand500
+import com.zatiaras.pos.core.ui.theme.Brand600
+import com.zatiaras.pos.core.ui.theme.InfoBlue
+import com.zatiaras.pos.core.ui.theme.PurpleAccent
+import com.zatiaras.pos.core.ui.theme.SuccessGreen
+import com.zatiaras.pos.core.ui.theme.WarningAmber
 import com.zatiaras.pos.core.ui.R as CoreUiR
+import androidx.compose.foundation.border
 
 // Icon colors for consistent theming
-private val VersionIconColor = Color(0xFF8B5CF6) // Purple
-private val BranchIconColor = Color(0xFFEC4899) // Pink
-private val UserIconColor = Color(0xFF3B82F6) // Blue
-private val RoleIconColor = Color(0xFFF59E0B) // Amber
-private val SupportIconColor = Color(0xFF10B981) // Emerald
+private val VersionIconColor = PurpleAccent
+private val BranchIconColor = Brand500
+private val UserIconColor = InfoBlue
+private val RoleIconColor = WarningAmber
+private val SupportIconColor = SuccessGreen
 
 /**
  * About Screen - Enhanced with premium styling
@@ -49,6 +56,7 @@ fun AboutScreen(
     val uiState by viewModel.uiState.collectAsState()
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
@@ -83,9 +91,11 @@ fun AboutScreen(
 
             // Premium App Logo Card with gradient
             Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(24.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f), AppShapes.XXL),
+                shape = AppShapes.XXL,
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
             ) {
                 Box(
                     modifier = Modifier
@@ -93,8 +103,8 @@ fun AboutScreen(
                         .background(
                             brush = Brush.linearGradient(
                                 colors = listOf(
-                                    Color(0xFFEC4899),
-                                    Color(0xFFDB2777)
+                                    Brand500,
+                                    Brand600
                                 )
                             )
                         )
@@ -109,7 +119,7 @@ fun AboutScreen(
                             modifier = Modifier
                                 .size(100.dp)
                                 .clip(CircleShape)
-                                .background(Color.White.copy(alpha = 0.2f)),
+                                .background(MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.2f)),
                             contentAlignment = Alignment.Center
                         ) {
                             Image(
@@ -126,13 +136,13 @@ fun AboutScreen(
                             text = stringResource(R.string.auth_title),
                             style = MaterialTheme.typography.headlineMedium,
                             fontWeight = FontWeight.Bold,
-                            color = Color.White
+                            color = MaterialTheme.colorScheme.onPrimary
                         )
 
                         Text(
                             text = stringResource(R.string.about_system_pos),
                             style = MaterialTheme.typography.bodyMedium,
-                            color = Color.White.copy(alpha = 0.8f)
+                            color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
                         )
 
                         Spacer(modifier = Modifier.height(12.dp))
@@ -140,15 +150,15 @@ fun AboutScreen(
                         // Version Badge
                         Box(
                             modifier = Modifier
-                                .clip(RoundedCornerShape(20.dp))
-                                .background(Color.White.copy(alpha = 0.25f))
+                                .clip(AppShapes.XL)
+                                .background(MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.25f))
                                 .padding(horizontal = 16.dp, vertical = 6.dp)
                         ) {
                             Text(
                                 text = stringResource(R.string.about_version_badge, "1.0"),
                                 style = MaterialTheme.typography.labelLarge,
                                 fontWeight = FontWeight.SemiBold,
-                                color = Color.White
+                                color = MaterialTheme.colorScheme.onPrimary
                             )
                         }
                     }
@@ -195,7 +205,7 @@ fun AboutScreen(
             // Copyright Footer - Stylized
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
+                shape = AppShapes.L,
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
                 )
@@ -272,12 +282,14 @@ private fun AboutInfoCard(
     value: String
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f), AppShapes.L),
+        shape = AppShapes.L,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
             modifier = Modifier
@@ -289,7 +301,7 @@ private fun AboutInfoCard(
             Box(
                 modifier = Modifier
                     .size(44.dp)
-                    .clip(RoundedCornerShape(12.dp))
+                    .clip(AppShapes.M)
                     .background(iconColor.copy(alpha = 0.1f)),
                 contentAlignment = Alignment.Center
             ) {

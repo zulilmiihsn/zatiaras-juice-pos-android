@@ -11,7 +11,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -30,13 +29,20 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.zatiaras.pos.core.ui.theme.AppShapes
+import com.zatiaras.pos.core.ui.theme.ErrorRed
+import com.zatiaras.pos.core.ui.theme.InfoBlue
+import com.zatiaras.pos.core.ui.theme.PurpleAccent
+import com.zatiaras.pos.core.ui.theme.SuccessGreen
+import com.zatiaras.pos.core.ui.theme.WarningAmber
+import androidx.compose.foundation.border
 
 // Icon colors for consistent theming
-private val SyncIconColor = Color(0xFF3B82F6) // Blue
-private val SuccessColor = Color(0xFF10B981) // Green
-private val WarningColor = Color(0xFFF59E0B) // Amber
-private val ErrorColor = Color(0xFFEF4444) // Red
-private val InfoColor = Color(0xFF8B5CF6) // Purple
+private val SyncIconColor = InfoBlue
+private val SuccessColor = SuccessGreen
+private val WarningColor = WarningAmber
+private val ErrorColor = ErrorRed
+private val InfoColor = PurpleAccent
 
 /**
  * Sync Settings Sub-Screen - Enhanced with premium styling
@@ -51,6 +57,7 @@ fun SyncSettingsScreen(
     val uiState by viewModel.uiState.collectAsState()
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
@@ -145,7 +152,7 @@ fun SyncSettingsScreen(
             // Info Card with bullet points - Enhanced
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp),
+                shape = AppShapes.XL,
                 colors = CardDefaults.cardColors(
                     containerColor = InfoColor.copy(alpha = 0.08f)
                 )
@@ -157,7 +164,7 @@ fun SyncSettingsScreen(
                         Box(
                             modifier = Modifier
                                 .size(40.dp)
-                                .clip(RoundedCornerShape(10.dp))
+                                .clip(AppShapes.M)
                                 .background(InfoColor.copy(alpha = 0.15f)),
                             contentAlignment = Alignment.Center
                         ) {
@@ -241,9 +248,11 @@ private fun SyncStatusCard(
     )
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f), AppShapes.XXL),
+        shape = AppShapes.XXL,
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Box(
             modifier = Modifier
@@ -268,7 +277,7 @@ private fun SyncStatusCard(
                         modifier = Modifier
                             .size(56.dp)
                             .clip(CircleShape)
-                            .background(Color.White.copy(alpha = 0.2f)),
+                            .background(MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.2f)),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
@@ -278,7 +287,7 @@ private fun SyncStatusCard(
                                 else -> Icons.Outlined.CloudDone
                             },
                             contentDescription = null,
-                            tint = Color.White,
+                            tint = MaterialTheme.colorScheme.onPrimary,
                             modifier = Modifier
                                 .size(32.dp)
                                 .then(
@@ -298,19 +307,19 @@ private fun SyncStatusCard(
                             },
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
-                            color = Color.White
+                            color = MaterialTheme.colorScheme.onPrimary
                         )
                         Text(
                             text = lastSyncInfoText(lastSyncInfo),
                             style = MaterialTheme.typography.bodyMedium,
-                            color = Color.White.copy(alpha = 0.85f)
+                            color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f)
                         )
                     }
                 }
 
                 Spacer(modifier = Modifier.height(20.dp))
                 
-                HorizontalDivider(color = Color.White.copy(alpha = 0.2f))
+                HorizontalDivider(color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.2f))
                 
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -324,28 +333,28 @@ private fun SyncStatusCard(
                         Icon(
                             imageVector = Icons.Outlined.CloudQueue,
                             contentDescription = null,
-                            tint = Color.White.copy(alpha = 0.8f),
+                            tint = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f),
                             modifier = Modifier.size(20.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = stringResource(R.string.sync_pending_data),
                             style = MaterialTheme.typography.bodyMedium,
-                            color = Color.White.copy(alpha = 0.8f)
+                            color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
                         )
                     }
                     
                     Box(
                         modifier = Modifier
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(Color.White.copy(alpha = 0.25f))
+                            .clip(AppShapes.M)
+                            .background(MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.25f))
                             .padding(horizontal = 12.dp, vertical = 4.dp)
                     ) {
                         Text(
                             text = stringResource(R.string.sync_pending_count, pendingCount),
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.Bold,
-                            color = Color.White
+                            color = MaterialTheme.colorScheme.onPrimary
                         )
                     }
                 }
@@ -406,12 +415,14 @@ private fun SyncActionCard(
     onClick: () -> Unit
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f), AppShapes.L),
+        shape = AppShapes.L,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
             modifier = Modifier
@@ -423,7 +434,7 @@ private fun SyncActionCard(
             Box(
                 modifier = Modifier
                     .size(48.dp)
-                    .clip(RoundedCornerShape(12.dp))
+                    .clip(AppShapes.M)
                     .background(iconColor.copy(alpha = 0.1f)),
                 contentAlignment = Alignment.Center
             ) {
@@ -456,7 +467,7 @@ private fun SyncActionCard(
                 OutlinedButton(
                     onClick = onClick,
                     enabled = enabled,
-                    shape = RoundedCornerShape(12.dp)
+                    shape = AppShapes.M
                 ) {
                     Text(buttonText, fontWeight = FontWeight.SemiBold)
                 }
@@ -464,7 +475,7 @@ private fun SyncActionCard(
                 Button(
                     onClick = onClick,
                     enabled = enabled,
-                    shape = RoundedCornerShape(12.dp),
+                    shape = AppShapes.M,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = iconColor
                     )
@@ -472,7 +483,7 @@ private fun SyncActionCard(
                     if (isLoading) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(18.dp),
-                            color = Color.White,
+                            color = MaterialTheme.colorScheme.onPrimary,
                             strokeWidth = 2.dp
                         )
                         Spacer(modifier = Modifier.width(8.dp))

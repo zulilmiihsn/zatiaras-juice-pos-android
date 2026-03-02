@@ -13,7 +13,6 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -40,7 +39,10 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
+import com.zatiaras.pos.core.ui.theme.AppShapes
+import com.zatiaras.pos.core.ui.theme.InfoBlue
 import com.zatiaras.pos.core.ui.theme.LocalDimensions
+import com.zatiaras.pos.core.ui.theme.ProfitGreenDark
 import com.zatiaras.pos.feature.reports.R
 import compose.icons.EvaIcons
 import compose.icons.evaicons.Outline
@@ -96,6 +98,7 @@ fun ReportChatScreen(
     }
     
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
@@ -206,14 +209,12 @@ fun ReportChatScreen(
             
             // Input Area
             Surface(
-                tonalElevation = 8.dp,
-                shadowElevation = 16.dp,
-                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
-                shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                shape = AppShapes.XXL,
                 modifier = Modifier.border(
                     1.dp, 
                     MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f),
-                    RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
+                    AppShapes.XXL
                 )
             ) {
                 Column(
@@ -237,7 +238,7 @@ fun ReportChatScreen(
                                         containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
                                         labelColor = MaterialTheme.colorScheme.primary
                                     ),
-                                    shape = RoundedCornerShape(16.dp),
+                                    shape = AppShapes.L,
                                     border = null
                                 )
                             }
@@ -254,8 +255,8 @@ fun ReportChatScreen(
                             modifier = Modifier
                                 .padding(start = 16.dp, end = 16.dp, top = 8.dp)
                                 .size(100.dp)
-                                .clip(RoundedCornerShape(16.dp))
-                                .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f), RoundedCornerShape(16.dp))
+                                .clip(AppShapes.L)
+                                .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f), AppShapes.L)
                         ) {
                             AsyncImage(
                                 model = uiState.selectedImageUri,
@@ -269,12 +270,12 @@ fun ReportChatScreen(
                                     .align(Alignment.TopEnd)
                                     .size(24.dp)
                                     .offset(x = (-4).dp, y = 4.dp)
-                                    .background(Color.Black.copy(alpha = 0.5f), CircleShape)
+                                    .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.5f), CircleShape)
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Close,
                                     contentDescription = stringResource(R.string.chat_remove_image),
-                                    tint = Color.White,
+                                    tint = MaterialTheme.colorScheme.onPrimary,
                                     modifier = Modifier.size(16.dp)
                                 )
                             }
@@ -314,7 +315,7 @@ fun ReportChatScreen(
                                 ) 
                             },
                             maxLines = 4,
-                            shape = RoundedCornerShape(24.dp),
+                            shape = AppShapes.XXL,
                             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
                             keyboardActions = KeyboardActions(
                                 onSend = {
@@ -356,7 +357,7 @@ fun ReportChatScreen(
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.Send,
                                 contentDescription = stringResource(R.string.chat_send),
-                                tint = if (sendEnabled) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
+                                tint = if (sendEnabled) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
@@ -400,7 +401,6 @@ fun ChatMessageItem(message: ChatMessage) {
                     },
                 shape = CircleShape,
                 color = MaterialTheme.colorScheme.primaryContainer,
-                shadowElevation = 4.dp,
                 border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
             ) {
                 Box(contentAlignment = Alignment.Center) {
@@ -416,11 +416,7 @@ fun ChatMessageItem(message: ChatMessage) {
         }
         
         Surface(
-            shape = if (isUser) {
-                RoundedCornerShape(20.dp, 20.dp, 4.dp, 20.dp)
-            } else {
-                RoundedCornerShape(20.dp, 20.dp, 20.dp, 4.dp)
-            },
+            shape = AppShapes.XL,
             color = if (isUser) Color.Transparent else MaterialTheme.colorScheme.surface,
             tonalElevation = 0.dp,
             modifier = Modifier
@@ -434,17 +430,13 @@ fun ChatMessageItem(message: ChatMessage) {
                             MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
                         )
                     ),
-                    shape = if (isUser) {
-                        RoundedCornerShape(20.dp, 20.dp, 4.dp, 20.dp)
-                    } else {
-                        RoundedCornerShape(20.dp, 20.dp, 20.dp, 4.dp)
-                    }
+                    shape = AppShapes.XL
                 )
                 .then(
                     if (!isUser) Modifier.border(
                         1.dp, 
                         MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f),
-                        RoundedCornerShape(20.dp, 20.dp, 20.dp, 4.dp)
+                        AppShapes.XL
                     ) else Modifier
                 )
         ) {
@@ -464,7 +456,7 @@ fun ChatMessageItem(message: ChatMessage) {
                             contentDescription = stringResource(R.string.chat_message_image),
                             modifier = Modifier
                                 .padding(6.dp)
-                                .clip(RoundedCornerShape(14.dp))
+                                .clip(AppShapes.M)
                                 .fillMaxWidth(0.85f)
                                 .heightIn(max = 260.dp),
                             contentScale = ContentScale.Crop
@@ -494,8 +486,8 @@ fun FormattedMessage(
     isUser: Boolean,
     modifier: Modifier = Modifier
 ) {
-    val textColor = if (isUser) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
-    val headerColor = if (isUser) Color.White else MaterialTheme.colorScheme.primary
+    val textColor = if (isUser) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+    val headerColor = if (isUser) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary
     
     Column(modifier = modifier) {
         val lines = content.split("\n")
@@ -504,13 +496,13 @@ fun FormattedMessage(
                 line.startsWith("---") -> {
                     HorizontalDivider(
                         modifier = Modifier.padding(vertical = 8.dp),
-                        color = (if (isUser) Color.White else MaterialTheme.colorScheme.outlineVariant).copy(alpha = 0.3f)
+                        color = (if (isUser) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.outlineVariant).copy(alpha = 0.3f)
                     )
                 }
                 line.trim().startsWith("#") -> {
                     val hashCount = line.takeWhile { it == '#' }.length
-                    val content = line.dropWhile { it == '#' || it == ' ' }.trim()
-                    if (hashCount > 0 && content.isNotEmpty()) {
+                    val headingContent = line.dropWhile { it == '#' || it == ' ' }.trim()
+                    if (hashCount > 0 && headingContent.isNotEmpty()) {
                         val style = when (hashCount) {
                             1 -> MaterialTheme.typography.headlineSmall
                             2 -> MaterialTheme.typography.titleMedium
@@ -518,7 +510,7 @@ fun FormattedMessage(
                             else -> MaterialTheme.typography.bodyLarge
                         }
                         Text(
-                            text = parseMarkdown(content),
+                            text = parseMarkdown(headingContent),
                             style = style,
                             fontWeight = FontWeight.Bold,
                             color = headerColor,
@@ -586,7 +578,7 @@ fun FormattedMessage(
  * Enhanced markdown parser that highlights currency and percentages
  */
 fun parseMarkdown(text: String): AnnotatedString {
-    val highlightColor = Color(0xFF2E7D32) // Emerald Green for money
+    val highlightColor = ProfitGreenDark
     
     return buildAnnotatedString {
         val boldRegex = """\*\*(.*?)\*\*|__(.*?)__""".toRegex()
@@ -631,7 +623,7 @@ fun parseMarkdown(text: String): AnnotatedString {
                 }
                 "percent" -> {
                     withStyle(SpanStyle(
-                        color = Color(0xFF1976D2), // Blue for stats
+                        color = InfoBlue,
                         fontWeight = FontWeight.Bold
                     )) {
                         append(match.value)
@@ -668,7 +660,7 @@ fun TypingIndicator() {
             .graphicsLayer(alpha = alpha)
             .background(
                 MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
-                RoundedCornerShape(16.dp)
+                AppShapes.L
             )
             .padding(horizontal = 12.dp, vertical = 8.dp)
     ) {
