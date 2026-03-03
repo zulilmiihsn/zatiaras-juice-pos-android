@@ -76,7 +76,7 @@ fun CategoryListContent(
                     imageVector = Icons.Default.Delete,
                     contentDescription = null,
                     modifier = Modifier.size(64.dp),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
+                    tint = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
                     stringResource(R.string.inventory_empty_categories),
@@ -108,7 +108,7 @@ fun CategoryListContent(
                             AppShapes.L
                         ),
                     colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                        containerColor = MaterialTheme.colorScheme.surface
                     ),
                     shape = AppShapes.L,
                     elevation = CardDefaults.cardElevation(
@@ -209,7 +209,7 @@ fun AddCategoryDialog(
                 ),
             shape = AppShapes.XXL,
             colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                containerColor = MaterialTheme.colorScheme.surface
             ),
             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
@@ -287,7 +287,7 @@ fun DeleteCategoryConfirmDialog(
                 ),
             shape = AppShapes.XXL,
             colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                containerColor = MaterialTheme.colorScheme.surface
             ),
             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {

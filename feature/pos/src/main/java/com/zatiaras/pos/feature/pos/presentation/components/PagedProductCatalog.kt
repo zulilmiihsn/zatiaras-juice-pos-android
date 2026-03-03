@@ -30,6 +30,9 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.GridView
+import androidx.compose.material.icons.filled.ViewList
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -95,6 +98,7 @@ fun PagedProductCatalog(
     onCategoryResult: (Category?) -> Unit,
     cart: Cart,
     isGridView: Boolean,
+    onToggleViewMode: () -> Unit,
     onProductClick: (Product) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -109,11 +113,32 @@ fun PagedProductCatalog(
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 8.dp)
         ) {
-            SearchBar(
-                query = searchQuery,
-                onQueryChange = onSearchQueryChange,
-                modifier = Modifier.fillMaxWidth()
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                SearchBar(
+                    query = searchQuery,
+                    onQueryChange = onSearchQueryChange,
+                    modifier = Modifier.weight(1f)
+                )
+
+                IconButton(
+                    onClick = onToggleViewMode,
+                    modifier = Modifier
+                        .background(
+                            color = MaterialTheme.colorScheme.surfaceVariant,
+                            shape = RoundedCornerShape(12.dp)
+                        )
+                ) {
+                    Icon(
+                        imageVector = if (isGridView) Icons.Default.ViewList else Icons.Default.GridView,
+                        contentDescription = if (isGridView) "List View" else "Grid View",
+                        tint = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.height(12.dp))
 

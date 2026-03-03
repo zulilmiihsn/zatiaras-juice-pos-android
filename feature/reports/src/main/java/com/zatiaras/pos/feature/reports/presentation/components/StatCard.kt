@@ -51,6 +51,7 @@ fun StatCard(
     modifier: Modifier = Modifier,
     subtitle: String? = null,
     trendPercent: Double? = null,
+    backgroundBrush: androidx.compose.ui.graphics.Brush? = null,
     containerColor: Color = MaterialTheme.colorScheme.surface,
     contentColor: Color = MaterialTheme.colorScheme.onSurface,
     iconContainerColor: Color = MaterialTheme.colorScheme.primaryContainer,
@@ -64,7 +65,7 @@ fun StatCard(
         shape = AppShapes.L,
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         colors = CardDefaults.cardColors(
-            containerColor = containerColor,
+            containerColor = if (backgroundBrush != null) Color.Transparent else containerColor,
             contentColor = contentColor
         )
     ) {
@@ -72,6 +73,9 @@ fun StatCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .fillMaxHeight()
+                .then(
+                    if (backgroundBrush != null) Modifier.background(backgroundBrush) else Modifier
+                )
                 .padding(dimensions.paddingM)
         ) {
             Column {

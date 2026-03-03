@@ -272,7 +272,7 @@ fun LoginScreen(
                                     focusedBorderColor = PrimaryPink,
                                     focusedLabelColor = PrimaryPink,
                                     cursorColor = PrimaryPink,
-                                    unfocusedBorderColor = Brand200,
+                                    unfocusedBorderColor = Slate200,
                                     unfocusedContainerColor = InputBackground,
                                     focusedContainerColor = MaterialTheme.colorScheme.surface
                                 ),
@@ -327,7 +327,7 @@ fun LoginScreen(
                                 focusedBorderColor = PrimaryPink,
                                 focusedLabelColor = PrimaryPink,
                                 cursorColor = PrimaryPink,
-                                unfocusedBorderColor = Brand200,
+                                unfocusedBorderColor = Slate200,
                                 unfocusedContainerColor = InputBackground,
                                 focusedContainerColor = MaterialTheme.colorScheme.surface
                             ),
@@ -364,7 +364,7 @@ fun LoginScreen(
                                 focusedBorderColor = PrimaryPink,
                                 focusedLabelColor = PrimaryPink,
                                 cursorColor = PrimaryPink,
-                                unfocusedBorderColor = Brand200,
+                                unfocusedBorderColor = Slate200,
                                 unfocusedContainerColor = InputBackground,
                                 focusedContainerColor = MaterialTheme.colorScheme.surface
                             ),

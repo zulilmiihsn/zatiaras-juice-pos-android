@@ -467,7 +467,7 @@ fun ChatMessageItem(message: ChatMessage) {
                         FormattedMessage(
                             content = message.content,
                             isUser = isUser,
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
                         )
                     }
                 }
@@ -507,7 +507,7 @@ fun FormattedMessage(
                             1 -> MaterialTheme.typography.headlineSmall
                             2 -> MaterialTheme.typography.titleMedium
                             3 -> MaterialTheme.typography.titleSmall
-                            else -> MaterialTheme.typography.bodyLarge
+                            else -> MaterialTheme.typography.bodyMedium
                         }
                         Text(
                             text = parseMarkdown(headingContent),
@@ -520,7 +520,7 @@ fun FormattedMessage(
                         Text(
                             text = parseMarkdown(line),
                             color = textColor,
-                            style = MaterialTheme.typography.bodyLarge,
+                            style = MaterialTheme.typography.bodyMedium,
                             modifier = Modifier.padding(vertical = 2.dp)
                         )
                     }
@@ -536,7 +536,7 @@ fun FormattedMessage(
                         Text(
                             text = parseMarkdown(cleanLine),
                             color = textColor,
-                            style = MaterialTheme.typography.bodyLarge
+                            style = MaterialTheme.typography.bodyMedium
                         )
                     }
                 }
@@ -554,7 +554,7 @@ fun FormattedMessage(
                         Text(
                             text = parseMarkdown(text),
                             color = textColor,
-                            style = MaterialTheme.typography.bodyLarge
+                            style = MaterialTheme.typography.bodyMedium
                         )
                     }
                 }
@@ -565,7 +565,7 @@ fun FormattedMessage(
                     Text(
                         text = parseMarkdown(line),
                         color = textColor,
-                        style = MaterialTheme.typography.bodyLarge,
+                        style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier.padding(vertical = 2.dp)
                     )
                 }

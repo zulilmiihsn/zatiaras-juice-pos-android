@@ -78,7 +78,7 @@ fun AddOnListContent(
                     imageVector = Icons.Default.Delete,
                     contentDescription = null,
                     modifier = Modifier.size(64.dp),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
+                    tint = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
                     stringResource(R.string.inventory_empty_addons),
@@ -102,7 +102,7 @@ fun AddOnListContent(
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                        containerColor = MaterialTheme.colorScheme.surface
                     ),
                     shape = AppShapes.L,
                     elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
@@ -213,7 +213,7 @@ fun AddAddOnDialog(
                 ),
             shape = AppShapes.XXL,
             colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                containerColor = MaterialTheme.colorScheme.surface
             ),
             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
@@ -319,7 +319,7 @@ fun EditAddOnDialog(
                 ),
             shape = AppShapes.XXL,
             colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                containerColor = MaterialTheme.colorScheme.surface
             ),
             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
@@ -404,7 +404,7 @@ fun DeleteAddOnConfirmDialog(
                 ),
             shape = AppShapes.XXL,
             colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                containerColor = MaterialTheme.colorScheme.surface
             ),
             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {

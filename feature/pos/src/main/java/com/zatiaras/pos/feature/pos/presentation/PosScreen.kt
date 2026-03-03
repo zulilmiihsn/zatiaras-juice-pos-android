@@ -97,84 +97,131 @@ fun PosScreen(
         // Remove old top bar to make it full screen premium look
         snackbarHost = { com.zatiaras.pos.core.ui.components.ZatSnackbarHost(snackbarHostState) }
     ) { paddingValues ->
-        Box(
+        BoxWithConstraints(
             modifier = Modifier
                 .fillMaxSize()
                 .background(
                     Brush.verticalGradient(
-                        colors = listOf(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f), MaterialTheme.colorScheme.background,
+                        colors = listOf(
+                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f), 
+                            MaterialTheme.colorScheme.background,
                             MaterialTheme.colorScheme.surface
                         )
                     )
                 )
                 .padding(paddingValues)
         ) {
-            // Main Catalog Area
-            PagedProductCatalog(
-                products = pagedProducts,
-                categories = uiState.categories,
-                cart = uiState.cart,
-                selectedCategory = uiState.categories.find { it.id == uiState.selectedCategoryId },
-                searchQuery = uiState.searchQuery,
-                isGridView = uiState.isGridView,
-                onSearchQueryChange = { viewModel.onEvent(PosEvent.SearchQueryChanged(it)) },
-                onCategoryResult = { category -> viewModel.onEvent(PosEvent.CategorySelected(category?.id)) },
-                onProductClick = { viewModel.onEvent(PosEvent.AddToCart(it)) },
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(bottom = if (uiState.cart.isNotEmpty()) 80.dp else 0.dp)
-            )
+            val isWideScreen = maxWidth >= 600.dp
             
-            // Floating Cart Summary Bar
-            AnimatedVisibility(
-                visible = uiState.cart.isNotEmpty(),
-                enter = slideInVertically(initialOffsetY = { it }),
-                exit = slideOutVertically(targetOffsetY = { it }),
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(16.dp)
-            ) {
-                FloatingCartBar(
-                    itemCount = uiState.cart.itemCount,
-                    total = uiState.cart.subtotal,
-                    onClick = { isCartVisible = true }
-                )
-            }
-            
-            // Scrim (Overlay)
-            if (isCartVisible && uiState.cart.isNotEmpty()) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Slate900.copy(alpha = 0.4f))
-                        .noRippleClickable { isCartVisible = false }
-                )
-            }
-            
-            // Cart Sidebar (Drawer)
-            AnimatedVisibility(
-                visible = isCartVisible && uiState.cart.isNotEmpty(),
-                enter = slideInHorizontally(initialOffsetX = { it }),
-                exit = slideOutHorizontally(targetOffsetX = { it }),
-                modifier = Modifier
-                    .align(Alignment.CenterEnd)
-                    .fillMaxHeight()
-                    .widthIn(max = 400.dp)
-                    .systemBarsPadding() 
-            ) {
-                CartSidebar(
-                    cart = uiState.cart,
-                    onIncrement = { viewModel.onEvent(PosEvent.IncrementItem(it)) },
-                    onDecrement = { viewModel.onEvent(PosEvent.DecrementItem(it)) },
-                    onRemove = { viewModel.onEvent(PosEvent.RemoveFromCart(it)) },
-                    onClearCart = { viewModel.onEvent(PosEvent.ClearCart) },
-                    onCheckout = onProceedToCheckout,
-                    modifier = Modifier.fillMaxSize()
-                )
+            if (isWideScreen) {
+                // Persistent Side-by-Side Layout for Tablet / Wide Screens
+                Row(modifier = Modifier.fillMaxSize()) {
+                    // Left Side: Product Catalog
+                    Box(modifier = Modifier.weight(1f).fillMaxHeight()) {
+                        PagedProductCatalog(
+                            products = pagedProducts,
+                            categories = uiState.categories,
+                            cart = uiState.cart,
+                            selectedCategory = uiState.categories.find { it.id == uiState.selectedCategoryId },
+                            searchQuery = uiState.searchQuery,
+                            isGridView = uiState.isGridView,
+                            onSearchQueryChange = { viewModel.onEvent(PosEvent.SearchQueryChanged(it)) },
+                            onCategoryResult = { category -> viewModel.onEvent(PosEvent.CategorySelected(category?.id)) },
+                            onProductClick = { viewModel.onEvent(PosEvent.AddToCart(it)) },
+                            onToggleViewMode = { viewModel.onEvent(PosEvent.ToggleViewMode) },
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
+                    
+                    // Right Side: Persistent Cart Sidebar
+                    Box(
+                        modifier = Modifier
+                            .width(350.dp)
+                            .fillMaxHeight()
+                            .border(
+                                width = 1.dp,
+                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                            )
+                    ) {
+                        CartSidebar(
+                            cart = uiState.cart,
+                            onIncrement = { viewModel.onEvent(PosEvent.IncrementItem(it)) },
+                            onDecrement = { viewModel.onEvent(PosEvent.DecrementItem(it)) },
+                            onRemove = { viewModel.onEvent(PosEvent.RemoveFromCart(it)) },
+                            onClearCart = { viewModel.onEvent(PosEvent.ClearCart) },
+                            onCheckout = onProceedToCheckout,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
+                }
+            } else {
+                // Mobile Layout: Floating Cart or Vertical Split
+                Box(modifier = Modifier.fillMaxSize()) {
+                    PagedProductCatalog(
+                        products = pagedProducts,
+                        categories = uiState.categories,
+                        cart = uiState.cart,
+                        selectedCategory = uiState.categories.find { it.id == uiState.selectedCategoryId },
+                        searchQuery = uiState.searchQuery,
+                        isGridView = uiState.isGridView,
+                        onToggleViewMode = { viewModel.onEvent(PosEvent.ToggleViewMode) },
+                        onSearchQueryChange = { viewModel.onEvent(PosEvent.SearchQueryChanged(it)) },
+                        onCategoryResult = { category -> viewModel.onEvent(PosEvent.CategorySelected(category?.id)) },
+                        onProductClick = { viewModel.onEvent(PosEvent.AddToCart(it)) },
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(bottom = if (uiState.cart.isNotEmpty()) 80.dp else 0.dp)
+                    )
+
+                    AnimatedVisibility(
+                        visible = uiState.cart.isNotEmpty(),
+                        enter = slideInVertically(initialOffsetY = { it }),
+                        exit = slideOutVertically(targetOffsetY = { it }),
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .padding(16.dp)
+                    ) {
+                        FloatingCartBar(
+                            itemCount = uiState.cart.itemCount,
+                            total = uiState.cart.subtotal,
+                            onClick = { isCartVisible = true }
+                        )
+                    }
+
+                    if (isCartVisible && uiState.cart.isNotEmpty()) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(Slate900.copy(alpha = 0.4f))
+                                .noRippleClickable { isCartVisible = false }
+                        )
+                    }
+
+                    AnimatedVisibility(
+                        visible = isCartVisible && uiState.cart.isNotEmpty(),
+                        enter = slideInHorizontally(initialOffsetX = { it }),
+                        exit = slideOutHorizontally(targetOffsetX = { it }),
+                        modifier = Modifier
+                            .align(Alignment.CenterEnd)
+                            .fillMaxHeight()
+                            .widthIn(max = 400.dp)
+                            .systemBarsPadding()
+                    ) {
+                        CartSidebar(
+                            cart = uiState.cart,
+                            onIncrement = { viewModel.onEvent(PosEvent.IncrementItem(it)) },
+                            onDecrement = { viewModel.onEvent(PosEvent.DecrementItem(it)) },
+                            onRemove = { viewModel.onEvent(PosEvent.RemoveFromCart(it)) },
+                            onClearCart = { viewModel.onEvent(PosEvent.ClearCart) },
+                            onCheckout = onProceedToCheckout,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
+                }
             }
         }
     }
-    
+
     // Product Options Bottom Sheet
     if (uiState.showProductOptionsSheet && uiState.selectedProduct != null) {
         ProductOptionsBottomSheet(
@@ -353,4 +400,5 @@ private fun StoreClosedOverlay(onNavigateBack: () -> Unit) {
         }
     }
 }
+
 
