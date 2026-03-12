@@ -3,10 +3,10 @@ package com.zatiaras.pos.core.data.repository
 import com.zatiaras.pos.core.data.local.dao.AppSettingsDao
 import com.zatiaras.pos.core.data.local.entity.AppSettingsEntity
 import com.zatiaras.pos.core.data.remote.SettingsRemoteDataSource
+import com.zatiaras.pos.core.data.util.PasswordHasher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import timber.log.Timber
-import java.security.MessageDigest
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -95,7 +95,7 @@ class AppSettingsRepository @Inject constructor(
      */
     suspend fun setOwnerPin(pin: String): Result<Unit> {
         return try {
-            val hashedPin = hashPin(pin)
+            val hashedPin = PasswordHasher.hashPin(pin)
             settingsDao.updateOwnerPin(hashedPin)
             
             // Sync to remote
@@ -114,7 +114,14 @@ class AppSettingsRepository @Inject constructor(
      */
     suspend fun verifyOwnerPin(pin: String): Boolean {
         val storedHash = settingsDao.getOwnerPinHash() ?: return false
-        return hashPin(pin) == storedHash
+        val isValid = PasswordHasher.verifyPin(pin, storedHash)
+        if (isValid && PasswordHasher.needsRehash(storedHash)) {
+            val upgradedHash = PasswordHasher.hashPin(pin)
+            settingsDao.updateOwnerPin(upgradedHash)
+            syncSettingsToRemote()
+            Timber.d("Owner PIN hash upgraded from legacy SHA-256 to PBKDF2")
+        }
+        return isValid
     }
 
     /**
@@ -253,7 +260,7 @@ class AppSettingsRepository @Inject constructor(
      * Get default tax percentage.
      */
     suspend fun getDefaultTaxPercentage(): Double {
-        return getSettings()?.defaultTaxPercentage ?: 0.5
+        return getSettings()?.defaultTaxPercentage ?: 0.0
     }
 
     /**
@@ -353,13 +360,4 @@ class AppSettingsRepository @Inject constructor(
         }
     }
 
-    // ==================== HELPERS ====================
-
-    /**
-     * Hash PIN using SHA-256.
-     */
-    private fun hashPin(pin: String): String {
-        val bytes = MessageDigest.getInstance("SHA-256").digest(pin.toByteArray())
-        return bytes.joinToString("") { "%02x".format(it) }
-    }
 }

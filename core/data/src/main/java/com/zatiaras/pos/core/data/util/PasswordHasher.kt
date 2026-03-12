@@ -34,6 +34,11 @@ object PasswordHasher {
         val hash = pbkdf2(password, salt)
         return "${salt.toHex()}:${hash.toHex()}"
     }
+
+    /**
+     * Hash a PIN using the same PBKDF2 scheme as password hashing.
+     */
+    fun hashPin(pin: String): String = hash(pin)
     
     /**
      * Verify a password against a stored hash.
@@ -50,6 +55,11 @@ object PasswordHasher {
             verifyPbkdf2(password, storedHash)
         }
     }
+
+    /**
+     * Verify PIN against stored hash (PBKDF2 or legacy SHA-256).
+     */
+    fun verifyPin(pin: String, storedHash: String): Boolean = verify(pin, storedHash)
     
     /**
      * Check if a hash is in legacy SHA-256 format.
@@ -101,7 +111,7 @@ object PasswordHasher {
     private fun verifyLegacy(password: String, storedHash: String): Boolean {
         val bytes = MessageDigest.getInstance("SHA-256")
             .digest(password.toByteArray())
-        return bytes.toHex() == storedHash
+        return constantTimeEquals(bytes.toHex(), storedHash)
     }
     
     /**

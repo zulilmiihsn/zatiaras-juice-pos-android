@@ -110,6 +110,7 @@ fun CashRecordScreen(
     val formState by viewModel.formState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val successMsg = stringResource(R.string.cash_record_saved)
+    val dimensions = LocalDimensions.current
     
     var showAddSheet by remember { mutableStateOf(false) }
     var selectedManualRecord by remember { mutableStateOf<CashFlowItem.FromCashRecord?>(null) }
@@ -154,7 +155,8 @@ fun CashRecordScreen(
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
+                    containerColor = MaterialTheme.colorScheme.background,
+                    scrolledContainerColor = MaterialTheme.colorScheme.background
                 )
             )
         },
@@ -183,7 +185,7 @@ fun CashRecordScreen(
                 netCash = uiState.summary.netCash,
                 posTransactionCount = uiState.posTransactionCount,
                 priceFormatter = priceFormatter,
-                modifier = Modifier.padding(16.dp)
+                modifier = Modifier.padding(dimensions.paddingM)
             )
             
             // Shared Date Filter Component
@@ -205,7 +207,7 @@ fun CashRecordScreen(
                 onQuickPeriodSelected = { period ->
                     viewModel.onEvent(CashRecordEvent.SetDateFilter(period))
                 },
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                modifier = Modifier.padding(horizontal = dimensions.paddingM, vertical = dimensions.spacingXS)
             )
 
             // Date Picker Dialog Logic
@@ -236,10 +238,10 @@ fun CashRecordScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.MenuBook,
                             contentDescription = null,
-                            modifier = Modifier.size(72.dp),
+                            modifier = Modifier.size(dimensions.iconSizeXXL),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                         )
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(dimensions.paddingM))
                         Text(
                             text = stringResource(R.string.cash_record_empty),
                             style = MaterialTheme.typography.titleMedium
@@ -252,7 +254,6 @@ fun CashRecordScreen(
                     }
                 }
             } else {
-                val dimensions = LocalDimensions.current
                 LazyColumn(
                     contentPadding = PaddingValues(dimensions.paddingM),
                     verticalArrangement = Arrangement.spacedBy(dimensions.spacingXS)
@@ -279,7 +280,7 @@ fun CashRecordScreen(
                     }
                     
                     item {
-                        Spacer(modifier = Modifier.height(72.dp))
+                        Spacer(modifier = Modifier.height(dimensions.iconSizeXXL))
                     }
                 }
             }
@@ -295,7 +296,6 @@ fun CashRecordScreen(
             AddCashRecordSheet(
                 formState = formState,
                 onEvent = viewModel::onEvent,
-                priceFormatter = priceFormatter,
                 onCancel = {
                     scope.launch {
                         sheetState.hide()

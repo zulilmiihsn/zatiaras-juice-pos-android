@@ -24,7 +24,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.zatiaras.pos.core.ui.theme.AppShapes
 import com.zatiaras.pos.core.ui.theme.Brand500
 import com.zatiaras.pos.core.ui.theme.Brand600
@@ -49,12 +48,8 @@ private val SupportIconColor = SuccessGreen
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AboutScreen(
-    onNavigateBack: () -> Unit,
-    viewModel: SettingsViewModel = hiltViewModel()
+    onNavigateBack: () -> Unit
 ) {
-    @Suppress("UNUSED_VARIABLE")
-    val uiState by viewModel.uiState.collectAsState()
-
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
@@ -74,7 +69,8 @@ fun AboutScreen(
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
+                    containerColor = MaterialTheme.colorScheme.background,
+                    scrolledContainerColor = MaterialTheme.colorScheme.background
                 )
             )
         }

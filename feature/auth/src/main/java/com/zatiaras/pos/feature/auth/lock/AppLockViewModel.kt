@@ -97,6 +97,19 @@ class AppLockViewModel @Inject constructor(
 
     private fun verifyPin(pin: String) {
         viewModelScope.launch {
+            val lockoutRemaining = appLockPreferences.getPinLockoutRemainingMillis()
+            if (lockoutRemaining > 0L) {
+                _uiState.update { state ->
+                    state.copy(
+                        enteredPin = "",
+                        pinError = true,
+                        errorMessage = formatLockoutMessage(lockoutRemaining),
+                        isLoading = false
+                    )
+                }
+                return@launch
+            }
+
             // Add a small delay to allow the user to see the 4th dot filled
             // before showing the verification result
             delay(200)
@@ -107,6 +120,7 @@ class AppLockViewModel @Inject constructor(
             
             if (isValid) {
                 Timber.d("PIN verified successfully")
+                appLockPreferences.clearPinLockout()
                 _uiState.update { state ->
                     state.copy(
                         isUnlocked = true,
@@ -115,15 +129,31 @@ class AppLockViewModel @Inject constructor(
                 }
             } else {
                 Timber.w("Invalid PIN entered")
+                val lockoutDuration = appLockPreferences.recordFailedPinAttempt()
+                val errorMessage = if (lockoutDuration > 0L) {
+                    formatLockoutMessage(lockoutDuration)
+                } else {
+                    context.getString(R.string.app_lock_pin_wrong)
+                }
                 _uiState.update { state ->
                     state.copy(
                         enteredPin = "",
                         pinError = true,
-                        errorMessage = context.getString(R.string.app_lock_pin_wrong),
+                        errorMessage = errorMessage,
                         isLoading = false
                     )
                 }
             }
+        }
+    }
+
+    private fun formatLockoutMessage(remainingMillis: Long): String {
+        val seconds = (remainingMillis / 1000).coerceAtLeast(1)
+        return if (seconds >= 60) {
+            val minutes = (seconds + 59) / 60
+            "Terlalu banyak percobaan. Coba lagi dalam $minutes menit."
+        } else {
+            "Terlalu banyak percobaan. Coba lagi dalam $seconds detik."
         }
     }
 

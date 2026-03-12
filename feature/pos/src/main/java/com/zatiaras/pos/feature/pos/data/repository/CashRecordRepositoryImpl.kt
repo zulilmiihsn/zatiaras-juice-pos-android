@@ -102,7 +102,7 @@ class CashRecordRepositoryImpl @Inject constructor(
     }
 
     override suspend fun syncToRemote(): Result<Unit> {
-        // TODO: Implement in Phase 5 - Sync Engine
+        // TODO(P1): Implement sinkronisasi buku kas ke remote via sync engine (lihat pola ProductSyncer).
         val unsynced = cashRecordDao.getUnsynced()
         Timber.d("Found ${unsynced.size} unsynced cash records (sync not yet implemented)")
         return Result.success(Unit)

@@ -5,13 +5,15 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.zatiaras.pos.core.data.util.PasswordHasher
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-import java.security.MessageDigest
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -34,6 +36,12 @@ class AppLockPreferences @Inject constructor(
         private val KEY_BIOMETRIC_ENABLED = booleanPreferencesKey("biometric_enabled")
         private val KEY_PIN_HASH = stringPreferencesKey("pin_hash")
         private val KEY_PIN_SET = booleanPreferencesKey("pin_set")
+        private val KEY_PIN_FAILED_ATTEMPTS = intPreferencesKey("pin_failed_attempts")
+        private val KEY_PIN_LOCKOUT_UNTIL = longPreferencesKey("pin_lockout_until")
+        private const val SOFT_LOCKOUT_ATTEMPTS = 5
+        private const val HARD_LOCKOUT_ATTEMPTS = 10
+        private const val SOFT_LOCKOUT_MS = 30_000L
+        private const val HARD_LOCKOUT_MS = 5 * 60_000L
     }
 
     // ==================== LOCK STATE ====================
@@ -112,10 +120,12 @@ class AppLockPreferences @Inject constructor(
      * Set PIN (stores hashed value).
      */
     suspend fun setPin(pin: String) {
-        val hashedPin = hashPin(pin)
+        val hashedPin = PasswordHasher.hashPin(pin)
         context.appLockDataStore.edit { prefs ->
             prefs[KEY_PIN_HASH] = hashedPin
             prefs[KEY_PIN_SET] = true
+            prefs[KEY_PIN_FAILED_ATTEMPTS] = 0
+            prefs[KEY_PIN_LOCKOUT_UNTIL] = 0L
         }
     }
 
@@ -128,7 +138,48 @@ class AppLockPreferences @Inject constructor(
         }.first()
         
         if (storedHash == null) return false
-        return hashPin(pin) == storedHash
+        val isValid = PasswordHasher.verifyPin(pin, storedHash)
+        if (isValid && PasswordHasher.needsRehash(storedHash)) {
+            context.appLockDataStore.edit { prefs ->
+                prefs[KEY_PIN_HASH] = PasswordHasher.hashPin(pin)
+            }
+        }
+        return isValid
+    }
+
+    suspend fun isPinLockedOutNow(now: Long = System.currentTimeMillis()): Boolean {
+        return getPinLockoutRemainingMillis(now) > 0
+    }
+
+    suspend fun getPinLockoutRemainingMillis(now: Long = System.currentTimeMillis()): Long {
+        val lockoutUntil = context.appLockDataStore.data.map { prefs ->
+            prefs[KEY_PIN_LOCKOUT_UNTIL] ?: 0L
+        }.first()
+        return (lockoutUntil - now).coerceAtLeast(0L)
+    }
+
+    suspend fun recordFailedPinAttempt(now: Long = System.currentTimeMillis()): Long {
+        var lockoutDuration = 0L
+        context.appLockDataStore.edit { prefs ->
+            val attempts = (prefs[KEY_PIN_FAILED_ATTEMPTS] ?: 0) + 1
+            prefs[KEY_PIN_FAILED_ATTEMPTS] = attempts
+            lockoutDuration = when {
+                attempts >= HARD_LOCKOUT_ATTEMPTS -> HARD_LOCKOUT_MS
+                attempts >= SOFT_LOCKOUT_ATTEMPTS -> SOFT_LOCKOUT_MS
+                else -> 0L
+            }
+            if (lockoutDuration > 0L) {
+                prefs[KEY_PIN_LOCKOUT_UNTIL] = now + lockoutDuration
+            }
+        }
+        return lockoutDuration
+    }
+
+    suspend fun clearPinLockout() {
+        context.appLockDataStore.edit { prefs ->
+            prefs[KEY_PIN_FAILED_ATTEMPTS] = 0
+            prefs[KEY_PIN_LOCKOUT_UNTIL] = 0L
+        }
     }
 
     /**
@@ -138,6 +189,8 @@ class AppLockPreferences @Inject constructor(
         context.appLockDataStore.edit { prefs ->
             prefs.remove(KEY_PIN_HASH)
             prefs[KEY_PIN_SET] = false
+            prefs[KEY_PIN_FAILED_ATTEMPTS] = 0
+            prefs[KEY_PIN_LOCKOUT_UNTIL] = 0L
         }
     }
 
@@ -148,15 +201,5 @@ class AppLockPreferences @Inject constructor(
         context.appLockDataStore.edit { prefs ->
             prefs.clear()
         }
-    }
-
-    // ==================== HELPERS ====================
-
-    /**
-     * Hash PIN using SHA-256.
-     */
-    private fun hashPin(pin: String): String {
-        val bytes = MessageDigest.getInstance("SHA-256").digest(pin.toByteArray())
-        return bytes.joinToString("") { "%02x".format(it) }
     }
 }

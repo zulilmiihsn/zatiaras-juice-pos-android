@@ -53,9 +53,11 @@ class InventoryRemoteDataSource @Inject constructor(
      * Fetch all products from Supabase (full sync).
      * No delta filter to avoid timestamp type mismatch issues.
      */
-    @Suppress("UNUSED_PARAMETER")
     suspend fun fetchProducts(lastSyncTimestamp: Long = 0): Result<List<ProductEntity>> = withContext(Dispatchers.IO) {
         try {
+            if (lastSyncTimestamp > 0L) {
+                Timber.d("Delta product sync is not implemented yet, running full pull")
+            }
             val response = postgrest.from(TABLE_PRODUK)
                 .select()
                 .decodeList<ProdukReadDto>()

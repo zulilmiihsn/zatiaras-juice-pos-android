@@ -31,10 +31,12 @@ class AddOnRemoteDataSource @Inject constructor(
 
     // ==================== PULL ====================
 
-    @Suppress("UNUSED_PARAMETER")
     suspend fun fetchAddOns(lastSyncTimestamp: Long = 0): Result<List<AddOnEntity>> = 
         withContext(Dispatchers.IO) {
             try {
+                if (lastSyncTimestamp > 0L) {
+                    Timber.d("Delta add-on sync is not implemented yet, running full pull")
+                }
                 val response = postgrest.from(TABLE_TAMBAHAN)
                     .select()
                     .decodeList<TambahanReadDto>()

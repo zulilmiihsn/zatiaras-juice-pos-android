@@ -47,9 +47,8 @@ class EncryptedSessionManager @Inject constructor(
                 EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
             )
         } catch (e: Exception) {
-            Timber.e(e, "Failed to create EncryptedSharedPreferences, falling back to regular prefs")
-            // Fallback to regular SharedPreferences if encryption fails
-            context.getSharedPreferences(ENCRYPTED_PREFS_FILE + "_fallback", Context.MODE_PRIVATE)
+            Timber.e(e, "Failed to create EncryptedSharedPreferences for secure session storage")
+            throw IllegalStateException("EncryptedSharedPreferences initialization failed", e)
         }
     }
 

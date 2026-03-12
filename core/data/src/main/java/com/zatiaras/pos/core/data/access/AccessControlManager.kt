@@ -151,13 +151,27 @@ class AccessControlManager @Inject constructor(
      * Verify owner PIN.
      */
     suspend fun verifyOwnerPin(pin: String): Boolean {
-        return try {
+        val lockoutRemaining = accessControlPreferences.getOwnerPinLockoutRemainingMillis()
+        if (lockoutRemaining > 0L) {
+            Timber.w("Owner PIN is locked out for ${lockoutRemaining}ms")
+            return false
+        }
+
+        val isValid = try {
             // Try synced settings first
             appSettingsRepository.verifyOwnerPin(pin)
         } catch (e: Exception) {
             Timber.w(e, "Using local preferences for PIN verification")
             accessControlPreferences.verifyOwnerPin(pin)
         }
+
+        if (isValid) {
+            accessControlPreferences.clearOwnerPinLockout()
+        } else {
+            accessControlPreferences.recordFailedOwnerPinAttempt()
+        }
+
+        return isValid
     }
 
     /**

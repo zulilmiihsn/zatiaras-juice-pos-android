@@ -6,6 +6,8 @@ package com.zatiaras.pos.core.domain
  * Usage Guidelines:
  * - Use this [Result] for domain layer operations (UseCases, ViewModels)
  * - Use [kotlin.Result] for low-level data operations (DataSource, networking)
+ * - Avoid mixing both Result types in one file to prevent ambiguous API usage
+ * - When both are needed, alias one import explicitly
  * 
  * This separation allows:
  * - Domain layer to have explicit Loading state
