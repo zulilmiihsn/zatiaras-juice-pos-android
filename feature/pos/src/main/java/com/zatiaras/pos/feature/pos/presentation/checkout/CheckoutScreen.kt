@@ -92,7 +92,7 @@ fun CheckoutScreen(
             TopAppBar(
                 title = {
                     Text(
-                        "Checkout",
+                        "Pembayaran",
                         style = MaterialTheme.typography.titleLarge.copy(
                             fontWeight = FontWeight.Bold,
                             color = Brand500
@@ -103,7 +103,7 @@ fun CheckoutScreen(
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = "Kembali",
                             tint = Brand500
                         )
                     }
@@ -192,7 +192,7 @@ fun CheckoutContent(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = "Total Payment",
+                    text = "Total Bayar",
                     style = MaterialTheme.typography.labelLarge.copy(
                         color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
                     )
@@ -217,7 +217,7 @@ fun CheckoutContent(
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    text = "Customer Info",
+                    text = "Informasi Pelanggan",
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Bold,
                         color = Brand500
@@ -228,7 +228,7 @@ fun CheckoutContent(
                 OutlinedTextField(
                     value = state.customerName,
                     onValueChange = { onEvent(CheckoutEvent.SetCustomerName(it)) },
-                    label = { Text("Customer Name (Optional)") },
+                    label = { Text("Nama Pelanggan (Opsional)") },
                     leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
                     modifier = Modifier.fillMaxWidth(),
                     shape = AppShapes.M,
@@ -246,7 +246,7 @@ fun CheckoutContent(
                 OutlinedTextField(
                     value = state.notes,
                     onValueChange = { onEvent(CheckoutEvent.SetNotes(it)) },
-                    label = { Text("Notes (Optional)") },
+                    label = { Text("Catatan (Opsional)") },
                     leadingIcon = { Icon(Icons.Outlined.Description, contentDescription = null) },
                     modifier = Modifier.fillMaxWidth(),
                     shape = AppShapes.M,
@@ -263,7 +263,7 @@ fun CheckoutContent(
 
         // Payment Method Selection
         Text(
-            text = "Payment Method",
+            text = "Metode Pembayaran",
             style = MaterialTheme.typography.titleMedium.copy(
                 fontWeight = FontWeight.Bold,
                 color = Slate900
@@ -276,7 +276,7 @@ fun CheckoutContent(
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             PaymentMethodCard(
-                title = "Cash",
+                title = "Tunai",
                 icon = Icons.Default.Money,
                 selected = state.selectedPaymentMethod == PaymentMethod.CASH,
                 onClick = { onEvent(CheckoutEvent.SetPaymentMethod(PaymentMethod.CASH)) },
@@ -290,7 +290,7 @@ fun CheckoutContent(
                 modifier = Modifier.weight(1f)
             )
             PaymentMethodCard(
-                title = "Transfer",
+                title = "Transfer Bank",
                 icon = Icons.Outlined.CreditCard,
                 selected = state.selectedPaymentMethod == PaymentMethod.TRANSFER,
                 onClick = { onEvent(CheckoutEvent.SetPaymentMethod(PaymentMethod.TRANSFER)) },
@@ -312,7 +312,7 @@ fun CheckoutContent(
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        text = "Cash Payment",
+                        text = "Pembayaran Tunai",
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.Bold,
                             color = Brand500
@@ -323,7 +323,7 @@ fun CheckoutContent(
                     OutlinedTextField(
                         value = state.amountPaid,
                         onValueChange = { onEvent(CheckoutEvent.SetAmountPaid(it)) },
-                        label = { Text("Amount Received") },
+                        label = { Text("Uang Diterima") },
                         prefix = { Text("Rp ") },
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Number,
@@ -378,7 +378,7 @@ fun CheckoutContent(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                "Change",
+                                "Kembalian",
                                 style = MaterialTheme.typography.bodyLarge
                             )
                             Text(
@@ -403,7 +403,7 @@ fun CheckoutContent(
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    text = "Order Summary",
+                    text = "Ringkasan Pesanan",
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Bold,
                         color = Brand500
@@ -439,13 +439,13 @@ fun CheckoutContent(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                          Icon(
                             imageVector = Icons.Default.LocalOffer,
-                            contentDescription = "Discount",
+                            contentDescription = "Diskon",
                                      tint = Slate500,
                             modifier = Modifier.size(16.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            "Discount (%)",
+                            "Diskon (%)",
                             style = MaterialTheme.typography.bodyMedium.copy(color = Slate500)
                         )
                     }
@@ -477,7 +477,7 @@ fun CheckoutContent(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            "Discount Amount",
+                            "Jumlah Diskon",
                             style = MaterialTheme.typography.bodyMedium.copy(color = ErrorRed)
                         )
                         Text(
@@ -497,7 +497,7 @@ fun CheckoutContent(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            "Tax (11%)",
+                            "PPN (11%)",
                             style = MaterialTheme.typography.bodyMedium.copy(color = Slate500)
                         )
                         Text(
@@ -555,7 +555,7 @@ fun CheckoutContent(
                 Icon(Icons.Default.Check, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary)
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    "Confirm Payment",
+                    "Konfirmasi Pembayaran",
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onPrimary

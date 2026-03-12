@@ -187,7 +187,7 @@ fun CartItemRow(
                         ) {
                             Icon(
                                 imageVector = if (cartItem.quantity == 1) Icons.Outlined.Delete else Icons.Filled.Remove,
-                                contentDescription = "Decrease",
+                                contentDescription = "Kurangi",
                                 modifier = Modifier.size(16.dp)
                             )
                         }
@@ -228,7 +228,7 @@ fun CartItemRow(
                         ) {
                             Icon(
                                 imageVector = Icons.Filled.Add,
-                                contentDescription = "Increase",
+                                contentDescription = "Tambah",
                                 modifier = Modifier.size(16.dp)
                             )
                         }

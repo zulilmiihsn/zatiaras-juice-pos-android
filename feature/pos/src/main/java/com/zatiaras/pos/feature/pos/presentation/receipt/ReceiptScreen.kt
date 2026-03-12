@@ -61,7 +61,7 @@ fun ReceiptScreen(
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        text = "Receipt Detail",
+                        text = "Detail Struk",
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.Bold,
                             color = Brand500
@@ -72,7 +72,7 @@ fun ReceiptScreen(
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = "Kembali",
                             tint = Brand500
                         )
                     }
@@ -113,7 +113,7 @@ fun ReceiptScreen(
                     }
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = "Transaction Successful",
+                        text = "Transaksi Berhasil",
                         style = MaterialTheme.typography.titleLarge.copy(
                             fontWeight = FontWeight.Bold,
                             color = Brand500
@@ -183,11 +183,11 @@ fun ReceiptScreen(
                         Spacer(modifier = Modifier.height(24.dp))
 
                         // Totals
-                        ReceiptTotalRow("Payment Method", transaction.paymentMethod.displayName)
+                        ReceiptTotalRow("Metode Pembayaran", transaction.paymentMethod.displayName)
                         
                         if (transaction.customerName != null) {
                             Spacer(modifier = Modifier.height(8.dp))
-                            ReceiptTotalRow("Customer", transaction.customerName)
+                            ReceiptTotalRow("Pelanggan", transaction.customerName)
                         }
                         
                         Spacer(modifier = Modifier.height(8.dp))
@@ -196,7 +196,7 @@ fun ReceiptScreen(
                         if (transaction.discountAmount > 0) {
                             Spacer(modifier = Modifier.height(8.dp))
                             ReceiptTotalRow(
-                                "Discount", 
+                                "Diskon", 
                                 "- ${CurrencyFormatter.formatCurrency(transaction.discountAmount)}",
                                 valueColor = ErrorRed
                             )
@@ -204,7 +204,7 @@ fun ReceiptScreen(
                         
                         if (transaction.taxAmount > 0) {
                             Spacer(modifier = Modifier.height(8.dp))
-                            ReceiptTotalRow("Tax", CurrencyFormatter.formatCurrency(transaction.taxAmount))
+                            ReceiptTotalRow("PPN", CurrencyFormatter.formatCurrency(transaction.taxAmount))
                         }
                         
                         Spacer(modifier = Modifier.height(12.dp))
@@ -238,7 +238,7 @@ fun ReceiptScreen(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Connected to ${printerName ?: "Printer"}",
+                            text = "Terhubung ke ${printerName ?: "Printer"}",
                             style = MaterialTheme.typography.bodySmall.copy(color = Slate500)
                         )
                     }
@@ -269,11 +269,11 @@ fun ReceiptScreen(
                                 strokeWidth = 2.dp
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Printing...", fontWeight = FontWeight.Bold)
+                            Text("Mencetak...", fontWeight = FontWeight.Bold)
                         } else {
                             Icon(Icons.Default.Print, contentDescription = null)
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Print Receipt", fontWeight = FontWeight.Bold)
+                            Text("Cetak Struk", fontWeight = FontWeight.Bold)
                         }
                     }
 
@@ -290,7 +290,7 @@ fun ReceiptScreen(
                     ) {
                         Icon(Icons.Default.Receipt, contentDescription = null)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("New Transaction", fontWeight = FontWeight.Bold)
+                        Text("Transaksi Baru", fontWeight = FontWeight.Bold)
                     }
                 }
             }

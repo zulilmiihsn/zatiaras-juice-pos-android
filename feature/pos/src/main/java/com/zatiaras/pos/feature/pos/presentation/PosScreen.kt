@@ -128,6 +128,9 @@ fun PosScreen(
                             onSearchQueryChange = { viewModel.onEvent(PosEvent.SearchQueryChanged(it)) },
                             onCategoryResult = { category -> viewModel.onEvent(PosEvent.CategorySelected(category?.id)) },
                             onProductClick = { viewModel.onEvent(PosEvent.AddToCart(it)) },
+                            onAddCustomItem = { name, price ->
+                                viewModel.onEvent(PosEvent.AddCustomItem(name, price))
+                            },
                             onToggleViewMode = { viewModel.onEvent(PosEvent.ToggleViewMode) },
                             modifier = Modifier.fillMaxSize()
                         )
@@ -168,6 +171,9 @@ fun PosScreen(
                         onSearchQueryChange = { viewModel.onEvent(PosEvent.SearchQueryChanged(it)) },
                         onCategoryResult = { category -> viewModel.onEvent(PosEvent.CategorySelected(category?.id)) },
                         onProductClick = { viewModel.onEvent(PosEvent.AddToCart(it)) },
+                        onAddCustomItem = { name, price ->
+                            viewModel.onEvent(PosEvent.AddCustomItem(name, price))
+                        },
                         modifier = Modifier
                             .fillMaxSize()
                             .padding(bottom = if (uiState.cart.isNotEmpty()) 80.dp else 0.dp)
@@ -226,11 +232,10 @@ fun PosScreen(
     if (uiState.showProductOptionsSheet && uiState.selectedProduct != null) {
         ProductOptionsBottomSheet(
             product = uiState.selectedProduct!!,
-            onAddToCart = { product, quantity, _ ->
-                repeat(quantity) {
-                    viewModel.onEvent(PosEvent.AddToCart(product))
-                }
-                viewModel.onEvent(PosEvent.HideProductOptions)
+            onAddToCart = { _, quantity, notes ->
+                viewModel.onEvent(PosEvent.SetProductQuantity(quantity))
+                viewModel.onEvent(PosEvent.SetProductNote(notes))
+                viewModel.onEvent(PosEvent.ConfirmAddToCart)
             },
             onDismiss = { viewModel.onEvent(PosEvent.HideProductOptions) }
         )
@@ -292,7 +297,7 @@ private fun FloatingCartBar(
                     }
                     
                     Text(
-                        text = "items",
+                        text = "produk",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f)
                     )

@@ -45,6 +45,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -61,11 +62,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
 import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
 import compose.icons.EvaIcons
@@ -75,7 +74,8 @@ import compose.icons.evaicons.outline.Plus
 import compose.icons.evaicons.outline.Search
 import com.zatiaras.pos.core.domain.model.Category
 import com.zatiaras.pos.core.domain.model.Product
-import com.zatiaras.pos.core.domain.model.ProductType
+import com.zatiaras.pos.core.ui.components.CurrencyTextField
+import com.zatiaras.pos.core.ui.components.ZatDialog
 import com.zatiaras.pos.core.ui.theme.AppShapes
 import com.zatiaras.pos.core.ui.theme.LocalDimensions
 import com.zatiaras.pos.core.ui.theme.Slate50
@@ -86,7 +86,6 @@ import com.zatiaras.pos.core.ui.theme.Slate500
 import com.zatiaras.pos.core.ui.util.CurrencyFormatter
 import com.zatiaras.pos.feature.pos.R
 import com.zatiaras.pos.feature.pos.domain.model.Cart
-import java.util.UUID
 
 @Composable
 fun PagedProductCatalog(
@@ -100,6 +99,7 @@ fun PagedProductCatalog(
     isGridView: Boolean,
     onToggleViewMode: () -> Unit,
     onProductClick: (Product) -> Unit,
+    onAddCustomItem: (String, Long) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var showCustomItemDialog by remember { mutableStateOf(false) }
@@ -134,7 +134,7 @@ fun PagedProductCatalog(
                 ) {
                     Icon(
                         imageVector = if (isGridView) Icons.Default.ViewList else Icons.Default.GridView,
-                        contentDescription = if (isGridView) "List View" else "Grid View",
+                        contentDescription = if (isGridView) "Tampilan daftar" else "Tampilan grid",
                         tint = MaterialTheme.colorScheme.onSurface
                     )
                 }
@@ -202,15 +202,7 @@ fun PagedProductCatalog(
         CustomItemDialog(
             onDismiss = { showCustomItemDialog = false },
             onConfirm = { name, price ->
-                val customProduct = Product(
-                    id = UUID.randomUUID().toString(),
-                    name = name,
-                    price = price,
-                    imageUrl = null,
-                    category = null,
-                    type = ProductType.MAKANAN
-                )
-                onProductClick(customProduct)
+                onAddCustomItem(name, price)
                 showCustomItemDialog = false
             }
         )
@@ -270,7 +262,7 @@ private fun SearchBar(
                     ) {
                         if (query.isEmpty()) {
                             Text(
-                                text = "Search products...",
+                                text = "Cari produk...",
                                 style = MaterialTheme.typography.bodyLarge,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                             )
@@ -287,7 +279,7 @@ private fun SearchBar(
                 ) {
                     Icon(
                         imageVector = EvaIcons.Outline.Close,
-                        contentDescription = "Clear",
+                        contentDescription = "Hapus",
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(20.dp)
                     )
@@ -457,7 +449,7 @@ private fun ErrorState(message: String, onRetry: () -> Unit) {
             onClick = onRetry,
             colors = ButtonDefaults.buttonColors(containerColor = Brand500)
         ) {
-            Text("Retry")
+            Text("Coba lagi")
         }
     }
 }
@@ -477,7 +469,7 @@ private fun EmptyState() {
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            text = "No products found",
+            text = "Produk tidak ditemukan",
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -557,86 +549,90 @@ fun CustomItemDialog(
     onConfirm: (String, Long) -> Unit
 ) {
     var name by remember { mutableStateOf("") }
-    var priceString by remember { mutableStateOf("") }
+    var price by remember { mutableLongStateOf(0L) }
 
-    val isValid = name.isNotBlank() && priceString.toLongOrNull() != null
+    val isValid = name.isNotBlank() && price > 0L
 
-    Dialog(onDismissRequest = onDismiss) {
-        Surface(
-            shape = AppShapes.XXL,
-            color = MaterialTheme.colorScheme.surface,
-            modifier = Modifier.fillMaxWidth().padding(16.dp)
+    ZatDialog(onDismissRequest = onDismiss) { dismiss ->
+        Box(
+            modifier = Modifier.fillMaxWidth(0.95f),
+            contentAlignment = Alignment.Center
         ) {
-            Column(
-                modifier = Modifier.padding(24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+            Surface(
+                shape = AppShapes.XXL,
+                color = MaterialTheme.colorScheme.surface,
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Text(
-                    text = stringResource(R.string.pos_custom_item),
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = Brand500
-                )
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = { Text("Item Name") },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = AppShapes.M,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Brand500,
-                        focusedLabelColor = Brand500
-                    )
-                )
-
-                 Spacer(modifier = Modifier.height(16.dp))
-
-                 OutlinedTextField(
-                    value = priceString,
-                    onValueChange = { if (it.all { char -> char.isDigit() || char == '.' }) priceString = it },
-                    label = { Text("Price") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                    modifier = Modifier.fillMaxWidth(),
-                          shape = AppShapes.M,
-                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Brand500,
-                        focusedLabelColor = Brand500
-                    )
-                )
-
-                Spacer(modifier = Modifier.height(32.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                Column(
+                    modifier = Modifier.padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    OutlinedButton(
-                        onClick = onDismiss,
-                        modifier = Modifier.weight(1f).height(48.dp),
-                         shape = AppShapes.M,
-                         border = androidx.compose.foundation.BorderStroke(1.dp, Slate200)
-                    ) {
-                        Text("Cancel", color = Slate500)
-                    }
+                    Text(
+                        text = stringResource(R.string.pos_custom_item),
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = Brand500
+                    )
 
-                    Button(
-                        onClick = {
-                                priceString.toLongOrNull()?.let { price ->
-                                 onConfirm(name, price)
-                             }
-                        },
-                        enabled = isValid,
-                        modifier = Modifier.weight(1f).height(48.dp),
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    OutlinedTextField(
+                        value = name,
+                        onValueChange = { name = it },
+                        label = { Text("Nama menu") },
+                        modifier = Modifier.fillMaxWidth(),
                         shape = AppShapes.M,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Brand500,
-                            disabledContainerColor = Slate200
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Brand500,
+                            focusedLabelColor = Brand500
                         )
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    CurrencyTextField(
+                        value = price,
+                        onValueChange = { price = it },
+                        label = { Text("Harga") },
+                        showPrefix = true,
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = AppShapes.M,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Brand500,
+                            focusedLabelColor = Brand500
+                        )
+                    )
+
+                    Spacer(modifier = Modifier.height(32.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        Text("Add", fontWeight = FontWeight.Bold)
+                        OutlinedButton(
+                            onClick = dismiss,
+                            modifier = Modifier.weight(1f).height(56.dp),
+                            shape = AppShapes.M,
+                            border = androidx.compose.foundation.BorderStroke(1.dp, Slate200)
+                        ) {
+                            Text("Batal", color = Slate500)
+                        }
+
+                        Button(
+                            onClick = {
+                                onConfirm(name.trim(), price)
+                            },
+                            enabled = isValid,
+                            modifier = Modifier.weight(1f).height(56.dp),
+                            shape = AppShapes.M,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Brand500,
+                                disabledContainerColor = Slate200
+                            )
+                        ) {
+                            Text("Tambah", fontWeight = FontWeight.Bold)
+                        }
                     }
                 }
             }

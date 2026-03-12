@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.ui.unit.dp
 import com.zatiaras.pos.core.ui.theme.AppShapes
 import com.zatiaras.pos.core.ui.theme.Slate50
@@ -41,11 +42,10 @@ fun ProductOptionsBottomSheet(
     var quantity by remember { mutableIntStateOf(1) }
     var notes by remember { mutableStateOf("") }
     
-    // Hardcoded options for UI demo - in real app, these would come from Product domain
     var selectedSugarLevel by remember { mutableStateOf("Normal") }
     var selectedIceLevel by remember { mutableStateOf("Normal") }
-    val sugarLevels = listOf("0%", "50%", "Normal", "Extra")
-    val iceLevels = listOf("No Ice", "Less", "Normal", "Extra")
+    val sugarLevels = listOf("Tanpa", "Sedikit", "Normal")
+    val iceLevels = listOf("Tanpa", "Sedikit", "Normal")
 
     val totalPrice = product.price * quantity
 
@@ -86,7 +86,7 @@ fun ProductOptionsBottomSheet(
                 IconButton(onClick = onDismiss) {
                     Icon(
                         imageVector = Icons.Default.Close,
-                        contentDescription = "Close",
+                        contentDescription = "Tutup",
                         tint = Slate600
                     )
                 }
@@ -94,9 +94,8 @@ fun ProductOptionsBottomSheet(
             
             HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp), color = Slate200.copy(alpha = 0.6f))
             
-            // Options: Sugar Level
             Text(
-                text = "Sugar Level",
+                text = "Level Gula",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(bottom = 12.dp)
@@ -118,9 +117,8 @@ fun ProductOptionsBottomSheet(
             
             Spacer(modifier = Modifier.height(24.dp))
             
-            // Options: Ice Level
             Text(
-                text = "Ice Level",
+                text = "Level Es",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(bottom = 12.dp)
@@ -154,7 +152,7 @@ fun ProductOptionsBottomSheet(
                 value = notes,
                 onValueChange = { notes = it },
                 modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("Add special instructions...", color = Slate500) },
+                placeholder = { Text("Tambahkan catatan khusus...", color = Slate500) },
                 shape = AppShapes.M,
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = Brand500,
@@ -189,7 +187,7 @@ fun ProductOptionsBottomSheet(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Remove, 
-                                contentDescription = "Decrease",
+                                contentDescription = "Kurangi",
                                 tint = if (quantity > 1) Slate700 else Slate500
                             )
                         }
@@ -204,17 +202,16 @@ fun ProductOptionsBottomSheet(
                         IconButton(onClick = { quantity++ }) {
                             Icon(
                                 imageVector = Icons.Default.Add, 
-                                contentDescription = "Increase",
+                                contentDescription = "Tambah",
                                 tint = Brand500
                             )
                         }
                     }
                 }
                 
-                // Total Price
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
-                        text = "Total Price",
+                        text = "Total Harga",
                         style = MaterialTheme.typography.bodySmall,
                         color = Slate600
                     )
@@ -233,8 +230,8 @@ fun ProductOptionsBottomSheet(
             Button(
                 onClick = { 
                     val finalNotes = buildString {
-                        if (selectedSugarLevel != "Normal") append("Sugar: $selectedSugarLevel, ")
-                        if (selectedIceLevel != "Normal") append("Ice: $selectedIceLevel, ")
+                        if (selectedSugarLevel != "Normal") append("Gula: $selectedSugarLevel, ")
+                        if (selectedIceLevel != "Normal") append("Es: $selectedIceLevel, ")
                         if (notes.isNotEmpty()) append(notes)
                     }.removeSuffix(", ")
                     
@@ -242,8 +239,9 @@ fun ProductOptionsBottomSheet(
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp)
+                    .height(72.dp)
                     .padding(bottom = 24.dp),
+                contentPadding = PaddingValues(vertical = 16.dp),
                 shape = AppShapes.L,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Brand500,

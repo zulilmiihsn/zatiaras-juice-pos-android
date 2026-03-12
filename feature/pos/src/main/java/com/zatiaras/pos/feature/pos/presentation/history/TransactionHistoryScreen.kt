@@ -392,7 +392,7 @@ fun TransactionHistoryCard(
                 ) {
                     Icon(
                         imageVector = Icons.Default.DeleteOutline,
-                        contentDescription = "Delete",
+                        contentDescription = "Hapus",
                         tint = ErrorRed,
                         modifier = Modifier.size(20.dp)
                     )
@@ -438,16 +438,16 @@ fun TransactionDetailDialogContent(
                         .size(32.dp)
                         .background(Slate100, CircleShape)
                 ) {
-                    Icon(Icons.Default.Close, contentDescription = "Close", modifier = Modifier.size(18.dp))
+                    Icon(Icons.Default.Close, contentDescription = "Tutup", modifier = Modifier.size(18.dp))
                 }
             }
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp), color = Slate100)
 
             // Details
-            DetailRow(label = "Customer", value = transaction.customerName ?: "-")
-            DetailRow(label = "Transaction ID", value = transaction.transactionNumber)
-            DetailRow(label = "Date", value = SimpleDateFormat("dd MMM yyyy, HH:mm", Locale("id", "ID")).format(Date(transaction.createdAt)))
+            DetailRow(label = "Pelanggan", value = transaction.customerName ?: "-")
+            DetailRow(label = "ID Transaksi", value = transaction.transactionNumber)
+            DetailRow(label = "Tanggal", value = SimpleDateFormat("dd MMM yyyy, HH:mm", Locale("id", "ID")).format(Date(transaction.createdAt)))
             
             Spacer(modifier = Modifier.height(16.dp))
             
@@ -506,7 +506,7 @@ fun TransactionDetailDialogContent(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Total Amount",
+                    text = "Total Bayar",
                     style = MaterialTheme.typography.titleMedium,
                     color = Brand500
                 )
@@ -528,7 +528,7 @@ fun TransactionDetailDialogContent(
             ) {
                 Icon(Icons.AutoMirrored.Outlined.ReceiptLong, contentDescription = null, modifier = Modifier.size(20.dp))
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("View Receipt", fontWeight = FontWeight.Bold)
+                Text("Lihat Struk", fontWeight = FontWeight.Bold)
             }
         }
     }
@@ -600,7 +600,7 @@ fun DeleteConfirmationContent(
                     shape = AppShapes.M,
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = Slate700)
                 ) {
-                    Text("Cancel")
+                    Text("Batal")
                 }
                 Button(
                     onClick = onConfirm,
@@ -608,7 +608,7 @@ fun DeleteConfirmationContent(
                     shape = AppShapes.M,
                     colors = ButtonDefaults.buttonColors(containerColor = ErrorRed)
                 ) {
-                    Text("Delete")
+                    Text("Hapus")
                 }
             }
         }
