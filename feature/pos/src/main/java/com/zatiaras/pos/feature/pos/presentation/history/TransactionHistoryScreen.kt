@@ -392,7 +392,7 @@ fun TransactionHistoryCard(
                 ) {
                     Icon(
                         imageVector = Icons.Default.DeleteOutline,
-                        contentDescription = "Hapus",
+                        contentDescription = stringResource(com.zatiaras.pos.core.ui.R.string.btn_delete),
                         tint = ErrorRed,
                         modifier = Modifier.size(20.dp)
                     )
@@ -438,16 +438,16 @@ fun TransactionDetailDialogContent(
                         .size(32.dp)
                         .background(Slate100, CircleShape)
                 ) {
-                    Icon(Icons.Default.Close, contentDescription = "Tutup", modifier = Modifier.size(18.dp))
+                    Icon(Icons.Default.Close, contentDescription = stringResource(com.zatiaras.pos.core.ui.R.string.btn_close), modifier = Modifier.size(18.dp))
                 }
             }
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp), color = Slate100)
 
             // Details
-            DetailRow(label = "Pelanggan", value = transaction.customerName ?: "-")
-            DetailRow(label = "ID Transaksi", value = transaction.transactionNumber)
-            DetailRow(label = "Tanggal", value = SimpleDateFormat("dd MMM yyyy, HH:mm", Locale("id", "ID")).format(Date(transaction.createdAt)))
+            DetailRow(label = stringResource(R.string.pos_history_customer), value = transaction.customerName ?: "-")
+            DetailRow(label = stringResource(R.string.pos_history_transaction_id), value = transaction.transactionNumber)
+            DetailRow(label = stringResource(R.string.pos_history_date), value = SimpleDateFormat("dd MMM yyyy, HH:mm", Locale("id", "ID")).format(Date(transaction.createdAt)))
             
             Spacer(modifier = Modifier.height(16.dp))
             
@@ -506,7 +506,7 @@ fun TransactionDetailDialogContent(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Total Bayar",
+                    text = stringResource(R.string.checkout_total_payment_label),
                     style = MaterialTheme.typography.titleMedium,
                     color = Brand500
                 )
@@ -528,7 +528,7 @@ fun TransactionDetailDialogContent(
             ) {
                 Icon(Icons.AutoMirrored.Outlined.ReceiptLong, contentDescription = null, modifier = Modifier.size(20.dp))
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Lihat Struk", fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.pos_history_view_receipt), fontWeight = FontWeight.Bold)
             }
         }
     }
@@ -600,7 +600,7 @@ fun DeleteConfirmationContent(
                     shape = AppShapes.M,
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = Slate700)
                 ) {
-                    Text("Batal")
+                    Text(stringResource(com.zatiaras.pos.core.ui.R.string.btn_cancel))
                 }
                 Button(
                     onClick = onConfirm,
@@ -608,10 +608,9 @@ fun DeleteConfirmationContent(
                     shape = AppShapes.M,
                     colors = ButtonDefaults.buttonColors(containerColor = ErrorRed)
                 ) {
-                    Text("Hapus")
+                    Text(stringResource(com.zatiaras.pos.core.ui.R.string.btn_delete))
                 }
             }
         }
     }
 }
-

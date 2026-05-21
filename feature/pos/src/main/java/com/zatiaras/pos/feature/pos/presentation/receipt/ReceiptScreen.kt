@@ -24,6 +24,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
+import com.zatiaras.pos.feature.pos.R
 import com.zatiaras.pos.core.ui.theme.AppShapes
 import com.zatiaras.pos.core.ui.theme.Slate50
 import com.zatiaras.pos.core.ui.theme.Brand500
@@ -61,7 +63,7 @@ fun ReceiptScreen(
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        text = "Detail Struk",
+                        text = stringResource(R.string.pos_receipt_detail_title),
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.Bold,
                             color = Brand500
@@ -72,7 +74,7 @@ fun ReceiptScreen(
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Kembali",
+                            contentDescription = stringResource(R.string.pos_back),
                             tint = Brand500
                         )
                     }
@@ -113,7 +115,7 @@ fun ReceiptScreen(
                     }
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = "Transaksi Berhasil",
+                        text = stringResource(R.string.checkout_success),
                         style = MaterialTheme.typography.titleLarge.copy(
                             fontWeight = FontWeight.Bold,
                             color = Brand500
@@ -150,14 +152,14 @@ fun ReceiptScreen(
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                "Zatiara Assets",
+                                stringResource(R.string.pos_receipt_store_name_default),
                                 style = MaterialTheme.typography.titleLarge.copy(
                                     fontWeight = FontWeight.Black,
                                     color = Slate900
                                 )
                             )
                             Text(
-                                "Jalan Raya Hankam No. 12",
+                                stringResource(R.string.pos_receipt_store_address_default),
                                 style = MaterialTheme.typography.bodySmall.copy(color = Slate500),
                                 textAlign = TextAlign.Center
                             )
@@ -183,20 +185,20 @@ fun ReceiptScreen(
                         Spacer(modifier = Modifier.height(24.dp))
 
                         // Totals
-                        ReceiptTotalRow("Metode Pembayaran", transaction.paymentMethod.displayName)
+                        ReceiptTotalRow(stringResource(R.string.checkout_payment_method), transaction.paymentMethod.displayName)
                         
                         if (transaction.customerName != null) {
                             Spacer(modifier = Modifier.height(8.dp))
-                            ReceiptTotalRow("Pelanggan", transaction.customerName)
+                            ReceiptTotalRow(stringResource(R.string.pos_history_customer), transaction.customerName)
                         }
                         
                         Spacer(modifier = Modifier.height(8.dp))
-                        ReceiptTotalRow("Subtotal", CurrencyFormatter.formatCurrency(transaction.subtotal))
+                        ReceiptTotalRow(stringResource(R.string.pos_subtotal), CurrencyFormatter.formatCurrency(transaction.subtotal))
                         
                         if (transaction.discountAmount > 0) {
                             Spacer(modifier = Modifier.height(8.dp))
                             ReceiptTotalRow(
-                                "Diskon", 
+                                stringResource(R.string.pos_receipt_discount_label),
                                 "- ${CurrencyFormatter.formatCurrency(transaction.discountAmount)}",
                                 valueColor = ErrorRed
                             )
@@ -204,7 +206,7 @@ fun ReceiptScreen(
                         
                         if (transaction.taxAmount > 0) {
                             Spacer(modifier = Modifier.height(8.dp))
-                            ReceiptTotalRow("PPN", CurrencyFormatter.formatCurrency(transaction.taxAmount))
+                            ReceiptTotalRow(stringResource(R.string.pos_receipt_tax_label), CurrencyFormatter.formatCurrency(transaction.taxAmount))
                         }
                         
                         Spacer(modifier = Modifier.height(12.dp))
@@ -212,7 +214,7 @@ fun ReceiptScreen(
                         Spacer(modifier = Modifier.height(12.dp))
                         
                         ReceiptTotalRow(
-                            "Total", 
+                            stringResource(R.string.pos_total),
                             CurrencyFormatter.formatCurrency(transaction.grandTotal),
                             isTotal = true
                         )
@@ -238,7 +240,7 @@ fun ReceiptScreen(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Terhubung ke ${printerName ?: "Printer"}",
+                            text = stringResource(R.string.pos_receipt_printer_connected, printerName ?: "Printer"),
                             style = MaterialTheme.typography.bodySmall.copy(color = Slate500)
                         )
                     }
@@ -269,11 +271,11 @@ fun ReceiptScreen(
                                 strokeWidth = 2.dp
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Mencetak...", fontWeight = FontWeight.Bold)
+                            Text(stringResource(R.string.pos_receipt_printing), fontWeight = FontWeight.Bold)
                         } else {
                             Icon(Icons.Default.Print, contentDescription = null)
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Cetak Struk", fontWeight = FontWeight.Bold)
+                            Text(stringResource(R.string.checkout_print_receipt), fontWeight = FontWeight.Bold)
                         }
                     }
 
@@ -290,12 +292,12 @@ fun ReceiptScreen(
                     ) {
                         Icon(Icons.Default.Receipt, contentDescription = null)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Transaksi Baru", fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.checkout_new_transaction), fontWeight = FontWeight.Bold)
                     }
                 }
             }
             
-             // Bottom Spacer
+            // Bottom Spacer
             item {
                 Spacer(modifier = Modifier.height(24.dp))
             }
@@ -328,7 +330,7 @@ fun ReceiptItemRow(item: TransactionItem) {
             }
             if (!item.notes.isNullOrBlank()) {
                 Text(
-                   text = "Note: ${item.notes}",
+                   text = stringResource(R.string.pos_receipt_notes) + " " + item.notes,
                    style = MaterialTheme.typography.labelSmall.copy(
                        color = Slate500,
                        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic

@@ -40,6 +40,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.ui.res.stringResource
+import com.zatiaras.pos.feature.pos.R
 import com.zatiaras.pos.core.ui.theme.AppShapes
 import com.zatiaras.pos.core.ui.theme.Slate50
 import com.zatiaras.pos.core.ui.theme.Brand500
@@ -92,7 +94,7 @@ fun CheckoutScreen(
             TopAppBar(
                 title = {
                     Text(
-                        "Pembayaran",
+                        stringResource(R.string.checkout_title),
                         style = MaterialTheme.typography.titleLarge.copy(
                             fontWeight = FontWeight.Bold,
                             color = Brand500
@@ -103,7 +105,7 @@ fun CheckoutScreen(
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Kembali",
+                            contentDescription = stringResource(R.string.pos_back),
                             tint = Brand500
                         )
                     }
@@ -192,7 +194,7 @@ fun CheckoutContent(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = "Total Bayar",
+                    text = stringResource(R.string.checkout_total_payment_label),
                     style = MaterialTheme.typography.labelLarge.copy(
                         color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
                     )
@@ -217,7 +219,7 @@ fun CheckoutContent(
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    text = "Informasi Pelanggan",
+                    text = stringResource(R.string.checkout_customer_info),
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Bold,
                         color = Brand500
@@ -228,7 +230,7 @@ fun CheckoutContent(
                 OutlinedTextField(
                     value = state.customerName,
                     onValueChange = { onEvent(CheckoutEvent.SetCustomerName(it)) },
-                    label = { Text("Nama Pelanggan (Opsional)") },
+                    label = { Text(stringResource(R.string.checkout_customer_name_hint)) },
                     leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
                     modifier = Modifier.fillMaxWidth(),
                     shape = AppShapes.M,
@@ -246,7 +248,7 @@ fun CheckoutContent(
                 OutlinedTextField(
                     value = state.notes,
                     onValueChange = { onEvent(CheckoutEvent.SetNotes(it)) },
-                    label = { Text("Catatan (Opsional)") },
+                    label = { Text(stringResource(R.string.checkout_order_notes_hint)) },
                     leadingIcon = { Icon(Icons.Outlined.Description, contentDescription = null) },
                     modifier = Modifier.fillMaxWidth(),
                     shape = AppShapes.M,
@@ -263,7 +265,7 @@ fun CheckoutContent(
 
         // Payment Method Selection
         Text(
-            text = "Metode Pembayaran",
+            text = stringResource(R.string.checkout_payment_method),
             style = MaterialTheme.typography.titleMedium.copy(
                 fontWeight = FontWeight.Bold,
                 color = Slate900
@@ -276,21 +278,21 @@ fun CheckoutContent(
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             PaymentMethodCard(
-                title = "Tunai",
+                title = stringResource(R.string.checkout_payment_cash),
                 icon = Icons.Default.Money,
                 selected = state.selectedPaymentMethod == PaymentMethod.CASH,
                 onClick = { onEvent(CheckoutEvent.SetPaymentMethod(PaymentMethod.CASH)) },
                 modifier = Modifier.weight(1f)
             )
             PaymentMethodCard(
-                title = "QRIS",
+                title = stringResource(R.string.checkout_payment_qris),
                 icon = Icons.Default.QrCode,
                 selected = state.selectedPaymentMethod == PaymentMethod.QRIS,
                 onClick = { onEvent(CheckoutEvent.SetPaymentMethod(PaymentMethod.QRIS)) },
                 modifier = Modifier.weight(1f)
             )
             PaymentMethodCard(
-                title = "Transfer Bank",
+                title = stringResource(R.string.checkout_payment_transfer),
                 icon = Icons.Outlined.CreditCard,
                 selected = state.selectedPaymentMethod == PaymentMethod.TRANSFER,
                 onClick = { onEvent(CheckoutEvent.SetPaymentMethod(PaymentMethod.TRANSFER)) },
@@ -312,7 +314,7 @@ fun CheckoutContent(
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        text = "Pembayaran Tunai",
+                        text = stringResource(R.string.checkout_payment_title, stringResource(R.string.checkout_payment_cash)),
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.Bold,
                             color = Brand500
@@ -323,7 +325,7 @@ fun CheckoutContent(
                     OutlinedTextField(
                         value = state.amountPaid,
                         onValueChange = { onEvent(CheckoutEvent.SetAmountPaid(it)) },
-                        label = { Text("Uang Diterima") },
+                        label = { Text(stringResource(R.string.checkout_customer_payment)) },
                         prefix = { Text("Rp ") },
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Number,
@@ -371,14 +373,14 @@ fun CheckoutContent(
                     }
                     
                     if (state.amountPaid.toLongOrNull() ?: 0 >= state.grandTotal) {
-                         Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                "Kembalian",
+                                stringResource(R.string.checkout_change),
                                 style = MaterialTheme.typography.bodyLarge
                             )
                             Text(
@@ -403,7 +405,7 @@ fun CheckoutContent(
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    text = "Ringkasan Pesanan",
+                    text = stringResource(R.string.checkout_order_summary),
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Bold,
                         color = Brand500
@@ -416,7 +418,7 @@ fun CheckoutContent(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        "Subtotal",
+                        stringResource(R.string.checkout_subtotal),
                         style = MaterialTheme.typography.bodyMedium.copy(color = Slate500)
                     )
                     Text(
@@ -437,15 +439,15 @@ fun CheckoutContent(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                         Icon(
+                        Icon(
                             imageVector = Icons.Default.LocalOffer,
-                            contentDescription = "Diskon",
-                                     tint = Slate500,
+                            contentDescription = stringResource(R.string.checkout_discount_percent_label),
+                            tint = Slate500,
                             modifier = Modifier.size(16.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            "Diskon (%)",
+                            stringResource(R.string.checkout_discount_percent_label),
                             style = MaterialTheme.typography.bodyMedium.copy(color = Slate500)
                         )
                     }
@@ -470,14 +472,14 @@ fun CheckoutContent(
                 }
                 
                 if (state.discountAmount > 0) {
-                     Row(
+                    Row(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(vertical = 4.dp),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            "Jumlah Diskon",
+                            stringResource(R.string.checkout_discount_amount),
                             style = MaterialTheme.typography.bodyMedium.copy(color = ErrorRed)
                         )
                         Text(
@@ -497,7 +499,7 @@ fun CheckoutContent(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            "PPN (11%)",
+                            stringResource(R.string.checkout_tax, 11),
                             style = MaterialTheme.typography.bodyMedium.copy(color = Slate500)
                         )
                         Text(
@@ -517,7 +519,7 @@ fun CheckoutContent(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        "Total",
+                        stringResource(R.string.pos_total),
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                     )
                     Text(
@@ -555,7 +557,7 @@ fun CheckoutContent(
                 Icon(Icons.Default.Check, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary)
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    "Konfirmasi Pembayaran",
+                    stringResource(R.string.checkout_confirm_payment),
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onPrimary

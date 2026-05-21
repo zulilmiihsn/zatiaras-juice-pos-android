@@ -475,7 +475,7 @@ fun DateRangePickerDialog(
                         showStartPicker = false
                     }
                 ) {
-                    Text("OK")
+                    Text(stringResource(R.string.btn_ok))
                 }
             },
             dismissButton = {
@@ -506,7 +506,7 @@ fun DateRangePickerDialog(
                         showEndPicker = false
                     }
                 ) {
-                    Text("OK")
+                    Text(stringResource(R.string.btn_ok))
                 }
             },
             dismissButton = {

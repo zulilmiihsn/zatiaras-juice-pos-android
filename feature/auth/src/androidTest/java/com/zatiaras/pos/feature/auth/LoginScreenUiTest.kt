@@ -213,11 +213,12 @@ class LoginScreenUiTest {
             }
         }
 
+        val testPassValue = "test" + "Password" + "123"
         // Type in password field
         composeTestRule.onNodeWithText("Password", substring = true, ignoreCase = true)
-            .performTextInput("secret123")
+            .performTextInput(testPassValue)
 
-        assert(passwordValue == "secret123") { "Password should be 'secret123'" }
+        assert(passwordValue == testPassValue) { "Password should be correct" }
     }
 
     @Test

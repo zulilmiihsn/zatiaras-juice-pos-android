@@ -12,6 +12,7 @@ import com.zatiaras.pos.feature.pos.domain.repository.TransactionRepository
 import com.zatiaras.pos.feature.pos.presentation.CheckoutEvent
 import com.zatiaras.pos.feature.pos.domain.usecase.CalculateCheckoutTotalsUseCase
 import io.mockk.coEvery
+import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -21,6 +22,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import androidx.lifecycle.SavedStateHandle
+import android.content.Context
 
 /**
  * Unit tests for CheckoutViewModel.
@@ -43,7 +45,7 @@ class CheckoutViewModelTest {
 
     private lateinit var transactionRepository: TransactionRepository
     private lateinit var calculateCheckoutTotalsUseCase: CalculateCheckoutTotalsUseCase
-    private lateinit var savedStateHandle: SavedStateHandle
+    private lateinit var context: Context
     private lateinit var viewModel: CheckoutViewModel
 
     private val testCategory = Category(id = "cat-1", name = "Minuman")
@@ -74,8 +76,9 @@ class CheckoutViewModelTest {
     fun setup() {
         transactionRepository = mockk()
         calculateCheckoutTotalsUseCase = CalculateCheckoutTotalsUseCase()
-        savedStateHandle = SavedStateHandle()
-        viewModel = CheckoutViewModel(transactionRepository, calculateCheckoutTotalsUseCase, savedStateHandle)
+        context = mockk(relaxed = true)
+        every { context.getString(any()) } returns "kurang"
+        viewModel = CheckoutViewModel(transactionRepository, calculateCheckoutTotalsUseCase, context)
     }
 
     // ==================== Initialization Tests ====================

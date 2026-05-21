@@ -46,12 +46,17 @@
     <string name="checkout_print_receipt">Cetak Struk</string>
     <string name="checkout_new_transaction">Transaksi Baru</string>
     <string name="checkout_processing">Memproses...</string>
-        <string name="checkout_discount_value">-%1$s</string>
-        <string name="checkout_payment_title">Pembayaran %1$s</string>
-        <string name="checkout_reset">Reset</string>
-        <string name="checkout_quick_amount_plus">+ %1$s</string>
-        <string name="checkout_item_customization">+ %1$s</string>
-        <string name="checkout_item_qty_price">%1$d x %2$s</string>
+    <string name="checkout_customer_info">Informasi Pelanggan</string>
+    <string name="checkout_confirm_payment">Konfirmasi Pembayaran</string>
+    <string name="checkout_total_payment_label">Total Bayar</string>
+    <string name="checkout_discount_amount">Jumlah Diskon</string>
+    <string name="checkout_discount_percent_label">Diskon (%)</string>
+    <string name="checkout_discount_value">-%1$s</string>
+    <string name="checkout_payment_title">Pembayaran %1$s</string>
+    <string name="checkout_reset">Reset</string>
+    <string name="checkout_quick_amount_plus">+ %1$s</string>
+    <string name="checkout_item_customization">+ %1$s</string>
+    <string name="checkout_item_qty_price">%1$d x %2$s</string>
     
     <!-- Validation -->
     <string name="checkout_error_payment_required">Pilih metode pembayaran</string>
@@ -164,8 +169,15 @@
     <string name="pos_history_time">Waktu</string>
     <string name="pos_history_total_payment">Total Pembayaran</string>
     <string name="pos_history_payment_type">Jenis Pembayaran</string>
+    <string name="pos_history_transaction_id">ID Transaksi</string>
+    <string name="pos_history_date">Tanggal</string>
+    <string name="pos_history_view_receipt">Lihat Struk</string>
     <string name="pos_receipt_detail_title">Detail Transaksi</string>
     <string name="pos_receipt_store_name_default">Zatiaras Juice</string>
+    <string name="pos_receipt_store_address_default">Jalan Raya Hankam No. 12</string>
+    <string name="pos_receipt_discount_label">Diskon</string>
+    <string name="pos_receipt_tax_label">PPN</string>
+    <string name="pos_receipt_printer_connected">Terhubung ke %1$s</string>
     <string name="pos_receipt_total_upper">TOTAL</string>
     <string name="pos_receipt_paid">Dibayar</string>
     <string name="pos_receipt_customer">Pelanggan:</string>
