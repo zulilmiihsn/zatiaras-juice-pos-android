@@ -24,8 +24,8 @@ sealed class AccessCheckResult {
     /** User needs to enter owner PIN to access */
     data object RequiresOwnerPin : AccessCheckResult()
     
-    /** Owner PIN is not set, so access is granted (fallback) */
-    data object GrantedNoPinSet : AccessCheckResult()
+    /** Route is locked but owner PIN is not configured */
+    data object DeniedOwnerPinNotSet : AccessCheckResult()
 }
 
 /**
@@ -114,15 +114,15 @@ class AccessControlManager @Inject constructor(
                 // Route not locked, kasir can access
                 !isLocked -> AccessCheckResult.Granted
                 
-                // Route is locked but no PIN set (fallback to allow)
-                !isPinSet -> AccessCheckResult.GrantedNoPinSet
+                // Route is locked but no PIN set. Deny instead of silently bypassing access control.
+                !isPinSet -> AccessCheckResult.DeniedOwnerPinNotSet
                 
                 // Kasir + locked route + PIN set = requires PIN
                 else -> AccessCheckResult.RequiresOwnerPin
             }
         }.catch { e ->
-            Timber.e(e, "Error checking access, granting by default")
-            emit(AccessCheckResult.Granted)
+            Timber.e(e, "Error checking access, denying by default")
+            emit(AccessCheckResult.DeniedOwnerPinNotSet)
         }
     }
 
@@ -133,8 +133,8 @@ class AccessControlManager @Inject constructor(
         return try {
             checkAccess(route).first()
         } catch (e: Exception) {
-            Timber.e(e, "Error checking access now, granting by default")
-            AccessCheckResult.Granted
+            Timber.e(e, "Error checking access now, denying by default")
+            AccessCheckResult.DeniedOwnerPinNotSet
         }
     }
 

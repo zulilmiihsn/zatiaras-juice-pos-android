@@ -1,13 +1,17 @@
 package com.zatiaras.pos.core.data.access
 
+import com.zatiaras.pos.core.data.local.entity.AppSettingsEntity
 import com.zatiaras.pos.core.data.local.dao.AppSettingsDao
 import com.zatiaras.pos.core.data.repository.AppSettingsRepository
 import com.zatiaras.pos.core.data.session.SessionPreferences
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -70,5 +74,56 @@ class AccessControlManagerTest {
 
         assertFalse(result)
         coVerify(exactly = 1) { accessControlPreferences.recordFailedOwnerPinAttempt(any()) }
+    }
+
+    @Test
+    fun `checkAccess denies cashier when locked route has no owner pin`() = runTest {
+        every { sessionPreferences.getRole() } returns UserRole.KASIR.value
+        every {
+            appSettingsDao.observeSettings()
+        } returns flowOf(
+            AppSettingsEntity(
+                lockedRoutes = listOf(LockableRoute.PNL_REPORT.route),
+                ownerPinHash = null
+            )
+        )
+
+        val result = manager.checkAccessNow(LockableRoute.PNL_REPORT.route)
+
+        assertEquals(AccessCheckResult.DeniedOwnerPinNotSet, result)
+    }
+
+    @Test
+    fun `checkAccess requires pin for cashier when locked route has owner pin`() = runTest {
+        every { sessionPreferences.getRole() } returns UserRole.KASIR.value
+        every {
+            appSettingsDao.observeSettings()
+        } returns flowOf(
+            AppSettingsEntity(
+                lockedRoutes = listOf(LockableRoute.PNL_REPORT.route),
+                ownerPinHash = "hash"
+            )
+        )
+
+        val result = manager.checkAccessNow(LockableRoute.PNL_REPORT.route)
+
+        assertEquals(AccessCheckResult.RequiresOwnerPin, result)
+    }
+
+    @Test
+    fun `checkAccess grants owner even when route is locked and pin is not set`() = runTest {
+        every { sessionPreferences.getRole() } returns UserRole.PEMILIK.value
+        every {
+            appSettingsDao.observeSettings()
+        } returns flowOf(
+            AppSettingsEntity(
+                lockedRoutes = listOf(LockableRoute.PNL_REPORT.route),
+                ownerPinHash = null
+            )
+        )
+
+        val result = manager.checkAccessNow(LockableRoute.PNL_REPORT.route)
+
+        assertEquals(AccessCheckResult.Granted, result)
     }
 }

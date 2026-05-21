@@ -69,9 +69,9 @@ fun AccessControlGate(
     LaunchedEffect(route) {
         val result = accessControlManager.checkAccessNow(route)
         gateState = when (result) {
-            is AccessCheckResult.Granted,
-            is AccessCheckResult.GrantedNoPinSet -> AccessGateState.Granted
+            is AccessCheckResult.Granted -> AccessGateState.Granted
             is AccessCheckResult.RequiresOwnerPin -> AccessGateState.RequiresPin
+            is AccessCheckResult.DeniedOwnerPinNotSet -> AccessGateState.Denied
         }
         
         if (gateState == AccessGateState.RequiresPin) {
