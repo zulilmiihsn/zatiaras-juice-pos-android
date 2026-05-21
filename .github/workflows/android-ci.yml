@@ -30,5 +30,11 @@ jobs:
       - name: Assemble debug
         run: ./gradlew :app:assembleDebug --no-daemon --console=plain
 
-      - name: Run unit tests
-        run: ./gradlew :app:testDebugUnitTest --no-daemon --console=plain
+      - name: Run all unit tests
+        run: ./gradlew test --no-daemon --console=plain
+
+      - name: Run Android lint
+        run: ./gradlew lintDebug --no-daemon --console=plain
+
+      - name: Verify release build
+        run: ./gradlew :app:assembleRelease --no-daemon --console=plain
