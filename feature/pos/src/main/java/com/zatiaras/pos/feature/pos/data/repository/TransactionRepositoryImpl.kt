@@ -15,6 +15,7 @@ import com.zatiaras.pos.feature.pos.domain.repository.TransactionStats
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import timber.log.Timber
+import java.util.Locale
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -134,11 +135,12 @@ class TransactionRepositoryImpl @Inject constructor(
     }
 
     override suspend fun generateTransactionNumber(): String {
-        val (startOfDay, endOfDay) = DateUtils.getTodayRange()
-        val count = transactionDao.getTransactionCountForDay(startOfDay, endOfDay)
         val dateStr = DateUtils.formatDateCompact()
-        val sequence = String.format("%04d", count + 1)
-        return "TRX-$dateStr-$sequence"
+        val timePart = System.currentTimeMillis().toString().takeLast(6)
+        val randomPart = UUID.randomUUID().toString()
+            .take(4)
+            .uppercase(Locale.US)
+        return "TRX-$dateStr-$timePart$randomPart"
     }
 
     override suspend fun getTodayStats(): TransactionStats {
