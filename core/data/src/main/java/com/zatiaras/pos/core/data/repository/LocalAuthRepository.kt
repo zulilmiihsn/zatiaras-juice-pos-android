@@ -18,15 +18,17 @@ import javax.inject.Singleton
  * 
  * Supports offline-first authentication:
  * - Login with username/password
- * - Credentials stored locally in Room
- * - Users synced from Supabase when online
+ * - User profiles synced from Supabase when online
+ * - Offline credential verifiers cached only after successful login
+ * - Credential verifiers stored encrypted outside Room
  * - Session persists across app restarts
- * - No internet required for authentication (after initial sync)
+ * - No internet required for authentication after a user's first successful login
  */
 @Singleton
 class LocalAuthRepository @Inject constructor(
     private val userDao: UserDao,
     private val userRemoteDataSource: UserRemoteDataSource,
+    private val credentialStore: LocalCredentialStore,
     private val sessionPreferences: SessionPreferences
 ) : AuthRepository {
 
@@ -41,33 +43,37 @@ class LocalAuthRepository @Inject constructor(
         return try {
             Timber.d("Attempting local login with username: $username")
             
-            val user = userDao.getUserByUsername(username)
+            val localUser = userDao.getUserByUsername(username)
             
-            if (user == null) {
+            if (localUser == null) {
                 Timber.w("User not found: $username")
-                return Result.Error(Exception("Username tidak ditemukan"))
+                val remoteUser = authenticateRemoteAndCache(username, password, null)
+                    ?: return Result.Error(Exception("Username tidak ditemukan"))
+                completeLogin(remoteUser)
+                return Result.Success(Unit)
             }
             
-            if (!user.isActive) {
+            if (!localUser.isActive) {
                 Timber.w("User is inactive: $username")
                 return Result.Error(Exception("Akun tidak aktif"))
             }
             
-            if (!UserEntity.verifyPassword(password, user.passwordHash)) {
+            val authenticatedUser = when {
+                credentialStore.verifyPassword(localUser.id, password) -> localUser
+                localUser.passwordHash.isNotBlank() && UserEntity.verifyPassword(password, localUser.passwordHash) -> {
+                    credentialStore.savePasswordHash(localUser.id, localUser.passwordHash)
+                    userDao.updatePassword(localUser.id, "")
+                    localUser.copy(passwordHash = "")
+                }
+                else -> authenticateRemoteAndCache(username, password, localUser)
+            }
+
+            if (authenticatedUser == null) {
                 Timber.w("Invalid password for user: $username")
                 return Result.Error(Exception("Password salah"))
             }
             
-            // Login successful - save session
-            _currentUser = user
-            _isLoggedIn.value = true
-            sessionPreferences.saveSession(
-                userId = user.id,
-                username = user.username,
-                displayName = user.displayName,
-                role = user.role
-            )
-            Timber.d("Login successful for: $username (${user.displayName})")
+            completeLogin(authenticatedUser)
             
             Result.Success(Unit)
         } catch (e: Exception) {
@@ -125,12 +131,50 @@ class LocalAuthRepository @Inject constructor(
      */
     fun getCurrentUser(): UserEntity? = _currentUser
 
+    private suspend fun completeLogin(user: UserEntity) {
+        _currentUser = user
+        _isLoggedIn.value = true
+        sessionPreferences.saveSession(
+            userId = user.id,
+            username = user.username,
+            displayName = user.displayName,
+            role = user.role
+        )
+        Timber.d("Login successful for: ${user.username} (${user.displayName})")
+    }
+
+    private suspend fun authenticateRemoteAndCache(
+        username: String,
+        password: String,
+        existingUser: UserEntity?
+    ): UserEntity? {
+        return when (val remoteResult = userRemoteDataSource.fetchActiveUserWithPassword(username)) {
+            is Result.Success -> {
+                val dto = remoteResult.data ?: return null
+                val remoteHash = dto.passwordHash ?: return null
+                if (!UserEntity.verifyPassword(password, remoteHash)) return null
+
+                val syncedUser = syncUserToLocal(dto)
+                credentialStore.savePasswordHash(syncedUser.id, remoteHash)
+                if (existingUser?.passwordHash?.isNotBlank() == true) {
+                    userDao.updatePassword(existingUser.id, "")
+                }
+                syncedUser
+            }
+            is Result.Error -> {
+                Timber.e(remoteResult.exception, "Remote credential check failed for username: $username")
+                null
+            }
+            is Result.Loading -> null
+        }
+    }
+
     /**
      * Change password for currently logged-in user.
      *
      * Flow:
      * - Resolve current user from memory/session
-     * - Verify current password against local hash
+     * - Verify current password against encrypted local credential or legacy Room hash
      * - Hash new password
      * - Update remote first, then local
      */
@@ -142,7 +186,10 @@ class LocalAuthRepository @Inject constructor(
             val user = resolveCurrentUser()
                 ?: return Result.Error(Exception("Sesi tidak ditemukan, silakan login ulang"))
 
-            if (!UserEntity.verifyPassword(currentPassword, user.passwordHash)) {
+            val currentPasswordValid = credentialStore.verifyPassword(user.id, currentPassword) ||
+                (user.passwordHash.isNotBlank() && UserEntity.verifyPassword(currentPassword, user.passwordHash))
+
+            if (!currentPasswordValid) {
                 return Result.Error(Exception("Password saat ini salah"))
             }
 
@@ -158,10 +205,11 @@ class LocalAuthRepository @Inject constructor(
                 is Result.Success -> Unit
             }
 
-            userDao.updatePassword(user.id, newHash)
+            credentialStore.savePasswordHash(user.id, newHash)
+            userDao.updatePassword(user.id, "")
 
             val refreshedUser = user.copy(
-                passwordHash = newHash,
+                passwordHash = "",
                 updatedAt = System.currentTimeMillis()
             )
             _currentUser = refreshedUser
@@ -235,13 +283,13 @@ class LocalAuthRepository @Inject constructor(
      * Sync a single user from Supabase DTO to local Room.
      * If user exists, update; otherwise insert.
      */
-    private suspend fun syncUserToLocal(dto: UserDto) {
+    private suspend fun syncUserToLocal(dto: UserDto): UserEntity {
         val existing = userDao.getUserByUsername(dto.username)
         
         val user = UserEntity(
             id = dto.id,
             username = dto.username,
-            passwordHash = dto.passwordHash, // Already hashed from Supabase
+            passwordHash = "",
             displayName = dto.displayName,
             role = dto.role,
             isActive = dto.isActive,
@@ -258,6 +306,7 @@ class LocalAuthRepository @Inject constructor(
             userDao.insertUser(user)
             Timber.d("Inserted new user: ${user.username}")
         }
+        return user
     }
 
     /**

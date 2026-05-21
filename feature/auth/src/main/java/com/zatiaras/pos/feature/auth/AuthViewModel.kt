@@ -91,7 +91,7 @@ class AuthViewModel @Inject constructor(
             _uiState.update { AuthUiState.Loading }
             
             // TODO(P2): Validasi role-user terhadap branch membutuhkan dukungan endpoint backend.
-            // For now, we assume the user exists and credential is correct
+            // Authentication is handled by the login use case.
             
             when (val result = loginUseCase(username, password)) {
                 is Result.Success -> {

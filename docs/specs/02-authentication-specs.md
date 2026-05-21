@@ -35,8 +35,8 @@ androidx-security-crypto = { group = "androidx.security", name = "security-crypt
 ### `:core:data`
 *   **DI**: `DatabaseModule` (Provides DAOs), `NetworkModule` (Provides Postgrest).
 *   `LocalAuthRepository`: Implements `AuthRepository`.
-    *   **Login**: Verifies password against local `users` table (PBKDF2/SHA-256).
-    *   **Sync**: `UserRemoteDataSource` fetches users from remote `users` table.
+    *   **Login**: Verifies password against encrypted local credential storage, then falls back to one-user online verification when needed.
+    *   **Sync**: `UserRemoteDataSource` fetches user profiles from the remote `users` table without bulk-syncing password hashes.
 *   **Data Sources**:
     *   `UserDao`: Local Room access.
     *   `UserRemoteDataSource`: Supabase Postgrest access.
@@ -50,9 +50,10 @@ androidx-security-crypto = { group = "androidx.security", name = "security-crypt
 ## 3. Data Flow
 1.  **User** enters credentials.
 2.  **ViewModel** calls `loginUseCase(email, pass)`.
-3.  **Repository** checks credentials against local `users` table.
-4.  **Verification** uses `PasswordHasher` (PBKDF2/SHA-256).
-5.  **Session** is saved via `EncryptedSessionManager` (AES256-GCM encrypted at rest).
+3.  **Repository** checks credentials against encrypted local credential storage.
+4.  **Fallback** fetches one active remote credential during online login and caches the verifier after successful authentication.
+5.  **Verification** uses `PasswordHasher` (PBKDF2/SHA-256).
+6.  **Session** is saved via `EncryptedSessionManager` (AES256-GCM encrypted at rest).
     *   **Implementation**: Custom `SessionManager` injected into Supabase client using `AndroidX Security Crypto`.
 
 ## 4. UI States

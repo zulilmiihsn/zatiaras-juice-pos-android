@@ -16,6 +16,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
  * - Version 4: Added users table for offline authentication
  * - Version 5: Added app_settings and add_ons tables
  * - Version 6: Added store_sessions table, sessionId to transactions
+ * - Version 12: Purged password hashes from Room
  */
 object Migrations {
 
@@ -269,6 +270,19 @@ object Migrations {
     }
 
     /**
+     * Migration from version 11 to 12.
+     * Removes previously bulk-synced password hashes from the Room database.
+     *
+     * Offline credentials are now cached only after successful login and stored
+     * encrypted in LocalCredentialStore.
+     */
+    val MIGRATION_11_12 = object : Migration(11, 12) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("UPDATE `users` SET `passwordHash` = ''")
+        }
+    }
+
+    /**
      * Get all migrations in order.
      * Add new migrations to this list.
      */
@@ -282,6 +296,7 @@ object Migrations {
         MIGRATION_7_8,
         MIGRATION_8_9,
         MIGRATION_9_10,
-        MIGRATION_10_11
+        MIGRATION_10_11,
+        MIGRATION_11_12
     )
 }

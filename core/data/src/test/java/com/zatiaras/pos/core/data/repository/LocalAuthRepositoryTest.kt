@@ -36,6 +36,7 @@ class LocalAuthRepositoryTest {
 
     private lateinit var userDao: UserDao
     private lateinit var userRemoteDataSource: UserRemoteDataSource
+    private lateinit var credentialStore: LocalCredentialStore
     private lateinit var sessionPreferences: SessionPreferences
     private lateinit var repository: LocalAuthRepository
 
@@ -56,9 +57,17 @@ class LocalAuthRepositoryTest {
         
         userDao = mockk(relaxed = true)
         userRemoteDataSource = mockk(relaxed = true)
+        credentialStore = mockk(relaxed = true)
         sessionPreferences = mockk(relaxed = true)
+
+        every { credentialStore.verifyPassword(any(), any()) } returns false
+        every { credentialStore.hasCredential(any()) } returns false
+        every { credentialStore.savePasswordHash(any(), any()) } just Runs
+        every { credentialStore.savePassword(any(), any()) } just Runs
+        every { credentialStore.clearCredential(any()) } just Runs
+        coEvery { userRemoteDataSource.fetchActiveUserWithPassword(any()) } returns Result.Success(null)
         
-        repository = LocalAuthRepository(userDao, userRemoteDataSource, sessionPreferences)
+        repository = LocalAuthRepository(userDao, userRemoteDataSource, credentialStore, sessionPreferences)
     }
 
     @After
@@ -71,6 +80,7 @@ class LocalAuthRepositoryTest {
     @Test
     fun `login with valid credentials returns Success`() = runTest {
         coEvery { userDao.getUserByUsername("admin") } returns testUser
+        every { credentialStore.verifyPassword(testUser.id, "admin123") } returns true
         
         val result = repository.login("admin", "admin123")
         
@@ -80,6 +90,7 @@ class LocalAuthRepositoryTest {
     @Test
     fun `login with valid credentials saves session`() = runTest {
         coEvery { userDao.getUserByUsername("admin") } returns testUser
+        every { credentialStore.verifyPassword(testUser.id, "admin123") } returns true
         
         repository.login("admin", "admin123")
         
@@ -114,6 +125,27 @@ class LocalAuthRepositoryTest {
     }
 
     @Test
+    fun `login fetches one remote credential when local user is missing`() = runTest {
+        val remoteHash = UserEntity.hashPassword("admin123")
+        val remoteUser = UserDto(
+            id = "user-1",
+            username = "admin",
+            passwordHash = remoteHash,
+            displayName = "Administrator",
+            role = "pemilik",
+            isActive = true
+        )
+        coEvery { userDao.getUserByUsername("admin") } returnsMany listOf(null, null)
+        coEvery { userRemoteDataSource.fetchActiveUserWithPassword("admin") } returns Result.Success(remoteUser)
+
+        val result = repository.login("admin", "admin123")
+
+        assertTrue(result is Result.Success)
+        verify(exactly = 1) { credentialStore.savePasswordHash("user-1", remoteHash) }
+        coVerify(exactly = 1) { userDao.insertUser(match { it.id == "user-1" && it.passwordHash.isBlank() }) }
+    }
+
+    @Test
     fun `login with inactive user returns Error`() = runTest {
         val inactiveUser = testUser.copy(isActive = false)
         coEvery { userDao.getUserByUsername("admin") } returns inactiveUser
@@ -130,6 +162,7 @@ class LocalAuthRepositoryTest {
     fun `logout clears session`() = runTest {
         // First login
         coEvery { userDao.getUserByUsername("admin") } returns testUser
+        every { credentialStore.verifyPassword(testUser.id, "admin123") } returns true
         repository.login("admin", "admin123")
         
         // Then logout
@@ -141,6 +174,7 @@ class LocalAuthRepositoryTest {
     @Test
     fun `logout clears current user`() = runTest {
         coEvery { userDao.getUserByUsername("admin") } returns testUser
+        every { credentialStore.verifyPassword(testUser.id, "admin123") } returns true
         repository.login("admin", "admin123")
         
         assertEquals(testUser, repository.getCurrentUser())
@@ -238,7 +272,6 @@ class LocalAuthRepositoryTest {
             UserDto(
                 id = "user-1", 
                 username = "admin", 
-                passwordHash = "hash1",
                 displayName = "Admin",
                 role = "pemilik",
                 isActive = true
@@ -246,7 +279,6 @@ class LocalAuthRepositoryTest {
             UserDto(
                 id = "user-2", 
                 username = "kasir1", 
-                passwordHash = "hash2",
                 displayName = "Kasir 1",
                 role = "kasir",
                 isActive = true
@@ -287,6 +319,7 @@ class LocalAuthRepositoryTest {
     @Test
     fun `changeCurrentUserPassword with valid current password returns Success`() = runTest {
         coEvery { userDao.getUserByUsername("admin") } returns testUser
+        every { credentialStore.verifyPassword(testUser.id, "admin123") } returns true
         every { sessionPreferences.getUserId() } returns testUser.id
         coEvery { userRemoteDataSource.updatePasswordHash(eq(testUser.id), any()) } returns Result.Success(Unit)
 
@@ -295,13 +328,15 @@ class LocalAuthRepositoryTest {
         val result = repository.changeCurrentUserPassword("admin123", "newpass123")
 
         assertTrue(result is Result.Success)
-        coVerify(exactly = 1) { userDao.updatePassword(eq(testUser.id), any(), any()) }
+        verify(exactly = 1) { credentialStore.savePasswordHash(eq(testUser.id), any()) }
+        coVerify(exactly = 1) { userDao.updatePassword(testUser.id, "", any()) }
         coVerify(exactly = 1) { userRemoteDataSource.updatePasswordHash(eq(testUser.id), any()) }
     }
 
     @Test
     fun `changeCurrentUserPassword with wrong current password returns Error`() = runTest {
         coEvery { userDao.getUserByUsername("admin") } returns testUser
+        every { credentialStore.verifyPassword(testUser.id, "admin123") } returns true
         every { sessionPreferences.getUserId() } returns testUser.id
 
         repository.login("admin", "admin123")
@@ -317,6 +352,7 @@ class LocalAuthRepositoryTest {
     @Test
     fun `changeCurrentUserPassword fails when remote update fails`() = runTest {
         coEvery { userDao.getUserByUsername("admin") } returns testUser
+        every { credentialStore.verifyPassword(testUser.id, "admin123") } returns true
         every { sessionPreferences.getUserId() } returns testUser.id
         coEvery { userRemoteDataSource.updatePasswordHash(eq(testUser.id), any()) } returns Result.Error(Exception("Remote gagal"))
 

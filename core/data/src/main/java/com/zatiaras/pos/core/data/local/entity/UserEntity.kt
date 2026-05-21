@@ -8,8 +8,8 @@ import com.zatiaras.pos.core.data.util.PasswordHasher
 /**
  * Local user entity for offline authentication.
  * 
- * Stores user credentials locally in Room database,
- * allowing login without internet connection.
+ * Stores user profile data in Room. Offline password verifiers are stored
+ * separately in encrypted local storage after successful authentication.
  * 
  * Password Security:
  * - Uses PBKDF2WithHmacSHA256 with 120,000 iterations

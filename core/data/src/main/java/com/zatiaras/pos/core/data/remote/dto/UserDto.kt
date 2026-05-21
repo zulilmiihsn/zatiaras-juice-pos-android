@@ -16,7 +16,7 @@ data class UserDto(
     val username: String,
     
     @SerialName("password_hash")
-    val passwordHash: String,
+    val passwordHash: String? = null,
     
     @SerialName("display_name")
     val displayName: String,

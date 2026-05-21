@@ -59,7 +59,7 @@ sealed class ApiResult<out T> {
 
 ### 3.1 `pengguna` (User Accounts & Profiles) ✅ IMPLEMENTED
 
-> **Note**: This table replaces the standard `auth.users` + `profil` pattern to support **Offline Authentication**. It stores hashed passwords directly in the public schema to allow syncing to local devices.
+> **Note**: This table replaces the standard `auth.users` + `profil` pattern to support username-based POS authentication. Password hashes remain server-side during bulk profile sync; the app fetches a single active user's verifier only during an online login attempt and stores the resulting offline verifier in encrypted local storage after successful authentication.
 
 | Column | Type | Description |
 |--------|------|-------------|

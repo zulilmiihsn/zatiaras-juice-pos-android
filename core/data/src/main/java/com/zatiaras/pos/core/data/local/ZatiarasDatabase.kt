@@ -44,6 +44,7 @@ import com.zatiaras.pos.core.data.local.entity.UserEntity
  * - v4: Added Users (Offline Auth)
  * - v5: Added AppSettings and AddOns (Settings Sync + Toppings)
  * - v7: Updated Product schema (Type + AddOns)
+ * - v12: Purged password hashes from Room; offline credentials moved to encrypted storage
  */
 @Database(
     entities = [
@@ -58,7 +59,7 @@ import com.zatiaras.pos.core.data.local.entity.UserEntity
         AddOnEntity::class,
         StoreSessionEntity::class
     ],
-    version = 11,
+    version = 12,
     exportSchema = true
 )
 @TypeConverters(LockedRoutesConverter::class)
