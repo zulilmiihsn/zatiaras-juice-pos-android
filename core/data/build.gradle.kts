@@ -87,8 +87,13 @@ dependencies {
     api(libs.supabase.postgrest)
     api(libs.supabase.storage)
     api(libs.supabase.functions)
-    implementation(libs.ktor.client.cio)
-    implementation(libs.ktor.client.core)
+    api(libs.ktor.client.android)
+    api(libs.ktor.client.core)
+    api(libs.ktor.client.content.negotiation)
+    api(libs.ktor.serialization)
+    api(libs.ktor.serialization.kotlinx)
+    api(libs.ktor.serialization.kotlinx.json)
+    api(libs.ktor.websockets)
 
     // DataStore
     implementation(libs.androidx.datastore.preferences)

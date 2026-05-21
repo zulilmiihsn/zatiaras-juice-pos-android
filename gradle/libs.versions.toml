@@ -1,36 +1,35 @@
 [versions]
-agp = "8.2.2"
-kotlin = "1.9.22"
+agp = "8.9.2"
+kotlin = "2.1.0"
 coreKtx = "1.12.0"
 junit = "4.13.2"
-junitVersion = "1.1.5"
-espressoCore = "3.5.1"
+junitVersion = "1.2.1"
+espressoCore = "3.6.1"
 lifecycleRuntimeKtx = "2.7.0"
 activityCompose = "1.8.2"
 composeBom = "2024.12.01"
-hilt = "2.50"
+hilt = "2.56"
 hiltNavigationCompose = "1.1.0"
-ksp = "1.9.22-1.0.17"
+ksp = "2.1.0-1.0.28"
 timber = "5.0.1"
-composeCompiler = "1.5.8"
-coroutines = "1.7.3"
+coroutines = "1.10.0"
 javaxInject = "1"
 room = "2.6.1"
 paging = "3.2.1"
 supabase = "2.1.3"
-ktor = "2.3.7"
+ktor = "2.3.13"
 datastore = "1.0.0"
-securityCrypto = "1.1.0-alpha06"
+securityCrypto = "1.1.0"
 serialization = "1.6.2"
 navigationCompose = "2.7.7"
 workManager = "2.9.0"
 hiltWork = "1.1.0"
 biometric = "1.1.0"
-coil = "2.5.0"
+coil = "2.6.0"
 # Testing
 mockk = "1.13.9"
 turbine = "1.0.0"
-coroutinesTest = "1.7.3"
+coroutinesTest = "1.10.0"
 archCore = "2.2.0"
 
 [libraries]
@@ -52,6 +51,7 @@ androidx-ui-text-google-fonts = { group = "androidx.compose.ui", name = "ui-text
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
 androidx-compose-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended" }
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
+kotlin-stdlib = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib", version.ref = "kotlin" }
 
 # Hilt
 hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt" }
@@ -85,7 +85,13 @@ supabase-postgrest = { group = "io.github.jan-tennert.supabase", name = "postgre
 supabase-storage = { group = "io.github.jan-tennert.supabase", name = "storage-kt", version.ref = "supabase" }
 supabase-functions = { group = "io.github.jan-tennert.supabase", name = "functions-kt", version.ref = "supabase" }
 ktor-client-cio = { group = "io.ktor", name = "ktor-client-cio", version.ref = "ktor" }
+ktor-client-android = { group = "io.ktor", name = "ktor-client-android", version.ref = "ktor" }
 ktor-client-core = { group = "io.ktor", name = "ktor-client-core", version.ref = "ktor" }
+ktor-client-content-negotiation = { group = "io.ktor", name = "ktor-client-content-negotiation", version.ref = "ktor" }
+ktor-serialization = { group = "io.ktor", name = "ktor-serialization", version.ref = "ktor" }
+ktor-serialization-kotlinx = { group = "io.ktor", name = "ktor-serialization-kotlinx", version.ref = "ktor" }
+ktor-serialization-kotlinx-json = { group = "io.ktor", name = "ktor-serialization-kotlinx-json", version.ref = "ktor" }
+ktor-websockets = { group = "io.ktor", name = "ktor-websockets", version.ref = "ktor" }
 
 # DataStore
 androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
@@ -129,3 +135,4 @@ hiltAndroid = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 kotlinJvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
