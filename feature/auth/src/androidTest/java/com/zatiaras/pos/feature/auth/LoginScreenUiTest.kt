@@ -24,6 +24,10 @@ class LoginScreenUiTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
+    private companion object {
+        const val TEST_PASSWORD = "testPassword123"
+    }
+
     private val defaultState = AuthUiState()
 
     @Test
@@ -213,12 +217,11 @@ class LoginScreenUiTest {
             }
         }
 
-        val testPassValue = "test" + "Password" + "123"
         // Type in password field
         composeTestRule.onNodeWithText("Password", substring = true, ignoreCase = true)
-            .performTextInput(testPassValue)
+            .performTextInput(TEST_PASSWORD)
 
-        assert(passwordValue == testPassValue) { "Password should be correct" }
+        assert(passwordValue == TEST_PASSWORD) { "Password should be correct" }
     }
 
     @Test
