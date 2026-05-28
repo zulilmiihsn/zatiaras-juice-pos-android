@@ -5,8 +5,8 @@ package com.zatiaras.pos.feature.reports.domain.model
  * Maps relevant fields from CashRecordEntity without leaking data-layer types.
  */
 data class CashFlowItem(
-    val type: String,          // "INCOME" or "EXPENSE"
+    val type: String, // "INCOME" or "EXPENSE"
     val amount: Long,
     val description: String,
-    val category: String? = null
+    val category: String? = null,
 )

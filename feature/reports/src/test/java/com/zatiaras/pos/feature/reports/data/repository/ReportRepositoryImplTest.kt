@@ -7,8 +7,8 @@ import com.zatiaras.pos.core.data.local.entity.CashRecordEntity
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertTrue
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -41,7 +41,7 @@ class ReportRepositoryImplTest {
         coEvery { transactionDao.getRevenueSummary(any(), any()) } returnsMany listOf(
             RevenueSummaryEntity(totalRevenue = weeklyRevenue, grossRevenue = weeklyRevenue, totalDiscount = 0, totalTax = 0),
             RevenueSummaryEntity(totalRevenue = monthlyRevenue, grossRevenue = monthlyRevenue, totalDiscount = 0, totalTax = 0),
-            RevenueSummaryEntity(totalRevenue = prevWeekRevenue, grossRevenue = prevWeekRevenue, totalDiscount = 0, totalTax = 0)
+            RevenueSummaryEntity(totalRevenue = prevWeekRevenue, grossRevenue = prevWeekRevenue, totalDiscount = 0, totalTax = 0),
         )
 
         val result = reportRepository.getDashboardStats()
@@ -71,15 +71,25 @@ class ReportRepositoryImplTest {
 
         val manualRecords = listOf(
             CashRecordEntity(
-                id = "1", type = "INCOME", amount = 100000,
-                category = "Operasional", description = "Jualan",
-                createdAt = 10, updatedAt = 10, isSynced = true
+                id = "1",
+                type = "INCOME",
+                amount = 100000,
+                category = "Operasional",
+                description = "Jualan",
+                createdAt = 10,
+                updatedAt = 10,
+                isSynced = true,
             ),
             CashRecordEntity(
-                id = "2", type = "EXPENSE", amount = 20000,
-                category = "Bahan", description = "Belanja",
-                createdAt = 20, updatedAt = 20, isSynced = true
-            )
+                id = "2",
+                type = "EXPENSE",
+                amount = 20000,
+                category = "Bahan",
+                description = "Belanja",
+                createdAt = 20,
+                updatedAt = 20,
+                isSynced = true,
+            ),
         )
 
         coEvery { cashRecordDao.getRecordsListByDateRange(any(), any()) } returns manualRecords

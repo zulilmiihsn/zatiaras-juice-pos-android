@@ -55,10 +55,10 @@ fun StatCard(
     containerColor: Color = MaterialTheme.colorScheme.surface,
     contentColor: Color = MaterialTheme.colorScheme.onSurface,
     iconContainerColor: Color = MaterialTheme.colorScheme.primaryContainer,
-    iconTintColor: Color = MaterialTheme.colorScheme.primary
+    iconTintColor: Color = MaterialTheme.colorScheme.primary,
 ) {
     val dimensions = LocalDimensions.current
-    
+
     Card(
         modifier = modifier
             .animateContentSize(),
@@ -66,72 +66,72 @@ fun StatCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         colors = CardDefaults.cardColors(
             containerColor = if (backgroundBrush != null) Color.Transparent else containerColor,
-            contentColor = contentColor
-        )
+            contentColor = contentColor,
+        ),
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .fillMaxHeight()
                 .then(
-                    if (backgroundBrush != null) Modifier.background(backgroundBrush) else Modifier
+                    if (backgroundBrush != null) Modifier.background(backgroundBrush) else Modifier,
                 )
-                .padding(dimensions.paddingM)
+                .padding(dimensions.paddingM),
         ) {
             Column {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.Top
+                    verticalAlignment = Alignment.Top,
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = title,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = contentColor.copy(alpha = 0.8f)
+                            color = contentColor.copy(alpha = 0.8f),
                         )
-                        
+
                         Spacer(modifier = Modifier.height(dimensions.spacingXS))
-                        
+
                         Text(
                             text = value,
                             style = MaterialTheme.typography.headlineMedium,
                             fontWeight = FontWeight.Bold,
-                            color = contentColor
+                            color = contentColor,
                         )
-                        
+
                         if (subtitle != null) {
                             Spacer(modifier = Modifier.height(dimensions.spacingXS))
                             Text(
                                 text = subtitle,
                                 style = MaterialTheme.typography.bodySmall,
-                                color = contentColor.copy(alpha = 0.7f)
+                                color = contentColor.copy(alpha = 0.7f),
                             )
                         }
                     }
-                    
+
                     Box(
                         modifier = Modifier
                             .size(48.dp)
                             .clip(CircleShape)
                             .background(iconContainerColor),
-                        contentAlignment = Alignment.Center
+                        contentAlignment = Alignment.Center,
                     ) {
                         Icon(
                             imageVector = icon,
                             contentDescription = null,
                             tint = iconTintColor,
-                            modifier = Modifier.size(24.dp)
+                            modifier = Modifier.size(24.dp),
                         )
                     }
                 }
-                
+
                 // Trend indicator
                 if (trendPercent != null) {
                     Spacer(modifier = Modifier.height(dimensions.spacingM))
-                    
+
                     Row(
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
                         val isPositive = trendPercent >= 0
                         val trendColor = if (isPositive) {
@@ -139,36 +139,36 @@ fun StatCard(
                         } else {
                             LossRedLight
                         }
-                        
+
                         Box(
                             modifier = Modifier
                                 .clip(AppShapes.XS)
                                 .background(trendColor.copy(alpha = 0.2f))
-                                .padding(horizontal = dimensions.spacingS, vertical = 2.dp)
+                                .padding(horizontal = dimensions.spacingS, vertical = 2.dp),
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Icon(
                                     imageVector = if (isPositive) Icons.AutoMirrored.Filled.TrendingUp else Icons.AutoMirrored.Filled.TrendingDown,
                                     contentDescription = null,
                                     tint = trendColor,
-                                    modifier = Modifier.size(14.dp)
+                                    modifier = Modifier.size(14.dp),
                                 )
                                 Spacer(modifier = Modifier.width(dimensions.spacingXS))
                                 Text(
                                     text = "${if (isPositive) "+" else ""}${String.format(Locale.getDefault(), "%.1f", trendPercent)}%",
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.Medium,
-                                    color = trendColor
+                                    color = trendColor,
                                 )
                             }
                         }
-                        
+
                         Spacer(modifier = Modifier.width(dimensions.spacingS))
-                        
+
                         Text(
                             text = stringResource(R.string.reports_vs_last_week),
                             style = MaterialTheme.typography.labelSmall,
-                            color = contentColor.copy(alpha = 0.6f)
+                            color = contentColor.copy(alpha = 0.6f),
                         )
                     }
                 }
@@ -180,6 +180,4 @@ fun StatCard(
 /**
  * Format currency in Indonesian Rupiah.
  */
-fun formatRupiah(amount: Long): String {
-    return CurrencyFormatter.formatCurrency(amount)
-}
+fun formatRupiah(amount: Long): String = CurrencyFormatter.formatCurrency(amount)

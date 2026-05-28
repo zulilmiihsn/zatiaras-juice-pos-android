@@ -4,9 +4,7 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.work.*
-import androidx.work.testing.TestListenableWorkerBuilder
 import androidx.work.testing.WorkManagerTestInitHelper
-import kotlinx.coroutines.runBlocking
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
@@ -14,7 +12,7 @@ import org.junit.runner.RunWith
 
 /**
  * Integration tests for SyncWorker.
- * 
+ *
  * Tests:
  * - Worker initialization
  * - Worker execution with network constraint
@@ -25,16 +23,16 @@ import org.junit.runner.RunWith
 class SyncWorkerIntegrationTest {
 
     private lateinit var context: Context
-    
+
     @Before
     fun setup() {
         context = ApplicationProvider.getApplicationContext()
-        
+
         // Initialize WorkManager for testing
         val config = Configuration.Builder()
             .setMinimumLoggingLevel(android.util.Log.DEBUG)
             .build()
-        
+
         WorkManagerTestInitHelper.initializeTestWorkManager(context, config)
     }
 
@@ -43,12 +41,12 @@ class SyncWorkerIntegrationTest {
         // Get the sync work request
         val workRequest = PeriodicWorkRequestBuilder<SyncWorker>(
             SyncWorker.SYNC_INTERVAL_HOURS,
-            java.util.concurrent.TimeUnit.HOURS
+            java.util.concurrent.TimeUnit.HOURS,
         )
             .setConstraints(
                 Constraints.Builder()
                     .setRequiredNetworkType(NetworkType.CONNECTED)
-                    .build()
+                    .build(),
             )
             .build()
 
@@ -60,13 +58,13 @@ class SyncWorkerIntegrationTest {
     @Test
     fun syncWorker_isRegisteredWithUniqueName() {
         val workManager = WorkManager.getInstance(context)
-        
+
         // Schedule sync work
         SyncWorker.schedulePeriodicSync(context)
-        
+
         // Verify the work is enqueued
         val workInfo = workManager.getWorkInfosForUniqueWork(SyncWorker.UNIQUE_WORK_NAME).get()
-        
+
         // Work should be scheduled
         assertTrue(workInfo.isNotEmpty())
     }
@@ -74,29 +72,29 @@ class SyncWorkerIntegrationTest {
     @Test
     fun triggerImmediateSync_schedulesOneTimeWork() {
         val workManager = WorkManager.getInstance(context)
-        
+
         // Trigger immediate sync
         SyncWorker.triggerImmediateSync(context)
-        
+
         // Verify one-time work is scheduled
         val workInfo = workManager.getWorkInfosForUniqueWork(SyncWorker.IMMEDIATE_WORK_NAME).get()
-        
+
         assertTrue(workInfo.isNotEmpty())
     }
 
     @Test
     fun cancelAllSync_cancelsWork() {
         val workManager = WorkManager.getInstance(context)
-        
+
         // First schedule sync
         SyncWorker.schedulePeriodicSync(context)
-        
+
         // Then cancel
         SyncWorker.cancelAllSync(context)
-        
+
         // Verify work is cancelled
         val workInfo = workManager.getWorkInfosForUniqueWork(SyncWorker.UNIQUE_WORK_NAME).get()
-        
+
         // Either empty or cancelled
         assertTrue(workInfo.isEmpty() || workInfo.all { it.state == WorkInfo.State.CANCELLED })
     }
@@ -106,12 +104,12 @@ class SyncWorkerIntegrationTest {
         // Get the sync work request
         val workRequest = PeriodicWorkRequestBuilder<SyncWorker>(
             SyncWorker.SYNC_INTERVAL_HOURS,
-            java.util.concurrent.TimeUnit.HOURS
+            java.util.concurrent.TimeUnit.HOURS,
         )
             .setBackoffCriteria(
                 BackoffPolicy.EXPONENTIAL,
                 WorkRequest.MIN_BACKOFF_MILLIS,
-                java.util.concurrent.TimeUnit.MILLISECONDS
+                java.util.concurrent.TimeUnit.MILLISECONDS,
             )
             .build()
 

@@ -7,11 +7,11 @@ import androidx.room.PrimaryKey
 
 /**
  * Room Entity for Transaction Line Items.
- * 
+ *
  * Stores individual items within a transaction.
  * Contains SNAPSHOT data - the product name and price at time of purchase.
  * This ensures historical accuracy even if product prices change.
- * 
+ *
  * Foreign key to TransactionEntity with CASCADE delete.
  */
 @Entity(
@@ -21,19 +21,19 @@ import androidx.room.PrimaryKey
             entity = TransactionEntity::class,
             parentColumns = ["id"],
             childColumns = ["transactionId"],
-            onDelete = ForeignKey.CASCADE
-        )
+            onDelete = ForeignKey.CASCADE,
+        ),
     ],
-    indices = [Index(value = ["transactionId"])]
+    indices = [Index(value = ["transactionId"])],
 )
 data class TransactionItemEntity(
     @PrimaryKey
-    val id: String,                             // UUID
-    val transactionId: String,                  // FK to transactions
-    val productId: String,                      // Reference (NOT FK - product may be deleted)
-    val productName: String,                    // Snapshot of name at purchase time
-    val productPrice: Long,                     // Snapshot of price at purchase time (IDR)
-    val quantity: Int,                          // Quantity ordered
-    val subtotal: Long,                         // productPrice * quantity
-    val notes: String? = null                   // Item-level notes (e.g., "less ice")
+    val id: String,
+    val transactionId: String,
+    val productId: String,
+    val productName: String,
+    val productPrice: Long,
+    val quantity: Int,
+    val subtotal: Long,
+    val notes: String? = null,
 )

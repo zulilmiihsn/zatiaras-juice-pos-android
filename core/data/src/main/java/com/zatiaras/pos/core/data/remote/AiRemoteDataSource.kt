@@ -6,7 +6,6 @@ import io.ktor.http.Headers
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonElement
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -21,7 +20,7 @@ import javax.inject.Singleton
 @Singleton
 class AiRemoteDataSource @Inject constructor(
     private val functions: Functions,
-    private val json: Json
+    private val json: Json,
 ) {
 
     /**
@@ -38,48 +37,46 @@ class AiRemoteDataSource @Inject constructor(
         messages: List<OpenRouterMessage>,
         model: String = "qwen/qwen3-vl-30b-a3b-thinking",
         temperature: Double = 0.7,
-        maxTokens: Int = 2048
-    ): Result<String> {
-        return try {
-            val request = AiEdgeFunctionRequest(
-                provider = provider,
-                model = model,
-                messages = messages,
-                temperature = temperature,
-                maxTokens = maxTokens
-            )
+        maxTokens: Int = 2048,
+    ): Result<String> = try {
+        val request = AiEdgeFunctionRequest(
+            provider = provider,
+            model = model,
+            messages = messages,
+            temperature = temperature,
+            maxTokens = maxTokens,
+        )
 
-            val requestBody = json.encodeToString(
-                AiEdgeFunctionRequest.serializer(),
-                request
-            )
+        val requestBody = json.encodeToString(
+            AiEdgeFunctionRequest.serializer(),
+            request,
+        )
 
-            Timber.d("Invoking ai-chat Edge Function (provider=$provider, model=$model)")
+        Timber.d("Invoking ai-chat Edge Function (provider=$provider, model=$model)")
 
-            val response = functions.invoke(
-                function = "ai-chat",
-                body = requestBody,
-                headers = Headers.build {
-                    append("Content-Type", "application/json")
-                }
-            )
+        val response = functions.invoke(
+            function = "ai-chat",
+            body = requestBody,
+            headers = Headers.build {
+                append("Content-Type", "application/json")
+            },
+        )
 
-            val responseBody = response.body<String>()
-            val chatResponse = json.decodeFromString(
-                OpenRouterChatResponse.serializer(),
-                responseBody
-            )
+        val responseBody = response.body<String>()
+        val chatResponse = json.decodeFromString(
+            OpenRouterChatResponse.serializer(),
+            responseBody,
+        )
 
-            val content = chatResponse.choices.firstOrNull()?.message?.content
-            if (content != null) {
-                Result.success(content)
-            } else {
-                Result.failure(Exception("No response from AI provider ($provider)"))
-            }
-        } catch (e: Exception) {
-            Timber.e(e, "AI chat request failed (provider=$provider)")
-            Result.failure(e)
+        val content = chatResponse.choices.firstOrNull()?.message?.content
+        if (content != null) {
+            Result.success(content)
+        } else {
+            Result.failure(Exception("No response from AI provider ($provider)"))
         }
+    } catch (e: Exception) {
+        Timber.e(e, "AI chat request failed (provider=$provider)")
+        Result.failure(e)
     }
 }
 
@@ -92,5 +89,5 @@ data class AiEdgeFunctionRequest(
     val model: String,
     val messages: List<OpenRouterMessage>,
     val temperature: Double = 0.7,
-    @SerialName("max_tokens") val maxTokens: Int = 2048
+    @SerialName("max_tokens") val maxTokens: Int = 2048,
 )

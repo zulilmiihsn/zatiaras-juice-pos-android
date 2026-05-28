@@ -25,7 +25,7 @@ import javax.inject.Singleton
 
 /**
  * Manager for Bluetooth printer operations.
- * 
+ *
  * Handles:
  * - Discovering paired Bluetooth devices
  * - Connecting to thermal printers
@@ -34,38 +34,35 @@ import javax.inject.Singleton
  */
 @Singleton
 class BluetoothPrinterManager @Inject constructor(
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
 ) {
     companion object {
         // Standard Serial Port Profile UUID for Bluetooth printers
         private val SPP_UUID: UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
-        
-        // Connection timeout in milliseconds
-        private const val CONNECT_TIMEOUT_MS = 10_000L
     }
-    
-    private val bluetoothManager: BluetoothManager? = 
+
+    private val bluetoothManager: BluetoothManager? =
         context.getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager
-    
+
     private val bluetoothAdapter: BluetoothAdapter? = bluetoothManager?.adapter
-    
+
     private var currentSocket: BluetoothSocket? = null
     private var outputStream: OutputStream? = null
     private var connectedDevice: PrinterDevice? = null
-    
+
     private val _status = MutableStateFlow<PrinterStatus>(PrinterStatus.Disconnected)
     val status: StateFlow<PrinterStatus> = _status.asStateFlow()
-    
+
     /**
      * Check if Bluetooth is available on this device.
      */
     fun isBluetoothAvailable(): Boolean = bluetoothAdapter != null
-    
+
     /**
      * Check if Bluetooth is enabled.
      */
     fun isBluetoothEnabled(): Boolean = bluetoothAdapter?.isEnabled == true
-    
+
     /**
      * Get list of paired Bluetooth devices.
      * Returns empty list if Bluetooth is not available or enabled.
@@ -76,14 +73,14 @@ class BluetoothPrinterManager @Inject constructor(
             Timber.w("Bluetooth not enabled, cannot get paired devices")
             return emptyList()
         }
-        
+
         return try {
             bluetoothAdapter?.bondedDevices?.map { device ->
                 PrinterDevice(
                     name = device.name ?: "",
                     address = device.address,
                     isPaired = true,
-                    isConnected = device.address == connectedDevice?.address
+                    isConnected = device.address == connectedDevice?.address,
                 )
             } ?: emptyList()
         } catch (e: SecurityException) {
@@ -91,17 +88,15 @@ class BluetoothPrinterManager @Inject constructor(
             emptyList()
         }
     }
-    
+
     /**
      * Get only devices that look like printers based on name.
      */
-    fun getPairedPrinters(): List<PrinterDevice> {
-        return getPairedDevices().filter { it.isLikelyPrinter }
-    }
-    
+    fun getPairedPrinters(): List<PrinterDevice> = getPairedDevices().filter { it.isLikelyPrinter }
+
     /**
      * Connect to a Bluetooth printer.
-     * 
+     *
      * @param device The printer device to connect to
      * @return Result with Unit on success, error on failure
      */
@@ -109,24 +104,24 @@ class BluetoothPrinterManager @Inject constructor(
     suspend fun connect(device: PrinterDevice): Result<Unit> = withContext(Dispatchers.IO) {
         // Disconnect existing connection first
         disconnect()
-        
+
         _status.value = PrinterStatus.Connecting(device)
         Timber.d("Connecting to printer: ${device.displayName} (${device.address})")
-        
+
         try {
             val bluetoothDevice: BluetoothDevice = bluetoothAdapter?.getRemoteDevice(device.address)
                 ?: return@withContext Result.failure(Exception(context.getString(R.string.printer_bluetooth_adapter_unavailable)))
-            
+
             // Create socket
             val socket = bluetoothDevice.createRfcommSocketToServiceRecord(SPP_UUID)
-            
+
             // Cancel discovery to speed up connection
             try {
                 bluetoothAdapter.cancelDiscovery()
             } catch (e: SecurityException) {
                 Timber.w("Could not cancel discovery: ${e.message}")
             }
-            
+
             // Connect with timeout
             try {
                 socket.connect()
@@ -135,27 +130,28 @@ class BluetoothPrinterManager @Inject constructor(
                 _status.value = PrinterStatus.Error(
                     message = context.getString(
                         R.string.printer_connect_failed_with_reason,
-                        e.message ?: context.getString(R.string.printer_error_unknown)
+                        e.message ?: context.getString(R.string.printer_error_unknown),
                     ),
-                    isRecoverable = true
+                    isRecoverable = true,
                 )
                 return@withContext Result.failure(e)
             }
-            
+
             // Store connection
             currentSocket = socket
             outputStream = socket.outputStream
-            connectedDevice = device.copy(isConnected = true)
-            
-            _status.value = PrinterStatus.Connected(connectedDevice!!)
+            val connected = device.copy(isConnected = true)
+            connectedDevice = connected
+
+            _status.value = PrinterStatus.Connected(connected)
             Timber.d("Connected to printer: ${device.displayName}")
-            
+
             Result.success(Unit)
         } catch (e: SecurityException) {
             Timber.e(e, "Permission denied for Bluetooth connection")
             _status.value = PrinterStatus.Error(
                 message = context.getString(R.string.printer_bluetooth_permission_denied),
-                isRecoverable = true
+                isRecoverable = true,
             )
             Result.failure(e)
         } catch (e: Exception) {
@@ -163,14 +159,14 @@ class BluetoothPrinterManager @Inject constructor(
             _status.value = PrinterStatus.Error(
                 message = context.getString(
                     R.string.printer_error_with_reason,
-                    e.message ?: context.getString(R.string.printer_error_unknown)
+                    e.message ?: context.getString(R.string.printer_error_unknown),
                 ),
-                isRecoverable = true
+                isRecoverable = true,
             )
             Result.failure(e)
         }
     }
-    
+
     /**
      * Disconnect from current printer.
      */
@@ -188,20 +184,20 @@ class BluetoothPrinterManager @Inject constructor(
             Timber.d("Disconnected from printer")
         }
     }
-    
+
     /**
      * Check if currently connected to a printer.
      */
     fun isConnected(): Boolean = currentSocket?.isConnected == true
-    
+
     /**
      * Get the currently connected device.
      */
     fun getConnectedDevice(): PrinterDevice? = connectedDevice
-    
+
     /**
      * Send raw bytes to the printer.
-     * 
+     *
      * @param data The ESC/POS formatted byte data
      * @return Result with Unit on success, error on failure
      */
@@ -212,59 +208,57 @@ class BluetoothPrinterManager @Inject constructor(
             _status.value = PrinterStatus.Error(message = error, isRecoverable = true)
             return@withContext Result.failure(Exception(error))
         }
-        
+
         _status.value = PrinterStatus.Printing(device, 0)
         Timber.d("Printing ${data.size} bytes to ${device.displayName}")
-        
+
         try {
             // Send data in chunks to avoid buffer overflow
             val chunkSize = 1024
             var bytesSent = 0
-            
+
             for (i in data.indices step chunkSize) {
                 val end = minOf(i + chunkSize, data.size)
                 val chunk = data.copyOfRange(i, end)
-                
+
                 outputStream?.write(chunk)
                 outputStream?.flush()
-                
+
                 bytesSent += chunk.size
                 val progress = (bytesSent * 100) / data.size
                 _status.value = PrinterStatus.Printing(device, progress)
-                
+
                 // Small delay between chunks
                 delay(50)
             }
-            
+
             _status.value = PrinterStatus.PrintSuccess(device)
             Timber.d("Print completed: $bytesSent bytes sent")
-            
+
             // Reset to connected status after a short delay
             delay(2000)
             _status.value = PrinterStatus.Connected(device)
-            
+
             Result.success(Unit)
         } catch (e: IOException) {
             Timber.e(e, "Print failed")
             _status.value = PrinterStatus.Error(
                 message = context.getString(
                     R.string.printer_print_failed_with_reason,
-                    e.message ?: context.getString(R.string.printer_error_unknown)
+                    e.message ?: context.getString(R.string.printer_error_unknown),
                 ),
-                isRecoverable = true
+                isRecoverable = true,
             )
-            
+
             // Connection might be broken, try to reconnect on next print
             disconnect()
-            
+
             Result.failure(e)
         }
     }
-    
+
     /**
      * Print a test page to verify printer is working.
      */
-    suspend fun printTestPage(testData: ByteArray): Result<Unit> {
-        return print(testData)
-    }
+    suspend fun printTestPage(testData: ByteArray): Result<Unit> = print(testData)
 }

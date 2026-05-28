@@ -38,17 +38,17 @@ fun AnimatedButton(
     enabled: Boolean = true,
     shape: Shape = ButtonDefaults.shape,
     colors: ButtonColors = ButtonDefaults.buttonColors(),
-    content: @Composable RowScope.() -> Unit
+    content: @Composable RowScope.() -> Unit,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
-    
+
     val scale by animateFloatAsState(
         targetValue = if (isPressed) PRESSED_SCALE else DEFAULT_SCALE,
         animationSpec = tween(durationMillis = ANIMATION_DURATION_MS),
-        label = "button_scale"
+        label = "button_scale",
     )
-    
+
     Button(
         onClick = onClick,
         modifier = modifier.scale(scale),
@@ -56,7 +56,7 @@ fun AnimatedButton(
         shape = shape,
         colors = colors,
         interactionSource = interactionSource,
-        content = content
+        content = content,
     )
 }
 
@@ -70,17 +70,17 @@ fun AnimatedElevatedButton(
     enabled: Boolean = true,
     shape: Shape = ButtonDefaults.elevatedShape,
     colors: ButtonColors = ButtonDefaults.elevatedButtonColors(),
-    content: @Composable RowScope.() -> Unit
+    content: @Composable RowScope.() -> Unit,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
-    
+
     val scale by animateFloatAsState(
         targetValue = if (isPressed) PRESSED_SCALE else DEFAULT_SCALE,
         animationSpec = tween(durationMillis = ANIMATION_DURATION_MS),
-        label = "elevated_button_scale"
+        label = "elevated_button_scale",
     )
-    
+
     ElevatedButton(
         onClick = onClick,
         modifier = modifier.scale(scale),
@@ -88,7 +88,7 @@ fun AnimatedElevatedButton(
         shape = shape,
         colors = colors,
         interactionSource = interactionSource,
-        content = content
+        content = content,
     )
 }
 
@@ -101,24 +101,24 @@ fun AnimatedOutlinedButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     shape: Shape = ButtonDefaults.outlinedShape,
-    content: @Composable RowScope.() -> Unit
+    content: @Composable RowScope.() -> Unit,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
-    
+
     val scale by animateFloatAsState(
         targetValue = if (isPressed) PRESSED_SCALE else DEFAULT_SCALE,
         animationSpec = tween(durationMillis = ANIMATION_DURATION_MS),
-        label = "outlined_button_scale"
+        label = "outlined_button_scale",
     )
-    
+
     OutlinedButton(
         onClick = onClick,
         modifier = modifier.scale(scale),
         enabled = enabled,
         shape = shape,
         interactionSource = interactionSource,
-        content = content
+        content = content,
     )
 }
 
@@ -132,17 +132,17 @@ fun AnimatedTonalButton(
     enabled: Boolean = true,
     shape: Shape = ButtonDefaults.filledTonalShape,
     colors: ButtonColors = ButtonDefaults.filledTonalButtonColors(),
-    content: @Composable RowScope.() -> Unit
+    content: @Composable RowScope.() -> Unit,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
-    
+
     val scale by animateFloatAsState(
         targetValue = if (isPressed) PRESSED_SCALE else DEFAULT_SCALE,
         animationSpec = tween(durationMillis = ANIMATION_DURATION_MS),
-        label = "tonal_button_scale"
+        label = "tonal_button_scale",
     )
-    
+
     FilledTonalButton(
         onClick = onClick,
         modifier = modifier.scale(scale),
@@ -150,7 +150,7 @@ fun AnimatedTonalButton(
         shape = shape,
         colors = colors,
         interactionSource = interactionSource,
-        content = content
+        content = content,
     )
 }
 
@@ -162,22 +162,22 @@ fun AnimatedTextButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    content: @Composable RowScope.() -> Unit
+    content: @Composable RowScope.() -> Unit,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
-    
+
     val scale by animateFloatAsState(
         targetValue = if (isPressed) PRESSED_SCALE else DEFAULT_SCALE,
         animationSpec = tween(durationMillis = ANIMATION_DURATION_MS),
-        label = "text_button_scale"
+        label = "text_button_scale",
     )
-    
+
     TextButton(
         onClick = onClick,
         modifier = modifier.scale(scale),
         enabled = enabled,
         interactionSource = interactionSource,
-        content = content
+        content = content,
     )
 }

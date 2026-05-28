@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.Flow
 
 /**
  * Data Access Object for Transaction operations.
- * 
+ *
  * All queries filter out soft-deleted transactions (isDeleted = false).
  */
 @Dao
@@ -38,7 +38,7 @@ interface TransactionDao {
     @Transaction
     suspend fun insertTransactionWithItems(
         transaction: TransactionEntity,
-        items: List<TransactionItemEntity>
+        items: List<TransactionItemEntity>,
     ) {
         insertTransaction(transaction)
         insertTransactionItems(items)
@@ -67,26 +67,29 @@ interface TransactionDao {
      * Get all transactions for today (reactive Flow).
      * Uses epoch milliseconds for date comparison.
      */
-    @Query("""
+    @Query(
+        """
         SELECT * FROM transactions 
         WHERE createdAt >= :startOfDay 
         AND createdAt < :endOfDay 
         AND isDeleted = 0
         ORDER BY createdAt DESC
-    """)
+    """,
+    )
     fun getTransactionsByDateRange(startOfDay: Long, endOfDay: Long): Flow<List<TransactionEntity>>
 
     /**
      * Get transactions list for reports (Synchronous suspend).
      */
-    @Query("""
+    @Query(
+        """
         SELECT * FROM transactions 
         WHERE createdAt >= :startDate 
         AND createdAt < :endDate 
         AND isDeleted = 0
-    """)
+    """,
+    )
     suspend fun getTransactionsForReports(startDate: Long, endDate: Long): List<TransactionEntity>
-
 
     /**
      * Get transactions with items in a single query.
@@ -94,47 +97,55 @@ interface TransactionDao {
      * Room will fetch all transactions and their items in optimized queries.
      */
     @Transaction
-    @Query("""
+    @Query(
+        """
         SELECT * FROM transactions 
         WHERE createdAt >= :startOfDay 
         AND createdAt < :endOfDay 
         AND isDeleted = 0
         ORDER BY createdAt DESC
-    """)
+    """,
+    )
     fun getTransactionsWithItems(startOfDay: Long, endOfDay: Long): Flow<List<TransactionWithItems>>
 
     /**
      * Get today's transaction count (for generating transaction number).
      */
-    @Query("""
+    @Query(
+        """
         SELECT COUNT(*) FROM transactions 
         WHERE createdAt >= :startOfDay 
         AND createdAt < :endOfDay
-    """)
+    """,
+    )
     suspend fun getTransactionCountForDay(startOfDay: Long, endOfDay: Long): Int
 
     /**
      * Get today's total revenue.
      */
-    @Query("""
+    @Query(
+        """
         SELECT COALESCE(SUM(grandTotal), 0) FROM transactions 
         WHERE createdAt >= :startOfDay 
         AND createdAt < :endOfDay 
         AND isDeleted = 0
-    """)
+    """,
+    )
     suspend fun getTotalRevenueForDay(startOfDay: Long, endOfDay: Long): Long
 
     /**
      * Get today's total items sold.
      */
-    @Query("""
+    @Query(
+        """
         SELECT COALESCE(SUM(ti.quantity), 0) 
         FROM transaction_items ti
         INNER JOIN transactions t ON ti.transactionId = t.id
         WHERE t.createdAt >= :startOfDay 
         AND t.createdAt < :endOfDay 
         AND t.isDeleted = 0
-    """)
+    """,
+    )
     suspend fun getTotalItemsSoldForDay(startOfDay: Long, endOfDay: Long): Int
 
     // ==================== SYNC ====================
@@ -162,7 +173,7 @@ interface TransactionDao {
      */
     @Query("UPDATE transactions SET isDeleted = 1, isSynced = 0, updatedAt = :timestamp WHERE id = :id")
     suspend fun softDelete(id: String, timestamp: Long = System.currentTimeMillis())
-    
+
     /**
      * Update payment method for a transaction.
      */
@@ -175,7 +186,8 @@ interface TransactionDao {
      * Get daily revenue for a date range (for weekly/monthly charts).
      * Groups transactions by date and sums revenue.
      */
-    @Query("""
+    @Query(
+        """
         SELECT 
             ((createdAt + :timeOffset) / 86400000) * 86400000 - :timeOffset as dayTimestamp,
             COALESCE(SUM(grandTotal), 0) as revenue,
@@ -186,17 +198,19 @@ interface TransactionDao {
         AND isDeleted = 0
         GROUP BY dayTimestamp
         ORDER BY dayTimestamp ASC
-    """)
+    """,
+    )
     suspend fun getDailyRevenue(
-        startDate: Long, 
-        endDate: Long, 
-        timeOffset: Long = 0L
+        startDate: Long,
+        endDate: Long,
+        timeOffset: Long = 0L,
     ): List<DailyRevenueEntity>
 
     /**
      * Get top selling products by quantity sold.
      */
-    @Query("""
+    @Query(
+        """
         SELECT 
             ti.productId,
             ti.productName,
@@ -210,14 +224,16 @@ interface TransactionDao {
         GROUP BY ti.productId, ti.productName
         ORDER BY totalQuantity DESC
         LIMIT :limit
-    """)
+    """,
+    )
     suspend fun getTopSellingProducts(startDate: Long, endDate: Long, limit: Int = 10): List<TopProductEntity>
 
     /**
      * Get total profit/loss summary.
      * Note: Profit calculation requires cost data from products.
      */
-    @Query("""
+    @Query(
+        """
         SELECT 
             COALESCE(SUM(grandTotal), 0) as totalRevenue,
             COALESCE(SUM(subtotal), 0) as grossRevenue,
@@ -227,7 +243,8 @@ interface TransactionDao {
         WHERE createdAt >= :startDate 
         AND createdAt < :endDate 
         AND isDeleted = 0
-    """)
+    """,
+    )
     suspend fun getRevenueSummary(startDate: Long, endDate: Long): RevenueSummaryEntity
 }
 
@@ -237,7 +254,7 @@ interface TransactionDao {
 data class DailyRevenueEntity(
     val dayTimestamp: Long,
     val revenue: Long,
-    val transactionCount: Int
+    val transactionCount: Int,
 )
 
 /**
@@ -247,7 +264,7 @@ data class TopProductEntity(
     val productId: String,
     val productName: String,
     val totalQuantity: Int,
-    val totalRevenue: Long
+    val totalRevenue: Long,
 )
 
 /**
@@ -257,5 +274,5 @@ data class RevenueSummaryEntity(
     val totalRevenue: Long,
     val grossRevenue: Long,
     val totalDiscount: Long,
-    val totalTax: Long
+    val totalTax: Long,
 )

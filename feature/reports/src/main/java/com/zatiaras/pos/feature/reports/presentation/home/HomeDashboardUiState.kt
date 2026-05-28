@@ -1,9 +1,9 @@
 package com.zatiaras.pos.feature.reports.presentation.home
 
-import com.zatiaras.pos.feature.reports.domain.model.DashboardStats
-import com.zatiaras.pos.feature.reports.domain.model.DailyRevenue
-import com.zatiaras.pos.feature.reports.domain.model.TopProduct
 import androidx.compose.runtime.Immutable
+import com.zatiaras.pos.feature.reports.domain.model.DailyRevenue
+import com.zatiaras.pos.feature.reports.domain.model.DashboardStats
+import com.zatiaras.pos.feature.reports.domain.model.TopProduct
 
 /**
  * UI State for Home Dashboard Screen.
@@ -20,7 +20,7 @@ data class HomeDashboardUiState(
         todayItemsSold = 0,
         weeklyRevenue = 0L,
         monthlyRevenue = 0L,
-        revenueGrowthPercent = 0.0
+        revenueGrowthPercent = 0.0,
     ),
     val openingBalance: Long = 0L,
     val todayExpenses: Long = 0L,
@@ -32,5 +32,5 @@ data class HomeDashboardUiState(
     val averageItemsPerTransaction: Double = 0.0,
     val growthPercent: Double? = null,
     val busiestDay: String = "-",
-    val error: com.zatiaras.pos.core.ui.util.UiText? = null
+    val error: com.zatiaras.pos.core.ui.util.UiText? = null,
 )

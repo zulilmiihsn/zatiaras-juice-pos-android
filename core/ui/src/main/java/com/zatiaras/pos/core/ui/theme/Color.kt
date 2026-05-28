@@ -65,10 +65,10 @@ val TaxBlue = Color(0xFF2196F3)
  * Eliminates duplicate Color(0x...) declarations across composables.
  */
 object GradientColors {
-    val Revenue = listOf(Color(0xFF667eea), Color(0xFF764ba2))       // Purple
-    val Transaction = listOf(Color(0xFF11998e), Color(0xFF38ef7d))   // Teal-Green
-    val ProductSold = listOf(Color(0xFFf093fb), Color(0xFFf5576c))   // Pink
-    val WeeklyPeriod = listOf(Color(0xFF4facfe), Color(0xFF00f2fe))  // Blue
+    val Revenue = listOf(Color(0xFF667eea), Color(0xFF764ba2)) // Purple
+    val Transaction = listOf(Color(0xFF11998e), Color(0xFF38ef7d)) // Teal-Green
+    val ProductSold = listOf(Color(0xFFf093fb), Color(0xFFf5576c)) // Pink
+    val WeeklyPeriod = listOf(Color(0xFF4facfe), Color(0xFF00f2fe)) // Blue
     val MonthlyPeriod = listOf(Color(0xFFfa709a), Color(0xFFfee140)) // Orange-Pink
 }
 

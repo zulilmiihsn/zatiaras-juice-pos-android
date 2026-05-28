@@ -8,7 +8,7 @@ data class ChatMessage(
     val isUser: Boolean,
     val timestamp: Long = System.currentTimeMillis(),
     val isThinking: Boolean = false,
-    val imageUrl: String? = null
+    val imageUrl: String? = null,
 )
 
 data class ReportChatUiState(
@@ -16,7 +16,7 @@ data class ReportChatUiState(
     val isLoading: Boolean = false,
     val error: String? = null,
     val selectedImageUri: String? = null,
-    val inputText: String = ""
+    val inputText: String = "",
 )
 
 sealed interface ChatEvent {

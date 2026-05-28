@@ -19,21 +19,21 @@ abstract class RepositoryModule {
 
     @Binds
     abstract fun bindAuthRepository(
-        implementation: LocalAuthRepository
+        implementation: LocalAuthRepository,
     ): AuthRepository
 
     @Binds
     abstract fun bindStoreSessionRepository(
-        implementation: StoreSessionRepositoryImpl
+        implementation: StoreSessionRepositoryImpl,
     ): StoreSessionRepository
 
     @Binds
     abstract fun bindDashboardRepository(
-        implementation: DashboardRepositoryImpl
+        implementation: DashboardRepositoryImpl,
     ): DashboardRepository
 
     @Binds
     abstract fun bindAddOnRepository(
-        implementation: AddOnRepositoryImpl
+        implementation: AddOnRepositoryImpl,
     ): AddOnRepository
 }

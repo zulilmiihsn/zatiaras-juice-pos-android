@@ -63,21 +63,37 @@ class SyncManagerTest {
         coEvery { transactionSyncer.getPendingCount() } returns 5
         coEvery { cashRecordSyncer.getPendingCount() } returns 3
         coEvery { categorySyncer.sync() } returns SyncResult(
-            type = SyncType.CATEGORIES, uploaded = 1, downloaded = 1, failed = 0
+            type = SyncType.CATEGORIES,
+            uploaded = 1,
+            downloaded = 1,
+            failed = 0,
         )
         coEvery { productSyncer.sync() } returns SyncResult(
-            type = SyncType.PRODUCTS, uploaded = 2, downloaded = 2, failed = 0
+            type = SyncType.PRODUCTS,
+            uploaded = 2,
+            downloaded = 2,
+            failed = 0,
         )
         coEvery { transactionSyncer.sync() } returns SyncResult(
-            type = SyncType.TRANSACTIONS, uploaded = 3, downloaded = 2, failed = 0
+            type = SyncType.TRANSACTIONS,
+            uploaded = 3,
+            downloaded = 2,
+            failed = 0,
         )
         coEvery { cashRecordSyncer.sync() } returns SyncResult(
-            type = SyncType.CASH_RECORDS, uploaded = 2, downloaded = 1, failed = 0
+            type = SyncType.CASH_RECORDS,
+            uploaded = 2,
+            downloaded = 1,
+            failed = 0,
         )
 
         syncManager = SyncManager(
-            context, syncPreferences,
-            cashRecordSyncer, productSyncer, categorySyncer, transactionSyncer
+            context,
+            syncPreferences,
+            cashRecordSyncer,
+            productSyncer,
+            categorySyncer,
+            transactionSyncer,
         )
     }
 
@@ -189,7 +205,10 @@ class SyncManagerTest {
     @Test
     fun `syncNow updates status to Error when syncer has failures`() = runTest {
         coEvery { transactionSyncer.sync() } returns SyncResult(
-            type = SyncType.TRANSACTIONS, uploaded = 1, downloaded = 2, failed = 2
+            type = SyncType.TRANSACTIONS,
+            uploaded = 1,
+            downloaded = 2,
+            failed = 2,
         )
 
         syncManager.syncNow()

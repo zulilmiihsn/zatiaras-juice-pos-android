@@ -11,7 +11,7 @@ private fun keyFor(product: Product): String = CartItem(product, 1).uniqueKey
 
 /**
  * Unit tests for Cart domain model.
- * 
+ *
  * Tests:
  * - Empty cart behavior
  * - Adding items
@@ -23,7 +23,7 @@ private fun keyFor(product: Product): String = CartItem(product, 1).uniqueKey
 class CartTest {
 
     private val testCategory = Category(id = "cat-1", name = "Minuman")
-    
+
     private lateinit var product1: Product
     private lateinit var product2: Product
     private lateinit var product3: Product
@@ -38,9 +38,9 @@ class CartTest {
             imageUrl = null,
             description = "Es teh manis",
             createdAt = System.currentTimeMillis(),
-            updatedAt = System.currentTimeMillis()
+            updatedAt = System.currentTimeMillis(),
         )
-        
+
         product2 = Product(
             id = "prod-2",
             name = "Kopi Susu",
@@ -49,9 +49,9 @@ class CartTest {
             imageUrl = null,
             description = "Kopi susu gula aren",
             createdAt = System.currentTimeMillis(),
-            updatedAt = System.currentTimeMillis()
+            updatedAt = System.currentTimeMillis(),
         )
-        
+
         product3 = Product(
             id = "prod-3",
             name = "Es Jeruk",
@@ -60,7 +60,7 @@ class CartTest {
             imageUrl = null,
             description = "Es jeruk segar",
             createdAt = System.currentTimeMillis(),
-            updatedAt = System.currentTimeMillis()
+            updatedAt = System.currentTimeMillis(),
         )
     }
 
@@ -69,7 +69,7 @@ class CartTest {
     @Test
     fun `new cart is empty`() {
         val cart = Cart()
-        
+
         assertTrue(cart.isEmpty())
         assertEquals(0, cart.itemCount)
         assertEquals(0, cart.uniqueItemCount)
@@ -88,7 +88,7 @@ class CartTest {
     @Test
     fun `addItem adds new product to cart`() {
         val cart = Cart().addItem(product1)
-        
+
         assertFalse(cart.isEmpty())
         assertEquals(1, cart.itemCount)
         assertEquals(1, cart.uniqueItemCount)
@@ -100,7 +100,7 @@ class CartTest {
         val cart = Cart()
             .addItem(product1)
             .addItem(product1)
-        
+
         assertEquals(2, cart.itemCount)
         assertEquals(1, cart.uniqueItemCount)
         assertEquals(2, cart.getQuantity(product1.id))
@@ -109,7 +109,7 @@ class CartTest {
     @Test
     fun `addItem with quantity adds multiple items at once`() {
         val cart = Cart().addItem(product1, quantity = 5)
-        
+
         assertEquals(5, cart.itemCount)
         assertEquals(1, cart.uniqueItemCount)
         assertEquals(5, cart.getQuantity(product1.id))
@@ -120,7 +120,7 @@ class CartTest {
         val cart = Cart()
             .addItem(product1)
             .addItem(product2)
-        
+
         assertEquals(2, cart.itemCount)
         assertEquals(2, cart.uniqueItemCount)
         assertEquals(1, cart.getQuantity(product1.id))
@@ -144,10 +144,10 @@ class CartTest {
     @Test
     fun `subtotal calculates correctly for multiple products`() {
         val cart = Cart()
-            .addItem(product1, quantity = 2)  // 5000 * 2 = 10000
-            .addItem(product2, quantity = 1)  // 15000 * 1 = 15000
-            .addItem(product3, quantity = 3)  // 8000 * 3 = 24000
-        
+            .addItem(product1, quantity = 2) // 5000 * 2 = 10000
+            .addItem(product2, quantity = 1) // 15000 * 1 = 15000
+            .addItem(product3, quantity = 3) // 8000 * 3 = 24000
+
         assertEquals(49000L, cart.subtotal) // 10000 + 15000 + 24000
     }
 
@@ -158,7 +158,7 @@ class CartTest {
         val cart = Cart()
             .addItem(product1)
             .incrementItem(keyFor(product1))
-        
+
         assertEquals(2, cart.getQuantity(product1.id))
     }
 
@@ -167,7 +167,7 @@ class CartTest {
         val cart = Cart()
             .addItem(product1, quantity = 3)
             .decrementItem(keyFor(product1))
-        
+
         assertEquals(2, cart.getQuantity(product1.id))
     }
 
@@ -176,7 +176,7 @@ class CartTest {
         val cart = Cart()
             .addItem(product1)
             .decrementItem(keyFor(product1))
-        
+
         assertTrue(cart.isEmpty())
         assertEquals(0, cart.getQuantity(product1.id))
     }
@@ -187,7 +187,7 @@ class CartTest {
             .addItem(product1, quantity = 2)
             .addItem(product2)
             .decrementItem(keyFor(product1))
-        
+
         assertEquals(1, cart.getQuantity(product1.id))
         assertEquals(1, cart.getQuantity(product2.id))
     }
@@ -199,7 +199,7 @@ class CartTest {
         val cart = Cart()
             .addItem(product1)
             .updateQuantity(keyFor(product1), 5)
-        
+
         assertEquals(5, cart.getQuantity(product1.id))
     }
 
@@ -208,7 +208,7 @@ class CartTest {
         val cart = Cart()
             .addItem(product1)
             .updateQuantity(keyFor(product1), 0)
-        
+
         assertTrue(cart.isEmpty())
     }
 
@@ -217,7 +217,7 @@ class CartTest {
         val cart = Cart()
             .addItem(product1)
             .updateQuantity(keyFor(product1), -1)
-        
+
         assertTrue(cart.isEmpty())
     }
 
@@ -228,7 +228,7 @@ class CartTest {
         val cart = Cart()
             .addItem(product1, quantity = 5)
             .removeItem(keyFor(product1))
-        
+
         assertTrue(cart.isEmpty())
         assertNull(cart.getItem(keyFor(product1)))
     }
@@ -239,7 +239,7 @@ class CartTest {
             .addItem(product1)
             .addItem(product2)
             .removeItem(keyFor(product1))
-        
+
         assertEquals(1, cart.uniqueItemCount)
         assertEquals(1, cart.getQuantity(product2.id))
         assertNull(cart.getItem(keyFor(product1)))
@@ -250,7 +250,7 @@ class CartTest {
         val cart = Cart()
             .addItem(product1)
             .removeItem("non-existent-id")
-        
+
         assertEquals(1, cart.itemCount)
     }
 
@@ -262,7 +262,7 @@ class CartTest {
             .addItem(product1)
             .addItem(product2)
             .clear()
-        
+
         assertTrue(cart.isEmpty())
         assertEquals(0, cart.itemCount)
     }
@@ -273,7 +273,7 @@ class CartTest {
     fun `getItem returns correct item`() {
         val cart = Cart().addItem(product1)
         val item = cart.getItem(keyFor(product1))
-        
+
         assertNotNull(item)
         assertEquals(product1.id, item?.product?.id)
     }
@@ -282,7 +282,7 @@ class CartTest {
     fun `getItem returns null for non-existent product`() {
         val cart = Cart()
         val item = cart.getItem("non-existent-id")
-        
+
         assertNull(item)
     }
 
@@ -298,7 +298,7 @@ class CartTest {
     fun `addItem returns new cart instance`() {
         val cart1 = Cart()
         val cart2 = cart1.addItem(product1)
-        
+
         assertNotSame(cart1, cart2)
         assertTrue(cart1.isEmpty())
         assertFalse(cart2.isEmpty())
@@ -308,7 +308,7 @@ class CartTest {
     fun `removeItem returns new cart instance`() {
         val cart1 = Cart().addItem(product1)
         val cart2 = cart1.removeItem(keyFor(product1))
-        
+
         assertNotSame(cart1, cart2)
         assertFalse(cart1.isEmpty())
         assertTrue(cart2.isEmpty())

@@ -5,38 +5,38 @@ import kotlinx.coroutines.flow.Flow
 
 /**
  * Repository interface for Add-Ons data access.
- * 
+ *
  * Provides access to add-ons (ekstra/topping) that can be applied to products.
  * Follows Repository pattern for clean architecture.
  */
 interface AddOnRepository {
-    
+
     /**
      * Observe all active add-ons as a Flow.
      */
     fun observeActiveAddOns(): Flow<List<AddOn>>
-    
+
     /**
      * Get all active add-ons (one-shot).
      */
     suspend fun getActiveAddOns(): List<AddOn>
-    
+
     /**
      * Get add-ons by their IDs.
      * Used to fetch specific add-ons for a product based on ekstra_ids.
      */
     suspend fun getAddOnsByIds(ids: List<String>): List<AddOn>
-    
+
     /**
      * Observe add-ons filtered by IDs.
      */
     fun observeAddOnsByIds(ids: List<String>): Flow<List<AddOn>>
-    
+
     /**
      * Get a single add-on by ID.
      */
     suspend fun getAddOnById(id: String): AddOn?
-    
+
     /**
      * Sync add-ons from remote server.
      */
@@ -49,7 +49,7 @@ interface AddOnRepository {
         name: String,
         price: Long,
         category: String? = null,
-        icon: String? = null
+        icon: String? = null,
     ): Result<AddOn>
 
     /**

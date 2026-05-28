@@ -6,7 +6,6 @@ import com.zatiaras.pos.core.domain.util.DateUtils
 import com.zatiaras.pos.feature.reports.domain.model.AiChatMessage
 import com.zatiaras.pos.feature.reports.domain.model.DailyRevenue
 import com.zatiaras.pos.feature.reports.domain.model.DashboardStats
-import com.zatiaras.pos.feature.reports.domain.model.ProfitLossReport
 import com.zatiaras.pos.feature.reports.domain.model.RawProfitLossData
 import com.zatiaras.pos.feature.reports.domain.model.TopProduct
 import com.zatiaras.pos.feature.reports.domain.model.TransactionSummaryItem
@@ -43,7 +42,7 @@ class AnalyzeReportUseCaseTest {
             generateProfitLossReportUseCase = generateProfitLossReportUseCase,
             reportRepository = reportRepository,
             storeSessionRepository = storeSessionRepository,
-            aiChatRepository = aiChatRepository
+            aiChatRepository = aiChatRepository,
         )
     }
 
@@ -75,11 +74,11 @@ class AnalyzeReportUseCaseTest {
                 posTotalDiscount = 0,
                 posTransactions = 3,
                 productSales = emptyList(),
-                manualRecords = emptyList()
-            )
+                manualRecords = emptyList(),
+            ),
         )
         coEvery { reportRepository.getTransactionsForAnalysis(any(), any()) } returns Result.success(
-            listOf(TransactionSummaryItem(createdAt = System.currentTimeMillis(), paymentMethod = "CASH", grandTotal = 150_000))
+            listOf(TransactionSummaryItem(createdAt = System.currentTimeMillis(), paymentMethod = "CASH", grandTotal = 150_000)),
         )
         coEvery { reportRepository.getCashRecordsForAnalysis(any(), any()) } returns Result.success(emptyList())
         coEvery { reportRepository.getDashboardStats() } returns Result.success(
@@ -89,14 +88,14 @@ class AnalyzeReportUseCaseTest {
                 todayItemsSold = 12,
                 weeklyRevenue = 3_000_000,
                 monthlyRevenue = 12_000_000,
-                revenueGrowthPercent = 10.0
-            )
+                revenueGrowthPercent = 10.0,
+            ),
         )
         coEvery { reportRepository.getDailyRevenueHistory(any()) } returns Result.success(
-            listOf(DailyRevenue(date = System.currentTimeMillis(), revenue = 500_000, transactionCount = 5))
+            listOf(DailyRevenue(date = System.currentTimeMillis(), revenue = 500_000, transactionCount = 5)),
         )
         coEvery { reportRepository.getTopSellingProducts(any(), any(), any()) } returns Result.success(
-            listOf(TopProduct(productId = "p1", productName = "Nasi Goreng", quantitySold = 5, totalRevenue = 250_000))
+            listOf(TopProduct(productId = "p1", productName = "Nasi Goreng", quantitySold = 5, totalRevenue = 250_000)),
         )
         coEvery { storeSessionRepository.getActiveSessionOneShot() } returns StoreSession(
             id = "s1",
@@ -104,7 +103,7 @@ class AnalyzeReportUseCaseTest {
             openingTime = System.currentTimeMillis() - 3_600_000,
             closingTime = null,
             isActive = true,
-            branchId = "b1"
+            branchId = "b1",
         )
         coEvery { storeSessionRepository.getLastSessions(any()) } returns flowOf(emptyList())
         coEvery { aiChatRepository.sendChatMessage(any(), any(), any()) } answers {
@@ -115,13 +114,13 @@ class AnalyzeReportUseCaseTest {
 
         val history = listOf(
             ChatMessage(content = "Halo", isUser = true),
-            ChatMessage(content = "Hai, ada yang bisa dibantu", isUser = false)
+            ChatMessage(content = "Hai, ada yang bisa dibantu", isUser = false),
         )
 
         val result = useCase(
             query = "analisa laba bulan ini",
             history = history,
-            imageBase64 = "base64-image"
+            imageBase64 = "base64-image",
         )
 
         assertTrue(result.isSuccess)
@@ -137,13 +136,13 @@ class AnalyzeReportUseCaseTest {
     @Test
     fun `invoke should fail when report generation fails`() = runTest {
         coEvery { reportRepository.getRawProfitLossData(any(), any()) } returns Result.failure(
-            IllegalStateException("Gagal ambil data mentah")
+            IllegalStateException("Gagal ambil data mentah"),
         )
 
         val result = useCase(
             query = "cek profit",
             history = emptyList(),
-            imageBase64 = null
+            imageBase64 = null,
         )
 
         assertTrue(result.isFailure)

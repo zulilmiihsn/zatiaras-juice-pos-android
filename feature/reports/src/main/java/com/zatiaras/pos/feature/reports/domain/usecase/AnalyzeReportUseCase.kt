@@ -3,6 +3,7 @@ package com.zatiaras.pos.feature.reports.domain.usecase
 import com.zatiaras.pos.core.domain.model.StoreSession
 import com.zatiaras.pos.core.domain.repository.StoreSessionRepository
 import com.zatiaras.pos.core.domain.util.DateUtils
+import com.zatiaras.pos.core.domain.util.LocaleUtils
 import com.zatiaras.pos.core.ui.util.CurrencyFormatter
 import com.zatiaras.pos.feature.reports.domain.model.AiChatMessage
 import com.zatiaras.pos.feature.reports.domain.model.CashFlowItem
@@ -37,7 +38,7 @@ class AnalyzeReportUseCase @Inject constructor(
     private val generateProfitLossReportUseCase: GenerateProfitLossReportUseCase,
     private val reportRepository: ReportRepository,
     private val storeSessionRepository: StoreSessionRepository,
-    private val aiChatRepository: AiChatRepository
+    private val aiChatRepository: AiChatRepository,
 ) {
 
     /**
@@ -51,7 +52,7 @@ class AnalyzeReportUseCase @Inject constructor(
     suspend operator fun invoke(
         query: String,
         history: List<ChatMessage>,
-        imageBase64: String? = null
+        imageBase64: String? = null,
     ): Result<String> {
         return try {
             // 1. Detect desired date range from query
@@ -61,7 +62,7 @@ class AnalyzeReportUseCase @Inject constructor(
             val reportResult = generateProfitLossReportUseCase(startDate, endDate)
             if (reportResult.isFailure) {
                 return Result.failure(
-                    reportResult.exceptionOrNull() ?: Exception("Gagal memuat data laporan")
+                    reportResult.exceptionOrNull() ?: Exception("Gagal memuat data laporan"),
                 )
             }
             val report = reportResult.getOrThrow()
@@ -87,7 +88,7 @@ class AnalyzeReportUseCase @Inject constructor(
                 dailyRevenue = dailyRevenue,
                 topProducts = topProducts,
                 isStoreOpen = storeSession != null,
-                recentSessions = recentSessions
+                recentSessions = recentSessions,
             )
 
             // 4. Prepare message list for AI
@@ -99,8 +100,8 @@ class AnalyzeReportUseCase @Inject constructor(
                 messages.add(
                     AiChatMessage(
                         role = if (msg.isUser) "user" else "assistant",
-                        content = msg.content
-                    )
+                        content = msg.content,
+                    ),
                 )
             }
 
@@ -109,8 +110,8 @@ class AnalyzeReportUseCase @Inject constructor(
                 AiChatMessage(
                     role = "user",
                     content = query,
-                    imageBase64 = imageBase64
-                )
+                    imageBase64 = imageBase64,
+                ),
             )
 
             // 5. Send to AI via repository
@@ -135,29 +136,29 @@ class AnalyzeReportUseCase @Inject constructor(
             q.contains("minggu ini") -> DateUtils.getThisWeekRange()
             q.contains("minggu lalu") -> {
                 val lastMonday = today.with(
-                    java.time.temporal.TemporalAdjusters.previousOrSame(java.time.DayOfWeek.MONDAY)
+                    java.time.temporal.TemporalAdjusters.previousOrSame(java.time.DayOfWeek.MONDAY),
                 ).minusWeeks(1)
                 val thisMonday = lastMonday.plusWeeks(1)
                 lastMonday.atStartOfDay(zoneId).toInstant().toEpochMilli() to
-                        thisMonday.atStartOfDay(zoneId).toInstant().toEpochMilli()
+                    thisMonday.atStartOfDay(zoneId).toInstant().toEpochMilli()
             }
             q.contains("bulan lalu") -> {
                 val firstOfLastMonth = today.minusMonths(1).withDayOfMonth(1)
                 val firstOfThisMonth = today.withDayOfMonth(1)
                 firstOfLastMonth.atStartOfDay(zoneId).toInstant().toEpochMilli() to
-                        firstOfThisMonth.atStartOfDay(zoneId).toInstant().toEpochMilli()
+                    firstOfThisMonth.atStartOfDay(zoneId).toInstant().toEpochMilli()
             }
             q.contains("tahun ini") -> {
                 val firstOfYear = today.withDayOfYear(1)
                 val tomorrow = today.plusDays(1)
                 firstOfYear.atStartOfDay(zoneId).toInstant().toEpochMilli() to
-                        tomorrow.atStartOfDay(zoneId).toInstant().toEpochMilli()
+                    tomorrow.atStartOfDay(zoneId).toInstant().toEpochMilli()
             }
             q.contains("tahun lalu") -> {
                 val firstOfLastYear = today.minusYears(1).withDayOfYear(1)
                 val firstOfThisYear = today.withDayOfYear(1)
                 firstOfLastYear.atStartOfDay(zoneId).toInstant().toEpochMilli() to
-                        firstOfThisYear.atStartOfDay(zoneId).toInstant().toEpochMilli()
+                    firstOfThisYear.atStartOfDay(zoneId).toInstant().toEpochMilli()
             }
             q.contains("3 bulan") -> DateUtils.getLastNDaysRange(90)
             q.contains("6 bulan") -> DateUtils.getLastNDaysRange(180)
@@ -179,7 +180,7 @@ class AnalyzeReportUseCase @Inject constructor(
         dailyRevenue: List<DailyRevenue>,
         topProducts: List<TopProduct>,
         isStoreOpen: Boolean,
-        recentSessions: List<StoreSession>
+        recentSessions: List<StoreSession>,
     ): String {
         val fmt = { amount: Long -> CurrencyFormatter.formatCurrency(amount) }
         val dateFmt = java.text.SimpleDateFormat("dd MMM yyyy", java.util.Locale("id"))
@@ -188,7 +189,9 @@ class AnalyzeReportUseCase @Inject constructor(
         // --- Section I: P&L ---
         val margin = if (report.grossRevenue > 0) {
             (report.netProfit.toDouble() / report.grossRevenue * 100).toInt()
-        } else 0
+        } else {
+            0
+        }
 
         val productSalesText = report.productSales.take(10).joinToString("\n") {
             "  - ${it.productName}: ${it.quantity} pcs (${fmt(it.revenue)})"
@@ -218,7 +221,9 @@ class AnalyzeReportUseCase @Inject constructor(
 
         val avgOrderValue = if (transactions.isNotEmpty()) {
             fmt(transactions.sumOf { it.grandTotal } / transactions.size)
-        } else "Rp0"
+        } else {
+            "Rp0"
+        }
 
         // --- Section III: Daily Revenue Trend ---
         val trendText = dailyRevenue.joinToString("\n") { day ->
@@ -253,14 +258,18 @@ class AnalyzeReportUseCase @Inject constructor(
         }
 
         // --- Section VII: Dashboard KPI ---
-        val dashboardText = if (dashboardStats != null) """
+        val dashboardText = if (dashboardStats != null) {
+            """
             - Revenue Hari Ini: ${fmt(dashboardStats.todayRevenue)}
             - Transaksi Hari Ini: ${dashboardStats.todayTransactions}
             - Item Terjual Hari Ini: ${dashboardStats.todayItemsSold}
             - Revenue Mingguan: ${fmt(dashboardStats.weeklyRevenue)}
             - Revenue Bulanan: ${fmt(dashboardStats.monthlyRevenue)}
-            - Pertumbuhan: ${String.format("%.1f", dashboardStats.revenueGrowthPercent)}%
-        """.trimIndent() else "Data dashboard tidak tersedia"
+            - Pertumbuhan: ${String.format(LocaleUtils.LOCALE_ID, "%.1f", dashboardStats.revenueGrowthPercent)}%
+            """.trimIndent()
+        } else {
+            "Data dashboard tidak tersedia"
+        }
 
         return """
 Anda adalah **Asisten Zatiaras**, konsultan bisnis AI cerdas untuk aplikasi POS Zatiaras.
@@ -280,7 +289,7 @@ STATUS TOKO: $storeStatus
 - Laba Kotor: ${fmt(report.grossProfit)}
 - Pajak (${report.taxPercentage}%): ${fmt(report.tax)}
 - LABA BERSIH: ${fmt(report.netProfit)}
-- PROFIT MARGIN: ${margin}%
+- PROFIT MARGIN: $margin%
 
 Rincian Penjualan POS:
 $productSalesText

@@ -3,13 +3,13 @@ package com.zatiaras.pos.feature.printer.presentation
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.zatiaras.pos.feature.printer.R
 import com.zatiaras.pos.feature.printer.data.bluetooth.BluetoothPrinterManager
 import com.zatiaras.pos.feature.printer.data.escpos.ReceiptFormatter
 import com.zatiaras.pos.feature.printer.data.preferences.PrinterPreferences
 import com.zatiaras.pos.feature.printer.domain.model.PaperWidth
 import com.zatiaras.pos.feature.printer.domain.model.PrinterDevice
 import com.zatiaras.pos.feature.printer.domain.model.PrinterStatus
-import com.zatiaras.pos.feature.printer.R
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -28,24 +28,24 @@ class PrinterSettingsViewModel @Inject constructor(
     private val printerManager: BluetoothPrinterManager,
     private val printerPreferences: PrinterPreferences,
     private val receiptFormatter: ReceiptFormatter,
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
 ) : ViewModel() {
-    
+
     private val _uiState = MutableStateFlow(PrinterSettingsUiState())
     val uiState: StateFlow<PrinterSettingsUiState> = _uiState.asStateFlow()
-    
+
     private val _events = MutableSharedFlow<PrinterEvent>()
     val events: SharedFlow<PrinterEvent> = _events.asSharedFlow()
-    
+
     init {
         loadSettings()
         observePrinterStatus()
     }
-    
+
     private fun loadSettings() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
-            
+
             try {
                 val paperWidth = printerPreferences.getPaperWidth()
                 val storeName = printerPreferences.getStoreName()
@@ -53,7 +53,7 @@ class PrinterSettingsViewModel @Inject constructor(
                 val storeLogo = printerPreferences.getStoreLogo()
                 val autoConnect = printerPreferences.isAutoConnectEnabled()
                 val lastPrinter = printerPreferences.getLastPrinter()
-                
+
                 _uiState.update {
                     it.copy(
                         isLoading = false,
@@ -63,15 +63,15 @@ class PrinterSettingsViewModel @Inject constructor(
                         storeLogoUri = storeLogo,
                         autoConnect = autoConnect,
                         selectedDevice = lastPrinter,
-                        isBluetoothEnabled = printerManager.isBluetoothEnabled()
+                        isBluetoothEnabled = printerManager.isBluetoothEnabled(),
                     )
                 }
-                
+
                 // Auto-connect if enabled and has last printer
                 if (autoConnect && lastPrinter != null) {
                     connectToPrinter(lastPrinter)
                 }
-                
+
                 // Load paired devices
                 refreshPairedDevices()
             } catch (e: Exception) {
@@ -80,19 +80,19 @@ class PrinterSettingsViewModel @Inject constructor(
             }
         }
     }
-    
+
     private fun observePrinterStatus() {
         viewModelScope.launch {
             printerManager.status.collect { status ->
                 _uiState.update { it.copy(printerStatus = status) }
-                
+
                 if (status is PrinterStatus.Error) {
                     _events.emit(PrinterEvent.ShowToast(status.message))
                 }
             }
         }
     }
-    
+
     fun refreshPairedDevices() {
         viewModelScope.launch {
             if (!printerManager.isBluetoothEnabled()) {
@@ -100,33 +100,33 @@ class PrinterSettingsViewModel @Inject constructor(
                 _events.emit(PrinterEvent.RequestBluetoothEnable)
                 return@launch
             }
-            
+
             val devices = printerManager.getPairedDevices()
             _uiState.update {
                 it.copy(
                     pairedDevices = devices,
-                    isBluetoothEnabled = true
+                    isBluetoothEnabled = true,
                 )
             }
         }
     }
-    
+
     fun connectToPrinter(device: PrinterDevice) {
         viewModelScope.launch {
             if (!printerManager.isBluetoothEnabled()) {
                 _events.emit(PrinterEvent.RequestBluetoothEnable)
                 return@launch
             }
-            
+
             _uiState.update { it.copy(selectedDevice = device) }
-            
+
             printerManager.connect(device).fold(
                 onSuccess = {
                     printerPreferences.saveLastPrinter(device)
                     _events.emit(
                         PrinterEvent.ShowToast(
-                            context.getString(R.string.printer_connected_to_device, device.displayName)
-                        )
+                            context.getString(R.string.printer_connected_to_device, device.displayName),
+                        ),
                     )
                     refreshPairedDevices()
                 },
@@ -135,15 +135,15 @@ class PrinterSettingsViewModel @Inject constructor(
                         PrinterEvent.ShowToast(
                             context.getString(
                                 R.string.printer_failed_with_reason,
-                                error.message ?: context.getString(R.string.printer_error_unknown)
-                            )
-                        )
+                                error.message ?: context.getString(R.string.printer_error_unknown),
+                            ),
+                        ),
                     )
-                }
+                },
             )
         }
     }
-    
+
     fun disconnect() {
         viewModelScope.launch {
             printerManager.disconnect()
@@ -151,17 +151,17 @@ class PrinterSettingsViewModel @Inject constructor(
             refreshPairedDevices()
         }
     }
-    
+
     fun printTestPage() {
         viewModelScope.launch {
             if (!printerManager.isConnected()) {
                 _events.emit(PrinterEvent.ShowToast(context.getString(R.string.printer_not_connected)))
                 return@launch
             }
-            
+
             val paperWidth = printerPreferences.getPaperWidth()
             val testData = receiptFormatter.formatTestPage(paperWidth)
-            
+
             printerManager.print(testData).fold(
                 onSuccess = {
                     _events.emit(PrinterEvent.PrintComplete)
@@ -171,65 +171,65 @@ class PrinterSettingsViewModel @Inject constructor(
                         PrinterEvent.ShowToast(
                             context.getString(
                                 R.string.printer_print_failed_with_reason,
-                                error.message ?: context.getString(R.string.printer_error_unknown)
-                            )
-                        )
+                                error.message ?: context.getString(R.string.printer_error_unknown),
+                            ),
+                        ),
                     )
-                }
+                },
             )
         }
     }
-    
+
     fun setPaperWidth(width: PaperWidth) {
         viewModelScope.launch {
             printerPreferences.savePaperWidth(width)
             _uiState.update { it.copy(paperWidth = width) }
         }
     }
-    
+
     fun setStoreName(name: String) {
         _uiState.update { it.copy(storeName = name) }
     }
-    
+
     fun setStoreAddress(address: String) {
         _uiState.update { it.copy(storeAddress = address) }
     }
-    
+
     fun saveStoreInfo() {
         viewModelScope.launch {
             val state = _uiState.value
             printerPreferences.saveStoreInfo(
                 name = state.storeName,
-                address = state.storeAddress.ifBlank { null }
+                address = state.storeAddress.ifBlank { null },
             )
             printerPreferences.saveStoreLogo(state.storeLogoUri)
             _events.emit(PrinterEvent.ShowToast(context.getString(R.string.printer_store_info_saved)))
         }
     }
-    
+
     fun setStoreLogo(uri: String?) {
         _uiState.update { it.copy(storeLogoUri = uri) }
     }
-    
+
     fun clearStoreLogo() {
         viewModelScope.launch {
             printerPreferences.clearStoreLogo()
             _uiState.update { it.copy(storeLogoUri = null) }
         }
     }
-    
+
     fun setAutoConnect(enabled: Boolean) {
         viewModelScope.launch {
             printerPreferences.setAutoConnect(enabled)
             _uiState.update { it.copy(autoConnect = enabled) }
         }
     }
-    
+
     fun onBluetoothPermissionGranted() {
         _uiState.update { it.copy(hasBluetoothPermission = true) }
         refreshPairedDevices()
     }
-    
+
     fun onBluetoothEnabled() {
         _uiState.update { it.copy(isBluetoothEnabled = true) }
         refreshPairedDevices()

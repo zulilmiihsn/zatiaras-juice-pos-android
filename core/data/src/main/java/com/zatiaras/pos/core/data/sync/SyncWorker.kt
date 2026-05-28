@@ -14,15 +14,16 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
+import io.sentry.Sentry
 import timber.log.Timber
 import java.util.concurrent.TimeUnit
 
 /**
  * WorkManager Worker for background sync operations.
- * 
+ *
  * Delegates all sync logic to [SyncManager] to maintain a single source of truth
  * for sync orchestration (DRY principle).
- * 
+ *
  * Uses "Last Write Wins" conflict resolution based on updatedAt timestamp.
  * Runs with network constraint and exponential backoff on failure.
  */
@@ -30,7 +31,7 @@ import java.util.concurrent.TimeUnit
 class SyncWorker @AssistedInject constructor(
     @Assisted context: Context,
     @Assisted params: WorkerParameters,
-    private val syncManager: SyncManager
+    private val syncManager: SyncManager,
 ) : CoroutineWorker(context, params) {
 
     companion object {
@@ -48,7 +49,8 @@ class SyncWorker @AssistedInject constructor(
                 .build()
 
             val syncRequest = PeriodicWorkRequestBuilder<SyncWorker>(
-                SYNC_INTERVAL_MINUTES, TimeUnit.MINUTES
+                SYNC_INTERVAL_MINUTES,
+                TimeUnit.MINUTES,
             )
                 .setConstraints(constraints)
                 .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 1, TimeUnit.MINUTES)
@@ -58,7 +60,7 @@ class SyncWorker @AssistedInject constructor(
             WorkManager.getInstance(context).enqueueUniquePeriodicWork(
                 WORK_NAME_PERIODIC,
                 ExistingPeriodicWorkPolicy.KEEP,
-                syncRequest
+                syncRequest,
             )
 
             Timber.d("Scheduled periodic sync every $SYNC_INTERVAL_MINUTES minutes")
@@ -81,7 +83,7 @@ class SyncWorker @AssistedInject constructor(
             WorkManager.getInstance(context).enqueueUniqueWork(
                 WORK_NAME_ONE_TIME,
                 ExistingWorkPolicy.REPLACE,
-                syncRequest
+                syncRequest,
             )
 
             Timber.d("Triggered immediate sync")
@@ -99,11 +101,11 @@ class SyncWorker @AssistedInject constructor(
 
     override suspend fun doWork(): Result {
         Timber.d("SyncWorker started")
-        
+
         return try {
             // Delegate to SyncManager (single source of truth for sync logic)
             val results = syncManager.syncNow()
-            
+
             val totalUploaded = results.sumOf { it.totalSynced }
             val hasErrors = results.any { it.failed > 0 }
 
@@ -116,6 +118,7 @@ class SyncWorker @AssistedInject constructor(
             }
         } catch (e: Exception) {
             Timber.e(e, "Sync failed")
+            Sentry.captureException(e)
             Result.retry()
         }
     }

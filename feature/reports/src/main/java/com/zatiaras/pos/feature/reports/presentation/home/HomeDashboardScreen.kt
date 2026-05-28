@@ -32,13 +32,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import com.zatiaras.pos.feature.reports.R
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.zatiaras.pos.core.ui.components.OwnerPinDialog
 import com.zatiaras.pos.core.ui.theme.LocalDimensions
+import com.zatiaras.pos.feature.reports.R
 import com.zatiaras.pos.feature.reports.presentation.components.RevenueLineChart
 import com.zatiaras.pos.feature.reports.presentation.components.StatisticsSection
 import com.zatiaras.pos.feature.reports.presentation.components.TopProductsList
@@ -59,17 +58,17 @@ import com.zatiaras.pos.feature.reports.presentation.components.TopProductsList
 @Composable
 fun HomeDashboardRoute(
     onNavigateToSettings: () -> Unit = {},
-    viewModel: HomeDashboardViewModel = hiltViewModel()
+    viewModel: HomeDashboardViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    
+
     HomeDashboardScreen(
         uiState = uiState,
         onRefresh = viewModel::refresh,
         onNavigateToSettings = onNavigateToSettings,
         onOpenStore = viewModel::openStore,
         onCloseStore = viewModel::closeStore,
-        verifyPin = viewModel::verifyPin
+        verifyPin = viewModel::verifyPin,
     )
 }
 
@@ -81,16 +80,16 @@ fun HomeDashboardScreen(
     onNavigateToSettings: () -> Unit,
     onOpenStore: (Long) -> Unit = {},
     onCloseStore: () -> Unit = {},
-    verifyPin: suspend (String) -> Boolean = { true }
+    verifyPin: suspend (String) -> Boolean = { true },
 ) {
     val pullToRefreshState = rememberPullToRefreshState()
     var showOpenStoreDialog by remember { mutableStateOf(false) }
     var showCloseStoreDialog by remember { mutableStateOf(false) }
-    
+
     // PIN Verification State
     var showPinDialog by remember { mutableStateOf(false) }
     var pendingStoreAction by remember { mutableStateOf<StoreAction?>(null) }
-        val dimensions = LocalDimensions.current
+    val dimensions = LocalDimensions.current
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
@@ -98,7 +97,7 @@ fun HomeDashboardScreen(
                 title = {
                     Text(
                         text = stringResource(R.string.home_tab_home),
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
                     )
                 },
                 actions = {
@@ -106,16 +105,16 @@ fun HomeDashboardScreen(
                         Icon(
                             imageVector = Icons.Default.Settings,
                             contentDescription = stringResource(R.string.home_tab_settings),
-                            tint = MaterialTheme.colorScheme.tertiary
+                            tint = MaterialTheme.colorScheme.tertiary,
                         )
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background,
-                    scrolledContainerColor = MaterialTheme.colorScheme.background
-                )
+                    scrolledContainerColor = MaterialTheme.colorScheme.background,
+                ),
             )
-        }
+        },
     ) { paddingValues ->
         PullToRefreshBox(
             isRefreshing = uiState.isLoading,
@@ -123,37 +122,37 @@ fun HomeDashboardScreen(
             state = pullToRefreshState,
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
+                .padding(paddingValues),
         ) {
             AnimatedVisibility(
                 visible = uiState.isLoading && uiState.stats.todayTransactions == 0,
                 enter = fadeIn(),
-                exit = fadeOut()
+                exit = fadeOut(),
             ) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.Center,
                 ) {
                     CircularProgressIndicator()
                 }
             }
-            
+
             AnimatedVisibility(
                 visible = !uiState.isLoading || uiState.stats.todayTransactions > 0,
                 enter = fadeIn(),
-                exit = fadeOut()
+                exit = fadeOut(),
             ) {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(dimensions.paddingL),
-                    verticalArrangement = Arrangement.spacedBy(dimensions.spacingL)
+                    verticalArrangement = Arrangement.spacedBy(dimensions.spacingL),
                 ) {
                     // Error Display
                     if (uiState.error != null) {
                         item {
                             com.zatiaras.pos.core.ui.components.ErrorDisplay(
                                 message = uiState.error.asString(),
-                                onRetry = onRefresh
+                                onRetry = onRefresh,
                             )
                         }
                     }
@@ -162,37 +161,37 @@ fun HomeDashboardScreen(
                     item {
                         StoreStatusBanner(
                             isStoreOpen = uiState.isStoreOpen,
-                            onOpenClick = { 
+                            onOpenClick = {
                                 if (!uiState.isOwner) {
                                     pendingStoreAction = StoreAction.Open
                                     showPinDialog = true
                                 } else {
-                                    showOpenStoreDialog = true 
+                                    showOpenStoreDialog = true
                                 }
                             },
-                            onCloseClick = { 
+                            onCloseClick = {
                                 if (!uiState.isOwner) {
                                     pendingStoreAction = StoreAction.Close
                                     showPinDialog = true
                                 } else {
-                                    showCloseStoreDialog = true 
+                                    showCloseStoreDialog = true
                                 }
-                            }
+                            },
                         )
                     }
-                    
+
                     // Today's Stats Section
                     item {
                         TodayStatsSection(uiState)
                     }
-                    
+
                     // Top Products (PRIORITAS - di atas chart)
                     item {
                         TopProductsList(
-                            products = uiState.topProducts
+                            products = uiState.topProducts,
                         )
                     }
-                    
+
                     // Statistics Section (6 metrics in grid)
                     item {
                         StatisticsSection(
@@ -201,17 +200,17 @@ fun HomeDashboardScreen(
                             averageOrderValue = uiState.averageOrderValue,
                             averageItemsPerTransaction = uiState.averageItemsPerTransaction,
                             growthPercent = uiState.growthPercent,
-                            busiestDay = uiState.busiestDay
+                            busiestDay = uiState.busiestDay,
                         )
                     }
-                    
+
                     // Weekly Revenue Chart (dipindah ke bawah)
                     item {
                         RevenueLineChart(
-                            data = uiState.weeklyRevenue
+                            data = uiState.weeklyRevenue,
                         )
                     }
-                    
+
                     // Bottom spacing
                     item {
                         Spacer(modifier = Modifier.height(dimensions.paddingXXL))
@@ -220,13 +219,13 @@ fun HomeDashboardScreen(
             }
         }
     }
-    
+
     // PIN Verification Dialog
     if (showPinDialog) {
         OwnerPinDialog(
-            onDismiss = { 
+            onDismiss = {
                 showPinDialog = false
-                pendingStoreAction = null 
+                pendingStoreAction = null
             },
             onPinVerified = {
                 showPinDialog = false
@@ -238,7 +237,7 @@ fun HomeDashboardScreen(
                 pendingStoreAction = null
             },
             verifyPin = verifyPin,
-            screenName = if (pendingStoreAction == StoreAction.Open) stringResource(R.string.store_open_title) else stringResource(R.string.store_close_title)
+            screenName = if (pendingStoreAction == StoreAction.Open) stringResource(R.string.store_open_title) else stringResource(R.string.store_close_title),
         )
     }
 
@@ -249,10 +248,10 @@ fun HomeDashboardScreen(
             onConfirm = { amount ->
                 onOpenStore(amount)
                 showOpenStoreDialog = false
-            }
+            },
         )
     }
-    
+
     // Close Store Dialog
     if (showCloseStoreDialog) {
         CloseStoreDialog(
@@ -265,7 +264,7 @@ fun HomeDashboardScreen(
             onConfirm = {
                 onCloseStore()
                 showCloseStoreDialog = false
-            }
+            },
         )
     }
 }

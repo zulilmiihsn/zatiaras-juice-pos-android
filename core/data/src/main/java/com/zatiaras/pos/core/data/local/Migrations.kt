@@ -5,10 +5,10 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 
 /**
  * Database migrations for ZatiarasPOS.
- * 
+ *
  * IMPORTANT: Always add new migrations here instead of using fallbackToDestructiveMigration().
  * Destructive migration will delete all user data on schema changes.
- * 
+ *
  * Migration strategy:
  * - Version 1: Initial schema with products, categories, FTS
  * - Version 2: Added transactions and transaction_items tables
@@ -27,7 +27,8 @@ object Migrations {
     val MIGRATION_1_2 = object : Migration(1, 2) {
         override fun migrate(db: SupportSQLiteDatabase) {
             // Create transactions table
-            db.execSQL("""
+            db.execSQL(
+                """
                 CREATE TABLE IF NOT EXISTS `transactions` (
                     `id` TEXT NOT NULL PRIMARY KEY,
                     `transactionNumber` TEXT NOT NULL,
@@ -46,7 +47,8 @@ object Migrations {
                     `isSynced` INTEGER NOT NULL DEFAULT 0,
                     `isDeleted` INTEGER NOT NULL DEFAULT 0
                 )
-            """.trimIndent())
+                """.trimIndent(),
+            )
 
             // Create indexes for transactions
             db.execSQL("CREATE INDEX IF NOT EXISTS `index_transactions_createdAt` ON `transactions` (`createdAt`)")
@@ -54,7 +56,8 @@ object Migrations {
             db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_transactions_transactionNumber` ON `transactions` (`transactionNumber`)")
 
             // Create transaction_items table
-            db.execSQL("""
+            db.execSQL(
+                """
                 CREATE TABLE IF NOT EXISTS `transaction_items` (
                     `id` TEXT NOT NULL PRIMARY KEY,
                     `transactionId` TEXT NOT NULL,
@@ -66,7 +69,8 @@ object Migrations {
                     `notes` TEXT,
                     FOREIGN KEY(`transactionId`) REFERENCES `transactions`(`id`) ON DELETE CASCADE
                 )
-            """.trimIndent())
+                """.trimIndent(),
+            )
 
             // Create index for transaction_items
             db.execSQL("CREATE INDEX IF NOT EXISTS `index_transaction_items_transactionId` ON `transaction_items` (`transactionId`)")
@@ -80,7 +84,8 @@ object Migrations {
     val MIGRATION_2_3 = object : Migration(2, 3) {
         override fun migrate(db: SupportSQLiteDatabase) {
             // Create cash_records table
-            db.execSQL("""
+            db.execSQL(
+                """
                 CREATE TABLE IF NOT EXISTS `cash_records` (
                     `id` TEXT NOT NULL PRIMARY KEY,
                     `type` TEXT NOT NULL,
@@ -93,7 +98,8 @@ object Migrations {
                     `isSynced` INTEGER NOT NULL DEFAULT 0,
                     `isDeleted` INTEGER NOT NULL DEFAULT 0
                 )
-            """.trimIndent())
+                """.trimIndent(),
+            )
 
             // Create indexes for cash_records
             db.execSQL("CREATE INDEX IF NOT EXISTS `index_cash_records_createdAt` ON `cash_records` (`createdAt`)")
@@ -109,7 +115,8 @@ object Migrations {
     val MIGRATION_3_4 = object : Migration(3, 4) {
         override fun migrate(db: SupportSQLiteDatabase) {
             // Create users table
-            db.execSQL("""
+            db.execSQL(
+                """
                 CREATE TABLE IF NOT EXISTS `users` (
                     `id` TEXT NOT NULL PRIMARY KEY,
                     `username` TEXT NOT NULL,
@@ -120,7 +127,8 @@ object Migrations {
                     `updatedAt` INTEGER NOT NULL,
                     `isActive` INTEGER NOT NULL DEFAULT 1
                 )
-            """.trimIndent())
+                """.trimIndent(),
+            )
 
             // Create unique index for username
             db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_users_username` ON `users` (`username`)")
@@ -134,7 +142,8 @@ object Migrations {
     val MIGRATION_4_5 = object : Migration(4, 5) {
         override fun migrate(db: SupportSQLiteDatabase) {
             // Create app_settings table (singleton - one row)
-            db.execSQL("""
+            db.execSQL(
+                """
                 CREATE TABLE IF NOT EXISTS `app_settings` (
                     `id` TEXT NOT NULL PRIMARY KEY,
                     `ownerPinHash` TEXT,
@@ -148,16 +157,20 @@ object Migrations {
                     `updatedAt` INTEGER NOT NULL,
                     `isSynced` INTEGER NOT NULL DEFAULT 0
                 )
-            """.trimIndent())
-            
+                """.trimIndent(),
+            )
+
             // Insert default settings row
-            db.execSQL("""
+            db.execSQL(
+                """
                 INSERT OR IGNORE INTO `app_settings` (id, storeName, defaultPaperWidth, updatedAt, isSynced)
                 VALUES ('default', 'Zatiaras Juice', 58, ${System.currentTimeMillis()}, 0)
-            """.trimIndent())
+                """.trimIndent(),
+            )
 
             // Create add_ons table
-            db.execSQL("""
+            db.execSQL(
+                """
                 CREATE TABLE IF NOT EXISTS `add_ons` (
                     `id` TEXT NOT NULL PRIMARY KEY,
                     `name` TEXT NOT NULL,
@@ -171,7 +184,8 @@ object Migrations {
                     `isSynced` INTEGER NOT NULL DEFAULT 0,
                     `isDeleted` INTEGER NOT NULL DEFAULT 0
                 )
-            """.trimIndent())
+                """.trimIndent(),
+            )
 
             // Create indexes for add_ons
             db.execSQL("CREATE INDEX IF NOT EXISTS `index_add_ons_category` ON `add_ons` (`category`)")
@@ -188,7 +202,8 @@ object Migrations {
     val MIGRATION_5_6 = object : Migration(5, 6) {
         override fun migrate(db: SupportSQLiteDatabase) {
             // Create store_sessions table
-            db.execSQL("""
+            db.execSQL(
+                """
                 CREATE TABLE IF NOT EXISTS `store_sessions` (
                     `id` TEXT NOT NULL PRIMARY KEY,
                     `openingCash` INTEGER NOT NULL,
@@ -200,7 +215,8 @@ object Migrations {
                     `updatedAt` INTEGER NOT NULL,
                     `isSynced` INTEGER NOT NULL DEFAULT 0
                 )
-            """.trimIndent())
+                """.trimIndent(),
+            )
 
             // Create indexes for store_sessions
             db.execSQL("CREATE INDEX IF NOT EXISTS `index_store_sessions_isActive` ON `store_sessions` (`isActive`)")
@@ -297,6 +313,6 @@ object Migrations {
         MIGRATION_8_9,
         MIGRATION_9_10,
         MIGRATION_10_11,
-        MIGRATION_11_12
+        MIGRATION_11_12,
     )
 }

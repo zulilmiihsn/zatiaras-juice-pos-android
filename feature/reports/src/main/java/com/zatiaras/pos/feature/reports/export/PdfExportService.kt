@@ -27,6 +27,7 @@ import com.zatiaras.pos.core.ui.theme.SuccessGreenDark
 import com.zatiaras.pos.core.ui.theme.SuccessGreenLight
 import com.zatiaras.pos.core.ui.util.CurrencyFormatter
 import com.zatiaras.pos.feature.reports.domain.model.ProfitLossReport
+import io.sentry.Sentry
 import timber.log.Timber
 import java.io.File
 import java.io.FileOutputStream
@@ -43,59 +44,53 @@ import javax.inject.Singleton
 @Singleton
 class PdfExportService @Inject constructor() {
 
-    private val pageWidth = 595  // A4 width in points (72 dpi)
+    private val pageWidth = 595 // A4 width in points (72 dpi)
     private val pageHeight = 842 // A4 height in points
     private val margin = 40f
     private val lineHeight = 24f
-    
-    private val titlePaint = Paint().apply {
-        color = Slate900.toArgb()
-        textSize = 24f
-        isFakeBoldText = true
-    }
-    
+
     private val headerPaint = Paint().apply {
         color = Brand500.toArgb()
         textSize = 14f
         isFakeBoldText = true
     }
-    
+
     private val expenseHeaderPaint = Paint().apply {
         color = ErrorRed.toArgb()
         textSize = 14f
         isFakeBoldText = true
     }
-    
+
     private val incomeHeaderPaint = Paint().apply {
         color = SuccessGreen.toArgb()
         textSize = 14f
         isFakeBoldText = true
     }
-    
+
     private val labelPaint = Paint().apply {
         color = Slate600.toArgb()
         textSize = 12f
     }
-    
+
     private val valuePaint = Paint().apply {
         color = Slate900.toArgb()
         textSize = 12f
     }
-    
+
     private val totalPaint = Paint().apply {
         color = Slate900.toArgb()
         textSize = 14f
         isFakeBoldText = true
     }
-    
+
     private val negativePaint = Paint().apply {
         color = ErrorRed.toArgb()
         textSize = 12f
     }
-    
+
     private val dateFormat = SimpleDateFormat("dd MMMM yyyy", LocaleUtils.LOCALE_ID)
     private val currencyFormat: NumberFormat = CurrencyFormatter.getCurrencyFormatter()
-    
+
     private var currentPage: PdfDocument.Page? = null
     private var currentPageNum = 0
 
@@ -106,71 +101,71 @@ class PdfExportService @Inject constructor() {
         context: Context,
         report: ProfitLossReport,
         periodName: String,
-        storeLogoUri: String? = null
-    ): Result<Uri> {
-        return try {
-            val document = PdfDocument()
-            currentPageNum = 0
-            
-            // Start first page
-            currentPage = document.startPage(
-                PdfDocument.PageInfo.Builder(pageWidth, pageHeight, ++currentPageNum).create()
-            )
-            
-            drawPage(context, document, currentPage!!.canvas, report, periodName, storeLogoUri)
-            
-            // Finish last page
-            document.finishPage(currentPage!!)
-            currentPage = null
-            
-            // Always save to cache directory first to guarantee the file is created for sharing
-            val fileName = "Laporan_Laba_Rugi_${System.currentTimeMillis()}.pdf"
-            val file = File(context.cacheDir, fileName)
-            
-            FileOutputStream(file).use { outputStream ->
-                document.writeTo(outputStream)
-            }
-            
-            document.close()
-            
-            // Try attempting to copy to public Downloads directly
-            try {
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
-                    val resolver = context.contentResolver
-                    val contentValues = android.content.ContentValues().apply {
-                        put(android.provider.MediaStore.MediaColumns.DISPLAY_NAME, fileName)
-                        put(android.provider.MediaStore.MediaColumns.MIME_TYPE, "application/pdf")
-                        put(android.provider.MediaStore.MediaColumns.RELATIVE_PATH, android.os.Environment.DIRECTORY_DOWNLOADS)
-                    }
-                    val downloadsUri = resolver.insert(android.provider.MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)
-                    if (downloadsUri != null) {
-                        resolver.openOutputStream(downloadsUri)?.use { outStream ->
-                            file.inputStream().use { inStream -> inStream.copyTo(outStream) }
-                        }
-                    }
-                } else {
-                    val downloadsDir = android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS)
-                    if (!downloadsDir.exists()) downloadsDir.mkdirs()
-                    val destFile = File(downloadsDir, fileName)
-                    file.copyTo(destFile, overwrite = true)
-                }
-            } catch (e: Exception) {
-                Timber.w(e, "Gagal mengkopi file pdf ke folder Downloads public, menggunakan versi Share saja")
-            }
-            
-            // Get URI via FileProvider
-            val uri = FileProvider.getUriForFile(
-                context,
-                "${context.packageName}.fileprovider",
-                file
-            )
-            
-            Timber.d("PDF exported successfully: ${file.absolutePath}")
-            Result.success(uri)
-        } catch (e: Exception) {
-            Timber.e(e, "Failed to export PDF")
-            Result.failure(e)
+        storeLogoUri: String? = null,
+    ): Result<Uri> = try {
+        val document = PdfDocument()
+        currentPageNum = 0
+
+        // Start first page
+        currentPage = document.startPage(
+            PdfDocument.PageInfo.Builder(pageWidth, pageHeight, ++currentPageNum).create(),
+        )
+        val firstPage = currentPage ?: error("Failed to start PDF page")
+
+        drawPage(context, document, firstPage.canvas, report, periodName, storeLogoUri)
+
+        // Finish last page
+        currentPage?.let(document::finishPage)
+        currentPage = null
+
+        // Always save to cache directory first to guarantee the file is created for sharing
+        val fileName = "Laporan_Laba_Rugi_${System.currentTimeMillis()}.pdf"
+        val file = File(context.cacheDir, fileName)
+
+        FileOutputStream(file).use { outputStream ->
+            document.writeTo(outputStream)
         }
+
+        document.close()
+
+        // Try attempting to copy to public Downloads directly
+        try {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                val resolver = context.contentResolver
+                val contentValues = android.content.ContentValues().apply {
+                    put(android.provider.MediaStore.MediaColumns.DISPLAY_NAME, fileName)
+                    put(android.provider.MediaStore.MediaColumns.MIME_TYPE, "application/pdf")
+                    put(android.provider.MediaStore.MediaColumns.RELATIVE_PATH, android.os.Environment.DIRECTORY_DOWNLOADS)
+                }
+                val downloadsUri = resolver.insert(android.provider.MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)
+                if (downloadsUri != null) {
+                    resolver.openOutputStream(downloadsUri)?.use { outStream ->
+                        file.inputStream().use { inStream -> inStream.copyTo(outStream) }
+                    }
+                }
+            } else {
+                val downloadsDir = android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS)
+                if (!downloadsDir.exists()) downloadsDir.mkdirs()
+                val destFile = File(downloadsDir, fileName)
+                file.copyTo(destFile, overwrite = true)
+            }
+        } catch (e: Exception) {
+            Timber.w(e, "Gagal mengkopi file pdf ke folder Downloads public, menggunakan versi Share saja")
+        }
+
+        // Get URI via FileProvider
+        val uri = FileProvider.getUriForFile(
+            context,
+            "${context.packageName}.fileprovider",
+            file,
+        )
+
+        Timber.d("PDF exported successfully: ${file.absolutePath}")
+        Result.success(uri)
+    } catch (e: Exception) {
+        Timber.e(e, "Failed to export PDF")
+        Sentry.captureException(e)
+        Result.failure(e)
     }
 
     /**
@@ -180,20 +175,24 @@ class PdfExportService @Inject constructor() {
         // If yPos exceeds threshold, start new page
         if (yPos > pageHeight - margin - 60f) {
             // Finish current page
-            document.finishPage(currentPage!!)
-            
+            currentPage?.let(document::finishPage)
+
             // Start new page
-            currentPage = document.startPage(
-                PdfDocument.PageInfo.Builder(pageWidth, pageHeight, ++currentPageNum).create()
+            val newPage = document.startPage(
+                PdfDocument.PageInfo.Builder(pageWidth, pageHeight, ++currentPageNum).create(),
             )
-            
+            currentPage = newPage
+
             // Return new canvas with reset yPos
-            return currentPage!!.canvas to (margin + 40f)
+            return newPage.canvas to (margin + 40f)
         }
-        
-        return currentPage!!.canvas to yPos
+
+        val activePage = currentPage ?: document.startPage(
+            PdfDocument.PageInfo.Builder(pageWidth, pageHeight, ++currentPageNum).create(),
+        ).also { currentPage = it }
+        return activePage.canvas to yPos
     }
-    
+
     private fun drawPage(context: Context, document: PdfDocument, canvas: Canvas, report: ProfitLossReport, periodName: String, storeLogoUri: String?) {
         var currentCanvas = canvas
 
@@ -223,7 +222,9 @@ class PdfExportService @Inject constructor() {
                 val bitmap: Bitmap? = if (isContentUri) {
                     val stream = context.contentResolver.openInputStream(uri)
                     BitmapFactory.decodeStream(stream)
-                } else null
+                } else {
+                    null
+                }
 
                 if (bitmap != null) {
                     val targetHeight = 50f
@@ -234,7 +235,7 @@ class PdfExportService @Inject constructor() {
                         (pageWidth - margin - targetWidth).toInt(),
                         (yPos - 35f).toInt(),
                         (pageWidth - margin).toInt(),
-                        (yPos + 15f).toInt()
+                        (yPos + 15f).toInt(),
                     )
 
                     val bitmapPaint = Paint().apply {
@@ -355,7 +356,7 @@ class PdfExportService @Inject constructor() {
             yPos + 35f,
             8f,
             8f,
-            boxPaint
+            boxPaint,
         )
 
         val profitPaint = Paint().apply {
@@ -377,7 +378,7 @@ class PdfExportService @Inject constructor() {
         }
         currentCanvas.drawText("ZatiarasPOS - Laporan Keuangan", pageWidth / 2f, footerY, footerPaint)
     }
-    
+
     /**
      * Draw line item with automatic pagination support.
      */
@@ -387,7 +388,7 @@ class PdfExportService @Inject constructor() {
         amount: Long,
         yPos: Float,
         isNegative: Boolean,
-        isBold: Boolean = false
+        isBold: Boolean = false,
     ): Pair<Canvas, Float> {
         val (newCanvas, newYPos) = checkAndStartNewPage(document, yPos)
         val finalYPos = drawLineItem(newCanvas, label, amount, newYPos, isNegative, isBold)
@@ -400,36 +401,34 @@ class PdfExportService @Inject constructor() {
         amount: Long,
         yPos: Float,
         isNegative: Boolean,
-        isBold: Boolean = false
+        isBold: Boolean = false,
     ): Float {
         val paint = when {
             isBold -> totalPaint
             isNegative && amount != 0L -> negativePaint
             else -> valuePaint
         }
-        
+
         canvas.drawText(label, margin + 20f, yPos, if (isBold) totalPaint else labelPaint)
-        
+
         val formattedValue = if (isNegative && amount != 0L) {
             "(${currencyFormat.format(kotlin.math.abs(amount))})"
         } else {
             currencyFormat.format(amount)
         }
-        
+
         val valueWidth = paint.measureText(formattedValue)
         canvas.drawText(formattedValue, pageWidth - margin - valueWidth, yPos, paint)
-        
+
         return yPos + lineHeight
     }
 
     /**
      * Create an intent to share the PDF file.
      */
-    fun createShareIntent(uri: Uri): Intent {
-        return Intent(Intent.ACTION_SEND).apply {
-            type = "application/pdf"
-            putExtra(Intent.EXTRA_STREAM, uri)
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        }
+    fun createShareIntent(uri: Uri): Intent = Intent(Intent.ACTION_SEND).apply {
+        type = "application/pdf"
+        putExtra(Intent.EXTRA_STREAM, uri)
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
     }
 }

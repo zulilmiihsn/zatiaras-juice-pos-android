@@ -17,7 +17,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 private val Context.printerDataStore: DataStore<Preferences> by preferencesDataStore(
-    name = "printer_preferences"
+    name = "printer_preferences",
 )
 
 /**
@@ -25,7 +25,7 @@ private val Context.printerDataStore: DataStore<Preferences> by preferencesDataS
  */
 @Singleton
 class PrinterPreferences @Inject constructor(
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
 ) {
     companion object {
         private val KEY_LAST_PRINTER_NAME = stringPreferencesKey("last_printer_name")
@@ -35,11 +35,11 @@ class PrinterPreferences @Inject constructor(
         private val KEY_STORE_ADDRESS = stringPreferencesKey("store_address")
         private val KEY_AUTO_CONNECT = stringPreferencesKey("auto_connect")
     }
-    
+
     private val dataStore = context.printerDataStore
-    
+
     // ==================== LAST PRINTER ====================
-    
+
     /**
      * Save the last connected printer.
      */
@@ -49,7 +49,7 @@ class PrinterPreferences @Inject constructor(
             prefs[KEY_LAST_PRINTER_ADDRESS] = device.address
         }
     }
-    
+
     /**
      * Get the last connected printer.
      */
@@ -57,24 +57,24 @@ class PrinterPreferences @Inject constructor(
         val prefs = dataStore.data.first()
         val name = prefs[KEY_LAST_PRINTER_NAME] ?: return null
         val address = prefs[KEY_LAST_PRINTER_ADDRESS] ?: return null
-        
+
         return PrinterDevice(
             name = name,
             address = address,
-            isPaired = true
+            isPaired = true,
         )
     }
-    
+
     /**
      * Observe the last printer as a Flow.
      */
     fun observeLastPrinter(): Flow<PrinterDevice?> = dataStore.data.map { prefs ->
         val name = prefs[KEY_LAST_PRINTER_NAME] ?: return@map null
         val address = prefs[KEY_LAST_PRINTER_ADDRESS] ?: return@map null
-        
+
         PrinterDevice(name = name, address = address, isPaired = true)
     }
-    
+
     /**
      * Clear the last printer.
      */
@@ -84,9 +84,9 @@ class PrinterPreferences @Inject constructor(
             prefs.remove(KEY_LAST_PRINTER_ADDRESS)
         }
     }
-    
+
     // ==================== PAPER WIDTH ====================
-    
+
     /**
      * Save paper width setting.
      */
@@ -95,17 +95,17 @@ class PrinterPreferences @Inject constructor(
             prefs[KEY_PAPER_WIDTH] = width.mmWidth
         }
     }
-    
+
     /**
      * Get paper width setting.
      */
     suspend fun getPaperWidth(): PaperWidth {
         val prefs = dataStore.data.first()
         val width = prefs[KEY_PAPER_WIDTH] ?: PaperWidth.MM_58.mmWidth
-        
+
         return if (width == 80) PaperWidth.MM_80 else PaperWidth.MM_58
     }
-    
+
     /**
      * Observe paper width as a Flow.
      */
@@ -113,9 +113,9 @@ class PrinterPreferences @Inject constructor(
         val width = prefs[KEY_PAPER_WIDTH] ?: PaperWidth.MM_58.mmWidth
         if (width == 80) PaperWidth.MM_80 else PaperWidth.MM_58
     }
-    
+
     // ==================== STORE INFO ====================
-    
+
     /**
      * Save store info for receipt header.
      */
@@ -125,7 +125,7 @@ class PrinterPreferences @Inject constructor(
             address?.let { prefs[KEY_STORE_ADDRESS] = it }
         }
     }
-    
+
     /**
      * Get store name.
      */
@@ -133,7 +133,7 @@ class PrinterPreferences @Inject constructor(
         val prefs = dataStore.data.first()
         return prefs[KEY_STORE_NAME] ?: "Zatiaras Juice"
     }
-    
+
     /**
      * Get store address.
      */
@@ -141,9 +141,9 @@ class PrinterPreferences @Inject constructor(
         val prefs = dataStore.data.first()
         return prefs[KEY_STORE_ADDRESS]
     }
-    
+
     // ==================== AUTO CONNECT ====================
-    
+
     /**
      * Enable/disable auto-connect to last printer.
      */
@@ -152,7 +152,7 @@ class PrinterPreferences @Inject constructor(
             prefs[KEY_AUTO_CONNECT] = if (enabled) "true" else "false"
         }
     }
-    
+
     /**
      * Check if auto-connect is enabled.
      */
@@ -160,11 +160,11 @@ class PrinterPreferences @Inject constructor(
         val prefs = dataStore.data.first()
         return prefs[KEY_AUTO_CONNECT] == "true"
     }
-    
+
     // ==================== STORE LOGO ====================
-    
-    private val KEY_STORE_LOGO = stringPreferencesKey("store_logo_uri")
-    
+
+    private val keyStoreLogo = stringPreferencesKey("store_logo_uri")
+
     /**
      * Save store logo URI.
      * Pass null to use default app logo.
@@ -172,28 +172,28 @@ class PrinterPreferences @Inject constructor(
     suspend fun saveStoreLogo(uri: String?) {
         dataStore.edit { prefs ->
             if (uri != null) {
-                prefs[KEY_STORE_LOGO] = uri
+                prefs[keyStoreLogo] = uri
             } else {
-                prefs.remove(KEY_STORE_LOGO)
+                prefs.remove(keyStoreLogo)
             }
         }
     }
-    
+
     /**
      * Get store logo URI.
      * Returns null if using default app logo.
      */
     suspend fun getStoreLogo(): String? {
         val prefs = dataStore.data.first()
-        return prefs[KEY_STORE_LOGO]
+        return prefs[keyStoreLogo]
     }
-    
+
     /**
      * Clear store logo to use default.
      */
     suspend fun clearStoreLogo() {
         dataStore.edit { prefs ->
-            prefs.remove(KEY_STORE_LOGO)
+            prefs.remove(keyStoreLogo)
         }
     }
 }

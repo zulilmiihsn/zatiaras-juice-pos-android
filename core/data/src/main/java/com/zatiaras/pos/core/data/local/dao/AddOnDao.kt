@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.Flow
 
 /**
  * DAO for Add-Ons operations.
- * 
+ *
  * Add-ons are extra items that can be added to products during POS checkout.
  */
 @Dao

@@ -1,52 +1,48 @@
 package com.zatiaras.pos.core.data.repository
 
+import com.zatiaras.pos.core.data.local.SyncPreferences
 import com.zatiaras.pos.core.data.local.dao.AddOnDao
 import com.zatiaras.pos.core.data.local.entity.AddOnEntity
-import com.zatiaras.pos.core.data.local.SyncPreferences
 import com.zatiaras.pos.core.data.remote.AddOnRemoteDataSource
 import com.zatiaras.pos.core.domain.model.AddOn
-import com.zatiaras.pos.core.domain.repository.AddOnRepository as IAddOnRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import timber.log.Timber
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
+import com.zatiaras.pos.core.domain.repository.AddOnRepository as IAddOnRepository
 
 /**
  * Repository for Add-Ons/Toppings.
- * 
+ *
  * Implements offline-first pattern:
  * 1. Write to local Room database
  * 2. Sync to Supabase in background
  * 3. Pull remote changes on app start
- * 
+ *
  * Add-ons are extra items that can be added to products during POS checkout.
  */
 @Singleton
 class AddOnRepositoryImpl @Inject constructor(
     private val addOnDao: AddOnDao,
     private val remoteDataSource: AddOnRemoteDataSource,
-    private val syncPreferences: SyncPreferences
+    private val syncPreferences: SyncPreferences,
 ) : IAddOnRepository {
-    
+
     // ==================== DOMAIN INTERFACE IMPLEMENTATION ====================
-    
-    override fun observeActiveAddOns(): Flow<List<AddOn>> {
-        return addOnDao.observeActiveAddOns().map { entities -> 
-            entities.map { it.toDomain() } 
-        }
+
+    override fun observeActiveAddOns(): Flow<List<AddOn>> = addOnDao.observeActiveAddOns().map { entities ->
+        entities.map { it.toDomain() }
     }
-    
-    override suspend fun getActiveAddOns(): List<AddOn> {
-        return addOnDao.getActiveAddOns().map { it.toDomain() }
-    }
-    
+
+    override suspend fun getActiveAddOns(): List<AddOn> = addOnDao.getActiveAddOns().map { it.toDomain() }
+
     override suspend fun getAddOnsByIds(ids: List<String>): List<AddOn> {
         if (ids.isEmpty()) return emptyList()
         return addOnDao.getAddOnsByIds(ids).map { it.toDomain() }
     }
-    
+
     override fun observeAddOnsByIds(ids: List<String>): Flow<List<AddOn>> {
         if (ids.isEmpty()) {
             return kotlinx.coroutines.flow.flowOf(emptyList())
@@ -55,23 +51,21 @@ class AddOnRepositoryImpl @Inject constructor(
             entities.map { it.toDomain() }
         }
     }
-    
-    override suspend fun getAddOnById(id: String): AddOn? {
-        return addOnDao.getAddOnById(id)?.toDomain()
-    }
-    
+
+    override suspend fun getAddOnById(id: String): AddOn? = addOnDao.getAddOnById(id)?.toDomain()
+
     override suspend fun syncFromRemote() {
         try {
             val lastSync = syncPreferences.getLastAddOnsSyncTimestamp()
             val remoteAddOns = remoteDataSource.fetchAddOns(lastSync).getOrThrow()
-            
+
             if (remoteAddOns.isNotEmpty()) {
                 addOnDao.insertAddOns(remoteAddOns)
                 Timber.d("Synced ${remoteAddOns.size} add-ons from remote")
             }
-            
+
             syncPreferences.updateLastAddOnsSyncTimestamp()
-            
+
             // Also push any local changes
             pushUnsyncedToRemote()
         } catch (e: Exception) {
@@ -79,71 +73,47 @@ class AddOnRepositoryImpl @Inject constructor(
             throw e
         }
     }
-    
+
     // ==================== ENTITY CONVERSION ====================
-    
-    private fun AddOnEntity.toDomain(): AddOn {
-        return AddOn(
-            id = id,
-            name = name,
-            price = price,
-            isActive = isActive
-        )
-    }
-    
-    private fun AddOn.toEntity(isSynced: Boolean = false): AddOnEntity {
-        return AddOnEntity(
-            id = id,
-            name = name,
-            price = price,
-            isActive = isActive,
-            isSynced = isSynced
-        )
-    }
+
+    private fun AddOnEntity.toDomain(): AddOn = AddOn(
+        id = id,
+        name = name,
+        price = price,
+        isActive = isActive,
+    )
 
     // ==================== LEGACY READ (for backward compatibility) ====================
 
     /**
      * Observe all add-ons (including inactive).
      */
-    fun observeAllAddOns(): Flow<List<AddOnEntity>> {
-        return addOnDao.observeAllAddOns()
-    }
+    fun observeAllAddOns(): Flow<List<AddOnEntity>> = addOnDao.observeAllAddOns()
 
     /**
      * Get all active add-ons as Entity.
      */
-    suspend fun getActiveAddOnsEntity(): List<AddOnEntity> {
-        return addOnDao.getActiveAddOns()
-    }
+    suspend fun getActiveAddOnsEntity(): List<AddOnEntity> = addOnDao.getActiveAddOns()
 
     /**
      * Get add-on entity by ID.
      */
-    suspend fun getAddOnEntityById(id: String): AddOnEntity? {
-        return addOnDao.getAddOnById(id)
-    }
+    suspend fun getAddOnEntityById(id: String): AddOnEntity? = addOnDao.getAddOnById(id)
 
     /**
      * Observe add-ons by category.
      */
-    fun observeAddOnsByCategory(category: String): Flow<List<AddOnEntity>> {
-        return addOnDao.observeAddOnsByCategory(category)
-    }
+    fun observeAddOnsByCategory(category: String): Flow<List<AddOnEntity>> = addOnDao.observeAddOnsByCategory(category)
 
     /**
      * Get all unique add-on categories.
      */
-    suspend fun getCategories(): List<String> {
-        return addOnDao.getCategories()
-    }
+    suspend fun getCategories(): List<String> = addOnDao.getCategories()
 
     /**
      * Search add-ons by name.
      */
-    suspend fun searchAddOns(query: String): List<AddOnEntity> {
-        return addOnDao.searchAddOns(query)
-    }
+    suspend fun searchAddOns(query: String): List<AddOnEntity> = addOnDao.searchAddOns(query)
 
     // ==================== WRITE ====================
 
@@ -154,7 +124,7 @@ class AddOnRepositoryImpl @Inject constructor(
         name: String,
         price: Long,
         category: String?,
-        icon: String?
+        icon: String?,
     ): Result<AddOn> {
         return try {
             // Check if an add-on with this name already exists (including soft-deleted)
@@ -176,7 +146,7 @@ class AddOnRepositoryImpl @Inject constructor(
                     isActive = true,
                     isDeleted = false,
                     updatedAt = System.currentTimeMillis(),
-                    isSynced = false
+                    isSynced = false,
                 )
             } else {
                 // Create new
@@ -190,10 +160,10 @@ class AddOnRepositoryImpl @Inject constructor(
                     isActive = true,
                     createdAt = System.currentTimeMillis(),
                     updatedAt = System.currentTimeMillis(),
-                    isSynced = false
+                    isSynced = false,
                 )
             }
-            
+
             addOnDao.insertAddOn(addOn)
 
             if (existing != null) {
@@ -201,10 +171,10 @@ class AddOnRepositoryImpl @Inject constructor(
             } else {
                 Timber.d("Created add-on: ${addOn.name} (id=${addOn.id})")
             }
-            
+
             // Try to sync immediately
             syncAddOnToRemote(addOn)
-            
+
             Result.success(addOn.toDomain())
         } catch (e: Exception) {
             Timber.e(e, "Failed to create add-on")
@@ -215,111 +185,101 @@ class AddOnRepositoryImpl @Inject constructor(
     /**
      * Update an existing add-on.
      */
-    suspend fun updateAddOn(addOn: AddOnEntity): Result<Unit> {
-        return try {
-            val updated = addOn.copy(
-                updatedAt = System.currentTimeMillis(),
-                isSynced = false
-            )
-            addOnDao.updateAddOn(updated)
-            Timber.d("Updated add-on: ${addOn.name}")
-            
-            syncAddOnToRemote(updated)
-            
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Timber.e(e, "Failed to update add-on")
-            Result.failure(e)
-        }
+    suspend fun updateAddOn(addOn: AddOnEntity): Result<Unit> = try {
+        val updated = addOn.copy(
+            updatedAt = System.currentTimeMillis(),
+            isSynced = false,
+        )
+        addOnDao.updateAddOn(updated)
+        Timber.d("Updated add-on: ${addOn.name}")
+
+        syncAddOnToRemote(updated)
+
+        Result.success(Unit)
+    } catch (e: Exception) {
+        Timber.e(e, "Failed to update add-on")
+        Result.failure(e)
     }
 
     /**
      * Delete an add-on (soft delete).
      */
-    override suspend fun deleteAddOn(id: String): Result<Unit> {
-        return try {
-            addOnDao.softDeleteAddOn(id)
-            Timber.d("Deleted add-on: $id")
-            
-            // Get the updated entity and sync
-            val deleted = addOnDao.getAddOnById(id)
-            if (deleted != null) {
-                syncAddOnToRemote(deleted)
-            }
-            
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Timber.e(e, "Failed to delete add-on")
-            Result.failure(e)
+    override suspend fun deleteAddOn(id: String): Result<Unit> = try {
+        addOnDao.softDeleteAddOn(id)
+        Timber.d("Deleted add-on: $id")
+
+        // Get the updated entity and sync
+        val deleted = addOnDao.getAddOnById(id)
+        if (deleted != null) {
+            syncAddOnToRemote(deleted)
         }
+
+        Result.success(Unit)
+    } catch (e: Exception) {
+        Timber.e(e, "Failed to delete add-on")
+        Result.failure(e)
     }
 
     /**
      * Update an existing add-on.
      */
-    override suspend fun updateAddOn(id: String, name: String, price: Long): Result<AddOn> {
-        return try {
-            val existingEntity = addOnDao.getAddOnById(id)
-            if (existingEntity != null) {
-                val updatedEntity = existingEntity.copy(
-                    name = name,
-                    price = price,
-                    updatedAt = System.currentTimeMillis(),
-                    isSynced = false
-                )
-                addOnDao.updateAddOn(updatedEntity)
-                Timber.d("Add-on updated locally: ${updatedEntity.name}")
-                
-                // Sync to remote
-                syncAddOnToRemote(updatedEntity)
-                
-                Result.success(updatedEntity.toDomain())
-            } else {
-                Result.failure(Exception("Add-on not found: $id"))
-            }
-        } catch (e: Exception) {
-            Timber.e(e, "Failed to update add-on: $id")
-            Result.failure(e)
+    override suspend fun updateAddOn(id: String, name: String, price: Long): Result<AddOn> = try {
+        val existingEntity = addOnDao.getAddOnById(id)
+        if (existingEntity != null) {
+            val updatedEntity = existingEntity.copy(
+                name = name,
+                price = price,
+                updatedAt = System.currentTimeMillis(),
+                isSynced = false,
+            )
+            addOnDao.updateAddOn(updatedEntity)
+            Timber.d("Add-on updated locally: ${updatedEntity.name}")
+
+            // Sync to remote
+            syncAddOnToRemote(updatedEntity)
+
+            Result.success(updatedEntity.toDomain())
+        } else {
+            Result.failure(Exception("Add-on not found: $id"))
         }
+    } catch (e: Exception) {
+        Timber.e(e, "Failed to update add-on: $id")
+        Result.failure(e)
     }
 
     /**
      * Update add-on status (active/inactive).
      */
-    override suspend fun updateAddOnStatus(id: String, isActive: Boolean): Result<Unit> {
-        return try {
-            addOnDao.updateStatus(id, isActive)
-            Timber.d("Updated add-on status: $id -> $isActive")
-            
-            val updated = addOnDao.getAddOnById(id)
-            if (updated != null) {
-                syncAddOnToRemote(updated)
-            }
-            
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Timber.e(e, "Failed to update add-on status")
-            Result.failure(e)
+    override suspend fun updateAddOnStatus(id: String, isActive: Boolean): Result<Unit> = try {
+        addOnDao.updateStatus(id, isActive)
+        Timber.d("Updated add-on status: $id -> $isActive")
+
+        val updated = addOnDao.getAddOnById(id)
+        if (updated != null) {
+            syncAddOnToRemote(updated)
         }
+
+        Result.success(Unit)
+    } catch (e: Exception) {
+        Timber.e(e, "Failed to update add-on status")
+        Result.failure(e)
     }
 
     /**
      * Toggle add-on active status (legacy).
      */
-    suspend fun toggleActive(id: String): Result<Unit> {
-        return try {
-            addOnDao.toggleActive(id)
-            
-            val updated = addOnDao.getAddOnById(id)
-            if (updated != null) {
-                syncAddOnToRemote(updated)
-            }
-            
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Timber.e(e, "Failed to toggle add-on active status")
-            Result.failure(e)
+    suspend fun toggleActive(id: String): Result<Unit> = try {
+        addOnDao.toggleActive(id)
+
+        val updated = addOnDao.getAddOnById(id)
+        if (updated != null) {
+            syncAddOnToRemote(updated)
         }
+
+        Result.success(Unit)
+    } catch (e: Exception) {
+        Timber.e(e, "Failed to toggle add-on active status")
+        Result.failure(e)
     }
 
     // ==================== SYNC ====================
@@ -328,26 +288,24 @@ class AddOnRepositoryImpl @Inject constructor(
      * Sync add-ons from remote to local.
      * Uses delta sync based on last sync timestamp.
      */
-    suspend fun syncFromRemoteWithResult(): Result<Int> {
-        return try {
-            val lastSync = syncPreferences.getLastAddOnsSyncTimestamp()
-            val remoteAddOns = remoteDataSource.fetchAddOns(lastSync).getOrThrow()
-            
-            if (remoteAddOns.isNotEmpty()) {
-                addOnDao.insertAddOns(remoteAddOns)
-                Timber.d("Synced ${remoteAddOns.size} add-ons from remote")
-            }
-            
-            syncPreferences.updateLastAddOnsSyncTimestamp()
-            
-            // Also push any local changes
-            pushUnsyncedToRemote()
-            
-            Result.success(remoteAddOns.size)
-        } catch (e: Exception) {
-            Timber.e(e, "Failed to sync add-ons from remote")
-            Result.failure(e)
+    suspend fun syncFromRemoteWithResult(): Result<Int> = try {
+        val lastSync = syncPreferences.getLastAddOnsSyncTimestamp()
+        val remoteAddOns = remoteDataSource.fetchAddOns(lastSync).getOrThrow()
+
+        if (remoteAddOns.isNotEmpty()) {
+            addOnDao.insertAddOns(remoteAddOns)
+            Timber.d("Synced ${remoteAddOns.size} add-ons from remote")
         }
+
+        syncPreferences.updateLastAddOnsSyncTimestamp()
+
+        // Also push any local changes
+        pushUnsyncedToRemote()
+
+        Result.success(remoteAddOns.size)
+    } catch (e: Exception) {
+        Timber.e(e, "Failed to sync add-ons from remote")
+        Result.failure(e)
     }
 
     /**
@@ -372,14 +330,14 @@ class AddOnRepositoryImpl @Inject constructor(
             if (unsynced.isEmpty()) {
                 return Result.success(0)
             }
-            
+
             val result = remoteDataSource.uploadAddOns(unsynced)
             result.onSuccess { count ->
                 val ids = unsynced.map { it.id }
                 addOnDao.markMultipleAsSynced(ids)
                 Timber.d("Pushed $count add-ons to remote")
             }
-            
+
             result
         } catch (e: Exception) {
             Timber.e(e, "Failed to push add-ons to remote")
@@ -390,31 +348,27 @@ class AddOnRepositoryImpl @Inject constructor(
     /**
      * Full sync - pull all from remote and push all local changes.
      */
-    suspend fun fullSync(): Result<Unit> {
-        return try {
-            // Pull from remote (full, not delta)
-            val remoteAddOns = remoteDataSource.fetchAddOns().getOrThrow()
-            addOnDao.insertAddOns(remoteAddOns)
-            
-            // Push local changes
-            pushUnsyncedToRemote()
-            
-            syncPreferences.updateLastAddOnsSyncTimestamp()
-            
-            Timber.d("Full add-ons sync completed")
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Timber.e(e, "Failed to perform full add-ons sync")
-            Result.failure(e)
-        }
+    suspend fun fullSync(): Result<Unit> = try {
+        // Pull from remote (full, not delta)
+        val remoteAddOns = remoteDataSource.fetchAddOns().getOrThrow()
+        addOnDao.insertAddOns(remoteAddOns)
+
+        // Push local changes
+        pushUnsyncedToRemote()
+
+        syncPreferences.updateLastAddOnsSyncTimestamp()
+
+        Timber.d("Full add-ons sync completed")
+        Result.success(Unit)
+    } catch (e: Exception) {
+        Timber.e(e, "Failed to perform full add-ons sync")
+        Result.failure(e)
     }
 
     /**
      * Get count of unsynced add-ons.
      */
-    suspend fun getUnsyncedCount(): Int {
-        return addOnDao.getUnsyncedCount()
-    }
+    suspend fun getUnsyncedCount(): Int = addOnDao.getUnsyncedCount()
 
     /**
      * Cleanup deleted add-ons that have been synced.

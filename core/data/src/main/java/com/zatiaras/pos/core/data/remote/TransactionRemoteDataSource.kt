@@ -14,7 +14,7 @@ import javax.inject.Singleton
 
 /**
  * Remote data source for Transaction operations with Supabase.
- * 
+ *
  * Design Principles:
  * - Separate Read/Write DTOs
  * - Exclude timestamps from Write DTOs (Supabase handles them)
@@ -22,7 +22,7 @@ import javax.inject.Singleton
  */
 @Singleton
 class TransactionRemoteDataSource @Inject constructor(
-    private val postgrest: Postgrest
+    private val postgrest: Postgrest,
 ) {
     companion object {
         private const val TABLE_TRANSAKSI = "transaksi"
@@ -36,7 +36,7 @@ class TransactionRemoteDataSource @Inject constructor(
      */
     suspend fun uploadTransaction(
         transaction: TransactionEntity,
-        items: List<TransactionItemEntity>
+        items: List<TransactionItemEntity>,
     ): Result<Unit> = withContext(Dispatchers.IO) {
         try {
             // Upload transaction header using Write DTO
@@ -62,7 +62,7 @@ class TransactionRemoteDataSource @Inject constructor(
      * Upload multiple transactions in batch.
      */
     suspend fun uploadTransactions(
-        transactions: List<Pair<TransactionEntity, List<TransactionItemEntity>>>
+        transactions: List<Pair<TransactionEntity, List<TransactionItemEntity>>>,
     ): Result<Int> = withContext(Dispatchers.IO) {
         try {
             if (transactions.isEmpty()) return@withContext Result.success(0)
@@ -91,72 +91,70 @@ class TransactionRemoteDataSource @Inject constructor(
     suspend fun fetchTransactionsExtended(
         lastSyncTimestamp: Long = 0,
         page: Int = 0,
-        pageSize: Int = 50
-    ): Result<List<Pair<TransactionEntity, List<TransactionItemEntity>>>> = 
-        withContext(Dispatchers.IO) {
-            try {
-                if (lastSyncTimestamp > 0L) {
-                    Timber.d("Delta transaction sync is not implemented yet, running paged full pull")
-                }
-                val from = page * pageSize
-                val to = from + pageSize - 1
-                
-                // 1. Fetch transaction headers
-                val transactions = postgrest.from(TABLE_TRANSAKSI)
-                    .select {
-                        range(from.toLong(), to.toLong())
-                        order("created_at", Order.ASCENDING)
-                    }
-                    .decodeList<TransaksiReadDto>()
-
-                if (transactions.isEmpty()) {
-                    return@withContext Result.success(emptyList())
-                }
-
-                // 2. Fetch ALL items for these transactions in one batch query
-                val transactionIds = transactions.map { it.id }
-                val allItems = postgrest.from(TABLE_TRANSAKSI_ITEM)
-                    .select {
-                        filter { isIn("transaksi_id", transactionIds) }
-                    }
-                    .decodeList<TransaksiItemReadDto>()
-
-                // 3. Group items by transaction ID
-                val itemsByTransactionId = allItems
-                    .map { it.toEntity() }
-                    .groupBy { it.transactionId }
-
-                // 4. Pair each transaction with its items
-                val results = transactions.map { dto ->
-                    val entity = dto.toEntity()
-                    val items = itemsByTransactionId[entity.id] ?: emptyList()
-                    Pair(entity, items)
-                }
-                
-                Timber.d("Fetched ${results.size} transactions with ${allItems.size} items (page $page)")
-                Result.success(results)
-            } catch (e: Exception) {
-                Timber.e(e, "Failed to fetch transactions")
-                Result.failure(e)
+        pageSize: Int = 50,
+    ): Result<List<Pair<TransactionEntity, List<TransactionItemEntity>>>> = withContext(Dispatchers.IO) {
+        try {
+            if (lastSyncTimestamp > 0L) {
+                Timber.d("Delta transaction sync is not implemented yet, running paged full pull")
             }
-        }
+            val from = page * pageSize
+            val to = from + pageSize - 1
 
-    suspend fun fetchTransactionItems(transactionId: String): Result<List<TransactionItemEntity>> =
-        withContext(Dispatchers.IO) {
-            try {
-                val response = postgrest.from(TABLE_TRANSAKSI_ITEM)
-                    .select {
-                        filter { eq("transaksi_id", transactionId) }
-                    }
-                    .decodeList<TransaksiItemReadDto>()
+            // 1. Fetch transaction headers
+            val transactions = postgrest.from(TABLE_TRANSAKSI)
+                .select {
+                    range(from.toLong(), to.toLong())
+                    order("created_at", Order.ASCENDING)
+                }
+                .decodeList<TransaksiReadDto>()
 
-                val entities = response.map { it.toEntity() }
-                Result.success(entities)
-            } catch (e: Exception) {
-                Timber.e(e, "Failed to fetch items for: $transactionId")
-                Result.failure(e)
+            if (transactions.isEmpty()) {
+                return@withContext Result.success(emptyList())
             }
+
+            // 2. Fetch ALL items for these transactions in one batch query
+            val transactionIds = transactions.map { it.id }
+            val allItems = postgrest.from(TABLE_TRANSAKSI_ITEM)
+                .select {
+                    filter { isIn("transaksi_id", transactionIds) }
+                }
+                .decodeList<TransaksiItemReadDto>()
+
+            // 3. Group items by transaction ID
+            val itemsByTransactionId = allItems
+                .map { it.toEntity() }
+                .groupBy { it.transactionId }
+
+            // 4. Pair each transaction with its items
+            val results = transactions.map { dto ->
+                val entity = dto.toEntity()
+                val items = itemsByTransactionId[entity.id] ?: emptyList()
+                Pair(entity, items)
+            }
+
+            Timber.d("Fetched ${results.size} transactions with ${allItems.size} items (page $page)")
+            Result.success(results)
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to fetch transactions")
+            Result.failure(e)
         }
+    }
+
+    suspend fun fetchTransactionItems(transactionId: String): Result<List<TransactionItemEntity>> = withContext(Dispatchers.IO) {
+        try {
+            val response = postgrest.from(TABLE_TRANSAKSI_ITEM)
+                .select {
+                    filter { eq("transaksi_id", transactionId) }
+                }
+                .decodeList<TransaksiItemReadDto>()
+
+            val entities = response.map { it.toEntity() }
+            Result.success(entities)
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to fetch items for: $transactionId")
+            Result.failure(e)
+        }
+    }
 }
 
 // ==================== DTOs: READ ====================
@@ -178,7 +176,7 @@ data class TransaksiReadDto(
     @SerialName("customer_name") val customerName: String? = null,
     @SerialName("created_at") val createdAt: String? = null,
     @SerialName("updated_at") val updatedAt: String? = null,
-    @SerialName("is_deleted") val isDeleted: Boolean = false
+    @SerialName("is_deleted") val isDeleted: Boolean = false,
 ) {
     fun toEntity(): TransactionEntity = TransactionEntity(
         id = id,
@@ -197,7 +195,7 @@ data class TransaksiReadDto(
         createdAt = parseTimestamp(createdAt),
         updatedAt = parseTimestamp(updatedAt),
         isSynced = true,
-        isDeleted = isDeleted
+        isDeleted = isDeleted,
     )
 }
 
@@ -210,7 +208,7 @@ data class TransaksiItemReadDto(
     @SerialName("produk_price") val productPrice: Long,
     val quantity: Int,
     val subtotal: Long,
-    val notes: String? = null
+    val notes: String? = null,
 ) {
     fun toEntity(): TransactionItemEntity = TransactionItemEntity(
         id = id,
@@ -220,7 +218,7 @@ data class TransaksiItemReadDto(
         productPrice = productPrice,
         quantity = quantity,
         subtotal = subtotal,
-        notes = notes
+        notes = notes,
     )
 }
 
@@ -241,7 +239,7 @@ data class TransaksiWriteDto(
     @SerialName("change_amount") val changeAmount: Long,
     val notes: String?,
     @SerialName("customer_name") val customerName: String?,
-    @SerialName("is_deleted") val isDeleted: Boolean
+    @SerialName("is_deleted") val isDeleted: Boolean,
 )
 
 @Serializable
@@ -253,7 +251,7 @@ data class TransaksiItemWriteDto(
     @SerialName("produk_price") val productPrice: Long,
     val quantity: Int,
     val subtotal: Long,
-    val notes: String?
+    val notes: String?,
 )
 
 // ==================== MAPPERS ====================
@@ -272,7 +270,7 @@ fun TransactionEntity.toWriteDto(): TransaksiWriteDto = TransaksiWriteDto(
     changeAmount = changeAmount,
     notes = notes,
     customerName = customerName,
-    isDeleted = isDeleted
+    isDeleted = isDeleted,
 )
 
 fun TransactionItemEntity.toWriteDto(): TransaksiItemWriteDto = TransaksiItemWriteDto(
@@ -283,7 +281,7 @@ fun TransactionItemEntity.toWriteDto(): TransaksiItemWriteDto = TransaksiItemWri
     productPrice = productPrice,
     quantity = quantity,
     subtotal = subtotal,
-    notes = notes
+    notes = notes,
 )
 
 private fun parseTimestamp(isoString: String?): Long {

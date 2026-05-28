@@ -1,7 +1,7 @@
 package com.zatiaras.pos.feature.pos.presentation.history
 
-import com.zatiaras.pos.feature.pos.domain.model.Transaction
 import com.zatiaras.pos.feature.pos.domain.model.PaymentMethod
+import com.zatiaras.pos.feature.pos.domain.model.Transaction
 
 data class TransactionHistoryUiState(
     val isLoading: Boolean = true,
@@ -12,21 +12,21 @@ data class TransactionHistoryUiState(
     val showDeleteConfirmDialog: Boolean = false,
     val selectedTransaction: Transaction? = null,
     val showDetailDialog: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
 ) {
     val displayedTransactions: List<Transaction>
         get() {
             var result = allTransactions
-            
+
             // Search filter
             if (searchQuery.isNotBlank()) {
                 val query = searchQuery.lowercase()
-                result = result.filter { 
+                result = result.filter {
                     it.notes?.lowercase()?.contains(query) == true ||
-                    it.transactionNumber.lowercase().contains(query) 
+                        it.transactionNumber.lowercase().contains(query)
                 }
             }
-            
+
             // Payment filter
             if (paymentFilter != PaymentFilter.ALL) {
                 result = result.filter {
@@ -37,7 +37,7 @@ data class TransactionHistoryUiState(
                     }
                 }
             }
-            
+
             return result
         }
 }
@@ -45,5 +45,5 @@ data class TransactionHistoryUiState(
 enum class PaymentFilter(val label: String) {
     ALL("Semua"),
     QRIS("QRIS"),
-    TUNAI("Tunai")
+    TUNAI("Tunai"),
 }

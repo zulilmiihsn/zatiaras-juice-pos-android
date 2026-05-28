@@ -13,11 +13,11 @@ import javax.inject.Singleton
 
 /**
  * Hilt module for WorkManager configuration.
- * 
+ *
  * Provides:
  * - WorkManager instance
  * - WorkManager Configuration with HiltWorkerFactory
- * 
+ *
  * Note: The Application class must implement Configuration.Provider
  * and return the configuration from this module.
  */
@@ -28,19 +28,15 @@ object WorkManagerModule {
     @Provides
     @Singleton
     fun provideWorkManagerConfiguration(
-        workerFactory: HiltWorkerFactory
-    ): Configuration {
-        return Configuration.Builder()
-            .setWorkerFactory(workerFactory)
-            .setMinimumLoggingLevel(android.util.Log.DEBUG)
-            .build()
-    }
+        workerFactory: HiltWorkerFactory,
+    ): Configuration = Configuration.Builder()
+        .setWorkerFactory(workerFactory)
+        .setMinimumLoggingLevel(android.util.Log.DEBUG)
+        .build()
 
     @Provides
     @Singleton
     fun provideWorkManager(
-        @ApplicationContext context: Context
-    ): WorkManager {
-        return WorkManager.getInstance(context)
-    }
+        @ApplicationContext context: Context,
+    ): WorkManager = WorkManager.getInstance(context)
 }

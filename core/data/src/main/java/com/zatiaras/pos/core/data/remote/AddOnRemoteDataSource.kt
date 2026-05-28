@@ -16,14 +16,14 @@ import javax.inject.Singleton
 
 /**
  * Remote data source for Add-Ons (Tambahan) operations with Supabase.
- * 
+ *
  * Design Principles:
  * - Read DTO with String timestamps
  * - Write DTO without timestamps
  */
 @Singleton
 class AddOnRemoteDataSource @Inject constructor(
-    private val postgrest: Postgrest
+    private val postgrest: Postgrest,
 ) {
     companion object {
         private const val TABLE_TAMBAHAN = "tambahan"
@@ -31,69 +31,65 @@ class AddOnRemoteDataSource @Inject constructor(
 
     // ==================== PULL ====================
 
-    suspend fun fetchAddOns(lastSyncTimestamp: Long = 0): Result<List<AddOnEntity>> = 
-        withContext(Dispatchers.IO) {
-            try {
-                if (lastSyncTimestamp > 0L) {
-                    Timber.d("Delta add-on sync is not implemented yet, running full pull")
-                }
-                val response = postgrest.from(TABLE_TAMBAHAN)
-                    .select()
-                    .decodeList<TambahanReadDto>()
-                
-                val entities = response.map { it.toEntity() }
-                Timber.d("Fetched ${entities.size} add-ons from remote")
-                Result.success(entities)
-            } catch (e: Exception) {
-                Timber.e(e, "Failed to fetch add-ons from remote")
-                Result.failure(e)
+    suspend fun fetchAddOns(lastSyncTimestamp: Long = 0): Result<List<AddOnEntity>> = withContext(Dispatchers.IO) {
+        try {
+            if (lastSyncTimestamp > 0L) {
+                Timber.d("Delta add-on sync is not implemented yet, running full pull")
             }
+            val response = postgrest.from(TABLE_TAMBAHAN)
+                .select()
+                .decodeList<TambahanReadDto>()
+
+            val entities = response.map { it.toEntity() }
+            Timber.d("Fetched ${entities.size} add-ons from remote")
+            Result.success(entities)
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to fetch add-ons from remote")
+            Result.failure(e)
         }
+    }
 
     // ==================== PUSH ====================
 
-    suspend fun uploadAddOn(addOn: AddOnEntity): Result<Unit> = 
-        withContext(Dispatchers.IO) {
-            try {
-                val dto = addOn.toWriteDto()
-                postgrest.from(TABLE_TAMBAHAN).upsert(dto)
-                Timber.d("Uploaded add-on to remote: ${addOn.id}")
-                Result.success(Unit)
-            } catch (e: Exception) {
-                Timber.e(e, "Failed to upload add-on to remote: ${addOn.id}")
-                Result.failure(e)
-            }
+    suspend fun uploadAddOn(addOn: AddOnEntity): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            val dto = addOn.toWriteDto()
+            postgrest.from(TABLE_TAMBAHAN).upsert(dto)
+            Timber.d("Uploaded add-on to remote: ${addOn.id}")
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to upload add-on to remote: ${addOn.id}")
+            Result.failure(e)
         }
+    }
 
-    suspend fun uploadAddOns(addOns: List<AddOnEntity>): Result<Int> = 
-        withContext(Dispatchers.IO) {
-            if (addOns.isEmpty()) return@withContext Result.success(0)
-            try {
-                val dtos = addOns.map { it.toWriteDto() }
-                postgrest.from(TABLE_TAMBAHAN).upsert(dtos)
-                Timber.d("Uploaded ${dtos.size} add-ons in batch")
-                Result.success(dtos.size)
-            } catch (e: Exception) {
-                Timber.e(e, "Failed to batch upload add-ons")
-                Result.failure(e)
-            }
+    suspend fun uploadAddOns(addOns: List<AddOnEntity>): Result<Int> = withContext(Dispatchers.IO) {
+        if (addOns.isEmpty()) return@withContext Result.success(0)
+        try {
+            val dtos = addOns.map { it.toWriteDto() }
+            postgrest.from(TABLE_TAMBAHAN).upsert(dtos)
+            Timber.d("Uploaded ${dtos.size} add-ons in batch")
+            Result.success(dtos.size)
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to batch upload add-ons")
+            Result.failure(e)
         }
+    }
 
-    suspend fun deleteAddOn(addOnId: String): Result<Unit> = 
-        withContext(Dispatchers.IO) {
-            try {
-                postgrest.from(TABLE_TAMBAHAN).update(
-                    TambahanSoftDeleteDto(isActive = false)
-                ) {
-                    filter { eq("id", addOnId) }
-                }
-                Timber.d("Soft deleted add-on on remote: $addOnId")
-                Result.success(Unit)
-            } catch (e: Exception) {
-                Timber.e(e, "Failed to delete add-on on remote: $addOnId")
-                Result.failure(e)
+    suspend fun deleteAddOn(addOnId: String): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            postgrest.from(TABLE_TAMBAHAN).update(
+                TambahanSoftDeleteDto(isActive = false),
+            ) {
+                filter { eq("id", addOnId) }
             }
+            Timber.d("Soft deleted add-on on remote: $addOnId")
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to delete add-on on remote: $addOnId")
+            Result.failure(e)
         }
+    }
 }
 
 // ==================== DTOs ====================
@@ -108,7 +104,7 @@ data class TambahanReadDto(
     val icon: String? = null,
     @SerialName("is_active") val isActive: Boolean = true,
     @SerialName("created_at") val createdAt: JsonElement? = null,
-    @SerialName("updated_at") val updatedAt: JsonElement? = null
+    @SerialName("updated_at") val updatedAt: JsonElement? = null,
 ) {
     fun toEntity(): AddOnEntity = AddOnEntity(
         id = id,
@@ -121,7 +117,7 @@ data class TambahanReadDto(
         createdAt = parseJsonTimestamp(createdAt),
         updatedAt = parseJsonTimestamp(updatedAt),
         isSynced = true,
-        isDeleted = !isActive
+        isDeleted = !isActive,
     )
 }
 
@@ -133,12 +129,12 @@ data class TambahanWriteDto(
     @SerialName("kategori") val category: String?,
     @SerialName("sort_order") val sortOrder: Int,
     val icon: String?,
-    @SerialName("is_active") val isActive: Boolean
+    @SerialName("is_active") val isActive: Boolean,
 )
 
 @Serializable
 data class TambahanSoftDeleteDto(
-    @SerialName("is_active") val isActive: Boolean
+    @SerialName("is_active") val isActive: Boolean,
 )
 
 // ==================== MAPPERS ====================
@@ -150,7 +146,7 @@ fun AddOnEntity.toWriteDto(): TambahanWriteDto = TambahanWriteDto(
     category = category,
     sortOrder = sortOrder,
     icon = icon,
-    isActive = isActive && !isDeleted
+    isActive = isActive && !isDeleted,
 )
 
 /**

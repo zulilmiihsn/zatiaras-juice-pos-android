@@ -2,10 +2,10 @@ package com.zatiaras.pos.core.domain.model
 
 /**
  * Domain model for Product.
- * 
+ *
  * Used across layers: presentation, domain, data.
  * Independent of database/API implementation details.
- * 
+ *
  * Design: price is Long (IDR, no decimals) for precision and simplicity.
  */
 data class Product(
@@ -19,16 +19,15 @@ data class Product(
     val description: String? = null,
     val isActive: Boolean = true,
     val createdAt: Long = System.currentTimeMillis(),
-    val updatedAt: Long = System.currentTimeMillis()
+    val updatedAt: Long = System.currentTimeMillis(),
 ) {
 
-    
     /**
      * Returns true if this product is a beverage (minuman) and supports sugar/ice customization.
      */
     val supportsSugarIce: Boolean
         get() = type.supportsSugarIce
-    
+
     /**
      * Returns true if this product has available add-ons.
      */

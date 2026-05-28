@@ -17,5 +17,5 @@ data class CategoryEntity(
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis(),
     val isActive: Boolean = true,
-    val isSynced: Boolean = false
+    val isSynced: Boolean = false,
 )

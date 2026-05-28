@@ -12,26 +12,25 @@ data class DashboardAnalyticsResult(
     val peakHours: String,
     val averageOrderValue: Long,
     val averageItemsPerTransaction: Double,
-    val busiestDay: String
+    val busiestDay: String,
 )
 
 class CalculateDashboardAnalyticsUseCase @Inject constructor() {
     operator fun invoke(
         stats: DashboardStats,
-        weeklyRevenue: List<DailyRevenue>
+        weeklyRevenue: List<DailyRevenue>,
     ): DashboardAnalyticsResult {
         val avgTrans = calculateAverageTransactions(weeklyRevenue)
-        val pkHours = calculatePeakHours()
         val avgOrder = calculateAverageOrderValue(stats)
         val avgItems = calculateAverageItemsPerTransaction(stats)
         val busyDay = calculateBusiestDay(weeklyRevenue)
-        
+
         return DashboardAnalyticsResult(
             averageTransactionsPerDay = avgTrans,
-            peakHours = pkHours,
+            peakHours = DEFAULT_PEAK_HOURS,
             averageOrderValue = avgOrder,
             averageItemsPerTransaction = avgItems,
-            busiestDay = busyDay
+            busiestDay = busyDay,
         )
     }
 
@@ -39,10 +38,6 @@ class CalculateDashboardAnalyticsUseCase @Inject constructor() {
         if (weeklyRevenue.isEmpty()) return 0
         val totalTransactions = weeklyRevenue.sumOf { it.transactionCount }
         return totalTransactions / weeklyRevenue.size
-    }
-
-    private fun calculatePeakHours(): String {
-        return "-"
     }
 
     private fun calculateAverageOrderValue(stats: DashboardStats): Long {
@@ -61,5 +56,9 @@ class CalculateDashboardAnalyticsUseCase @Inject constructor() {
         return busiestDay?.let {
             SimpleDateFormat("EEEE", LocaleUtils.LOCALE_ID).format(Date(it.date))
         } ?: "-"
+    }
+
+    private companion object {
+        const val DEFAULT_PEAK_HOURS = "-"
     }
 }

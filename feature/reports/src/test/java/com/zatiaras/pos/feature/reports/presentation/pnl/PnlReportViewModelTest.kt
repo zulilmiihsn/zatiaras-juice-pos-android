@@ -48,7 +48,7 @@ class PnlReportViewModelTest {
         grossProfit = 700_000,
         tax = 3_500,
         netProfit = 696_500,
-        transactionCount = 25
+        transactionCount = 25,
     )
 
     @Before
@@ -62,7 +62,7 @@ class PnlReportViewModelTest {
         printerPreferences = mockk(relaxed = true)
 
         coEvery { appSettingsRepository.observeSettings() } returns flowOf(
-            AppSettingsEntity(defaultTaxPercentage = 0.5)
+            AppSettingsEntity(defaultTaxPercentage = 0.5),
         )
         coEvery { generateProfitLossReportUseCase.invoke(any(), any(), any()) } returns Result.success(testReport)
     }
@@ -72,15 +72,13 @@ class PnlReportViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun createViewModel(): PnlReportViewModel {
-        return PnlReportViewModel(
-            generateProfitLossReportUseCase = generateProfitLossReportUseCase,
-            pdfExportService = pdfExportService,
-            csvExportService = csvExportService,
-            appSettingsRepository = appSettingsRepository,
-            printerPreferences = printerPreferences
-        )
-    }
+    private fun createViewModel(): PnlReportViewModel = PnlReportViewModel(
+        generateProfitLossReportUseCase = generateProfitLossReportUseCase,
+        pdfExportService = pdfExportService,
+        csvExportService = csvExportService,
+        appSettingsRepository = appSettingsRepository,
+        printerPreferences = printerPreferences,
+    )
 
     @Test
     fun `init should load report and stop loading`() = runTest {

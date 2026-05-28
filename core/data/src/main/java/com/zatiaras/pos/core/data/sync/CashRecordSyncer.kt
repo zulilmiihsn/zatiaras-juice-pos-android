@@ -9,7 +9,7 @@ import javax.inject.Singleton
 
 /**
  * Syncer implementation for CashRecord entities.
- * 
+ *
  * Handles two-way sync:
  * - PUSH: Upload unsynced local cash records to Supabase
  * - PULL: Fetch remote cash records and apply Last-Write-Wins
@@ -18,7 +18,7 @@ import javax.inject.Singleton
 class CashRecordSyncer @Inject constructor(
     private val cashRecordDao: CashRecordDao,
     private val cashRecordRemoteDataSource: CashRecordRemoteDataSource,
-    private val syncPreferences: SyncPreferences
+    private val syncPreferences: SyncPreferences,
 ) : EntitySyncer {
 
     override val syncType: SyncType = SyncType.CASH_RECORDS
@@ -32,7 +32,7 @@ class CashRecordSyncer @Inject constructor(
         // 1. PUSH: Upload unsynced local cash records
         // ──────────────────────────────────────────────
         val unsyncedRecords = cashRecordDao.getUnsynced()
-        
+
         if (unsyncedRecords.isNotEmpty()) {
             Timber.d("CashRecordSyncer: Found ${unsyncedRecords.size} unsynced cash records")
 
@@ -47,7 +47,7 @@ class CashRecordSyncer @Inject constructor(
                 onFailure = { error ->
                     failed = unsyncedRecords.size
                     Timber.e(error, "CashRecordSyncer: Failed to push cash records")
-                }
+                },
             )
         }
 
@@ -89,7 +89,7 @@ class CashRecordSyncer @Inject constructor(
             onFailure = { error ->
                 failed++
                 Timber.e(error, "CashRecordSyncer: Failed to pull cash records")
-            }
+            },
         )
 
         Timber.d("CashRecordSyncer: Completed — uploaded=$uploaded, downloaded=$downloaded, failed=$failed")
@@ -98,11 +98,9 @@ class CashRecordSyncer @Inject constructor(
             type = SyncType.CASH_RECORDS,
             uploaded = uploaded,
             downloaded = downloaded,
-            failed = failed
+            failed = failed,
         )
     }
 
-    override suspend fun getPendingCount(): Int {
-        return cashRecordDao.getUnsyncedCount()
-    }
+    override suspend fun getPendingCount(): Int = cashRecordDao.getUnsyncedCount()
 }

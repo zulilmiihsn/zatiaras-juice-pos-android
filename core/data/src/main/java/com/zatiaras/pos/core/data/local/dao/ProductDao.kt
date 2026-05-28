@@ -23,21 +23,25 @@ interface ProductDao {
      * Get all active products, ordered by creation date (newest first).
      * Returns Flow for reactive UI updates.
      */
-    @Query("""
+    @Query(
+        """
         SELECT * FROM products 
         WHERE isActive = 1 
         ORDER BY createdAt DESC
-    """)
+    """,
+    )
     fun getAllActive(): Flow<List<ProductEntity>>
 
     /**
      * Get products filtered by category.
      */
-    @Query("""
+    @Query(
+        """
         SELECT * FROM products 
         WHERE categoryId = :categoryId AND isActive = 1
         ORDER BY createdAt DESC
-    """)
+    """,
+    )
     fun getByCategory(categoryId: String): Flow<List<ProductEntity>>
 
     /**
@@ -76,11 +80,13 @@ interface ProductDao {
      * Soft delete: set isActive = false.
      * Also updates the timestamp for sync.
      */
-    @Query("""
+    @Query(
+        """
         UPDATE products 
         SET isActive = 0, updatedAt = :timestamp, isSynced = 0 
         WHERE id = :id
-    """)
+    """,
+    )
     suspend fun softDelete(id: String, timestamp: Long = System.currentTimeMillis())
 
     /**
@@ -98,42 +104,48 @@ interface ProductDao {
     /**
      * Set category for multiple products.
      */
-    @Query("""
+    @Query(
+        """
         UPDATE products 
         SET categoryId = :categoryId, updatedAt = :timestamp, isSynced = 0 
         WHERE id IN (:productIds)
-    """)
+    """,
+    )
     suspend fun setCategoryForProducts(
-        categoryId: String, 
-        productIds: List<String>, 
-        timestamp: Long = System.currentTimeMillis()
+        categoryId: String,
+        productIds: List<String>,
+        timestamp: Long = System.currentTimeMillis(),
     )
 
     /**
      * Clear category from products that have this category but are not in the list.
      */
-    @Query("""
+    @Query(
+        """
         UPDATE products 
         SET categoryId = NULL, updatedAt = :timestamp, isSynced = 0 
         WHERE categoryId = :categoryId AND id NOT IN (:keepProductIds)
-    """)
+    """,
+    )
     suspend fun clearCategoryExcept(
-        categoryId: String, 
+        categoryId: String,
         keepProductIds: List<String>,
-        timestamp: Long = System.currentTimeMillis()
+        timestamp: Long = System.currentTimeMillis(),
     )
 
     /**
      * Clear category from products that have this category (e.g. when category is deleted).
      */
-    @Query("""
+    @Query(
+        """
         UPDATE products 
         SET categoryId = NULL, updatedAt = :timestamp, isSynced = 0 
         WHERE categoryId = :categoryId
-    """)
+    """,
+    )
     suspend fun clearCategoryFromProducts(
-        categoryId: String, 
-        timestamp: Long = System.currentTimeMillis()
+        categoryId: String,
+        timestamp: Long = System.currentTimeMillis(),
     )
 
     // ==================== SYNC ====================
@@ -167,26 +179,30 @@ interface ProductDao {
     /**
      * Full-text search on product name and description.
      * Uses FTS4 for fast, typo-tolerant search.
-     * 
+     *
      * Query format: "kopi*" for prefix match.
      */
-    @Query("""
+    @Query(
+        """
         SELECT products.* FROM products
         JOIN products_fts ON products.rowid = products_fts.rowid
         WHERE products_fts MATCH :query AND products.isActive = 1
         ORDER BY products.createdAt DESC
-    """)
+    """,
+    )
     fun search(query: String): Flow<List<ProductEntity>>
 
     /**
      * Simple LIKE search for basic queries.
      * Fallback when FTS is not suitable.
      */
-    @Query("""
+    @Query(
+        """
         SELECT * FROM products 
         WHERE isActive = 1 AND (name LIKE '%' || :query || '%' OR description LIKE '%' || :query || '%')
         ORDER BY createdAt DESC
-    """)
+    """,
+    )
     fun searchSimple(query: String): Flow<List<ProductEntity>>
 
     // ==================== PAGINATION ====================
@@ -195,32 +211,38 @@ interface ProductDao {
      * Get all active products with pagination support.
      * Room automatically generates PagingSource implementation.
      */
-    @Query("""
+    @Query(
+        """
         SELECT * FROM products 
         WHERE isActive = 1 
         ORDER BY createdAt DESC
-    """)
+    """,
+    )
     fun getAllActivePaged(): PagingSource<Int, ProductEntity>
 
     /**
      * Get products filtered by category with pagination.
      */
-    @Query("""
+    @Query(
+        """
         SELECT * FROM products 
         WHERE categoryId = :categoryId AND isActive = 1
         ORDER BY createdAt DESC
-    """)
+    """,
+    )
     fun getByCategoryPaged(categoryId: String): PagingSource<Int, ProductEntity>
 
     /**
      * Search products with pagination.
      * Uses simple LIKE for better compatibility with paging.
      */
-    @Query("""
+    @Query(
+        """
         SELECT * FROM products 
         WHERE isActive = 1 AND (name LIKE '%' || :query || '%' OR description LIKE '%' || :query || '%')
         ORDER BY createdAt DESC
-    """)
+    """,
+    )
     fun searchPaged(query: String): PagingSource<Int, ProductEntity>
 
     /**

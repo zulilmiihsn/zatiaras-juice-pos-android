@@ -2,7 +2,7 @@ package com.zatiaras.pos.core.domain.model
 
 /**
  * Universal time period filter for both reports and cash records.
- * 
+ *
  * This enum is shared across modules to maintain consistency
  * and follow DRY principle.
  */
@@ -13,8 +13,9 @@ enum class DatePeriod {
     THIS_MONTH,
     LAST_7_DAYS,
     LAST_30_DAYS,
-    CUSTOM;
-    
+    CUSTOM,
+    ;
+
     /**
      * Get display name in Indonesian.
      */

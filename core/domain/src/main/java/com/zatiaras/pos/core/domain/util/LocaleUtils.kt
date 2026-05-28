@@ -4,7 +4,7 @@ import java.util.Locale
 
 /**
  * Centralized locale configuration for the application.
- * 
+ *
  * All formatters, date/time displays, and number formatting should use
  * this constant to ensure consistency across the app.
  */

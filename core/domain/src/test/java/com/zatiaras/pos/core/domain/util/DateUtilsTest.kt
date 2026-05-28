@@ -59,14 +59,14 @@ class DateUtilsTest {
 
         // Assert
         assertTrue("Start should be strictly less than End", start < end)
-        
+
         // Exact 24 hours difference? Or 23/25 depending on DST, but typically 24 in ms
         val expectedDiffMs = 24 * 60 * 60 * 1000L
         val actualDiffMs = end - start
-        
+
         // At minimum we can assert the time difference is somewhat exactly 1 day duration
         assertTrue("Difference should be around 24 hours", actualDiffMs == expectedDiffMs || actualDiffMs == 23 * 3600 * 1000L || actualDiffMs == 25 * 3600 * 1000L)
-        
+
         val startZDT = Instant.ofEpochMilli(start).atZone(testZoneId)
         val endZDT = Instant.ofEpochMilli(end).atZone(testZoneId)
 
@@ -82,7 +82,7 @@ class DateUtilsTest {
 
         // Assert
         assertTrue("Start should be less than End", start < end)
-        
+
         val startZDT = Instant.ofEpochMilli(start).atZone(testZoneId)
         val endZDT = Instant.ofEpochMilli(end).atZone(testZoneId)
 
@@ -115,8 +115,8 @@ class DateUtilsTest {
         val formattedDate = DateUtils.formatDateReadable(timestamp)
 
         // Assert
-        // Given thatLOCALE_ID is likely Indonesian, "Feb" might be "Feb" or "Peb" depending on device, 
-        // but typically "Feb" is standard. Let's just check length and components to avoid strict locale issues 
+        // Given thatLOCALE_ID is likely Indonesian, "Feb" might be "Feb" or "Peb" depending on device,
+        // but typically "Feb" is standard. Let's just check length and components to avoid strict locale issues
         // without mocking.
         assertTrue(formattedDate.contains("21"))
         assertTrue(formattedDate.contains("2026"))

@@ -19,7 +19,7 @@ import javax.inject.Inject
 @HiltViewModel
 class ReportChatViewModel @Inject constructor(
     private val analyzeReportUseCase: AnalyzeReportUseCase,
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(
@@ -27,10 +27,10 @@ class ReportChatViewModel @Inject constructor(
             messages = listOf(
                 ChatMessage(
                     content = "Halo! Saya asisten AI Zatiaras. Anda bisa bertanya tentang performa penjualan, tren produk, atau analisis laba rugi.",
-                    isUser = false
-                )
-            )
-        )
+                    isUser = false,
+                ),
+            ),
+        ),
     )
     val uiState: StateFlow<ReportChatUiState> = _uiState.asStateFlow()
 
@@ -44,10 +44,10 @@ class ReportChatViewModel @Inject constructor(
                     messages = listOf(
                         ChatMessage(
                             content = "Halo! Saya asisten AI Zatiaras. Anda bisa bertanya tentang performa penjualan, tren produk, atau analisis laba rugi.",
-                            isUser = false
-                        )
+                            isUser = false,
+                        ),
                     ),
-                    inputText = ""
+                    inputText = "",
                 )
             }
         }
@@ -62,7 +62,7 @@ class ReportChatViewModel @Inject constructor(
         val userMsg = ChatMessage(
             content = content,
             isUser = true,
-            imageUrl = imageUri
+            imageUrl = imageUri,
         )
 
         _uiState.update {
@@ -71,7 +71,7 @@ class ReportChatViewModel @Inject constructor(
                 isLoading = true,
                 error = null,
                 selectedImageUri = null,
-                inputText = ""
+                inputText = "",
             )
         }
 
@@ -83,14 +83,14 @@ class ReportChatViewModel @Inject constructor(
             analyzeReportUseCase(
                 query = content,
                 history = _uiState.value.messages.dropLast(1),
-                imageBase64 = imageBase64
+                imageBase64 = imageBase64,
             ).fold(
                 onSuccess = { aiResponse ->
                     val aiMsg = ChatMessage(content = aiResponse, isUser = false)
                     _uiState.update {
                         it.copy(
                             messages = it.messages + aiMsg,
-                            isLoading = false
+                            isLoading = false,
                         )
                     }
                 },
@@ -98,31 +98,31 @@ class ReportChatViewModel @Inject constructor(
                     Timber.e(error, "Failed to get AI response")
                     val errorMsg = ChatMessage(
                         content = "Maaf, saya sedang mengalami kendala teknis (${error.message}). Silakan coba lagi nanti.",
-                        isUser = false
+                        isUser = false,
                     )
                     _uiState.update {
                         it.copy(
                             messages = it.messages + errorMsg,
-                            isLoading = false
+                            isLoading = false,
                         )
                     }
-                }
+                },
             )
         }
     }
 
-    private fun encodeImageToBase64(uriString: String): String? {
-        return try {
-            val uri = Uri.parse(uriString)
-            val inputStream = context.contentResolver.openInputStream(uri)
-            val bytes = inputStream?.readBytes()
-            inputStream?.close()
-            if (bytes != null) {
-                Base64.encodeToString(bytes, Base64.NO_WRAP)
-            } else null
-        } catch (e: Exception) {
-            Timber.e(e, "Failed to encode image")
+    private fun encodeImageToBase64(uriString: String): String? = try {
+        val uri = Uri.parse(uriString)
+        val inputStream = context.contentResolver.openInputStream(uri)
+        val bytes = inputStream?.readBytes()
+        inputStream?.close()
+        if (bytes != null) {
+            Base64.encodeToString(bytes, Base64.NO_WRAP)
+        } else {
             null
         }
+    } catch (e: Exception) {
+        Timber.e(e, "Failed to encode image")
+        null
     }
 }

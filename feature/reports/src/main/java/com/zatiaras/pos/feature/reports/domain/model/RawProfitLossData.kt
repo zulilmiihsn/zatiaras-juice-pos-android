@@ -5,7 +5,7 @@ data class RawProfitLossData(
     val posTotalDiscount: Long,
     val posTransactions: Int,
     val productSales: List<ProductSaleItem>,
-    val manualRecords: List<ManualCashRecord>
+    val manualRecords: List<ManualCashRecord>,
 )
 
 data class ManualCashRecord(
@@ -13,5 +13,5 @@ data class ManualCashRecord(
     val category: String?,
     val amount: Long,
     val description: String,
-    val isDeleted: Boolean
+    val isDeleted: Boolean,
 )

@@ -20,6 +20,16 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.ZatiarasPOS"
         tools:targetApi="31">
+        <meta-data
+            android:name="io.sentry.dsn"
+            android:value="${sentryDsn}" />
+        <meta-data
+            android:name="io.sentry.environment"
+            android:value="${sentryEnvironment}" />
+        <meta-data
+            android:name="io.sentry.release"
+            android:value="${sentryRelease}" />
+
         <activity
             android:name="com.zatiaras.pos.MainActivity"
             android:exported="true"

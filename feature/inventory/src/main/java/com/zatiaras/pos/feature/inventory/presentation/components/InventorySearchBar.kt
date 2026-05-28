@@ -2,10 +2,6 @@ package com.zatiaras.pos.feature.inventory.presentation.components
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import compose.icons.EvaIcons
-import compose.icons.evaicons.Outline
-import compose.icons.evaicons.outline.Close
-import compose.icons.evaicons.outline.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -18,10 +14,14 @@ import androidx.compose.ui.res.stringResource
 import com.zatiaras.pos.core.ui.theme.AppShapes
 import com.zatiaras.pos.core.ui.theme.LocalDimensions
 import com.zatiaras.pos.feature.inventory.R
+import compose.icons.EvaIcons
+import compose.icons.evaicons.Outline
+import compose.icons.evaicons.outline.Close
+import compose.icons.evaicons.outline.Search
 
 /**
  * Search bar component for filtering products.
- * 
+ *
  * Features:
  * - Search icon prefix
  * - Clear button when text is not empty
@@ -32,7 +32,7 @@ fun InventorySearchBar(
     query: String,
     onQueryChange: (String) -> Unit,
     modifier: Modifier = Modifier,
-    placeholder: String = stringResource(R.string.inventory_search_placeholder)
+    placeholder: String = stringResource(R.string.inventory_search_placeholder),
 ) {
     val dimensions = LocalDimensions.current
     OutlinedTextField(
@@ -45,7 +45,7 @@ fun InventorySearchBar(
         leadingIcon = {
             Icon(
                 imageVector = EvaIcons.Outline.Search,
-                contentDescription = null
+                contentDescription = null,
             )
         },
         trailingIcon = {
@@ -53,7 +53,7 @@ fun InventorySearchBar(
                 IconButton(onClick = { onQueryChange("") }) {
                     Icon(
                         imageVector = EvaIcons.Outline.Close,
-                        contentDescription = null
+                        contentDescription = null,
                     )
                 }
             }
@@ -62,7 +62,7 @@ fun InventorySearchBar(
         shape = AppShapes.M,
         colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = MaterialTheme.colorScheme.primary,
-            unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
-        )
+            unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+        ),
     )
 }

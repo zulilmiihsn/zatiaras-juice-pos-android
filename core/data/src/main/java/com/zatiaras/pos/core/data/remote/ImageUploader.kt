@@ -4,8 +4,8 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
-import io.github.jan.supabase.storage.storage
 import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.storage.storage
 import io.github.jan.supabase.storage.upload
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -17,17 +17,17 @@ import javax.inject.Singleton
 
 /**
  * Handles image upload to Supabase Storage.
- * 
+ *
  * Features:
  * - Compress images before upload (reduce bandwidth)
  * - Generate unique filenames
  * - Return public URL after upload
- * 
+ *
  * Bucket: "produk-images" (must be created in Supabase Dashboard)
  */
 @Singleton
 class ImageUploader @Inject constructor(
-    private val supabaseClient: SupabaseClient
+    private val supabaseClient: SupabaseClient,
 ) {
     companion object {
         private const val BUCKET_NAME = "produk-images"
@@ -37,7 +37,7 @@ class ImageUploader @Inject constructor(
 
     /**
      * Upload image from Uri to Supabase Storage.
-     * 
+     *
      * @param context Android context for content resolver
      * @param imageUri Local image Uri (from gallery/camera)
      * @param productId Product ID for subfolder organization
@@ -46,7 +46,7 @@ class ImageUploader @Inject constructor(
     suspend fun uploadProductImage(
         context: Context,
         imageUri: Uri,
-        productId: String
+        productId: String,
     ): Result<String> = withContext(Dispatchers.IO) {
         try {
             // 1. Read and compress image
@@ -56,17 +56,17 @@ class ImageUploader @Inject constructor(
             }
 
             // 2. Generate unique filename
-            val fileName = "${productId}/${UUID.randomUUID()}.jpg"
+            val fileName = "$productId/${UUID.randomUUID()}.jpg"
 
             // 3. Upload to Supabase Storage
             val storage = supabaseClient.storage
             val bucket = storage.from(BUCKET_NAME)
-            
+
             bucket.upload(fileName, compressedBytes, upsert = true)
 
             // 4. Get public URL
             val publicUrl = bucket.publicUrl(fileName)
-            
+
             Timber.d("Image uploaded successfully: $publicUrl")
             Result.success(publicUrl)
         } catch (e: Exception) {
@@ -82,11 +82,11 @@ class ImageUploader @Inject constructor(
         try {
             // Extract path from URL
             val path = imageUrl.substringAfter("$BUCKET_NAME/")
-            
+
             val storage = supabaseClient.storage
             val bucket = storage.from(BUCKET_NAME)
             bucket.delete(path)
-            
+
             Timber.d("Image deleted: $path")
             Result.success(Unit)
         } catch (e: Exception) {
@@ -116,7 +116,7 @@ class ImageUploader @Inject constructor(
             val (newWidth, newHeight) = calculateScaledDimensions(
                 originalBitmap.width,
                 originalBitmap.height,
-                MAX_IMAGE_SIZE
+                MAX_IMAGE_SIZE,
             )
 
             // Resize if needed
@@ -129,7 +129,7 @@ class ImageUploader @Inject constructor(
             // Compress to JPEG
             val outputStream = ByteArrayOutputStream()
             scaledBitmap.compress(Bitmap.CompressFormat.JPEG, COMPRESSION_QUALITY, outputStream)
-            
+
             // Cleanup
             if (scaledBitmap != originalBitmap) {
                 scaledBitmap.recycle()

@@ -3,7 +3,6 @@ package com.zatiaras.pos.core.ui.util
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
-import java.util.Locale
 
 class CurrencyFormatterTest {
 

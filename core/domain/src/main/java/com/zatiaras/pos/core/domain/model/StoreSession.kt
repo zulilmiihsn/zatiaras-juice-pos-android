@@ -6,5 +6,5 @@ data class StoreSession(
     val openingTime: Long,
     val closingTime: Long? = null,
     val isActive: Boolean,
-    val branchId: String? = null
+    val branchId: String? = null,
 )

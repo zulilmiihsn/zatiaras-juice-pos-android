@@ -13,14 +13,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import com.zatiaras.pos.core.domain.model.Category
-import com.zatiaras.pos.feature.inventory.R
 import com.zatiaras.pos.core.ui.theme.LocalDimensions
+import com.zatiaras.pos.feature.inventory.R
 
 /**
  * Horizontal scrollable row of category filter chips.
- * 
+ *
  * Includes "Semua" (All) chip as the first option.
  * Selected chip is highlighted with primary color.
  */
@@ -30,14 +29,14 @@ fun CategoryFilterRow(
     categories: List<Category>,
     selectedCategoryId: String?,
     onCategorySelected: (String?) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val dimensions = LocalDimensions.current
     Row(
         modifier = modifier
             .horizontalScroll(rememberScrollState())
             .padding(horizontal = dimensions.paddingM),
-        horizontalArrangement = Arrangement.spacedBy(dimensions.spacingXS)
+        horizontalArrangement = Arrangement.spacedBy(dimensions.spacingXS),
     ) {
         // "Semua" chip (All)
         FilterChip(
@@ -46,8 +45,8 @@ fun CategoryFilterRow(
             label = { Text(stringResource(R.string.category_all)) },
             colors = FilterChipDefaults.filterChipColors(
                 selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
-            )
+                selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
+            ),
         )
 
         // Category chips
@@ -58,8 +57,8 @@ fun CategoryFilterRow(
                 label = { Text(category.name) },
                 colors = FilterChipDefaults.filterChipColors(
                     selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                    selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
-                )
+                    selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                ),
             )
         }
     }

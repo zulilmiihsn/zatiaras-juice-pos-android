@@ -6,6 +6,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -36,12 +37,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
-import com.zatiaras.pos.feature.reports.R
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -53,10 +53,9 @@ import com.zatiaras.pos.core.ui.theme.ProfitGreenDark
 import com.zatiaras.pos.core.ui.theme.ProfitGreenLight
 import com.zatiaras.pos.core.ui.theme.TaxBlue
 import com.zatiaras.pos.core.ui.theme.WarningAmberDark
+import com.zatiaras.pos.feature.reports.R
 import com.zatiaras.pos.feature.reports.domain.model.ExpenseCategoryItem
-import com.zatiaras.pos.feature.reports.domain.model.ProductSaleItem
 import com.zatiaras.pos.feature.reports.domain.model.ProfitLossReport
-import androidx.compose.foundation.border
 
 /**
  * Comprehensive P&L breakdown card.
@@ -64,7 +63,7 @@ import androidx.compose.foundation.border
 @Composable
 fun PnlBreakdownCard(
     report: ProfitLossReport,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Card(
         modifier = modifier
@@ -73,83 +72,83 @@ fun PnlBreakdownCard(
             .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f), AppShapes.L),
         shape = AppShapes.L,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
     ) {
         Column(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(16.dp),
         ) {
             // Header
             Text(
                 text = stringResource(R.string.pnl_summary),
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
             )
-            
+
             Text(
                 text = stringResource(R.string.pnl_transactions_count, report.transactionCount),
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            
+
             Spacer(modifier = Modifier.height(14.dp))
-            
+
             // --- 1. INCOME SECTION ---
             SectionHeader(
                 title = stringResource(R.string.pnl_revenue),
-                color = ProfitGreen
+                color = ProfitGreen,
             )
-            
+
             Spacer(modifier = Modifier.height(8.dp))
-            
+
             // Expandable Operating Revenue
             ExpandableLineItem(
                 label = stringResource(R.string.pnl_operating_revenue),
                 amount = report.operatingRevenue,
                 icon = Icons.Default.ArrowUpward,
                 iconColor = ProfitGreen,
-                hasDetails = report.productSales.isNotEmpty() || report.posNetRevenue > 0 || report.manualIncomeItems.isNotEmpty()
+                hasDetails = report.productSales.isNotEmpty() || report.posNetRevenue > 0 || report.manualIncomeItems.isNotEmpty(),
             ) {
                 // POS Sales Detail
                 if (report.posNetRevenue > 0) {
                     DetailLineItem(
                         label = stringResource(R.string.pnl_pos_sales),
-                        amount = report.posNetRevenue
+                        amount = report.posNetRevenue,
                     )
-                    
+
                     // Product Sales Breakdown - display all items without truncation
                     report.productSales.forEach { item ->
                         DetailLineItem(
                             label = stringResource(
                                 R.string.pnl_product_with_qty,
                                 item.productName,
-                                item.quantity
+                                item.quantity,
                             ),
                             amount = item.revenue,
-                            isSubItem = true
+                            isSubItem = true,
                         )
                     }
                 }
-                
+
                 // Manual Operating Income with breakdown
                 if (report.manualIncomeItems.isNotEmpty()) {
                     DetailLineItem(
                         label = stringResource(R.string.pnl_manual_revenue),
-                        amount = report.manualOperatingIncome
+                        amount = report.manualOperatingIncome,
                     )
-                    
+
                     // Detail per item (e.g., "Sangu Ilham", "Titipan dari X")
                     report.manualIncomeItems.forEach { item ->
                         DetailLineItem(
                             label = item.description,
                             amount = item.amount,
-                            isSubItem = true
+                            isSubItem = true,
                         )
                     }
                 }
             }
-            
+
             // Expandable Other Revenue (if any)
             if (report.otherRevenue > 0) {
                 ExpandableLineItem(
@@ -157,45 +156,45 @@ fun PnlBreakdownCard(
                     amount = report.otherRevenue,
                     icon = Icons.Default.ArrowUpward,
                     iconColor = ProfitGreenLight,
-                    hasDetails = report.otherIncomeItems.isNotEmpty()
+                    hasDetails = report.otherIncomeItems.isNotEmpty(),
                 ) {
                     report.otherIncomeItems.forEach { item ->
                         DetailLineItem(
                             label = item.description,
                             amount = item.amount,
-                            isSubItem = true
+                            isSubItem = true,
                         )
                     }
                 }
             }
-            
+
             HorizontalDivider(
                 modifier = Modifier.padding(vertical = 8.dp),
-                color = MaterialTheme.colorScheme.outlineVariant
+                color = MaterialTheme.colorScheme.outlineVariant,
             )
-            
+
             PnlLineItem(
                 label = stringResource(R.string.pnl_total_revenue),
                 amount = report.grossRevenue,
-                isBold = true
+                isBold = true,
             )
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             // --- 2. EXPENSE SECTION ---
             SectionHeader(
                 title = stringResource(R.string.pnl_expenses),
-                color = LossRed
+                color = LossRed,
             )
-            
+
             Spacer(modifier = Modifier.height(8.dp))
-            
+
             // Dynamic expense categories from data
             if (report.expensesByCategory.isNotEmpty()) {
                 report.expensesByCategory.forEach { categoryItem ->
                     ExpandableExpenseCategory(
                         categoryItem = categoryItem,
-                        iconColor = LossRed
+                        iconColor = LossRed,
                     )
                 }
             } else {
@@ -206,63 +205,63 @@ fun PnlBreakdownCard(
                         amount = report.operatingExpenses,
                         icon = Icons.Default.ArrowDownward,
                         iconColor = LossRed,
-                        isNegative = true
+                        isNegative = true,
                     )
                 }
-                
+
                 if (report.otherExpenses > 0) {
                     PnlLineItem(
                         label = stringResource(R.string.pnl_other_expenses),
                         amount = report.otherExpenses,
                         icon = Icons.Default.ArrowDownward,
                         iconColor = WarningAmberDark,
-                        isNegative = true
+                        isNegative = true,
                     )
                 }
             }
-            
+
             HorizontalDivider(
                 modifier = Modifier.padding(vertical = 8.dp),
-                color = MaterialTheme.colorScheme.outlineVariant
+                color = MaterialTheme.colorScheme.outlineVariant,
             )
-            
+
             PnlLineItem(
                 label = stringResource(R.string.pnl_total_expenses),
                 amount = -report.totalExpenses, // Display as negative
                 isBold = true,
-                isNegative = true
+                isNegative = true,
             )
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             // --- 3. PROFIT / TAX SECTION ---
             SectionHeader(
                 title = stringResource(R.string.pnl_profit_and_tax),
-                color = MaterialTheme.colorScheme.primary
+                color = MaterialTheme.colorScheme.primary,
             )
-            
+
             Spacer(modifier = Modifier.height(8.dp))
-            
+
             PnlLineItem(
                 label = stringResource(R.string.pnl_gross_profit),
                 amount = report.grossProfit,
-                isBold = true
+                isBold = true,
             )
 
             PnlLineItem(
                 label = stringResource(R.string.pnl_tax, report.taxPercentage.toString()),
-                amount = report.tax, 
+                amount = report.tax,
                 icon = Icons.Default.Remove,
                 iconColor = TaxBlue,
-                isNegative = true
+                isNegative = true,
             )
-            
+
             Spacer(modifier = Modifier.height(10.dp))
-            
+
             ProfitRow(
                 label = stringResource(R.string.pnl_net_profit),
                 amount = report.netProfit,
-                isProfit = report.netProfit >= 0
+                isProfit = report.netProfit >= 0,
             )
         }
     }
@@ -271,26 +270,26 @@ fun PnlBreakdownCard(
 @Composable
 private fun SectionHeader(
     title: String,
-    color: Color
+    color: Color,
 ) {
     Row(
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
             modifier = Modifier
                 .size(4.dp, 16.dp)
                 .clip(AppShapes.XS)
-                .background(color)
+                .background(color),
         )
-        
+
         Spacer(modifier = Modifier.width(8.dp))
-        
+
         Text(
             text = title,
             style = MaterialTheme.typography.labelMedium,
             fontWeight = FontWeight.SemiBold,
             color = color,
-            letterSpacing = 1.sp
+            letterSpacing = 1.sp,
         )
     }
 }
@@ -303,17 +302,17 @@ private fun PnlLineItem(
     icon: ImageVector? = null,
     iconColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
     isBold: Boolean = false,
-    isNegative: Boolean = false
+    isNegative: Boolean = false,
 ) {
     Row(
         modifier = modifier
             .fillMaxWidth()
             .padding(vertical = 6.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Row(
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             if (icon != null) {
                 Box(
@@ -321,26 +320,26 @@ private fun PnlLineItem(
                         .size(24.dp)
                         .clip(CircleShape)
                         .background(iconColor.copy(alpha = 0.1f)),
-                    contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.Center,
                 ) {
                     Icon(
                         imageVector = icon,
                         contentDescription = null,
                         tint = iconColor,
-                        modifier = Modifier.size(14.dp)
+                        modifier = Modifier.size(14.dp),
                     )
                 }
                 Spacer(modifier = Modifier.width(12.dp))
             }
-            
+
             Text(
                 text = label,
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = if (isBold) FontWeight.SemiBold else FontWeight.Normal,
-                color = MaterialTheme.colorScheme.onSurface
+                color = MaterialTheme.colorScheme.onSurface,
             )
         }
-        
+
         Text(
             text = if (isNegative && amount != 0L) {
                 "(${formatRupiah(kotlin.math.abs(amount))})"
@@ -349,41 +348,8 @@ private fun PnlLineItem(
             },
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = if (isBold) FontWeight.SemiBold else FontWeight.Normal,
-            color = if (isNegative) LossRed else MaterialTheme.colorScheme.onSurface
+            color = if (isNegative) LossRed else MaterialTheme.colorScheme.onSurface,
         )
-    }
-}
-
-@Composable
-private fun GrandTotalRow(
-    amount: Long
-) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(AppShapes.M)
-            .background(MaterialTheme.colorScheme.primaryContainer)
-            .padding(16.dp)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = stringResource(R.string.pnl_total_received),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onPrimaryContainer
-            )
-            
-            Text(
-                text = formatRupiah(amount),
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onPrimaryContainer
-            )
-        }
     }
 }
 
@@ -391,53 +357,53 @@ private fun GrandTotalRow(
 private fun ProfitRow(
     label: String,
     amount: Long,
-    isProfit: Boolean
+    isProfit: Boolean,
 ) {
     val backgroundColor = if (isProfit) {
         ProfitGreen.copy(alpha = 0.1f)
     } else {
         LossRed.copy(alpha = 0.1f)
     }
-    
+
     val textColor = if (isProfit) {
         ProfitGreenDark
     } else {
         ErrorRedDark
     }
-    
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .clip(AppShapes.M)
             .background(backgroundColor)
-            .padding(16.dp)
+            .padding(16.dp),
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
                     imageVector = if (isProfit) Icons.Default.ArrowUpward else Icons.Default.ArrowDownward,
                     contentDescription = null,
                     tint = textColor,
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(20.dp),
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = label,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = textColor
+                    color = textColor,
                 )
             }
-            
+
             Text(
                 text = formatRupiah(amount),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
-                color = textColor
+                color = textColor,
             )
         }
     }
@@ -453,14 +419,14 @@ private fun ExpandableLineItem(
     icon: ImageVector,
     iconColor: Color,
     hasDetails: Boolean = false,
-    detailsContent: @Composable () -> Unit = {}
+    detailsContent: @Composable () -> Unit = {},
 ) {
     var isExpanded by remember { mutableStateOf(false) }
     val rotationAngle by animateFloatAsState(
         targetValue = if (isExpanded) 180f else 0f,
-        label = "rotation"
+        label = "rotation",
     )
-    
+
     Column(modifier = Modifier.animateContentSize()) {
         Row(
             modifier = Modifier
@@ -468,39 +434,41 @@ private fun ExpandableLineItem(
                 .then(
                     if (hasDetails) {
                         Modifier.clickable { isExpanded = !isExpanded }
-                    } else Modifier
+                    } else {
+                        Modifier
+                    },
                 )
                 .padding(vertical = 6.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
             ) {
                 Box(
                     modifier = Modifier
                         .size(24.dp)
                         .clip(CircleShape)
                         .background(iconColor.copy(alpha = 0.1f)),
-                    contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.Center,
                 ) {
                     Icon(
                         imageVector = icon,
                         contentDescription = null,
                         tint = iconColor,
-                        modifier = Modifier.size(14.dp)
+                        modifier = Modifier.size(14.dp),
                     )
                 }
                 Spacer(modifier = Modifier.width(12.dp))
-                
+
                 Text(
                     text = label,
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Normal,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
-                
+
                 if (hasDetails) {
                     Spacer(modifier = Modifier.width(4.dp))
                     Icon(
@@ -509,26 +477,26 @@ private fun ExpandableLineItem(
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier
                             .size(16.dp)
-                            .rotate(rotationAngle)
+                            .rotate(rotationAngle),
                     )
                 }
             }
-            
+
             Text(
                 text = formatRupiah(amount),
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Normal,
-                color = MaterialTheme.colorScheme.onSurface
+                color = MaterialTheme.colorScheme.onSurface,
             )
         }
-        
+
         AnimatedVisibility(
             visible = isExpanded && hasDetails,
             enter = expandVertically(),
-            exit = shrinkVertically()
+            exit = shrinkVertically(),
         ) {
             Column(
-                modifier = Modifier.padding(start = 12.dp, top = 4.dp, bottom = 8.dp)
+                modifier = Modifier.padding(start = 12.dp, top = 4.dp, bottom = 8.dp),
             ) {
                 detailsContent()
             }
@@ -542,52 +510,52 @@ private fun ExpandableLineItem(
 @Composable
 private fun ExpandableExpenseCategory(
     categoryItem: ExpenseCategoryItem,
-    iconColor: Color
+    iconColor: Color,
 ) {
     var isExpanded by remember { mutableStateOf(false) }
     val rotationAngle by animateFloatAsState(
         targetValue = if (isExpanded) 180f else 0f,
-        label = "rotation"
+        label = "rotation",
     )
     val hasItems = categoryItem.items.isNotEmpty()
-    
+
     Column(modifier = Modifier.animateContentSize()) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .then(
-                    if (hasItems) Modifier.clickable { isExpanded = !isExpanded } else Modifier
+                    if (hasItems) Modifier.clickable { isExpanded = !isExpanded } else Modifier,
                 )
                 .padding(vertical = 6.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
             ) {
                 Box(
                     modifier = Modifier
                         .size(24.dp)
                         .clip(CircleShape)
                         .background(iconColor.copy(alpha = 0.1f)),
-                    contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.Center,
                 ) {
                     Icon(
                         imageVector = Icons.Default.ArrowDownward,
                         contentDescription = null,
                         tint = iconColor,
-                        modifier = Modifier.size(14.dp)
+                        modifier = Modifier.size(14.dp),
                     )
                 }
                 Spacer(modifier = Modifier.width(12.dp))
-                
+
                 Text(
                     text = categoryItem.category,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
-                
+
                 if (hasItems) {
                     Spacer(modifier = Modifier.width(4.dp))
                     Icon(
@@ -596,43 +564,43 @@ private fun ExpandableExpenseCategory(
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier
                             .size(16.dp)
-                            .rotate(rotationAngle)
+                            .rotate(rotationAngle),
                     )
                 }
             }
-            
+
             Text(
                 text = stringResource(R.string.pnl_amount_in_parentheses, formatRupiah(categoryItem.amount)),
                 style = MaterialTheme.typography.bodyMedium,
-                color = LossRed
+                color = LossRed,
             )
         }
-        
+
         AnimatedVisibility(
             visible = isExpanded && hasItems,
             enter = expandVertically(),
-            exit = shrinkVertically()
+            exit = shrinkVertically(),
         ) {
             Column(
-                modifier = Modifier.padding(start = 36.dp, top = 4.dp, bottom = 8.dp)
+                modifier = Modifier.padding(start = 36.dp, top = 4.dp, bottom = 8.dp),
             ) {
                 categoryItem.items.forEach { item ->
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(vertical = 2.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        horizontalArrangement = Arrangement.SpaceBetween,
                     ) {
                         Text(
                             text = item.description,
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f),
                         )
                         Text(
                             text = formatRupiah(item.amount),
                             style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 }
@@ -648,7 +616,7 @@ private fun ExpandableExpenseCategory(
 private fun DetailLineItem(
     label: String,
     amount: Long,
-    isSubItem: Boolean = false
+    isSubItem: Boolean = false,
 ) {
     Row(
         modifier = Modifier
@@ -656,20 +624,20 @@ private fun DetailLineItem(
             .padding(
                 start = if (isSubItem) 24.dp else 12.dp,
                 top = 3.dp,
-                bottom = 3.dp
+                bottom = 3.dp,
             ),
-        horizontalArrangement = Arrangement.SpaceBetween
+        horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Text(
             text = if (isSubItem) "• $label" else label,
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
         )
         Text(
             text = formatRupiah(amount),
             style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
 }

@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.Flow
 
 /**
  * DAO for AppSettings operations.
- * 
+ *
  * Settings is a singleton table - only one row exists at "default" ID.
  * All operations target this single row.
  */
@@ -78,7 +78,8 @@ interface AppSettingsDao {
     /**
      * Update store info.
      */
-    @Query("""
+    @Query(
+        """
         UPDATE app_settings 
         SET storeName = :name, 
             storeAddress = :address, 
@@ -86,12 +87,13 @@ interface AppSettingsDao {
             updatedAt = :updatedAt, 
             isSynced = 0 
         WHERE id = 'default'
-    """)
+    """,
+    )
     suspend fun updateStoreInfo(
-        name: String, 
-        address: String?, 
+        name: String,
+        address: String?,
         phone: String?,
-        updatedAt: Long = System.currentTimeMillis()
+        updatedAt: Long = System.currentTimeMillis(),
     )
 
     /**
@@ -103,18 +105,20 @@ interface AppSettingsDao {
     /**
      * Update receipt settings.
      */
-    @Query("""
+    @Query(
+        """
         UPDATE app_settings 
         SET receiptFooter = :footer, 
             showLogoOnReceipt = :showLogo,
             updatedAt = :updatedAt, 
             isSynced = 0 
         WHERE id = 'default'
-    """)
+    """,
+    )
     suspend fun updateReceiptSettings(
-        footer: String?, 
+        footer: String?,
         showLogo: Boolean,
-        updatedAt: Long = System.currentTimeMillis()
+        updatedAt: Long = System.currentTimeMillis(),
     )
 
     /**
@@ -165,10 +169,9 @@ interface AppSettingsDao {
                     storeName = "Zatiaras Juice",
                     defaultPaperWidth = 58,
                     updatedAt = timestamp,
-                    isSynced = false
-                )
+                    isSynced = false,
+                ),
             )
         }
     }
 }
-

@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.automirrored.filled.TrendingDown
@@ -44,18 +43,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.zatiaras.pos.feature.pos.R
 import com.zatiaras.pos.core.domain.util.LocaleUtils
 import com.zatiaras.pos.core.ui.components.CurrencyTextField
 import com.zatiaras.pos.core.ui.theme.AppShapes
 import com.zatiaras.pos.core.ui.theme.ExpenseRed
 import com.zatiaras.pos.core.ui.theme.IncomeGreen
 import com.zatiaras.pos.core.ui.theme.LocalDimensions
+import com.zatiaras.pos.feature.pos.R
 import com.zatiaras.pos.feature.pos.domain.model.CashRecordType
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -65,13 +63,13 @@ import java.util.Date
 internal fun AddCashRecordSheet(
     formState: CashRecordFormState,
     onEvent: (CashRecordEvent) -> Unit,
-    onCancel: () -> Unit
+    onCancel: () -> Unit,
 ) {
     val dimensions = LocalDimensions.current
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(dimensions.paddingXL)
+            .padding(dimensions.paddingXL),
     ) {
         // Centered Title
         Text(
@@ -79,35 +77,35 @@ internal fun AddCashRecordSheet(
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.fillMaxWidth(),
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
         )
-        
+
         Spacer(modifier = Modifier.height(dimensions.spacingXXS))
-        
+
         Text(
             text = stringResource(R.string.cash_record_add_subtitle),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.fillMaxWidth(),
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
         )
-        
+
         Spacer(modifier = Modifier.height(dimensions.spacingL))
-        
+
         // Type Selection - LARGE Segmented Button Style
         Text(
             text = stringResource(R.string.cash_record_type),
             style = MaterialTheme.typography.labelLarge,
-            fontWeight = FontWeight.SemiBold
+            fontWeight = FontWeight.SemiBold,
         )
         Spacer(modifier = Modifier.height(dimensions.spacingS))
-        
+
         // Large segmented buttons for easy touch
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(dimensions.buttonHeightLarge), // Standard touch target
-            horizontalArrangement = Arrangement.spacedBy(dimensions.spacingS)
+            horizontalArrangement = Arrangement.spacedBy(dimensions.spacingS),
         ) {
             // PEMASUKAN Button
             Surface(
@@ -116,42 +114,46 @@ internal fun AddCashRecordSheet(
                     .weight(1f)
                     .fillMaxHeight(),
                 shape = AppShapes.L,
-                color = if (formState.type == CashRecordType.INCOME) 
+                color = if (formState.type == CashRecordType.INCOME) {
                     IncomeGreen.copy(alpha = 0.15f)
-                else 
-                    MaterialTheme.colorScheme.surfaceVariant,
-                border = if (formState.type == CashRecordType.INCOME)
+                } else {
+                    MaterialTheme.colorScheme.surfaceVariant
+                },
+                border = if (formState.type == CashRecordType.INCOME) {
                     androidx.compose.foundation.BorderStroke(1.dp, IncomeGreen)
-                else
+                } else {
                     null
+                },
             ) {
                 Row(
                     modifier = Modifier.fillMaxSize(),
                     horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.TrendingUp,
                         contentDescription = null,
-                        tint = if (formState.type == CashRecordType.INCOME) 
-                            IncomeGreen 
-                        else 
-                            MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(dimensions.iconSizeL)
+                        tint = if (formState.type == CashRecordType.INCOME) {
+                            IncomeGreen
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        },
+                        modifier = Modifier.size(dimensions.iconSizeL),
                     )
                     Spacer(modifier = Modifier.width(dimensions.spacingXS))
                     Text(
                         text = stringResource(R.string.cash_record_type_income).uppercase(),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = if (formState.type == CashRecordType.INCOME) 
-                            IncomeGreen 
-                        else 
+                        color = if (formState.type == CashRecordType.INCOME) {
+                            IncomeGreen
+                        } else {
                             MaterialTheme.colorScheme.onSurfaceVariant
+                        },
                     )
                 }
             }
-            
+
             // PENGELUARAN Button
             Surface(
                 onClick = { onEvent(CashRecordEvent.SetType(CashRecordType.EXPENSE)) },
@@ -159,45 +161,49 @@ internal fun AddCashRecordSheet(
                     .weight(1f)
                     .fillMaxHeight(),
                 shape = AppShapes.L,
-                color = if (formState.type == CashRecordType.EXPENSE) 
+                color = if (formState.type == CashRecordType.EXPENSE) {
                     ExpenseRed.copy(alpha = 0.15f)
-                else 
-                    MaterialTheme.colorScheme.surfaceVariant,
-                border = if (formState.type == CashRecordType.EXPENSE)
+                } else {
+                    MaterialTheme.colorScheme.surfaceVariant
+                },
+                border = if (formState.type == CashRecordType.EXPENSE) {
                     androidx.compose.foundation.BorderStroke(1.dp, ExpenseRed)
-                else
+                } else {
                     null
+                },
             ) {
                 Row(
                     modifier = Modifier.fillMaxSize(),
                     horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.TrendingDown,
                         contentDescription = null,
-                        tint = if (formState.type == CashRecordType.EXPENSE) 
-                            ExpenseRed 
-                        else 
-                            MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(dimensions.iconSizeL)
+                        tint = if (formState.type == CashRecordType.EXPENSE) {
+                            ExpenseRed
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        },
+                        modifier = Modifier.size(dimensions.iconSizeL),
                     )
                     Spacer(modifier = Modifier.width(dimensions.spacingXS))
                     Text(
                         text = stringResource(R.string.cash_record_type_expense).uppercase(),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = if (formState.type == CashRecordType.EXPENSE) 
-                            ExpenseRed 
-                        else 
+                        color = if (formState.type == CashRecordType.EXPENSE) {
+                            ExpenseRed
+                        } else {
                             MaterialTheme.colorScheme.onSurfaceVariant
+                        },
                     )
                 }
             }
         }
-        
+
         Spacer(modifier = Modifier.height(dimensions.spacingM))
-        
+
         // Date Selection
         val date = formState.date ?: System.currentTimeMillis()
         val dateFormatter = SimpleDateFormat("dd MMMM yyyy", LocaleUtils.LOCALE_ID)
@@ -216,26 +222,26 @@ internal fun AddCashRecordSheet(
                     IconButton(onClick = { showDatePicker = true }) {
                         Icon(
                             Icons.AutoMirrored.Filled.MenuBook,
-                            contentDescription = stringResource(R.string.cash_record_pick_date)
+                            contentDescription = stringResource(R.string.cash_record_pick_date),
                         )
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
                 colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
-                shape = AppShapes.M
+                shape = AppShapes.M,
             )
-            
+
             // Invisible clickable layer
             Box(
                 modifier = Modifier
                     .matchParentSize()
-                    .clickable { showDatePicker = true }
+                    .clickable { showDatePicker = true },
             )
         }
 
         if (showDatePicker) {
             val datePickerState = rememberDatePickerState(
-                initialSelectedDateMillis = date
+                initialSelectedDateMillis = date,
             )
             DatePickerDialog(
                 onDismissRequest = { showDatePicker = false },
@@ -246,7 +252,7 @@ internal fun AddCashRecordSheet(
                                 onEvent(CashRecordEvent.SetDate(it))
                             }
                             showDatePicker = false
-                        }
+                        },
                     ) {
                         Text(stringResource(R.string.dialog_ok))
                     }
@@ -255,14 +261,14 @@ internal fun AddCashRecordSheet(
                     TextButton(onClick = { showDatePicker = false }) {
                         Text(stringResource(R.string.dialog_cancel))
                     }
-                }
+                },
             ) {
                 DatePicker(state = datePickerState)
             }
         }
-        
+
         Spacer(modifier = Modifier.height(dimensions.spacingM))
-        
+
         // Amount with currency formatting
         CurrencyTextField(
             value = formState.amount,
@@ -272,21 +278,21 @@ internal fun AddCashRecordSheet(
             showPrefix = true,
             isError = formState.amountError != null,
             singleLine = true,
-            shape = AppShapes.M
+            shape = AppShapes.M,
         )
-        
+
         // Show error if any
         if (formState.amountError != null) {
             Text(
                 text = formState.amountError,
                 color = MaterialTheme.colorScheme.error,
                 style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(start = dimensions.spacingM, top = dimensions.paddingXXS)
+                modifier = Modifier.padding(start = dimensions.spacingM, top = dimensions.paddingXXS),
             )
         }
-        
+
         Spacer(modifier = Modifier.height(dimensions.spacingXS))
-        
+
         // Description
         OutlinedTextField(
             value = formState.description,
@@ -297,11 +303,11 @@ internal fun AddCashRecordSheet(
             isError = formState.descriptionError != null,
             supportingText = formState.descriptionError?.let { { Text(it) } },
             singleLine = true,
-            shape = AppShapes.M
+            shape = AppShapes.M,
         )
-        
+
         Spacer(modifier = Modifier.height(dimensions.spacingXS))
-        
+
         // Category (Dropdown)
         val categories = if (formState.type == CashRecordType.INCOME) {
             com.zatiaras.pos.core.domain.model.CashCategories.INCOME_CATEGORIES
@@ -313,7 +319,7 @@ internal fun AddCashRecordSheet(
         ExposedDropdownMenuBox(
             expanded = expanded,
             onExpandedChange = { expanded = !expanded },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
         ) {
             OutlinedTextField(
                 value = formState.category,
@@ -326,12 +332,12 @@ internal fun AddCashRecordSheet(
                 modifier = Modifier
                     .fillMaxWidth()
                     .menuAnchor(MenuAnchorType.PrimaryNotEditable),
-                shape = AppShapes.M
+                shape = AppShapes.M,
             )
 
             ExposedDropdownMenu(
                 expanded = expanded,
-                onDismissRequest = { expanded = false }
+                onDismissRequest = { expanded = false },
             ) {
                 categories.forEach { category ->
                     DropdownMenuItem(
@@ -339,14 +345,14 @@ internal fun AddCashRecordSheet(
                         onClick = {
                             onEvent(CashRecordEvent.SetCategory(category))
                             expanded = false
-                        }
+                        },
                     )
                 }
             }
         }
-        
+
         Spacer(modifier = Modifier.height(dimensions.spacingXS))
-        
+
         // Notes (optional)
         OutlinedTextField(
             value = formState.notes,
@@ -354,24 +360,24 @@ internal fun AddCashRecordSheet(
             modifier = Modifier.fillMaxWidth(),
             label = { Text(stringResource(R.string.cash_record_notes)) },
             minLines = 2,
-            shape = AppShapes.M
+            shape = AppShapes.M,
         )
-        
+
         Spacer(modifier = Modifier.height(dimensions.spacingL))
-        
+
         // Buttons
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(dimensions.spacingS)
+            horizontalArrangement = Arrangement.spacedBy(dimensions.spacingS),
         ) {
             OutlinedButton(
                 onClick = onCancel,
                 modifier = Modifier.weight(1f),
-                shape = AppShapes.M
+                shape = AppShapes.M,
             ) {
                 Text(stringResource(R.string.dialog_cancel))
             }
-            
+
             Button(
                 onClick = { onEvent(CashRecordEvent.SaveRecord) },
                 modifier = Modifier.weight(1f),
@@ -382,21 +388,21 @@ internal fun AddCashRecordSheet(
                         IncomeGreen
                     } else {
                         ExpenseRed
-                    }
-                )
+                    },
+                ),
             ) {
                 if (formState.isSubmitting) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(dimensions.iconSizeM),
                         strokeWidth = 2.dp,
-                        color = MaterialTheme.colorScheme.onPrimary
+                        color = MaterialTheme.colorScheme.onPrimary,
                     )
                 } else {
                     Text(stringResource(R.string.cash_record_save))
                 }
             }
         }
-        
+
         Spacer(modifier = Modifier.height(dimensions.paddingXXL))
     }
 }

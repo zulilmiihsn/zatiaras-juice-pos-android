@@ -7,10 +7,10 @@ import kotlinx.coroutines.flow.Flow
 
 /**
  * Repository interface for Product operations.
- * 
+ *
  * IMPORTANT: This interface lives in core/domain to be accessible from any feature module
  * without creating cross-feature dependencies.
- * 
+ *
  * Design: Offline-first approach.
  * - All reads are from Room (Single Source of Truth)
  * - Writes save to Room first, then queue for Supabase sync

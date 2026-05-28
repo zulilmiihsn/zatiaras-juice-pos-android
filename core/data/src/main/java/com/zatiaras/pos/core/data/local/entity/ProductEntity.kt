@@ -8,10 +8,10 @@ import androidx.room.PrimaryKey
 /**
  * Room Entity for Products.
  * Maps to Supabase table: "produk"
- * 
+ *
  * Foreign key to CategoryEntity with SET_NULL on delete.
  * Index on categoryId for faster queries.
- * 
+ *
  * New fields:
  * - type: Product type ("minuman", "makanan", "snack")
  * - ekstraIds: JSON array of add-on IDs as string
@@ -23,23 +23,23 @@ import androidx.room.PrimaryKey
             entity = CategoryEntity::class,
             parentColumns = ["id"],
             childColumns = ["categoryId"],
-            onDelete = ForeignKey.SET_NULL
-        )
+            onDelete = ForeignKey.SET_NULL,
+        ),
     ],
-    indices = [Index(value = ["categoryId"]), Index(value = ["type"])]
+    indices = [Index(value = ["categoryId"]), Index(value = ["type"])],
 )
 data class ProductEntity(
     @PrimaryKey
     val id: String,
     val name: String,
-    val price: Long,                    // IDR, no decimals
+    val price: Long, // IDR, no decimals
     val categoryId: String? = null,
-    val type: String = "makanan",       // "minuman", "makanan", "snack"
-    val ekstraIds: String? = null,      // JSON array as string: ["id1", "id2"]
+    val type: String = "makanan", // "minuman", "makanan", "snack"
+    val ekstraIds: String? = null, // JSON array as string: ["id1", "id2"]
     val imageUrl: String? = null,
     val description: String? = null,
     val isActive: Boolean = true,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis(),
-    val isSynced: Boolean = false
+    val isSynced: Boolean = false,
 )

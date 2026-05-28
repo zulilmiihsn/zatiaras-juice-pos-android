@@ -10,16 +10,12 @@ import java.util.UUID
 import javax.inject.Inject
 
 class StoreSessionRepositoryImpl @Inject constructor(
-    private val storeSessionDao: StoreSessionDao
+    private val storeSessionDao: StoreSessionDao,
 ) : StoreSessionRepository {
 
-    override fun getActiveSession(): Flow<StoreSession?> {
-        return storeSessionDao.getActiveSession().map { it?.toDomain() }
-    }
+    override fun getActiveSession(): Flow<StoreSession?> = storeSessionDao.getActiveSession().map { it?.toDomain() }
 
-    override suspend fun getActiveSessionOneShot(): StoreSession? {
-        return storeSessionDao.getActiveSessionOneShot()?.toDomain()
-    }
+    override suspend fun getActiveSessionOneShot(): StoreSession? = storeSessionDao.getActiveSessionOneShot()?.toDomain()
 
     override suspend fun openSession(openingCash: Long, branchId: String?): Result<StoreSession> {
         return try {
@@ -34,7 +30,7 @@ class StoreSessionRepositoryImpl @Inject constructor(
                 openingTime = System.currentTimeMillis(),
                 isActive = true,
                 branchId = branchId,
-                isSynced = false
+                isSynced = false,
             )
             storeSessionDao.insertSession(newSession)
             Result.success(newSession.toDomain())
@@ -54,7 +50,7 @@ class StoreSessionRepositoryImpl @Inject constructor(
                 closingTime = System.currentTimeMillis(),
                 isActive = false,
                 isSynced = false,
-                updatedAt = System.currentTimeMillis()
+                updatedAt = System.currentTimeMillis(),
             )
             storeSessionDao.updateSession(closedSession)
             Result.success(true)
@@ -63,20 +59,16 @@ class StoreSessionRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun getLastSessions(limit: Int): Flow<List<StoreSession>> {
-        return storeSessionDao.getLastSessions(limit).map { list ->
-            list.map { it.toDomain() }
-        }
+    override fun getLastSessions(limit: Int): Flow<List<StoreSession>> = storeSessionDao.getLastSessions(limit).map { list ->
+        list.map { it.toDomain() }
     }
 
-    private fun StoreSessionEntity.toDomain(): StoreSession {
-        return StoreSession(
-            id = id,
-            openingCash = openingCash,
-            openingTime = openingTime,
-            closingTime = closingTime,
-            isActive = isActive,
-            branchId = branchId
-        )
-    }
+    private fun StoreSessionEntity.toDomain(): StoreSession = StoreSession(
+        id = id,
+        openingCash = openingCash,
+        openingTime = openingTime,
+        closingTime = closingTime,
+        isActive = isActive,
+        branchId = branchId,
+    )
 }

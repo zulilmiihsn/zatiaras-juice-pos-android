@@ -2,16 +2,16 @@ package com.zatiaras.pos.core.data.di
 
 import android.content.Context
 import androidx.room.Room
-import com.zatiaras.pos.core.data.local.ZatiarasDatabase
 import com.zatiaras.pos.core.data.local.Migrations
+import com.zatiaras.pos.core.data.local.ZatiarasDatabase
 import com.zatiaras.pos.core.data.local.dao.AddOnDao
 import com.zatiaras.pos.core.data.local.dao.AppSettingsDao
 import com.zatiaras.pos.core.data.local.dao.CashRecordDao
 import com.zatiaras.pos.core.data.local.dao.CategoryDao
 import com.zatiaras.pos.core.data.local.dao.ProductDao
+import com.zatiaras.pos.core.data.local.dao.StoreSessionDao
 import com.zatiaras.pos.core.data.local.dao.TransactionDao
 import com.zatiaras.pos.core.data.local.dao.UserDao
-import com.zatiaras.pos.core.data.local.dao.StoreSessionDao
 import com.zatiaras.pos.core.data.session.SessionPreferences
 import dagger.Module
 import dagger.Provides
@@ -22,7 +22,7 @@ import javax.inject.Singleton
 
 /**
  * Hilt module for Room Database and DAOs.
- * 
+ *
  * Provides singleton instances to ensure consistent data access
  * across the entire application lifecycle.
  */
@@ -33,72 +33,52 @@ object DatabaseModule {
     @Provides
     @Singleton
     fun provideDatabase(
-        @ApplicationContext context: Context
-    ): ZatiarasDatabase {
-        return Room.databaseBuilder(
-            context,
-            ZatiarasDatabase::class.java,
-            ZatiarasDatabase.DATABASE_NAME
-        )
-            // Use proper migrations to preserve user data
-            // IMPORTANT: Never use fallbackToDestructiveMigration() in production!
-            .addMigrations(*Migrations.ALL_MIGRATIONS)
-            .build()
-    }
+        @ApplicationContext context: Context,
+    ): ZatiarasDatabase = Room.databaseBuilder(
+        context,
+        ZatiarasDatabase::class.java,
+        ZatiarasDatabase.DATABASE_NAME,
+    )
+        // Use proper migrations to preserve user data
+        // IMPORTANT: Never use fallbackToDestructiveMigration() in production!
+        .addMigrations(*Migrations.ALL_MIGRATIONS)
+        .build()
 
     @Provides
     @Singleton
-    fun provideCategoryDao(database: ZatiarasDatabase): CategoryDao {
-        return database.categoryDao()
-    }
+    fun provideCategoryDao(database: ZatiarasDatabase): CategoryDao = database.categoryDao()
 
     @Provides
     @Singleton
-    fun provideProductDao(database: ZatiarasDatabase): ProductDao {
-        return database.productDao()
-    }
+    fun provideProductDao(database: ZatiarasDatabase): ProductDao = database.productDao()
 
     @Provides
     @Singleton
-    fun provideTransactionDao(database: ZatiarasDatabase): TransactionDao {
-        return database.transactionDao()
-    }
+    fun provideTransactionDao(database: ZatiarasDatabase): TransactionDao = database.transactionDao()
 
     @Provides
     @Singleton
-    fun provideCashRecordDao(database: ZatiarasDatabase): CashRecordDao {
-        return database.cashRecordDao()
-    }
+    fun provideCashRecordDao(database: ZatiarasDatabase): CashRecordDao = database.cashRecordDao()
 
     @Provides
     @Singleton
-    fun provideUserDao(database: ZatiarasDatabase): UserDao {
-        return database.userDao()
-    }
+    fun provideUserDao(database: ZatiarasDatabase): UserDao = database.userDao()
 
     @Provides
     @Singleton
-    fun provideAppSettingsDao(database: ZatiarasDatabase): AppSettingsDao {
-        return database.appSettingsDao()
-    }
+    fun provideAppSettingsDao(database: ZatiarasDatabase): AppSettingsDao = database.appSettingsDao()
 
     @Provides
     @Singleton
-    fun provideAddOnDao(database: ZatiarasDatabase): AddOnDao {
-        return database.addOnDao()
-    }
+    fun provideAddOnDao(database: ZatiarasDatabase): AddOnDao = database.addOnDao()
 
     @Provides
     @Singleton
-    fun provideStoreSessionDao(database: ZatiarasDatabase): StoreSessionDao {
-        return database.storeSessionDao()
-    }
+    fun provideStoreSessionDao(database: ZatiarasDatabase): StoreSessionDao = database.storeSessionDao()
 
     @Provides
     @Singleton
     fun provideSessionPreferences(
-        @ApplicationContext context: Context
-    ): SessionPreferences {
-        return SessionPreferences(context)
-    }
+        @ApplicationContext context: Context,
+    ): SessionPreferences = SessionPreferences(context)
 }

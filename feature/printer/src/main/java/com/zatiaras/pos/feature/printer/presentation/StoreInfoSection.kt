@@ -56,39 +56,39 @@ private val LogoIconColor = IconColors.Logo
 internal fun StoreLogoCard(
     logoUri: String?,
     onSelectLogo: () -> Unit,
-    onClearLogo: () -> Unit
+    onClearLogo: () -> Unit,
 ) {
     val context = LocalContext.current
-    
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f), AppShapes.L),
         shape = AppShapes.L,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
     ) {
         Column(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(16.dp),
         ) {
             // Header
             Row(
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Box(
                     modifier = Modifier
                         .size(40.dp)
                         .clip(AppShapes.M)
                         .background(LogoIconColor.copy(alpha = 0.1f)),
-                    contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.Center,
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.Image,
                         contentDescription = null,
                         tint = LogoIconColor,
-                        modifier = Modifier.size(22.dp)
+                        modifier = Modifier.size(22.dp),
                     )
                 }
                 Spacer(modifier = Modifier.width(12.dp))
@@ -96,23 +96,23 @@ internal fun StoreLogoCard(
                     Text(
                         text = stringResource(R.string.printer_store_logo_title),
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold
+                        fontWeight = FontWeight.SemiBold,
                     )
                     Text(
                         text = if (logoUri == null) stringResource(R.string.printer_store_logo_default) else stringResource(R.string.printer_store_logo_custom),
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             // Logo preview
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Box(
                     modifier = Modifier
@@ -122,9 +122,9 @@ internal fun StoreLogoCard(
                         .border(
                             2.dp,
                             if (logoUri != null) StoreIconColor else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
-                            AppShapes.M
+                            AppShapes.M,
                         ),
-                    contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.Center,
                 ) {
                     if (logoUri != null) {
                         AsyncImage(
@@ -137,7 +137,7 @@ internal fun StoreLogoCard(
                                 .fillMaxSize()
                                 .padding(8.dp)
                                 .clip(AppShapes.S),
-                            contentScale = ContentScale.Fit
+                            contentScale = ContentScale.Fit,
                         )
                     } else {
                         // Default app icon
@@ -147,53 +147,53 @@ internal fun StoreLogoCard(
                             modifier = Modifier
                                 .fillMaxSize()
                                 .padding(8.dp),
-                            contentScale = ContentScale.Fit
+                            contentScale = ContentScale.Fit,
                         )
                     }
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             // Action buttons
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 if (logoUri != null) {
                     OutlinedButton(
                         onClick = onClearLogo,
                         modifier = Modifier.weight(1f),
-                        shape = AppShapes.M
+                        shape = AppShapes.M,
                     ) {
                         Icon(Icons.Default.Close, null, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(stringResource(R.string.printer_delete))
                     }
                 }
-                
+
                 Button(
                     onClick = onSelectLogo,
                     modifier = Modifier.weight(1f),
                     shape = AppShapes.M,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = LogoIconColor
-                    )
+                        containerColor = LogoIconColor,
+                    ),
                 ) {
                     Icon(Icons.Default.Edit, null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(if (logoUri == null) stringResource(R.string.printer_select_logo) else stringResource(R.string.printer_change))
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(8.dp))
-            
+
             Text(
                 text = stringResource(R.string.printer_store_logo_hint),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
             )
         }
     }
@@ -205,7 +205,7 @@ internal fun EnhancedStoreInfoCard(
     storeAddress: String,
     onStoreNameChange: (String) -> Unit,
     onStoreAddressChange: (String) -> Unit,
-    onSave: () -> Unit
+    onSave: () -> Unit,
 ) {
     Card(
         modifier = Modifier
@@ -213,29 +213,29 @@ internal fun EnhancedStoreInfoCard(
             .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f), AppShapes.L),
         shape = AppShapes.L,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
     ) {
         Column(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(16.dp),
         ) {
             // Header
             Row(
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Box(
                     modifier = Modifier
                         .size(40.dp)
                         .clip(AppShapes.M)
                         .background(StoreIconColor.copy(alpha = 0.1f)),
-                    contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.Center,
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.Store,
                         contentDescription = null,
                         tint = StoreIconColor,
-                        modifier = Modifier.size(22.dp)
+                        modifier = Modifier.size(22.dp),
                     )
                 }
                 Spacer(modifier = Modifier.width(12.dp))
@@ -243,18 +243,18 @@ internal fun EnhancedStoreInfoCard(
                     Text(
                         text = stringResource(R.string.printer_store_info_title),
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold
+                        fontWeight = FontWeight.SemiBold,
                     )
                     Text(
                         text = stringResource(R.string.printer_store_info_subtitle),
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(20.dp))
-            
+
             // Store Name
             OutlinedTextField(
                 value = storeName,
@@ -263,11 +263,11 @@ internal fun EnhancedStoreInfoCard(
                 placeholder = { Text(stringResource(R.string.printer_store_name_placeholder)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                shape = AppShapes.M
+                shape = AppShapes.M,
             )
-            
+
             Spacer(modifier = Modifier.height(12.dp))
-            
+
             // Store Address
             OutlinedTextField(
                 value = storeAddress,
@@ -277,18 +277,18 @@ internal fun EnhancedStoreInfoCard(
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = false,
                 maxLines = 2,
-                shape = AppShapes.M
+                shape = AppShapes.M,
             )
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             Button(
                 onClick = onSave,
                 modifier = Modifier.fillMaxWidth(),
                 shape = AppShapes.M,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = StoreIconColor
-                )
+                    containerColor = StoreIconColor,
+                ),
             ) {
                 Icon(Icons.Default.Check, null, modifier = Modifier.size(18.dp))
                 Spacer(modifier = Modifier.width(8.dp))

@@ -28,33 +28,35 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideJson(): Json {
-        return Json {
-            ignoreUnknownKeys = true
-            isLenient = true
-            encodeDefaults = true
-            coerceInputValues = true
-        }
+    fun provideJson(): Json = Json {
+        ignoreUnknownKeys = true
+        isLenient = true
+        encodeDefaults = true
+        coerceInputValues = true
     }
 
     @Provides
     @Singleton
     fun provideEncryptedSessionManager(
         @ApplicationContext context: Context,
-        json: Json
-    ): EncryptedSessionManager {
-        return EncryptedSessionManager(context, json)
-    }
+        json: Json,
+    ): EncryptedSessionManager = EncryptedSessionManager(context, json)
 
     @Provides
     @Singleton
     fun provideSupabaseClient(
-        sessionManager: EncryptedSessionManager
+        sessionManager: EncryptedSessionManager,
     ): SupabaseClient {
-        Timber.d("Creating Supabase client with URL: ${BuildConfig.SUPABASE_URL}")
+        require(BuildConfig.SUPABASE_URL.isNotBlank()) {
+            "SUPABASE_URL is not configured"
+        }
+        require(BuildConfig.SUPABASE_ANON_KEY.isNotBlank()) {
+            "SUPABASE_ANON_KEY is not configured"
+        }
+        Timber.d("Creating Supabase client")
         return createSupabaseClient(
             supabaseUrl = BuildConfig.SUPABASE_URL,
-            supabaseKey = BuildConfig.SUPABASE_KEY
+            supabaseKey = BuildConfig.SUPABASE_ANON_KEY,
         ) {
             install(Auth) {
                 // Use our encrypted session manager for secure token storage
@@ -68,26 +70,17 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideSupabaseAuth(client: SupabaseClient): Auth {
-        return client.auth
-    }
+    fun provideSupabaseAuth(client: SupabaseClient): Auth = client.auth
 
     @Provides
     @Singleton
-    fun provideSupabasePostgrest(client: SupabaseClient): Postgrest {
-        return client.postgrest
-    }
+    fun provideSupabasePostgrest(client: SupabaseClient): Postgrest = client.postgrest
 
     @Provides
     @Singleton
-    fun provideSupabaseStorage(client: SupabaseClient): Storage {
-        return client.storage
-    }
+    fun provideSupabaseStorage(client: SupabaseClient): Storage = client.storage
 
     @Provides
     @Singleton
-    fun provideSupabaseFunctions(client: SupabaseClient): Functions {
-        return client.functions
-    }
+    fun provideSupabaseFunctions(client: SupabaseClient): Functions = client.functions
 }
-

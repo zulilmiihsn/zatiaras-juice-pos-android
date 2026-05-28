@@ -22,7 +22,7 @@ class ProductSyncer @Inject constructor(
     private val productDao: ProductDao,
     private val categoryDao: CategoryDao,
     private val remoteDataSource: InventoryRemoteDataSource,
-    private val syncPreferences: SyncPreferences
+    private val syncPreferences: SyncPreferences,
 ) : EntitySyncer {
 
     override val syncType: SyncType = SyncType.PRODUCTS
@@ -50,7 +50,7 @@ class ProductSyncer @Inject constructor(
             type = SyncType.PRODUCTS,
             uploaded = uploaded,
             downloaded = downloaded,
-            failed = failed
+            failed = failed,
         )
     }
 
@@ -77,7 +77,7 @@ class ProductSyncer @Inject constructor(
                     val result = syncSingleProduct(product)
                     if (result) uploaded++ else failed++
                 }
-            }
+            },
         )
 
         return uploaded to failed
@@ -113,7 +113,7 @@ class ProductSyncer @Inject constructor(
             onFailure = { retryError ->
                 Timber.e(retryError, "ProductSyncer: Final sync attempt failed for ${product.id}")
                 return false
-            }
+            },
         )
     }
 
@@ -142,7 +142,7 @@ class ProductSyncer @Inject constructor(
             onFailure = { retryError ->
                 Timber.e(retryError, "ProductSyncer: Retry failed even after category sync for ${product.id}")
                 return false
-            }
+            },
         )
     }
 
@@ -187,13 +187,11 @@ class ProductSyncer @Inject constructor(
             onFailure = { error ->
                 failed++
                 Timber.e(error, "ProductSyncer: Failed to fetch remote products")
-            }
+            },
         )
 
         return downloaded to failed
     }
 
-    override suspend fun getPendingCount(): Int {
-        return productDao.getUnsyncedCount()
-    }
+    override suspend fun getPendingCount(): Int = productDao.getUnsyncedCount()
 }

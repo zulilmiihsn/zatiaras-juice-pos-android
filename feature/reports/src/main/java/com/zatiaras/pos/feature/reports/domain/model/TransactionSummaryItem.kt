@@ -7,5 +7,5 @@ package com.zatiaras.pos.feature.reports.domain.model
 data class TransactionSummaryItem(
     val createdAt: Long,
     val paymentMethod: String,
-    val grandTotal: Long
+    val grandTotal: Long,
 )

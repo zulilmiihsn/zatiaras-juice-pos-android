@@ -19,17 +19,17 @@ data class PrinterSettingsUiState(
     val autoConnect: Boolean = false,
     val errorMessage: String? = null,
     val isBluetoothEnabled: Boolean = false,
-    val hasBluetoothPermission: Boolean = false
+    val hasBluetoothPermission: Boolean = false,
 ) {
     val isConnected: Boolean
         get() = printerStatus is PrinterStatus.Connected
-    
+
     val isConnecting: Boolean
         get() = printerStatus is PrinterStatus.Connecting
-    
+
     val isPrinting: Boolean
         get() = printerStatus is PrinterStatus.Printing
-    
+
     val connectedPrinter: PrinterDevice?
         get() = when (printerStatus) {
             is PrinterStatus.Connected -> printerStatus.device

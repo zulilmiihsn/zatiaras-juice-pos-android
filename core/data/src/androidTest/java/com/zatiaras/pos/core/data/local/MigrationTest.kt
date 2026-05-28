@@ -1,6 +1,5 @@
 package com.zatiaras.pos.core.data.local
 
-import androidx.room.Room
 import androidx.room.testing.MigrationTestHelper
 import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -13,7 +12,7 @@ import java.io.IOException
 
 /**
  * Integration tests for Room database migrations.
- * 
+ *
  * Tests:
  * - Migration from v1 to v2
  * - Migration from v2 to v3
@@ -25,34 +24,38 @@ import java.io.IOException
 @RunWith(AndroidJUnit4::class)
 class MigrationTest {
 
-    private val TEST_DB = "migration-test"
+    private val testDb = "migration-test"
 
     @get:Rule
     val helper: MigrationTestHelper = MigrationTestHelper(
         InstrumentationRegistry.getInstrumentation(),
         ZatiarasDatabase::class.java.canonicalName,
-        FrameworkSQLiteOpenHelperFactory()
+        FrameworkSQLiteOpenHelperFactory(),
     )
 
     @Test
     @Throws(IOException::class)
     fun migrate1To2() {
         // Create database with version 1
-        helper.createDatabase(TEST_DB, 1).apply {
+        helper.createDatabase(testDb, 1).apply {
             // Insert sample category and product
-            execSQL("""
+            execSQL(
+                """
                 INSERT INTO categories (id, name, sortOrder, createdAt, updatedAt, isSynced, isDeleted)
                 VALUES ('cat-1', 'Minuman', 0, ${System.currentTimeMillis()}, ${System.currentTimeMillis()}, 0, 0)
-            """)
-            execSQL("""
+            """,
+            )
+            execSQL(
+                """
                 INSERT INTO products (id, name, price, categoryId, unit, imageUrl, description, isActive, sortOrder, createdAt, updatedAt, isSynced, isDeleted)
                 VALUES ('prod-1', 'Es Teh', 5000, 'cat-1', 'pcs', null, 'Es teh manis', 1, 0, ${System.currentTimeMillis()}, ${System.currentTimeMillis()}, 0, 0)
-            """)
+            """,
+            )
             close()
         }
 
         // Run migration 1 to 2
-        val db = helper.runMigrationsAndValidate(TEST_DB, 2, true, Migrations.MIGRATION_1_2)
+        val db = helper.runMigrationsAndValidate(testDb, 2, true, Migrations.MIGRATION_1_2)
 
         // Verify new tables exist
         val cursor = db.query("SELECT name FROM sqlite_master WHERE type='table' AND name='transactions'")
@@ -67,10 +70,10 @@ class MigrationTest {
     @Test
     @Throws(IOException::class)
     fun migrate2To3() {
-        helper.createDatabase(TEST_DB, 2).apply { close() }
+        helper.createDatabase(testDb, 2).apply { close() }
 
         // Run migration 2 to 3
-        val db = helper.runMigrationsAndValidate(TEST_DB, 3, true, Migrations.MIGRATION_2_3)
+        val db = helper.runMigrationsAndValidate(testDb, 3, true, Migrations.MIGRATION_2_3)
 
         // Verify cash_records table exists
         val cursor = db.query("SELECT name FROM sqlite_master WHERE type='table' AND name='cash_records'")
@@ -81,10 +84,10 @@ class MigrationTest {
     @Test
     @Throws(IOException::class)
     fun migrate3To4() {
-        helper.createDatabase(TEST_DB, 3).apply { close() }
+        helper.createDatabase(testDb, 3).apply { close() }
 
         // Run migration 3 to 4
-        val db = helper.runMigrationsAndValidate(TEST_DB, 4, true, Migrations.MIGRATION_3_4)
+        val db = helper.runMigrationsAndValidate(testDb, 4, true, Migrations.MIGRATION_3_4)
 
         // Verify users table exists
         val cursor = db.query("SELECT name FROM sqlite_master WHERE type='table' AND name='users'")
@@ -95,10 +98,10 @@ class MigrationTest {
     @Test
     @Throws(IOException::class)
     fun migrate4To5() {
-        helper.createDatabase(TEST_DB, 4).apply { close() }
+        helper.createDatabase(testDb, 4).apply { close() }
 
         // Run migration 4 to 5
-        val db = helper.runMigrationsAndValidate(TEST_DB, 5, true, Migrations.MIGRATION_4_5)
+        val db = helper.runMigrationsAndValidate(testDb, 5, true, Migrations.MIGRATION_4_5)
 
         // Verify app_settings table exists
         val cursor = db.query("SELECT name FROM sqlite_master WHERE type='table' AND name='app_settings'")
@@ -114,10 +117,10 @@ class MigrationTest {
     @Test
     @Throws(IOException::class)
     fun migrate5To6() {
-        helper.createDatabase(TEST_DB, 5).apply { close() }
+        helper.createDatabase(testDb, 5).apply { close() }
 
         // Run migration 5 to 6
-        val db = helper.runMigrationsAndValidate(TEST_DB, 6, true, Migrations.MIGRATION_5_6)
+        val db = helper.runMigrationsAndValidate(testDb, 6, true, Migrations.MIGRATION_5_6)
 
         // Verify store_sessions table exists
         val cursor = db.query("SELECT name FROM sqlite_master WHERE type='table' AND name='store_sessions'")
@@ -142,14 +145,14 @@ class MigrationTest {
     @Throws(IOException::class)
     fun migrateAllVersions() {
         // Create database with version 1
-        helper.createDatabase(TEST_DB, 1).apply { close() }
+        helper.createDatabase(testDb, 1).apply { close() }
 
         // Run all migrations
         val db = helper.runMigrationsAndValidate(
-            TEST_DB, 
-            6, 
-            true, 
-            *Migrations.ALL_MIGRATIONS
+            testDb,
+            6,
+            true,
+            *Migrations.ALL_MIGRATIONS,
         )
 
         // Verify all tables exist
@@ -163,7 +166,7 @@ class MigrationTest {
             "users",
             "app_settings",
             "add_ons",
-            "store_sessions"
+            "store_sessions",
         )
 
         for (tableName in expectedTables) {
@@ -177,24 +180,28 @@ class MigrationTest {
     @Throws(IOException::class)
     fun dataPreservedAfterMigration() {
         // Create database with version 1 and insert data
-        helper.createDatabase(TEST_DB, 1).apply {
-            execSQL("""
+        helper.createDatabase(testDb, 1).apply {
+            execSQL(
+                """
                 INSERT INTO categories (id, name, sortOrder, createdAt, updatedAt, isSynced, isDeleted)
                 VALUES ('cat-test', 'Test Category', 0, ${System.currentTimeMillis()}, ${System.currentTimeMillis()}, 0, 0)
-            """)
-            execSQL("""
+            """,
+            )
+            execSQL(
+                """
                 INSERT INTO products (id, name, price, categoryId, unit, imageUrl, description, isActive, sortOrder, createdAt, updatedAt, isSynced, isDeleted)
                 VALUES ('prod-test', 'Test Product', 10000, 'cat-test', 'pcs', null, 'Test description', 1, 0, ${System.currentTimeMillis()}, ${System.currentTimeMillis()}, 0, 0)
-            """)
+            """,
+            )
             close()
         }
 
         // Run all migrations
         val db = helper.runMigrationsAndValidate(
-            TEST_DB, 
-            6, 
-            true, 
-            *Migrations.ALL_MIGRATIONS
+            testDb,
+            6,
+            true,
+            *Migrations.ALL_MIGRATIONS,
         )
 
         // Verify data is preserved

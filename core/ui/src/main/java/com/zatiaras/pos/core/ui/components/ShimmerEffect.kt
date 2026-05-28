@@ -40,21 +40,21 @@ fun shimmerBrush(): Brush {
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
             animation = tween(durationMillis = 1200),
-            repeatMode = RepeatMode.Restart
+            repeatMode = RepeatMode.Restart,
         ),
-        label = "shimmer_offset"
+        label = "shimmer_offset",
     )
-    
+
     val colors = listOf(
         MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.9f),
         MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.9f)
+        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.9f),
     )
-    
+
     return Brush.linearGradient(
         colors = colors,
         start = Offset(shimmerProgress * 1000f - 500f, 0f),
-        end = Offset(shimmerProgress * 1000f, 0f)
+        end = Offset(shimmerProgress * 1000f, 0f),
     )
 }
 
@@ -67,14 +67,14 @@ fun ShimmerBox(
     modifier: Modifier = Modifier,
     width: Dp? = null,
     height: Dp = 20.dp,
-    shape: Shape = AppShapes.S
+    shape: Shape = AppShapes.S,
 ) {
     Box(
         modifier = modifier
             .then(if (width != null) Modifier.width(width) else Modifier.fillMaxWidth())
             .height(height)
             .clip(shape)
-            .background(shimmerBrush())
+            .background(shimmerBrush()),
     )
 }
 
@@ -83,35 +83,35 @@ fun ShimmerBox(
  */
 @Composable
 fun ShimmerProductCard(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Column(
         modifier = modifier
             .clip(AppShapes.M)
             .background(MaterialTheme.colorScheme.surface)
-            .padding(8.dp)
+            .padding(8.dp),
     ) {
         // Image placeholder
         ShimmerBox(
             height = 120.dp,
-            shape = AppShapes.S
+            shape = AppShapes.S,
         )
-        
+
         Spacer(modifier = Modifier.height(8.dp))
-        
+
         // Title placeholder
         ShimmerBox(
             height = 16.dp,
-            shape = AppShapes.XS
+            shape = AppShapes.XS,
         )
-        
+
         Spacer(modifier = Modifier.height(4.dp))
-        
+
         // Price placeholder
         ShimmerBox(
             width = 80.dp,
             height = 14.dp,
-            shape = AppShapes.XS
+            shape = AppShapes.XS,
         )
     }
 }
@@ -121,48 +121,48 @@ fun ShimmerProductCard(
  */
 @Composable
 fun ShimmerCartItem(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(12.dp)
+            .padding(12.dp),
     ) {
         // Image placeholder
         Box(
             modifier = Modifier
                 .size(56.dp)
                 .clip(AppShapes.S)
-                .background(shimmerBrush())
+                .background(shimmerBrush()),
         )
-        
+
         Spacer(modifier = Modifier.width(12.dp))
-        
+
         Column(modifier = Modifier.weight(1f)) {
             // Title
             ShimmerBox(
                 height = 14.dp,
-                shape = AppShapes.XS
+                shape = AppShapes.XS,
             )
-            
+
             Spacer(modifier = Modifier.height(6.dp))
-            
+
             // Subtitle
             ShimmerBox(
                 width = 60.dp,
                 height = 12.dp,
-                shape = AppShapes.XS
+                shape = AppShapes.XS,
             )
         }
-        
+
         Spacer(modifier = Modifier.width(8.dp))
-        
+
         // Quantity controls placeholder
         Box(
             modifier = Modifier
                 .size(80.dp, 32.dp)
                 .clip(AppShapes.S)
-                .background(shimmerBrush())
+                .background(shimmerBrush()),
         )
     }
 }
@@ -172,37 +172,37 @@ fun ShimmerCartItem(
  */
 @Composable
 fun ShimmerListItem(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(16.dp)
+            .padding(16.dp),
     ) {
         // Avatar/icon placeholder
         Box(
             modifier = Modifier
                 .size(48.dp)
                 .clip(CircleShape)
-                .background(shimmerBrush())
+                .background(shimmerBrush()),
         )
-        
+
         Spacer(modifier = Modifier.width(16.dp))
-        
+
         Column(modifier = Modifier.weight(1f)) {
             // Title
             ShimmerBox(
                 height = 16.dp,
-                shape = AppShapes.XS
+                shape = AppShapes.XS,
             )
-            
+
             Spacer(modifier = Modifier.height(8.dp))
-            
+
             // Subtitle
             ShimmerBox(
                 width = 120.dp,
                 height = 12.dp,
-                shape = AppShapes.XS
+                shape = AppShapes.XS,
             )
         }
     }
@@ -213,38 +213,38 @@ fun ShimmerListItem(
  */
 @Composable
 fun ShimmerStatCard(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Column(
         modifier = modifier
             .clip(AppShapes.M)
             .background(MaterialTheme.colorScheme.surface)
-            .padding(16.dp)
+            .padding(16.dp),
     ) {
         // Icon placeholder
         Box(
             modifier = Modifier
                 .size(40.dp)
                 .clip(CircleShape)
-                .background(shimmerBrush())
+                .background(shimmerBrush()),
         )
-        
+
         Spacer(modifier = Modifier.height(12.dp))
-        
+
         // Value placeholder
         ShimmerBox(
             width = 80.dp,
             height = 24.dp,
-            shape = AppShapes.XS
+            shape = AppShapes.XS,
         )
-        
+
         Spacer(modifier = Modifier.height(4.dp))
-        
+
         // Label placeholder
         ShimmerBox(
             width = 60.dp,
             height = 12.dp,
-            shape = AppShapes.XS
+            shape = AppShapes.XS,
         )
     }
 }

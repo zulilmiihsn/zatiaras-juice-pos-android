@@ -22,7 +22,7 @@ import javax.inject.Singleton
  */
 @Singleton
 class InventoryRemoteDataSource @Inject constructor(
-    private val postgrest: Postgrest
+    private val postgrest: Postgrest,
 ) {
     companion object {
         private const val TABLE_PRODUK = "produk"
@@ -109,7 +109,7 @@ class InventoryRemoteDataSource @Inject constructor(
     suspend fun deleteProduct(productId: String): Result<Unit> = withContext(Dispatchers.IO) {
         try {
             postgrest.from(TABLE_PRODUK).update(
-                ProdukSoftDeleteDto(isActive = false)
+                ProdukSoftDeleteDto(isActive = false),
             ) {
                 filter { eq("id", productId) }
             }
@@ -191,7 +191,7 @@ data class KategoriReadDto(
     @SerialName("created_at")
     val createdAt: String? = null,
     @SerialName("updated_at")
-    val updatedAt: String? = null
+    val updatedAt: String? = null,
 ) {
     fun toEntity(): CategoryEntity = CategoryEntity(
         id = id,
@@ -201,7 +201,7 @@ data class KategoriReadDto(
         isActive = isActive,
         createdAt = parseTimestamp(createdAt),
         updatedAt = parseTimestamp(updatedAt),
-        isSynced = true
+        isSynced = true,
     )
 }
 
@@ -226,7 +226,7 @@ data class ProdukReadDto(
     @SerialName("created_at")
     val createdAt: String? = null,
     @SerialName("updated_at")
-    val updatedAt: String? = null
+    val updatedAt: String? = null,
 ) {
     fun toEntity(): ProductEntity = ProductEntity(
         id = id,
@@ -242,7 +242,7 @@ data class ProdukReadDto(
         isActive = isActive,
         createdAt = parseTimestamp(createdAt),
         updatedAt = parseTimestamp(updatedAt),
-        isSynced = true
+        isSynced = true,
     )
 }
 
@@ -264,7 +264,7 @@ data class KategoriWriteDto(
     @SerialName("sort_order")
     val sortOrder: Int,
     @SerialName("is_active")
-    val isActive: Boolean
+    val isActive: Boolean,
 )
 
 /**
@@ -286,7 +286,7 @@ data class ProdukWriteDto(
     val gambarUrl: String?,
     val deskripsi: String?,
     @SerialName("is_active")
-    val isActive: Boolean
+    val isActive: Boolean,
 )
 
 /**
@@ -295,7 +295,7 @@ data class ProdukWriteDto(
 @Serializable
 data class ProdukSoftDeleteDto(
     @SerialName("is_active")
-    val isActive: Boolean
+    val isActive: Boolean,
 )
 
 // =====================================================================
@@ -310,7 +310,7 @@ fun CategoryEntity.toWriteDto(): KategoriWriteDto = KategoriWriteDto(
     nama = name,
     icon = icon,
     sortOrder = sortOrder,
-    isActive = isActive
+    isActive = isActive,
 )
 
 /**
@@ -335,7 +335,7 @@ fun ProductEntity.toWriteDto(): ProdukWriteDto {
         ekstraIds = ekstraIdsList,
         gambarUrl = imageUrl,
         deskripsi = description,
-        isActive = isActive
+        isActive = isActive,
     )
 }
 

@@ -7,12 +7,12 @@ import java.util.UUID
  */
 enum class CashRecordType(val displayName: String) {
     INCOME("Pemasukan"),
-    EXPENSE("Pengeluaran")
+    EXPENSE("Pengeluaran"),
 }
 
 /**
  * Represents a manual cash record entry (Buku Kas).
- * 
+ *
  * Used for recording income/expenses that are not from POS transactions.
  * Examples:
  * - Restocking supplies (expense)
@@ -22,12 +22,12 @@ enum class CashRecordType(val displayName: String) {
 data class CashRecord(
     val id: String = UUID.randomUUID().toString(),
     val type: CashRecordType,
-    val amount: Long,                    // Always positive
+    val amount: Long, // Always positive
     val description: String,
-    val category: String? = null,        // Optional category (e.g., "Utilities", "Supplies")
+    val category: String? = null, // Optional category (e.g., "Utilities", "Supplies")
     val notes: String? = null,
     val createdAt: Long = System.currentTimeMillis(),
-    val isSynced: Boolean = false
+    val isSynced: Boolean = false,
 ) {
     /**
      * Signed amount based on type.

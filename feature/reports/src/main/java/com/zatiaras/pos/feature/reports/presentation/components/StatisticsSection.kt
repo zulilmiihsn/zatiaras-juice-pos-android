@@ -18,18 +18,19 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
-import com.zatiaras.pos.feature.reports.R
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.zatiaras.pos.core.ui.theme.LocalDimensions
 import com.zatiaras.pos.core.ui.theme.AppShapes
 import com.zatiaras.pos.core.ui.theme.ErrorRed
+import com.zatiaras.pos.core.ui.theme.LocalDimensions
 import com.zatiaras.pos.core.ui.theme.SuccessGreen
 import com.zatiaras.pos.core.ui.util.CurrencyFormatter
+import com.zatiaras.pos.feature.reports.R
+import java.util.Locale
 
 /**
  * Statistics section displaying 6 metrics in a grid layout.
@@ -43,36 +44,36 @@ fun StatisticsSection(
     averageItemsPerTransaction: Double = 0.0,
     growthPercent: Double? = null,
     busiestDay: String = "-",
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val formatCurrency = CurrencyFormatter.getCurrencyFormatter()
     val dimensions = LocalDimensions.current
-    
+
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = AppShapes.L,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
     ) {
         Column(
-            modifier = Modifier.padding(dimensions.paddingL)
+            modifier = Modifier.padding(dimensions.paddingL),
         ) {
             Text(
                 text = stringResource(R.string.reports_stats),
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold
+                fontWeight = FontWeight.SemiBold,
             )
-            
+
             Spacer(modifier = Modifier.height(dimensions.spacingM))
-            
+
             // Row 1: Rata-rata transaksi & Jam paling ramai
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(IntrinsicSize.Min),
-                horizontalArrangement = Arrangement.spacedBy(dimensions.spacingM)
+                horizontalArrangement = Arrangement.spacedBy(dimensions.spacingM),
             ) {
                 StatItem(
                     value = if (averageTransactions > 0) averageTransactions.toString() else null,
@@ -80,25 +81,25 @@ fun StatisticsSection(
                     sublabel = stringResource(R.string.reports_per_day),
                     modifier = Modifier
                         .weight(1f)
-                        .fillMaxHeight()
+                        .fillMaxHeight(),
                 )
                 StatItem(
                     value = if (peakHours != "-") peakHours else null,
                     label = stringResource(R.string.reports_peak_hour),
                     modifier = Modifier
                         .weight(1f)
-                        .fillMaxHeight()
+                        .fillMaxHeight(),
                 )
             }
-            
+
             Spacer(modifier = Modifier.height(dimensions.spacingM))
-            
+
             // Row 2: AOV & Items per transaksi
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(IntrinsicSize.Min),
-                horizontalArrangement = Arrangement.spacedBy(dimensions.spacingM)
+                horizontalArrangement = Arrangement.spacedBy(dimensions.spacingM),
             ) {
                 StatItem(
                     value = if (averageOrderValue > 0) formatCurrency.format(averageOrderValue) else null,
@@ -106,39 +107,43 @@ fun StatisticsSection(
                     sublabel = stringResource(R.string.reports_per_transaction),
                     modifier = Modifier
                         .weight(1f)
-                        .fillMaxHeight()
+                        .fillMaxHeight(),
                 )
                 StatItem(
-                    value = if (averageItemsPerTransaction > 0) String.format("%.1f", averageItemsPerTransaction) else null,
+                    value = if (averageItemsPerTransaction > 0) {
+                        String.format(Locale.getDefault(), "%.1f", averageItemsPerTransaction)
+                    } else {
+                        null
+                    },
                     label = stringResource(R.string.reports_avg_items_label),
                     modifier = Modifier
                         .weight(1f)
-                        .fillMaxHeight()
+                        .fillMaxHeight(),
                 )
             }
-            
+
             Spacer(modifier = Modifier.height(dimensions.spacingM))
-            
+
             // Row 3: Growth & Busiest day
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(IntrinsicSize.Min),
-                horizontalArrangement = Arrangement.spacedBy(dimensions.spacingM)
+                horizontalArrangement = Arrangement.spacedBy(dimensions.spacingM),
             ) {
                 StatItem(
-                    value = growthPercent?.let { 
+                    value = growthPercent?.let {
                         val sign = if (it >= 0) "+" else ""
-                        "$sign${String.format("%.1f", it)}%"
+                        "$sign${String.format(Locale.getDefault(), "%.1f", it)}%"
                     },
                     label = stringResource(R.string.reports_growth_label),
                     sublabel = stringResource(R.string.reports_vs_yesterday),
-                    valueColor = growthPercent?.let { 
-                        if (it >= 0) SuccessGreen else ErrorRed 
+                    valueColor = growthPercent?.let {
+                        if (it >= 0) SuccessGreen else ErrorRed
                     },
                     modifier = Modifier
                         .weight(1f)
-                        .fillMaxHeight()
+                        .fillMaxHeight(),
                 )
                 StatItem(
                     value = if (busiestDay != "-") busiestDay else null,
@@ -146,7 +151,7 @@ fun StatisticsSection(
                     sublabel = stringResource(R.string.reports_this_week),
                     modifier = Modifier
                         .weight(1f)
-                        .fillMaxHeight()
+                        .fillMaxHeight(),
                 )
             }
         }
@@ -159,7 +164,7 @@ private fun StatItem(
     label: String,
     modifier: Modifier = Modifier,
     sublabel: String? = null,
-    valueColor: Color? = null
+    valueColor: Color? = null,
 ) {
     val dimensions = LocalDimensions.current
     Box(
@@ -168,10 +173,10 @@ private fun StatItem(
             .background(MaterialTheme.colorScheme.surface)
             .fillMaxHeight()
             .padding(horizontal = dimensions.paddingM, vertical = dimensions.paddingL),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         Column(
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             if (value != null) {
                 // Has data - show value prominently
@@ -182,7 +187,7 @@ private fun StatItem(
                     color = valueColor ?: MaterialTheme.colorScheme.primary,
                     textAlign = TextAlign.Center,
                     maxLines = 1,
-                    softWrap = false
+                    softWrap = false,
                 )
             } else {
                 // No data - show placeholder
@@ -191,33 +196,28 @@ private fun StatItem(
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
                 )
             }
-            
+
             Spacer(modifier = Modifier.height(dimensions.spacingXS))
-            
+
             Text(
                 text = label,
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.Medium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
             )
-            
+
             if (sublabel != null) {
                 Text(
                     text = sublabel,
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
                 )
             }
         }
     }
 }
-
-
-
-
-

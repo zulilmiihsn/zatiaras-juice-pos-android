@@ -17,65 +17,57 @@ import java.util.UUID
 /**
  * Convert TransactionEntity + items to domain Transaction.
  */
-fun TransactionEntity.toDomain(items: List<TransactionItemEntity>): Transaction {
-    return Transaction(
-        id = id,
-        transactionNumber = transactionNumber,
-        items = items.map { it.toDomain() },
-        subtotal = subtotal,
-        discountAmount = discountAmount,
-        discountPercent = discountPercent,
-        taxAmount = taxAmount,
-        taxPercent = taxPercent,
-        grandTotal = grandTotal,
-        paymentMethod = PaymentMethod.valueOf(paymentMethod),
-        amountPaid = amountPaid,
-        changeAmount = changeAmount,
-        notes = notes,
-        customerName = customerName,
-        createdAt = createdAt,
-        isSynced = isSynced
-    )
-}
+fun TransactionEntity.toDomain(items: List<TransactionItemEntity>): Transaction = Transaction(
+    id = id,
+    transactionNumber = transactionNumber,
+    items = items.map { it.toDomain() },
+    subtotal = subtotal,
+    discountAmount = discountAmount,
+    discountPercent = discountPercent,
+    taxAmount = taxAmount,
+    taxPercent = taxPercent,
+    grandTotal = grandTotal,
+    paymentMethod = PaymentMethod.valueOf(paymentMethod),
+    amountPaid = amountPaid,
+    changeAmount = changeAmount,
+    notes = notes,
+    customerName = customerName,
+    createdAt = createdAt,
+    isSynced = isSynced,
+)
 
 /**
  * Convert TransactionItemEntity to domain TransactionItem.
  */
-fun TransactionItemEntity.toDomain(): TransactionItem {
-    return TransactionItem(
-        id = id,
-        productId = productId,
-        productName = productName,
-        productPrice = productPrice,
-        quantity = quantity,
-        subtotal = subtotal,
-        notes = notes
-    )
-}
+fun TransactionItemEntity.toDomain(): TransactionItem = TransactionItem(
+    id = id,
+    productId = productId,
+    productName = productName,
+    productPrice = productPrice,
+    quantity = quantity,
+    subtotal = subtotal,
+    notes = notes,
+)
 
 /**
  * Convert CartItem to TransactionItemEntity.
  * Creates snapshot of product data at time of purchase.
  */
-fun CartItem.toEntity(transactionId: String): TransactionItemEntity {
-    return TransactionItemEntity(
-        id = UUID.randomUUID().toString(),
-        transactionId = transactionId,
-        productId = product.id,
-        productName = product.name,
-        productPrice = product.price,
-        quantity = quantity,
-        subtotal = subtotal,
-        notes = notes
-    )
-}
+fun CartItem.toEntity(transactionId: String): TransactionItemEntity = TransactionItemEntity(
+    id = UUID.randomUUID().toString(),
+    transactionId = transactionId,
+    productId = product.id,
+    productName = product.name,
+    productPrice = product.price,
+    quantity = quantity,
+    subtotal = subtotal,
+    notes = notes,
+)
 
 /**
  * Convert Cart items to list of TransactionItemEntity.
  */
-fun Cart.toItemEntities(transactionId: String): List<TransactionItemEntity> {
-    return items.map { it.toEntity(transactionId) }
-}
+fun Cart.toItemEntities(transactionId: String): List<TransactionItemEntity> = items.map { it.toEntity(transactionId) }
 
 /**
  * Create TransactionEntity from checkout data.
@@ -89,7 +81,7 @@ fun createTransactionEntity(
     discountPercent: Double,
     taxPercent: Double,
     notes: String?,
-    customerName: String?
+    customerName: String?,
 ): TransactionEntity {
     val subtotal = cart.subtotal
     val discountAmount = (subtotal * discountPercent / 100).toLong()
@@ -101,7 +93,7 @@ fun createTransactionEntity(
     } else {
         0
     }
-    
+
     return TransactionEntity(
         id = id,
         transactionNumber = transactionNumber,
@@ -116,7 +108,7 @@ fun createTransactionEntity(
         changeAmount = changeAmount,
         notes = notes,
         customerName = customerName,
-        isSynced = false
+        isSynced = false,
     )
 }
 
@@ -124,6 +116,4 @@ fun createTransactionEntity(
  * Convert TransactionWithItems (Room @Relation result) to domain Transaction.
  * This avoids N+1 query problem by using Room's relation mapping.
  */
-fun TransactionWithItems.toDomain(): Transaction {
-    return transaction.toDomain(items)
-}
+fun TransactionWithItems.toDomain(): Transaction = transaction.toDomain(items)

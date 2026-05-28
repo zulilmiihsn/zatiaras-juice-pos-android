@@ -9,7 +9,7 @@ import javax.inject.Singleton
 
 /**
  * Syncer implementation for Transaction entities.
- * 
+ *
  * Handles:
  * - Fetching unsynced transactions from local DB
  * - Uploading to Supabase
@@ -20,21 +20,21 @@ import javax.inject.Singleton
 class TransactionSyncer @Inject constructor(
     private val transactionDao: TransactionDao,
     private val transactionRemoteDataSource: TransactionRemoteDataSource,
-    private val syncPreferences: SyncPreferences
+    private val syncPreferences: SyncPreferences,
 ) : EntitySyncer {
 
     override val syncType: SyncType = SyncType.TRANSACTIONS
 
     override suspend fun sync(): SyncResult {
         val unsyncedTransactions = transactionDao.getUnsyncedTransactions()
-        
+
         if (unsyncedTransactions.isEmpty()) {
             Timber.d("TransactionSyncer: No unsynced transactions")
             return SyncResult(type = SyncType.TRANSACTIONS)
         }
 
         Timber.d("TransactionSyncer: Found ${unsyncedTransactions.size} unsynced transactions")
-        
+
         var uploaded = 0
         var failed = 0
 
@@ -42,7 +42,7 @@ class TransactionSyncer @Inject constructor(
         val allTransactionIds = unsyncedTransactions.map { it.id }
         val allItems = transactionDao.getTransactionItemsByTransactionIds(allTransactionIds)
         val itemsByTransactionId = allItems.groupBy { it.transactionId }
-        
+
         val batchData = unsyncedTransactions.map { transaction ->
             Pair(transaction, itemsByTransactionId[transaction.id] ?: emptyList())
         }
@@ -60,7 +60,7 @@ class TransactionSyncer @Inject constructor(
             onFailure = { error ->
                 failed = unsyncedTransactions.size
                 Timber.e(error, "TransactionSyncer: Batch sync failed")
-            }
+            },
         )
 
         if (uploaded > 0) {
@@ -78,7 +78,7 @@ class TransactionSyncer @Inject constructor(
             val pullResult = transactionRemoteDataSource.fetchTransactionsExtended(
                 lastSyncTimestamp = lastSyncTimestamp,
                 page = page,
-                pageSize = pageSize
+                pageSize = pageSize,
             )
 
             pullResult.fold(
@@ -89,7 +89,7 @@ class TransactionSyncer @Inject constructor(
                         // SMART MERGE: Insert or Update local
                         for ((remoteTransaction, remoteItems) in remoteData) {
                             val localTransaction = transactionDao.getTransactionById(remoteTransaction.id)
-                            
+
                             if (localTransaction == null) {
                                 // New transaction -> Insert with items
                                 transactionDao.insertTransactionWithItems(remoteTransaction, remoteItems)
@@ -100,7 +100,7 @@ class TransactionSyncer @Inject constructor(
                                 downloaded++
                             }
                         }
-                        
+
                         if (remoteData.size < pageSize) {
                             hasMore = false
                         } else {
@@ -112,28 +112,26 @@ class TransactionSyncer @Inject constructor(
                     Timber.e(error, "TransactionSyncer: Failed to pull page $page")
                     failed += pageSize // Approximation
                     hasMore = false
-                }
+                },
             )
         }
 
         // Always update sync timestamp on successful completion
         syncPreferences.updateLastTransactionsSyncTimestamp()
-        
+
         if (downloaded > 0) {
             Timber.d("TransactionSyncer: Downloaded $downloaded new/updated transactions")
         }
 
         Timber.d("TransactionSyncer: Completed - uploaded=$uploaded, downloaded=$downloaded, failed=$failed")
-        
+
         return SyncResult(
             type = SyncType.TRANSACTIONS,
             uploaded = uploaded,
             downloaded = downloaded,
-            failed = failed
+            failed = failed,
         )
     }
 
-    override suspend fun getPendingCount(): Int {
-        return transactionDao.getUnsyncedCount()
-    }
+    override suspend fun getPendingCount(): Int = transactionDao.getUnsyncedCount()
 }

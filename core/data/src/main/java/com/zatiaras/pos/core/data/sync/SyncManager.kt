@@ -3,6 +3,7 @@ package com.zatiaras.pos.core.data.sync
 import android.content.Context
 import com.zatiaras.pos.core.data.local.SyncPreferences
 import dagger.hilt.android.qualifiers.ApplicationContext
+import io.sentry.Sentry
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,15 +17,15 @@ import javax.inject.Singleton
 
 /**
  * Facade for all sync operations.
- * 
+ *
  * Provides a unified API for:
  * - Manual sync trigger
  * - Sync status observation
  * - Pending changes count
  * - Last sync info
- * 
+ *
  * This is the main entry point for UI layer to interact with sync functionality.
- * 
+ *
  * Follows Single Responsibility Principle by delegating actual sync logic
  * to dedicated EntitySyncer implementations.
  */
@@ -35,7 +36,7 @@ class SyncManager @Inject constructor(
     private val cashRecordSyncer: CashRecordSyncer,
     private val productSyncer: ProductSyncer,
     private val categorySyncer: CategorySyncer,
-    private val transactionSyncer: TransactionSyncer
+    private val transactionSyncer: TransactionSyncer,
 ) {
     private val _syncStatus = MutableStateFlow<SyncStatus>(SyncStatus.Idle)
     val syncStatus: StateFlow<SyncStatus> = _syncStatus.asStateFlow()
@@ -45,7 +46,7 @@ class SyncManager @Inject constructor(
         categorySyncer,
         productSyncer,
         transactionSyncer,
-        cashRecordSyncer
+        cashRecordSyncer,
     )
 
     /**
@@ -72,50 +73,51 @@ class SyncManager @Inject constructor(
      */
     suspend fun syncNow(): List<SyncResult> = withContext(Dispatchers.IO) {
         val results = mutableListOf<SyncResult>()
-        
+
         try {
             syncPreferences.setSyncInProgress(true)
-            
+
             val totalSyncers = syncers.size
-            
+
             syncers.forEachIndexed { index, syncer ->
                 val progress = ((index + 1) * 100) / totalSyncers
                 _syncStatus.value = SyncStatus.Syncing(
                     progress = progress,
-                    message = "Syncing ${syncer.syncType.name.lowercase().replace('_', ' ')}..."
+                    message = "Syncing ${syncer.syncType.name.lowercase().replace('_', ' ')}...",
                 )
-                
+
                 val result = syncer.sync()
                 results.add(result)
             }
-            
+
             // Update timestamps
             syncPreferences.updateLastFullSyncTimestamp()
-            
+
             val totalSynced = results.sumOf { it.totalSynced }
             val totalFailed = results.sumOf { it.failed }
-            
+
             _syncStatus.value = if (totalFailed > 0) {
                 SyncStatus.Error(
                     message = "Sync completed with $totalFailed errors",
-                    isRetryable = true
+                    isRetryable = true,
                 )
             } else {
                 SyncStatus.Success(itemsSynced = totalSynced)
             }
-            
+
             Timber.d("Sync completed: $totalSynced items synced, $totalFailed failed")
         } catch (e: Exception) {
             Timber.e(e, "Sync failed")
+            Sentry.captureException(e)
             _syncStatus.value = SyncStatus.Error(
                 error = e,
                 message = e.message ?: "Unknown error",
-                isRetryable = true
+                isRetryable = true,
             )
         } finally {
             syncPreferences.setSyncInProgress(false)
         }
-        
+
         results
     }
 
@@ -139,17 +141,15 @@ class SyncManager @Inject constructor(
     /**
      * Get sync info as a Flow for UI observation.
      */
-    fun getSyncInfo(): Flow<SyncInfo> {
-        return combine(
-            syncPreferences.isSyncInProgress(),
-            _syncStatus
-        ) { inProgress, status ->
-            SyncInfo(
-                isInProgress = inProgress,
-                status = status,
-                lastSyncTimestamp = syncPreferences.getLastFullSyncTimestamp()
-            )
-        }
+    fun getSyncInfo(): Flow<SyncInfo> = combine(
+        syncPreferences.isSyncInProgress(),
+        _syncStatus,
+    ) { inProgress, status ->
+        SyncInfo(
+            isInProgress = inProgress,
+            status = status,
+            lastSyncTimestamp = syncPreferences.getLastFullSyncTimestamp(),
+        )
     }
 
     /**
@@ -175,7 +175,7 @@ class SyncManager @Inject constructor(
 data class SyncInfo(
     val isInProgress: Boolean,
     val status: SyncStatus,
-    val lastSyncTimestamp: Long
+    val lastSyncTimestamp: Long,
 ) {
     val lastSyncFormatted: String
         get() {

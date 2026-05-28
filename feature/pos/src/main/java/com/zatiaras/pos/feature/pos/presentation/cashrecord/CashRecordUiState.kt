@@ -13,34 +13,34 @@ sealed class CashFlowItem(
     open val amount: Long,
     open val description: String,
     open val createdAt: Long,
-    open val isIncome: Boolean
+    open val isIncome: Boolean,
 ) {
     /**
      * POS Transaction (income from sales).
      */
     data class FromTransaction(
-        val transaction: Transaction
+        val transaction: Transaction,
     ) : CashFlowItem(
         id = "trx_${transaction.id}",
         amount = transaction.grandTotal,
         description = "Penjualan ${transaction.transactionNumber}",
         createdAt = transaction.createdAt,
-        isIncome = true
+        isIncome = true,
     ) {
         val itemCount: Int get() = transaction.items.sumOf { it.quantity }
     }
-    
+
     /**
      * Manual Cash Record (income/expense).
      */
     data class FromCashRecord(
-        val record: CashRecord
+        val record: CashRecord,
     ) : CashFlowItem(
         id = "cash_${record.id}",
         amount = record.amount,
         description = record.description,
         createdAt = record.createdAt,
-        isIncome = record.type == CashRecordType.INCOME
+        isIncome = record.type == CashRecordType.INCOME,
     ) {
         val category: String? get() = record.category
         val canDelete: Boolean get() = true
@@ -58,7 +58,7 @@ data class CashRecordUiState(
     val isLoading: Boolean = true,
     val error: String? = null,
     val customStartDate: Long? = null,
-    val customEndDate: Long? = null
+    val customEndDate: Long? = null,
 )
 
 /**
@@ -73,13 +73,13 @@ data class CashRecordFormState(
     val date: Long? = null,
     val isSubmitting: Boolean = false,
     val amountError: String? = null,
-    val descriptionError: String? = null
+    val descriptionError: String? = null,
 ) {
     val isValid: Boolean
-        get() = amountError == null && 
-                descriptionError == null && 
-                amount.isNotBlank() && 
-                description.isNotBlank()
+        get() = amountError == null &&
+            descriptionError == null &&
+            amount.isNotBlank() &&
+            description.isNotBlank()
 }
 
 /**
@@ -90,9 +90,9 @@ sealed interface CashRecordEvent {
     data class SetDateFilter(
         val period: com.zatiaras.pos.core.domain.model.DatePeriod,
         val customStartDate: Long? = null,
-        val customEndDate: Long? = null
+        val customEndDate: Long? = null,
     ) : CashRecordEvent
-    
+
     // Form events
     data class SetType(val type: CashRecordType) : CashRecordEvent
     data class SetAmount(val amount: String) : CashRecordEvent
@@ -101,7 +101,7 @@ sealed interface CashRecordEvent {
     data class SetNotes(val notes: String) : CashRecordEvent
     data class SetDate(val date: Long?) : CashRecordEvent
     data object SaveRecord : CashRecordEvent
-    
+
     // List events
     data class DeleteRecord(val id: String) : CashRecordEvent
     data object DismissError : CashRecordEvent

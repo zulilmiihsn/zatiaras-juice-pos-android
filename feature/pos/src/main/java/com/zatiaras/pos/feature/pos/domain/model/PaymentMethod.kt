@@ -6,5 +6,5 @@ package com.zatiaras.pos.feature.pos.domain.model
 enum class PaymentMethod(val displayName: String) {
     CASH("Tunai"),
     QRIS("QRIS"),
-    TRANSFER("Transfer Bank")
+    TRANSFER("Transfer Bank"),
 }

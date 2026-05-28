@@ -17,12 +17,12 @@ abstract class ReportModule {
     @Binds
     @Singleton
     abstract fun bindReportRepository(
-        impl: ReportRepositoryImpl
+        impl: ReportRepositoryImpl,
     ): ReportRepository
 
     @Binds
     @Singleton
     abstract fun bindAiChatRepository(
-        impl: AiChatRepositoryImpl
+        impl: AiChatRepositoryImpl,
     ): AiChatRepository
 }

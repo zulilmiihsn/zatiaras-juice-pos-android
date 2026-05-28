@@ -1,11 +1,15 @@
 package com.zatiaras.pos.feature.reports.presentation.pnl
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,31 +23,22 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.PictureAsPdf
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.TableChart
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
-import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -52,51 +47,43 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
-import com.zatiaras.pos.feature.reports.R
 import androidx.compose.ui.draw.clip
-import com.zatiaras.pos.core.ui.theme.PdfRed
-import com.zatiaras.pos.core.ui.theme.AppShapes
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.zatiaras.pos.core.ui.theme.LocalDimensions
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.zatiaras.pos.core.data.access.AccessControlManager
 import com.zatiaras.pos.core.data.access.LockableRoute
+import com.zatiaras.pos.core.domain.access.AccessChecker
 import com.zatiaras.pos.core.ui.components.AccessControlGate
 import com.zatiaras.pos.core.ui.components.DateFilterRow
+import com.zatiaras.pos.core.ui.theme.AppShapes
+import com.zatiaras.pos.core.ui.theme.LocalDimensions
+import com.zatiaras.pos.core.ui.theme.PdfRed
+import com.zatiaras.pos.feature.reports.R
 import com.zatiaras.pos.feature.reports.domain.model.ReportPeriod
 import com.zatiaras.pos.feature.reports.presentation.components.PnlBreakdownCard
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
-import android.Manifest
-import android.content.pm.PackageManager
-import android.os.Build
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.content.ContextCompat
 
 @Composable
 fun PnlReportRoute(
     onNavigateBack: (() -> Unit)? = null,
     onNavigateToChat: () -> Unit = {},
-    accessControlManager: AccessControlManager,
-    viewModel: PnlReportViewModel = hiltViewModel()
+    accessControlManager: AccessChecker,
+    viewModel: PnlReportViewModel = hiltViewModel(),
 ) {
     // Wrap with access control gate
     AccessControlGate(
-        accessControlManager = accessControlManager,
+        accessChecker = accessControlManager,
         route = LockableRoute.PNL_REPORT.route,
         screenName = stringResource(R.string.pnl_title),
-        onAccessDenied = { onNavigateBack?.invoke() }
+        onAccessDenied = { onNavigateBack?.invoke() },
     ) {
         PnlReportContent(
             onNavigateBack = onNavigateBack,
             onNavigateToChat = onNavigateToChat,
-            viewModel = viewModel
+            viewModel = viewModel,
         )
     }
 }
@@ -108,12 +95,12 @@ fun PnlReportRoute(
 fun PnlReportRoute(
     onNavigateBack: (() -> Unit)? = null,
     onNavigateToChat: () -> Unit = {},
-    viewModel: PnlReportViewModel = hiltViewModel()
+    viewModel: PnlReportViewModel = hiltViewModel(),
 ) {
     PnlReportContent(
         onNavigateBack = onNavigateBack,
         onNavigateToChat = onNavigateToChat,
-        viewModel = viewModel
+        viewModel = viewModel,
     )
 }
 
@@ -121,11 +108,11 @@ fun PnlReportRoute(
 private fun PnlReportContent(
     onNavigateBack: (() -> Unit)?,
     onNavigateToChat: () -> Unit,
-    viewModel: PnlReportViewModel
+    viewModel: PnlReportViewModel,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
-    
+
     // Handle export events
     LaunchedEffect(Unit) {
         viewModel.exportEvent.collect { event ->
@@ -133,16 +120,16 @@ private fun PnlReportContent(
                 is ExportEvent.SavedToDownloads -> {
                     val message = context.getString(R.string.export_saved, event.fileName)
                     Toast.makeText(
-                        context, 
-                        message, 
-                        Toast.LENGTH_LONG
+                        context,
+                        message,
+                        Toast.LENGTH_LONG,
                     ).show()
                 }
                 is ExportEvent.ShareFile -> {
                     val prefix = context.getString(R.string.export_share_prefix, event.fileName)
                     val chooserIntent = android.content.Intent.createChooser(
                         event.intent,
-                        prefix
+                        prefix,
                     )
                     context.startActivity(chooserIntent)
                 }
@@ -152,9 +139,9 @@ private fun PnlReportContent(
             }
         }
     }
-    
+
     val permissionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestPermission()
+        ActivityResultContracts.RequestPermission(),
     ) { isGranted ->
         if (isGranted) {
             Toast.makeText(context, "Izin diberikan, silakan tekan Export sekali lagi", Toast.LENGTH_SHORT).show()
@@ -164,8 +151,9 @@ private fun PnlReportContent(
     }
 
     val checkAndExportPdf = {
-        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P && 
-            ContextCompat.checkSelfPermission(context, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P &&
+            ContextCompat.checkSelfPermission(context, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
+        ) {
             permissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
         } else {
             viewModel.exportToPdf(context)
@@ -173,8 +161,9 @@ private fun PnlReportContent(
     }
 
     val checkAndExportCsv = {
-        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P && 
-            ContextCompat.checkSelfPermission(context, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P &&
+            ContextCompat.checkSelfPermission(context, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
+        ) {
             permissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
         } else {
             viewModel.exportToCsv(context)
@@ -191,7 +180,7 @@ private fun PnlReportContent(
         onHideDatePicker = viewModel::hideDatePicker,
         onRangeSelected = viewModel::setCustomRange,
         onExportPdf = checkAndExportPdf,
-        onExportCsv = checkAndExportCsv
+        onExportCsv = checkAndExportCsv,
     )
 }
 
@@ -207,20 +196,20 @@ fun PnlReportScreen(
     onHideDatePicker: () -> Unit,
     onRangeSelected: (Long, Long) -> Unit,
     onExportPdf: () -> Unit = {},
-    onExportCsv: () -> Unit = {}
+    onExportCsv: () -> Unit = {},
 ) {
     val pullToRefreshState = rememberPullToRefreshState()
-    
+
     // Date range picker dialog
     if (uiState.showDatePicker) {
         com.zatiaras.pos.core.ui.components.DateRangePickerDialog(
             onDismiss = onHideDatePicker,
             onConfirm = { start, end ->
                 onRangeSelected(start, end)
-            }
+            },
         )
     }
-    
+
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
@@ -228,7 +217,7 @@ fun PnlReportScreen(
                 title = {
                     Text(
                         text = stringResource(R.string.reports_title),
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
                     )
                 },
                 navigationIcon = {
@@ -236,11 +225,11 @@ fun PnlReportScreen(
                         IconButton(onClick = onNavigateBack) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = stringResource(R.string.reports_back)
+                                contentDescription = stringResource(R.string.reports_back),
                             )
                         }
                     }
-                }
+                },
             )
         },
         floatingActionButton = {
@@ -249,9 +238,9 @@ fun PnlReportScreen(
                 containerColor = MaterialTheme.colorScheme.primaryContainer,
                 contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
                 icon = { Icon(Icons.Default.AutoAwesome, contentDescription = null) },
-                text = { Text(stringResource(R.string.pnl_ask_ai)) }
+                text = { Text(stringResource(R.string.pnl_ask_ai)) },
             )
-        }
+        },
     ) { paddingValues ->
         PullToRefreshBox(
             isRefreshing = uiState.isLoading,
@@ -259,13 +248,13 @@ fun PnlReportScreen(
             state = pullToRefreshState,
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
+                .padding(paddingValues),
         ) {
             val dimensions = LocalDimensions.current
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(dimensions.paddingM),
-                verticalArrangement = Arrangement.spacedBy(dimensions.spacingM)
+                verticalArrangement = Arrangement.spacedBy(dimensions.spacingM),
             ) {
                 // Date Filter Row (always visible date range + quick period chips)
                 item {
@@ -275,11 +264,10 @@ fun PnlReportScreen(
                         activePeriod = if (uiState.selectedPeriod != ReportPeriod.CUSTOM) uiState.selectedPeriod else null,
                         onStartDateClick = onShowDatePicker,
                         onEndDateClick = onShowDatePicker,
-                        onQuickPeriodSelected = onPeriodSelected
+                        onQuickPeriodSelected = onPeriodSelected,
                     )
                 }
 
-                
                 // Loading State
                 if (uiState.isLoading && uiState.report == null) {
                     item {
@@ -287,35 +275,35 @@ fun PnlReportScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(200.dp),
-                            contentAlignment = Alignment.Center
+                            contentAlignment = Alignment.Center,
                         ) {
                             CircularProgressIndicator()
                         }
                     }
                 }
-                
+
                 // P&L Breakdown
                 uiState.report?.let { report ->
                     item {
                         AnimatedVisibility(
                             visible = !uiState.isLoading,
                             enter = fadeIn(),
-                            exit = fadeOut()
+                            exit = fadeOut(),
                         ) {
                             PnlBreakdownCard(report = report)
                         }
                     }
-                    
+
                     // Export Buttons
                     item {
                         ExportSection(
                             isExporting = uiState.isExporting,
                             onExportPdf = onExportPdf,
-                            onExportCsv = onExportCsv
+                            onExportCsv = onExportCsv,
                         )
                     }
                 }
-                
+
                 // Error State
                 uiState.error?.let { error ->
                     item {
@@ -324,16 +312,16 @@ fun PnlReportScreen(
                                 .fillMaxWidth()
                                 .clip(AppShapes.M)
                                 .background(MaterialTheme.colorScheme.errorContainer)
-                                .padding(16.dp)
+                                .padding(16.dp),
                         ) {
                             Text(
                                 text = error,
-                                color = MaterialTheme.colorScheme.onErrorContainer
+                                color = MaterialTheme.colorScheme.onErrorContainer,
                             )
                         }
                     }
                 }
-                
+
                 // Bottom spacing
                 item {
                     Spacer(modifier = Modifier.height(16.dp))
@@ -343,38 +331,37 @@ fun PnlReportScreen(
     }
 }
 
-
 @Composable
 private fun ExportSection(
     isExporting: Boolean,
     onExportPdf: () -> Unit,
     onExportCsv: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     var showExportMenu by remember { mutableStateOf(false) }
-    
+
     Column(modifier = modifier.fillMaxWidth()) {
         Text(
             text = stringResource(R.string.export_title),
             style = MaterialTheme.typography.labelLarge,
             fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        
+
         Spacer(modifier = Modifier.height(8.dp))
-        
+
         // Single Export Button with Dropdown
         Box {
             Button(
                 onClick = { showExportMenu = true },
                 enabled = !isExporting,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
             ) {
                 if (isExporting) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(16.dp),
                         color = MaterialTheme.colorScheme.onPrimary,
-                        strokeWidth = 2.dp
+                        strokeWidth = 2.dp,
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(stringResource(R.string.export_exporting))
@@ -382,26 +369,26 @@ private fun ExportSection(
                     Icon(
                         imageVector = Icons.Default.PictureAsPdf,
                         contentDescription = null,
-                        modifier = Modifier.size(18.dp)
+                        modifier = Modifier.size(18.dp),
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(stringResource(R.string.export_title))
                 }
             }
-            
+
             // Export Format Dropdown Menu
             androidx.compose.material3.DropdownMenu(
                 expanded = showExportMenu,
-                onDismissRequest = { showExportMenu = false }
+                onDismissRequest = { showExportMenu = false },
             ) {
                 androidx.compose.material3.DropdownMenuItem(
-                    text = { 
+                    text = {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
                                 imageVector = Icons.Default.PictureAsPdf,
                                 contentDescription = null,
                                 tint = PdfRed,
-                                modifier = Modifier.size(18.dp)
+                                modifier = Modifier.size(18.dp),
                             )
                             Spacer(modifier = Modifier.width(10.dp))
                             Text(stringResource(R.string.export_pdf))
@@ -410,16 +397,16 @@ private fun ExportSection(
                     onClick = {
                         showExportMenu = false
                         onExportPdf()
-                    }
+                    },
                 )
                 androidx.compose.material3.DropdownMenuItem(
-                    text = { 
+                    text = {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
                                 imageVector = Icons.Default.TableChart,
                                 contentDescription = null,
                                 tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(18.dp)
+                                modifier = Modifier.size(18.dp),
                             )
                             Spacer(modifier = Modifier.width(10.dp))
                             Text(stringResource(R.string.export_csv))
@@ -428,19 +415,17 @@ private fun ExportSection(
                     onClick = {
                         showExportMenu = false
                         onExportCsv()
-                    }
+                    },
                 )
             }
         }
-        
+
         Spacer(modifier = Modifier.height(4.dp))
-        
+
         Text(
             text = stringResource(R.string.export_save_desc),
             style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
         )
     }
 }
-
-

@@ -22,16 +22,12 @@ object PosModule {
     @Provides
     @Singleton
     fun provideTransactionRepository(
-        transactionDao: TransactionDao
-    ): TransactionRepository {
-        return TransactionRepositoryImpl(transactionDao)
-    }
+        transactionDao: TransactionDao,
+    ): TransactionRepository = TransactionRepositoryImpl(transactionDao)
 
     @Provides
     @Singleton
     fun provideCashRecordRepository(
-        cashRecordDao: CashRecordDao
-    ): CashRecordRepository {
-        return CashRecordRepositoryImpl(cashRecordDao)
-    }
+        cashRecordDao: CashRecordDao,
+    ): CashRecordRepository = CashRecordRepositoryImpl(cashRecordDao)
 }

@@ -28,7 +28,7 @@ interface StoreSessionDao {
 
     @Query("SELECT * FROM store_sessions WHERE isSynced = 0")
     suspend fun getUnsyncedSessions(): List<StoreSessionEntity>
-    
+
     @Query("DELETE FROM store_sessions")
     suspend fun deleteAll()
 }

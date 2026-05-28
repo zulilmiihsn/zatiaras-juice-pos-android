@@ -3,10 +3,10 @@ package com.zatiaras.pos.feature.pos.presentation
 import app.cash.turbine.test
 import com.zatiaras.pos.core.domain.model.Category
 import com.zatiaras.pos.core.domain.model.Product
+import com.zatiaras.pos.core.domain.repository.AddOnRepository
 import com.zatiaras.pos.core.domain.repository.ProductRepository
 import com.zatiaras.pos.core.domain.repository.StoreSessionRepository
 import com.zatiaras.pos.feature.pos.MainDispatcherRule
-import com.zatiaras.pos.core.domain.repository.AddOnRepository
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -21,7 +21,7 @@ import org.junit.Test
 
 /**
  * Unit tests for PosViewModel.
- * 
+ *
  * Tests:
  * - Initial state is loading
  * - Products and categories are loaded
@@ -50,7 +50,7 @@ class PosViewModelTest {
             imageUrl = null,
             description = "Es teh manis",
             createdAt = System.currentTimeMillis(),
-            updatedAt = System.currentTimeMillis()
+            updatedAt = System.currentTimeMillis(),
         ),
         Product(
             id = "prod-2",
@@ -60,8 +60,8 @@ class PosViewModelTest {
             imageUrl = null,
             description = "Kopi susu gula aren",
             createdAt = System.currentTimeMillis(),
-            updatedAt = System.currentTimeMillis()
-        )
+            updatedAt = System.currentTimeMillis(),
+        ),
     )
 
     @Before
@@ -76,7 +76,7 @@ class PosViewModelTest {
         // Mock addOnRepository methods if necessary, or just rely on relaxed mocking if used
         // Since getAddOnsByIds is suspended, we might need to mock it if it's called in init or tests
         // But it's only called in showProductOptionsSheet which is triggered by an event, so initialization should be fine.
-        
+
         viewModel = PosViewModel(productRepository, storeSessionRepository, addOnRepository)
     }
 
@@ -84,7 +84,7 @@ class PosViewModelTest {
     fun `initial state loads categories and product count`() = runTest {
         viewModel.uiState.test {
             val state = awaitItem()
-            
+
             // Skip loading state, get to loaded state
             if (state.isLoading) {
                 val loadedState = awaitItem()
@@ -102,12 +102,12 @@ class PosViewModelTest {
     @Test
     fun `addToCart adds product to cart`() = runTest {
         advanceUntilIdle() // let loadData complete
-        
+
         viewModel.onEvent(PosEvent.AddToCart(testProducts[0]))
         advanceUntilIdle() // let showProductOptionsSheet complete
-        
+
         viewModel.onEvent(PosEvent.ConfirmAddToCart)
-        
+
         val state = viewModel.uiState.value
         assertEquals(1, state.cart.itemCount)
         assertEquals(testProducts[0].id, state.cart.items[0].product.id)
@@ -116,17 +116,17 @@ class PosViewModelTest {
     @Test
     fun `addToCart increments quantity for existing product`() = runTest {
         advanceUntilIdle()
-        
+
         // First add
         viewModel.onEvent(PosEvent.AddToCart(testProducts[0]))
         advanceUntilIdle()
         viewModel.onEvent(PosEvent.ConfirmAddToCart)
-        
+
         // Second add - same product
         viewModel.onEvent(PosEvent.AddToCart(testProducts[0]))
         advanceUntilIdle()
         viewModel.onEvent(PosEvent.ConfirmAddToCart)
-        
+
         val state = viewModel.uiState.value
         assertEquals(1, state.cart.uniqueItemCount)
         assertEquals(2, state.cart.itemCount)
@@ -135,30 +135,30 @@ class PosViewModelTest {
     @Test
     fun `incrementItem increases quantity by 1`() = runTest {
         advanceUntilIdle()
-        
+
         viewModel.onEvent(PosEvent.AddToCart(testProducts[0]))
         advanceUntilIdle()
         viewModel.onEvent(PosEvent.ConfirmAddToCart)
-        
+
         val uniqueKey = viewModel.uiState.value.cart.items[0].uniqueKey
         viewModel.onEvent(PosEvent.IncrementItem(uniqueKey))
-        
+
         assertEquals(2, viewModel.uiState.value.cart.getQuantity(testProducts[0].id))
     }
 
     @Test
     fun `decrementItem decreases quantity by 1`() = runTest {
         advanceUntilIdle()
-        
+
         viewModel.onEvent(PosEvent.AddToCart(testProducts[0]))
         advanceUntilIdle()
         viewModel.onEvent(PosEvent.ConfirmAddToCart)
-        
+
         val uniqueKey = viewModel.uiState.value.cart.items[0].uniqueKey
-        
+
         viewModel.onEvent(PosEvent.IncrementItem(uniqueKey))
         viewModel.onEvent(PosEvent.DecrementItem(uniqueKey))
-        
+
         assertEquals(1, viewModel.uiState.value.cart.getQuantity(testProducts[0].id))
     }
 
@@ -220,17 +220,17 @@ class PosViewModelTest {
     @Test
     fun `cart calculates subtotal correctly`() = runTest {
         advanceUntilIdle()
-        
+
         // Add first product (5000)
         viewModel.onEvent(PosEvent.AddToCart(testProducts[0]))
         advanceUntilIdle()
         viewModel.onEvent(PosEvent.ConfirmAddToCart)
-        
+
         // Add second product (15000)
         viewModel.onEvent(PosEvent.AddToCart(testProducts[1]))
         advanceUntilIdle()
         viewModel.onEvent(PosEvent.ConfirmAddToCart)
-        
+
         assertEquals(20000L, viewModel.uiState.value.cart.subtotal)
     }
 }

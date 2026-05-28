@@ -11,16 +11,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.layout.size
-import compose.icons.EvaIcons
-import compose.icons.evaicons.Outline
-import compose.icons.evaicons.outline.Close
-import compose.icons.evaicons.outline.Search
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -31,20 +26,24 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Modifier
-import com.zatiaras.pos.feature.pos.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.zatiaras.pos.core.domain.model.Category
 import com.zatiaras.pos.core.domain.model.Product
-import com.zatiaras.pos.feature.pos.domain.model.Cart
 import com.zatiaras.pos.core.ui.theme.AppShapes
 import com.zatiaras.pos.core.ui.theme.LocalDimensions
+import com.zatiaras.pos.feature.pos.R
+import com.zatiaras.pos.feature.pos.domain.model.Cart
+import compose.icons.EvaIcons
+import compose.icons.evaicons.Outline
+import compose.icons.evaicons.outline.Close
+import compose.icons.evaicons.outline.Search
 
 /**
  * Product catalog component with search, category filter, and product grid.
- * 
+ *
  * Extracted from PosScreen for better separation of concerns.
  */
 @Composable
@@ -59,7 +58,7 @@ fun ProductCatalog(
     onSearchChange: (String) -> Unit,
     onCategorySelect: (String?) -> Unit,
     onProductClick: (Product) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier) {
         // Search Bar
@@ -68,9 +67,9 @@ fun ProductCatalog(
             onQueryChange = onSearchChange,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp)
+                .padding(horizontal = 16.dp, vertical = 8.dp),
         )
-        
+
         // Category Filter Chips
         CategoryChips(
             categories = categories,
@@ -78,11 +77,11 @@ fun ProductCatalog(
             onCategorySelect = onCategorySelect,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = 16.dp),
         )
-        
+
         Spacer(modifier = Modifier.height(8.dp))
-        
+
         // Product Grid
         ProductGrid(
             products = products,
@@ -90,7 +89,7 @@ fun ProductCatalog(
             isLoading = isLoading,
             showEmptyState = showEmptyState,
             onProductClick = onProductClick,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
         )
     }
 }
@@ -99,7 +98,7 @@ fun ProductCatalog(
 private fun SearchBar(
     query: String,
     onQueryChange: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     OutlinedTextField(
         value = query,
@@ -109,7 +108,7 @@ private fun SearchBar(
         leadingIcon = {
             Icon(
                 imageVector = EvaIcons.Outline.Search,
-                contentDescription = null
+                contentDescription = null,
             )
         },
         trailingIcon = {
@@ -117,13 +116,13 @@ private fun SearchBar(
                 IconButton(onClick = { onQueryChange("") }) {
                     Icon(
                         imageVector = EvaIcons.Outline.Close,
-                        contentDescription = stringResource(R.string.cart_item_remove)
+                        contentDescription = stringResource(R.string.cart_item_remove),
                     )
                 }
             }
         },
         singleLine = true,
-        shape = AppShapes.M
+        shape = AppShapes.M,
     )
 }
 
@@ -132,12 +131,12 @@ private fun CategoryChips(
     categories: List<Category>,
     selectedCategoryId: String?,
     onCategorySelect: (String?) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val dimensions = LocalDimensions.current
     Row(
         modifier = modifier.horizontalScroll(rememberScrollState()),
-        horizontalArrangement = Arrangement.spacedBy(dimensions.spacingXS)
+        horizontalArrangement = Arrangement.spacedBy(dimensions.spacingXS),
     ) {
         FilterChip(
             selected = selectedCategoryId == null,
@@ -145,10 +144,10 @@ private fun CategoryChips(
             label = { Text(stringResource(R.string.pos_category_all)) },
             colors = FilterChipDefaults.filterChipColors(
                 selectedContainerColor = MaterialTheme.colorScheme.primary,
-                selectedLabelColor = MaterialTheme.colorScheme.onPrimary
-            )
+                selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
+            ),
         )
-        
+
         categories.forEach { category ->
             FilterChip(
                 selected = selectedCategoryId == category.id,
@@ -156,8 +155,8 @@ private fun CategoryChips(
                 label = { Text(category.name) },
                 colors = FilterChipDefaults.filterChipColors(
                     selectedContainerColor = MaterialTheme.colorScheme.primary,
-                    selectedLabelColor = MaterialTheme.colorScheme.onPrimary
-                )
+                    selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                ),
             )
         }
     }
@@ -170,40 +169,40 @@ private fun ProductGrid(
     isLoading: Boolean,
     showEmptyState: Boolean,
     onProductClick: (Product) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Box(modifier = modifier) {
         when {
             isLoading -> {
                 CircularProgressIndicator(
-                    modifier = Modifier.align(Alignment.Center)
+                    modifier = Modifier.align(Alignment.Center),
                 )
             }
-            
+
             showEmptyState -> {
                 EmptyState(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(32.dp)
+                        .padding(32.dp),
                 )
             }
-            
+
             else -> {
                 val dimensions = LocalDimensions.current
                 LazyVerticalGrid(
                     columns = GridCells.Adaptive(minSize = 150.dp),
                     contentPadding = PaddingValues(dimensions.paddingM),
                     horizontalArrangement = Arrangement.spacedBy(dimensions.spacingS),
-                    verticalArrangement = Arrangement.spacedBy(dimensions.spacingS)
+                    verticalArrangement = Arrangement.spacedBy(dimensions.spacingS),
                 ) {
                     items(
                         items = products,
-                        key = { it.id }
+                        key = { it.id },
                     ) { product ->
                         PosProductCard(
                             product = product,
                             quantityInCart = cart.getQuantity(product.id),
-                            onAddToCart = { onProductClick(product) }
+                            onAddToCart = { onProductClick(product) },
                         )
                     }
                 }
@@ -214,30 +213,30 @@ private fun ProductGrid(
 
 @Composable
 private fun EmptyState(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.Center,
     ) {
         Icon(
             imageVector = EvaIcons.Outline.Search,
             contentDescription = null,
             modifier = Modifier.size(72.dp),
-            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
             text = stringResource(R.string.pos_empty_products),
             style = MaterialTheme.typography.titleMedium,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
         )
         Text(
             text = stringResource(R.string.pos_empty_products_hint),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
         )
     }
 }

@@ -8,9 +8,9 @@ import com.zatiaras.pos.feature.pos.domain.model.Transaction
  * UI State for Checkout screen.
  */
 sealed interface CheckoutUiState {
-    
+
     data object Loading : CheckoutUiState
-    
+
     /**
      * Ready state with all checkout information.
      */
@@ -19,7 +19,7 @@ sealed interface CheckoutUiState {
         val subtotal: Long,
         val discountPercent: Double = 0.0,
         val discountAmount: Long = 0,
-        val taxPercent: Double = 11.0,          // Default PPN Indonesia
+        val taxPercent: Double = 11.0, // Default PPN Indonesia
         val taxAmount: Long = 0,
         val grandTotal: Long,
         val selectedPaymentMethod: PaymentMethod = PaymentMethod.CASH,
@@ -28,9 +28,9 @@ sealed interface CheckoutUiState {
         val customerName: String = "",
         val notes: String = "",
         val isProcessing: Boolean = false,
-        val paymentError: String? = null
+        val paymentError: String? = null,
     ) : CheckoutUiState {
-        
+
         /**
          * Check if payment can be completed.
          * For CASH: amountPaid must be >= grandTotal
@@ -44,21 +44,21 @@ sealed interface CheckoutUiState {
                 }
                 PaymentMethod.QRIS, PaymentMethod.TRANSFER -> true
             }
-        
+
         /**
          * Formatted amount paid as Long.
          */
         val amountPaidValue: Long
             get() = amountPaid.toLongOrNull() ?: 0
     }
-    
+
     /**
      * Transaction completed successfully.
      */
     data class Success(
-        val transaction: Transaction
+        val transaction: Transaction,
     ) : CheckoutUiState
-    
+
     /**
      * Error state.
      */

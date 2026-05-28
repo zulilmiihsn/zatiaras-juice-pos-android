@@ -18,7 +18,7 @@ private val Context.syncDataStore: DataStore<Preferences> by preferencesDataStor
 
 /**
  * Stores sync-related preferences using DataStore.
- * 
+ *
  * Tracks:
  * - Last sync timestamp for delta sync (per entity type)
  * - Sync in progress flag
@@ -26,7 +26,7 @@ private val Context.syncDataStore: DataStore<Preferences> by preferencesDataStor
  */
 @Singleton
 class SyncPreferences @Inject constructor(
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
 ) {
     companion object {
         private val KEY_LAST_PRODUCTS_SYNC = longPreferencesKey("last_products_sync")
@@ -44,11 +44,9 @@ class SyncPreferences @Inject constructor(
     /**
      * Get last products sync timestamp.
      */
-    suspend fun getLastProductsSyncTimestamp(): Long {
-        return context.syncDataStore.data.map { prefs ->
-            prefs[KEY_LAST_PRODUCTS_SYNC] ?: 0L
-        }.first()
-    }
+    suspend fun getLastProductsSyncTimestamp(): Long = context.syncDataStore.data.map { prefs ->
+        prefs[KEY_LAST_PRODUCTS_SYNC] ?: 0L
+    }.first()
 
     /**
      * Update last products sync timestamp to now.
@@ -64,11 +62,9 @@ class SyncPreferences @Inject constructor(
     /**
      * Get last categories sync timestamp.
      */
-    suspend fun getLastCategoriesSyncTimestamp(): Long {
-        return context.syncDataStore.data.map { prefs ->
-            prefs[KEY_LAST_CATEGORIES_SYNC] ?: 0L
-        }.first()
-    }
+    suspend fun getLastCategoriesSyncTimestamp(): Long = context.syncDataStore.data.map { prefs ->
+        prefs[KEY_LAST_CATEGORIES_SYNC] ?: 0L
+    }.first()
 
     /**
      * Update last categories sync timestamp to now.
@@ -84,11 +80,9 @@ class SyncPreferences @Inject constructor(
     /**
      * Get last transactions sync timestamp.
      */
-    suspend fun getLastTransactionsSyncTimestamp(): Long {
-        return context.syncDataStore.data.map { prefs ->
-            prefs[KEY_LAST_TRANSACTIONS_SYNC] ?: 0L
-        }.first()
-    }
+    suspend fun getLastTransactionsSyncTimestamp(): Long = context.syncDataStore.data.map { prefs ->
+        prefs[KEY_LAST_TRANSACTIONS_SYNC] ?: 0L
+    }.first()
 
     /**
      * Update last transactions sync timestamp to now.
@@ -104,11 +98,9 @@ class SyncPreferences @Inject constructor(
     /**
      * Get last cash records sync timestamp.
      */
-    suspend fun getLastCashRecordsSyncTimestamp(): Long {
-        return context.syncDataStore.data.map { prefs ->
-            prefs[KEY_LAST_CASH_RECORDS_SYNC] ?: 0L
-        }.first()
-    }
+    suspend fun getLastCashRecordsSyncTimestamp(): Long = context.syncDataStore.data.map { prefs ->
+        prefs[KEY_LAST_CASH_RECORDS_SYNC] ?: 0L
+    }.first()
 
     /**
      * Update last cash records sync timestamp to now.
@@ -124,11 +116,9 @@ class SyncPreferences @Inject constructor(
     /**
      * Get last add-ons sync timestamp.
      */
-    suspend fun getLastAddOnsSyncTimestamp(): Long {
-        return context.syncDataStore.data.map { prefs ->
-            prefs[KEY_LAST_ADD_ONS_SYNC] ?: 0L
-        }.first()
-    }
+    suspend fun getLastAddOnsSyncTimestamp(): Long = context.syncDataStore.data.map { prefs ->
+        prefs[KEY_LAST_ADD_ONS_SYNC] ?: 0L
+    }.first()
 
     /**
      * Update last add-ons sync timestamp to now.
@@ -144,11 +134,9 @@ class SyncPreferences @Inject constructor(
     /**
      * Get last settings sync timestamp.
      */
-    suspend fun getLastSettingsSyncTimestamp(): Long {
-        return context.syncDataStore.data.map { prefs ->
-            prefs[KEY_LAST_SETTINGS_SYNC] ?: 0L
-        }.first()
-    }
+    suspend fun getLastSettingsSyncTimestamp(): Long = context.syncDataStore.data.map { prefs ->
+        prefs[KEY_LAST_SETTINGS_SYNC] ?: 0L
+    }.first()
 
     /**
      * Update last settings sync timestamp to now.
@@ -164,11 +152,9 @@ class SyncPreferences @Inject constructor(
     /**
      * Get last full sync timestamp.
      */
-    suspend fun getLastFullSyncTimestamp(): Long {
-        return context.syncDataStore.data.map { prefs ->
-            prefs[KEY_LAST_FULL_SYNC] ?: 0L
-        }.first()
-    }
+    suspend fun getLastFullSyncTimestamp(): Long = context.syncDataStore.data.map { prefs ->
+        prefs[KEY_LAST_FULL_SYNC] ?: 0L
+    }.first()
 
     /**
      * Update last full sync timestamp to now.
@@ -182,10 +168,8 @@ class SyncPreferences @Inject constructor(
     /**
      * Check if sync is in progress.
      */
-    fun isSyncInProgress(): Flow<Boolean> {
-        return context.syncDataStore.data.map { prefs ->
-            prefs[KEY_SYNC_IN_PROGRESS] ?: false
-        }
+    fun isSyncInProgress(): Flow<Boolean> = context.syncDataStore.data.map { prefs ->
+        prefs[KEY_SYNC_IN_PROGRESS] ?: false
     }
 
     /**
@@ -212,4 +196,3 @@ class SyncPreferences @Inject constructor(
         }
     }
 }
-

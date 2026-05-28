@@ -9,5 +9,5 @@ data class DashboardStats(
     val todayItemsSold: Int,
     val weeklyRevenue: Long,
     val monthlyRevenue: Long,
-    val revenueGrowthPercent: Double  // Compared to previous period
+    val revenueGrowthPercent: Double, // Compared to previous period
 )

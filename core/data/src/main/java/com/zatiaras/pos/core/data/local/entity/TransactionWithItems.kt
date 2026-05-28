@@ -5,7 +5,7 @@ import androidx.room.Relation
 
 /**
  * Data class representing a Transaction with its Items.
- * 
+ *
  * Uses Room @Relation to fetch related items in a single query,
  * avoiding N+1 query problem where each transaction would trigger
  * a separate query for its items.
@@ -13,10 +13,10 @@ import androidx.room.Relation
 data class TransactionWithItems(
     @Embedded
     val transaction: TransactionEntity,
-    
+
     @Relation(
         parentColumn = "id",
-        entityColumn = "transactionId"
+        entityColumn = "transactionId",
     )
-    val items: List<TransactionItemEntity>
+    val items: List<TransactionItemEntity>,
 )

@@ -19,7 +19,7 @@ data class Transaction(
     val notes: String?,
     val customerName: String?,
     val createdAt: Long,
-    val isSynced: Boolean
+    val isSynced: Boolean,
 ) {
     /**
      * Total quantity of all items in this transaction.
@@ -38,5 +38,5 @@ data class TransactionItem(
     val productPrice: Long,
     val quantity: Int,
     val subtotal: Long,
-    val notes: String?
+    val notes: String?,
 )

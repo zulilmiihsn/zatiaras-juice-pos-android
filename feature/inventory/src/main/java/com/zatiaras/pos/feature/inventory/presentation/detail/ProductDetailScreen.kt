@@ -21,7 +21,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -48,31 +47,31 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Modifier
-import com.zatiaras.pos.feature.inventory.R
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.zatiaras.pos.core.domain.model.Category
 import com.zatiaras.pos.core.ui.components.CurrencyTextField
 import com.zatiaras.pos.core.ui.components.ZatDialog
 import com.zatiaras.pos.core.ui.theme.AppShapes
 import com.zatiaras.pos.core.ui.theme.LocalDimensions
+import com.zatiaras.pos.feature.inventory.R
 
 /**
  * Product Detail Screen for Add/Edit product.
- * 
+ *
  * Features:
  * - Image picker from gallery
  * - Form fields: name, price, category, description
@@ -85,26 +84,26 @@ import com.zatiaras.pos.core.ui.theme.LocalDimensions
 fun ProductDetailScreen(
     viewModel: ProductDetailViewModel = hiltViewModel(),
     onNavigateBack: () -> Unit = {},
-    onSaveSuccess: () -> Unit = {}
+    onSaveSuccess: () -> Unit = {},
 ) {
-    val uiState by viewModel.uiState.collectAsState()
-    
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
     // Image picker launcher
     val imagePickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
+        contract = ActivityResultContracts.GetContent(),
     ) { uri: Uri? ->
         uri?.let { viewModel.onEvent(ProductDetailEvent.SetImageUri(it)) }
     }
 
     // Permission launcher — request before opening gallery
     val permissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission()
+        contract = ActivityResultContracts.RequestPermission(),
     ) { isGranted ->
         if (isGranted) {
             imagePickerLauncher.launch("image/*")
         }
     }
-    
+
     // Function to pick image with permission check
     val pickImage: () -> Unit = {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -136,27 +135,28 @@ fun ProductDetailScreen(
                                 }
                             }
                             else -> stringResource(R.string.product_detail_title)
-                        }
+                        },
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = null
+                            contentDescription = null,
                         )
                     }
                 },
                 actions = {
-                    if (uiState is ProductDetailUiState.Form && 
-                        (uiState as ProductDetailUiState.Form).isEditMode) {
+                    if (uiState is ProductDetailUiState.Form &&
+                        (uiState as ProductDetailUiState.Form).isEditMode
+                    ) {
                         var showDeleteDialog by remember { mutableStateOf(false) }
-                        
+
                         IconButton(onClick = { showDeleteDialog = true }) {
                             Icon(
                                 imageVector = Icons.Default.Delete,
                                 contentDescription = stringResource(R.string.inventory_action_delete),
-                                tint = MaterialTheme.colorScheme.error
+                                tint = MaterialTheme.colorScheme.error,
                             )
                         }
 
@@ -166,13 +166,13 @@ fun ProductDetailScreen(
                                     viewModel.onEvent(ProductDetailEvent.Delete)
                                     showDeleteDialog = false
                                 },
-                                onDismiss = { showDeleteDialog = false }
+                                onDismiss = { showDeleteDialog = false },
                             )
                         }
                     }
-                }
+                },
             )
-        }
+        },
     ) { paddingValues ->
         when (val state = uiState) {
             is ProductDetailUiState.Loading -> {
@@ -181,7 +181,7 @@ fun ProductDetailScreen(
             is ProductDetailUiState.Error -> {
                 ErrorContent(
                     message = state.message,
-                    modifier = Modifier.padding(paddingValues)
+                    modifier = Modifier.padding(paddingValues),
                 )
             }
             is ProductDetailUiState.Form -> {
@@ -189,7 +189,7 @@ fun ProductDetailScreen(
                     state = state,
                     onEvent = viewModel::onEvent,
                     onPickImage = pickImage,
-                    modifier = Modifier.padding(paddingValues)
+                    modifier = Modifier.padding(paddingValues),
                 )
             }
             is ProductDetailUiState.Success -> {
@@ -206,7 +206,7 @@ private fun FormContent(
     state: ProductDetailUiState.Form,
     onEvent: (ProductDetailEvent) -> Unit,
     onPickImage: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val dimensions = LocalDimensions.current
     Column(
@@ -214,13 +214,13 @@ private fun FormContent(
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
             .padding(dimensions.paddingM),
-        verticalArrangement = Arrangement.spacedBy(dimensions.spacingM)
+        verticalArrangement = Arrangement.spacedBy(dimensions.spacingM),
     ) {
         // Image Picker
         ImagePickerBox(
             imageUrl = state.imageUrl,
             imageUri = state.imageUri,
-            onImageClick = onPickImage
+            onImageClick = onPickImage,
         )
 
         // Name Field
@@ -233,7 +233,7 @@ private fun FormContent(
             isError = state.nameError != null,
             supportingText = state.nameError?.let { { Text(it) } },
             singleLine = true,
-            shape = AppShapes.M
+            shape = AppShapes.M,
         )
 
         // Price Field with currency formatting
@@ -245,16 +245,16 @@ private fun FormContent(
             isError = state.priceError != null,
             showPrefix = true,
             singleLine = true,
-            shape = AppShapes.M
+            shape = AppShapes.M,
         )
-        
+
         // Show price error if any
         state.priceError?.let { error ->
             Text(
                 text = error,
                 color = MaterialTheme.colorScheme.error,
                 style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(start = 16.dp, top = 4.dp)
+                modifier = Modifier.padding(start = 16.dp, top = 4.dp),
             )
         }
 
@@ -262,32 +262,32 @@ private fun FormContent(
         CategoryDropdown(
             categories = state.categories,
             selectedCategoryId = state.categoryId,
-            onCategorySelected = { onEvent(ProductDetailEvent.SetCategory(it)) }
+            onCategorySelected = { onEvent(ProductDetailEvent.SetCategory(it)) },
         )
-        
+
         // Product Type Selector
         ProductTypeSelector(
             selectedType = state.type,
-            onTypeSelected = { onEvent(ProductDetailEvent.SetType(it)) }
+            onTypeSelected = { onEvent(ProductDetailEvent.SetType(it)) },
         )
-        
+
         // Add-Ons Selector
         var showAddOnDialog by remember { mutableStateOf(false) }
-        
+
         AddOnSelector(
             availableAddOns = state.availableAddOns,
             selectedAddOnIds = state.ekstraIds,
             onAddOnToggle = { onEvent(ProductDetailEvent.ToggleAddOn(it)) },
-            onAddNewAddOn = { showAddOnDialog = true }
+            onAddNewAddOn = { showAddOnDialog = true },
         )
-        
+
         if (showAddOnDialog) {
             AddNewAddOnDialog(
                 onDismiss = { showAddOnDialog = false },
                 onConfirm = { name, price ->
                     onEvent(ProductDetailEvent.AddNewAddOn(name, price))
                     showAddOnDialog = false
-                }
+                },
             )
         }
 
@@ -301,7 +301,7 @@ private fun FormContent(
             label = { Text(stringResource(R.string.product_desc_label)) },
             placeholder = { Text(stringResource(R.string.product_desc_placeholder)) },
             maxLines = 4,
-            shape = AppShapes.M
+            shape = AppShapes.M,
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -313,18 +313,18 @@ private fun FormContent(
                 .fillMaxWidth()
                 .height(56.dp),
             enabled = !state.isSubmitting,
-            shape = AppShapes.M
+            shape = AppShapes.M,
         ) {
             if (state.isSubmitting) {
                 CircularProgressIndicator(
                     modifier = Modifier.size(24.dp),
                     color = MaterialTheme.colorScheme.onPrimary,
-                    strokeWidth = 2.dp
+                    strokeWidth = 2.dp,
                 )
             } else {
                 Text(
                     text = if (state.isEditMode) stringResource(R.string.product_action_update) else stringResource(R.string.product_action_save),
-                    style = MaterialTheme.typography.titleMedium
+                    style = MaterialTheme.typography.titleMedium,
                 )
             }
         }
@@ -337,7 +337,7 @@ private fun FormContent(
 private fun ImagePickerBox(
     imageUrl: String?,
     imageUri: Uri?,
-    onImageClick: () -> Unit
+    onImageClick: () -> Unit,
 ) {
     Box(
         modifier = Modifier
@@ -348,10 +348,10 @@ private fun ImagePickerBox(
             .border(
                 width = 2.dp,
                 color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
-                shape = AppShapes.L
+                shape = AppShapes.L,
             )
             .clickable(onClick = onImageClick),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         when {
             imageUri != null -> {
@@ -359,7 +359,7 @@ private fun ImagePickerBox(
                     model = imageUri,
                     contentDescription = stringResource(R.string.product_image_selected),
                     modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
+                    contentScale = ContentScale.Crop,
                 )
             }
             imageUrl != null -> {
@@ -367,24 +367,24 @@ private fun ImagePickerBox(
                     model = imageUrl,
                     contentDescription = stringResource(R.string.product_image_existing),
                     modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
+                    contentScale = ContentScale.Crop,
                 )
             }
             else -> {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     Icon(
                         imageVector = Icons.Default.AddAPhoto,
                         contentDescription = null,
                         modifier = Modifier.size(48.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
                     )
                     Text(
                         text = stringResource(R.string.product_image_placeholder),
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                     )
                 }
             }
@@ -397,14 +397,14 @@ private fun ImagePickerBox(
 private fun CategoryDropdown(
     categories: List<Category>,
     selectedCategoryId: String?,
-    onCategorySelected: (String?) -> Unit
+    onCategorySelected: (String?) -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
     val selectedCategory = categories.find { it.id == selectedCategoryId }
 
     ExposedDropdownMenuBox(
         expanded = expanded,
-        onExpandedChange = { expanded = it }
+        onExpandedChange = { expanded = it },
     ) {
         OutlinedTextField(
             value = selectedCategory?.name ?: "",
@@ -416,12 +416,12 @@ private fun CategoryDropdown(
             label = { Text(stringResource(R.string.product_category_label)) },
             placeholder = { Text(stringResource(R.string.product_category_placeholder)) },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-            shape = AppShapes.M
+            shape = AppShapes.M,
         )
 
         ExposedDropdownMenu(
             expanded = expanded,
-            onDismissRequest = { expanded = false }
+            onDismissRequest = { expanded = false },
         ) {
             // "None" option
             DropdownMenuItem(
@@ -429,16 +429,16 @@ private fun CategoryDropdown(
                 onClick = {
                     onCategorySelected(null)
                     expanded = false
-                }
+                },
             )
-            
+
             categories.forEach { category ->
                 DropdownMenuItem(
                     text = { Text(category.name) },
                     onClick = {
                         onCategorySelected(category.id)
                         expanded = false
-                    }
+                    },
                 )
             }
         }
@@ -448,67 +448,67 @@ private fun CategoryDropdown(
 @Composable
 private fun DeleteConfirmationDialog(
     onConfirm: () -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
 ) {
     ZatDialog(
-        onDismissRequest = onDismiss
+        onDismissRequest = onDismiss,
     ) { dismiss ->
         Card(
             modifier = Modifier.fillMaxWidth(0.9f)
                 .border(
                     1.dp,
                     MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
-                    AppShapes.XXL
+                    AppShapes.XXL,
                 ),
             shape = AppShapes.XXL,
             colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surface
+                containerColor = MaterialTheme.colorScheme.surface,
             ),
-            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         ) {
             Column(
                 modifier = Modifier.padding(24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Icon(
                     imageVector = Icons.Default.Delete,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.size(48.dp)
+                    modifier = Modifier.size(48.dp),
                 )
-                
+
                 Spacer(modifier = Modifier.height(16.dp))
-                
+
                 Text(
                     text = stringResource(R.string.product_delete_confirm_title),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
-                
+
                 Spacer(modifier = Modifier.height(8.dp))
-                
+
                 Text(
                     text = stringResource(R.string.product_delete_confirm_desc),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
                 )
-                
+
                 Spacer(modifier = Modifier.height(24.dp))
-                
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     OutlinedButton(
                         onClick = dismiss,
                         modifier = Modifier.weight(1f),
-                        shape = AppShapes.M
+                        shape = AppShapes.M,
                     ) {
                         Text(stringResource(R.string.inventory_action_cancel))
                     }
-                    
+
                     Button(
                         onClick = {
                             onConfirm()
@@ -516,9 +516,9 @@ private fun DeleteConfirmationDialog(
                         },
                         modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.error
+                            containerColor = MaterialTheme.colorScheme.error,
                         ),
-                        shape = AppShapes.M
+                        shape = AppShapes.M,
                     ) {
                         Text(stringResource(R.string.inventory_action_delete))
                     }
@@ -532,7 +532,7 @@ private fun DeleteConfirmationDialog(
 private fun LoadingContent(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         CircularProgressIndicator()
     }
@@ -541,28 +541,28 @@ private fun LoadingContent(modifier: Modifier = Modifier) {
 @Composable
 private fun ErrorContent(
     message: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Box(
         modifier = modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         val dimensions = LocalDimensions.current
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(dimensions.paddingXXL)
+            modifier = Modifier.padding(dimensions.paddingXXL),
         ) {
             Icon(
                 imageVector = Icons.Default.ErrorOutline,
                 contentDescription = null,
                 modifier = Modifier.size(72.dp),
-                tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f)
+                tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f),
             )
             Spacer(modifier = Modifier.height(16.dp))
             Text(
                 text = message,
                 style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.error
+                color = MaterialTheme.colorScheme.error,
             )
         }
     }

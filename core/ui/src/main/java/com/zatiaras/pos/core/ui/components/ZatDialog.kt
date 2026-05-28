@@ -19,17 +19,17 @@ import kotlinx.coroutines.launch
 fun ZatDialog(
     onDismissRequest: () -> Unit,
     properties: DialogProperties = DialogProperties(usePlatformDefaultWidth = false),
-    content: @Composable (dismiss: () -> Unit) -> Unit
+    content: @Composable (dismiss: () -> Unit) -> Unit,
 ) {
     var isVisible by remember { mutableStateOf(false) }
     var isDismissing by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
-    
+
     // Trigger enter animation
     LaunchedEffect(Unit) {
         isVisible = true
     }
-    
+
     // Function to handle dismissal with animation
     val animateDismiss = {
         if (!isDismissing) {
@@ -44,22 +44,22 @@ fun ZatDialog(
 
     Dialog(
         onDismissRequest = { animateDismiss() },
-        properties = properties
+        properties = properties,
     ) {
         Box(
             modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.Center,
         ) {
             AnimatedVisibility(
                 visible = isVisible,
                 enter = slideInVertically(
                     initialOffsetY = { it },
-                    animationSpec = tween(300)
+                    animationSpec = tween(300),
                 ) + fadeIn(animationSpec = tween(300)),
                 exit = slideOutVertically(
                     targetOffsetY = { it },
-                    animationSpec = tween(300)
-                ) + fadeOut(animationSpec = tween(300))
+                    animationSpec = tween(300),
+                ) + fadeOut(animationSpec = tween(300)),
             ) {
                 content(animateDismiss)
             }

@@ -21,7 +21,7 @@ annotation class ApplicationScope
 
 /**
  * Hilt module for Coroutine dependencies.
- * 
+ *
  * Provides a single, managed CoroutineScope for background operations
  * instead of creating multiple unmanaged scopes throughout the app.
  */
@@ -37,6 +37,5 @@ object CoroutineModule {
     @Provides
     @Singleton
     @ApplicationScope
-    fun provideApplicationScope(): CoroutineScope =
-        CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    fun provideApplicationScope(): CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 }

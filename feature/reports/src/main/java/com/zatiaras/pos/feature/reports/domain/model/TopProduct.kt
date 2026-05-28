@@ -7,5 +7,5 @@ data class TopProduct(
     val productId: String,
     val productName: String,
     val quantitySold: Int,
-    val totalRevenue: Long
+    val totalRevenue: Long,
 )

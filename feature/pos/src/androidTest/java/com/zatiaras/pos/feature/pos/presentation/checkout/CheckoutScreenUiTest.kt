@@ -15,7 +15,7 @@ import org.junit.runner.RunWith
 
 /**
  * Compose UI tests for Checkout screen components.
- * 
+ *
  * Tests:
  * - Payment method selection
  * - Amount input
@@ -30,7 +30,7 @@ class CheckoutScreenUiTest {
     val composeTestRule = createComposeRule()
 
     private val testCategory = Category(id = "cat-1", name = "Minuman")
-    
+
     private val testProduct = Product(
         id = "prod-1",
         name = "Es Teh Manis",
@@ -39,13 +39,13 @@ class CheckoutScreenUiTest {
         imageUrl = null,
         description = "Es teh manis segar",
         createdAt = System.currentTimeMillis(),
-        updatedAt = System.currentTimeMillis()
+        updatedAt = System.currentTimeMillis(),
     )
 
     private val testCart = Cart(
         items = listOf(
-            CartItem(product = testProduct, quantity = 2)
-        )
+            CartItem(product = testProduct, quantity = 2),
+        ),
     )
 
     private val testState = CheckoutUiState.Ready(
@@ -58,7 +58,7 @@ class CheckoutScreenUiTest {
         grandTotal = 11100,
         selectedPaymentMethod = PaymentMethod.CASH,
         amountPaid = "",
-        changeAmount = 0
+        changeAmount = 0,
     )
 
     @Test
@@ -70,7 +70,7 @@ class CheckoutScreenUiTest {
                     onEvent = {},
                     onNavigateBack = {},
                     onSetQuickAmount = {},
-                    onSetExactAmount = {}
+                    onSetExactAmount = {},
                 )
             }
         }
@@ -89,7 +89,7 @@ class CheckoutScreenUiTest {
                     onEvent = {},
                     onNavigateBack = {},
                     onSetQuickAmount = {},
-                    onSetExactAmount = {}
+                    onSetExactAmount = {},
                 )
             }
         }
@@ -112,7 +112,7 @@ class CheckoutScreenUiTest {
                     onEvent = {},
                     onNavigateBack = {},
                     onSetQuickAmount = {},
-                    onSetExactAmount = {}
+                    onSetExactAmount = {},
                 )
             }
         }
@@ -131,7 +131,7 @@ class CheckoutScreenUiTest {
                     onEvent = {},
                     onNavigateBack = {},
                     onSetQuickAmount = {},
-                    onSetExactAmount = {}
+                    onSetExactAmount = {},
                 )
             }
         }
@@ -146,7 +146,7 @@ class CheckoutScreenUiTest {
     @Test
     fun checkoutScreen_clickQuickAmount_callsCallback() {
         var quickAmountClicked = 0L
-        
+
         composeTestRule.setContent {
             ZatiarasPOSTheme {
                 CheckoutScreenContent(
@@ -154,7 +154,7 @@ class CheckoutScreenUiTest {
                     onEvent = {},
                     onNavigateBack = {},
                     onSetQuickAmount = { amount -> quickAmountClicked = amount },
-                    onSetExactAmount = {}
+                    onSetExactAmount = {},
                 )
             }
         }
@@ -169,7 +169,7 @@ class CheckoutScreenUiTest {
     @Test
     fun checkoutScreen_insufficientPayment_confirmButtonDisabled() {
         val insufficientState = testState.copy(amountPaid = "5000")
-        
+
         composeTestRule.setContent {
             ZatiarasPOSTheme {
                 CheckoutScreenContent(
@@ -177,7 +177,7 @@ class CheckoutScreenUiTest {
                     onEvent = {},
                     onNavigateBack = {},
                     onSetQuickAmount = {},
-                    onSetExactAmount = {}
+                    onSetExactAmount = {},
                 )
             }
         }
@@ -192,9 +192,9 @@ class CheckoutScreenUiTest {
     fun checkoutScreen_sufficientPayment_confirmButtonEnabled() {
         val sufficientState = testState.copy(
             amountPaid = "15000",
-            changeAmount = 3900
+            changeAmount = 3900,
         )
-        
+
         composeTestRule.setContent {
             ZatiarasPOSTheme {
                 CheckoutScreenContent(
@@ -202,7 +202,7 @@ class CheckoutScreenUiTest {
                     onEvent = {},
                     onNavigateBack = {},
                     onSetQuickAmount = {},
-                    onSetExactAmount = {}
+                    onSetExactAmount = {},
                 )
             }
         }
@@ -217,9 +217,9 @@ class CheckoutScreenUiTest {
     fun checkoutScreen_showsChangeAmount() {
         val stateWithChange = testState.copy(
             amountPaid = "15000",
-            changeAmount = 3900
+            changeAmount = 3900,
         )
-        
+
         composeTestRule.setContent {
             ZatiarasPOSTheme {
                 CheckoutScreenContent(
@@ -227,7 +227,7 @@ class CheckoutScreenUiTest {
                     onEvent = {},
                     onNavigateBack = {},
                     onSetQuickAmount = {},
-                    onSetExactAmount = {}
+                    onSetExactAmount = {},
                 )
             }
         }
@@ -242,7 +242,7 @@ class CheckoutScreenUiTest {
     @Test
     fun checkoutScreen_backButton_callsNavigateBack() {
         var backCalled = false
-        
+
         composeTestRule.setContent {
             ZatiarasPOSTheme {
                 CheckoutScreenContent(
@@ -250,7 +250,7 @@ class CheckoutScreenUiTest {
                     onEvent = {},
                     onNavigateBack = { backCalled = true },
                     onSetQuickAmount = {},
-                    onSetExactAmount = {}
+                    onSetExactAmount = {},
                 )
             }
         }

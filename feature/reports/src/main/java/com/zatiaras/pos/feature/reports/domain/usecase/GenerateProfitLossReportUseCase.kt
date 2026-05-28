@@ -15,7 +15,7 @@ import javax.inject.Inject
  * away from the Repository and ViewModel to adhere to Clean Architecture.
  */
 class GenerateProfitLossReportUseCase @Inject constructor(
-    private val reportRepository: ReportRepository
+    private val reportRepository: ReportRepository,
 ) {
     suspend operator fun invoke(startDate: Long, endDate: Long, taxPercentage: Double = 0.5): Result<ProfitLossReport> {
         return try {
@@ -23,30 +23,30 @@ class GenerateProfitLossReportUseCase @Inject constructor(
             if (rawDataResult.isFailure) {
                 return Result.failure(rawDataResult.exceptionOrNull() ?: Exception("Gagal mengambil data mentah laporan"))
             }
-            
+
             val rawData = rawDataResult.getOrThrow()
-            
+
             // 1. Process POS Revenue
             val posNetRevenue = rawData.posGrossRevenue - rawData.posTotalDiscount
-            
+
             // 2. Aggregate Manual Records
             val manualSummary = aggregateManualRecords(rawData.manualRecords)
             val expensesByCategory = aggregateExpensesByCategory(rawData.manualRecords)
             val (manualIncomeItems, otherIncomeItems) = aggregateManualIncomeItems(rawData.manualRecords)
-            
+
             // 3. Combine Data
             val operatingRevenue = posNetRevenue + manualSummary.operatingIncome
             val otherRevenue = manualSummary.otherIncome
             val totalRevenue = operatingRevenue + otherRevenue
-            
+
             val totalExpenses = manualSummary.operatingExpense + manualSummary.otherExpense
-            
+
             // 4. Calculate Profit & Tax (based on taxPercentage on Gross Profit)
             val grossProfit = totalRevenue - totalExpenses
             val taxRate = taxPercentage / 100.0
             val tax = if (grossProfit > 0) (grossProfit * taxRate).toLong() else 0L
             val netProfit = grossProfit - tax
-            
+
             val report = ProfitLossReport(
                 periodStart = startDate,
                 periodEnd = endDate,
@@ -67,9 +67,9 @@ class GenerateProfitLossReportUseCase @Inject constructor(
                 manualIncomeItems = manualIncomeItems,
                 otherIncomeItems = otherIncomeItems,
                 expensesByCategory = expensesByCategory,
-                taxPercentage = taxPercentage
+                taxPercentage = taxPercentage,
             )
-            
+
             Result.success(report)
         } catch (e: Exception) {
             Result.failure(e)
@@ -82,34 +82,34 @@ class GenerateProfitLossReportUseCase @Inject constructor(
         val operatingIncome: Long,
         val otherIncome: Long,
         val operatingExpense: Long,
-        val otherExpense: Long
+        val otherExpense: Long,
     )
-    
+
     private fun aggregateManualRecords(records: List<ManualCashRecord>): ManualRecordSummary {
         var operatingIncome = 0L
         var otherIncome = 0L
         var operatingExpense = 0L
         var otherExpense = 0L
-        
+
         records.forEach { record ->
             when {
-                record.type == "INCOME" && record.category == CashCategories.OPERATING_INCOME -> 
+                record.type == "INCOME" && record.category == CashCategories.OPERATING_INCOME ->
                     operatingIncome += record.amount
-                record.type == "INCOME" -> 
+                record.type == "INCOME" ->
                     otherIncome += record.amount
-                record.type == "EXPENSE" && CashCategories.OPERATING_EXPENSES.contains(record.category) -> 
+                record.type == "EXPENSE" && CashCategories.OPERATING_EXPENSES.contains(record.category) ->
                     operatingExpense += record.amount
-                record.type == "EXPENSE" -> 
+                record.type == "EXPENSE" ->
                     otherExpense += record.amount
             }
         }
-        
+
         return ManualRecordSummary(operatingIncome, otherIncome, operatingExpense, otherExpense)
     }
-    
+
     private fun aggregateExpensesByCategory(records: List<ManualCashRecord>): List<ExpenseCategoryItem> {
         val expenseRecords = records.filter { it.type == "EXPENSE" && !it.isDeleted }
-        
+
         return expenseRecords
             .groupBy { it.category ?: "Lainnya" }
             .map { (category, items) ->
@@ -119,39 +119,39 @@ class GenerateProfitLossReportUseCase @Inject constructor(
                     items = items.map { record ->
                         ExpenseDetailItem(
                             description = record.description,
-                            amount = record.amount
+                            amount = record.amount,
                         )
-                    }
+                    },
                 )
             }
             .sortedByDescending { it.amount }
     }
-    
+
     private fun aggregateManualIncomeItems(records: List<ManualCashRecord>): Pair<List<IncomeDetailItem>, List<IncomeDetailItem>> {
         val incomeRecords = records.filter { it.type == "INCOME" && !it.isDeleted }
-        
+
         val operatingIncomeItems = incomeRecords
             .filter { it.category == CashCategories.OPERATING_INCOME }
             .map { record ->
                 IncomeDetailItem(
                     description = record.description,
                     amount = record.amount,
-                    category = record.category
+                    category = record.category,
                 )
             }
             .sortedByDescending { it.amount }
-        
+
         val otherIncomeItems = incomeRecords
             .filter { it.category != CashCategories.OPERATING_INCOME }
             .map { record ->
                 IncomeDetailItem(
                     description = record.description,
                     amount = record.amount,
-                    category = record.category
+                    category = record.category,
                 )
             }
             .sortedByDescending { it.amount }
-        
+
         return Pair(operatingIncomeItems, otherIncomeItems)
     }
 }

@@ -21,7 +21,7 @@ import javax.inject.Inject
 
 /**
  * ViewModel for Product Detail (Add/Edit) Screen.
- * 
+ *
  * Handles form state, validation, save/delete operations, and image upload.
  * Receives productId from navigation arguments (null = create mode).
  */
@@ -31,11 +31,11 @@ class ProductDetailViewModel @Inject constructor(
     private val addOnRepository: AddOnRepository,
     private val imageUploader: ImageUploader,
     @ApplicationContext private val context: Context,
-    savedStateHandle: SavedStateHandle
+    savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
     private val productId: String? = savedStateHandle.get<String>("productId")
-    
+
     private val _uiState = MutableStateFlow<ProductDetailUiState>(ProductDetailUiState.Loading)
     val uiState: StateFlow<ProductDetailUiState> = _uiState.asStateFlow()
 
@@ -49,7 +49,7 @@ class ProductDetailViewModel @Inject constructor(
                 // Load categories and add-ons first
                 val categories = productRepository.getCategories().first()
                 val addOns = addOnRepository.observeActiveAddOns().first()
-                
+
                 if (productId != null) {
                     // Edit mode - load existing product
                     val product = productRepository.getProductById(productId)
@@ -64,7 +64,7 @@ class ProductDetailViewModel @Inject constructor(
                             imageUrl = product.imageUrl,
                             description = product.description ?: "",
                             categories = categories,
-                            availableAddOns = addOns
+                            availableAddOns = addOns,
                         )
                     } else {
                         _uiState.value = ProductDetailUiState.Error("Produk tidak ditemukan")
@@ -73,13 +73,13 @@ class ProductDetailViewModel @Inject constructor(
                     // Create mode - empty form
                     _uiState.value = ProductDetailUiState.Form(
                         categories = categories,
-                        availableAddOns = addOns
+                        availableAddOns = addOns,
                     )
                 }
             } catch (e: Exception) {
                 Timber.e(e, "Error loading product detail")
                 _uiState.value = ProductDetailUiState.Error(
-                    e.message ?: "Gagal memuat data"
+                    e.message ?: "Gagal memuat data",
                 )
             }
         }
@@ -93,13 +93,13 @@ class ProductDetailViewModel @Inject constructor(
             is ProductDetailEvent.SetName -> {
                 _uiState.value = currentState.copy(
                     name = event.name,
-                    nameError = validateName(event.name)
+                    nameError = validateName(event.name),
                 )
             }
             is ProductDetailEvent.SetPrice -> {
                 _uiState.value = currentState.copy(
                     price = event.price.filter { it.isDigit() },
-                    priceError = validatePrice(event.price)
+                    priceError = validatePrice(event.price),
                 )
             }
             is ProductDetailEvent.SetCategory -> {
@@ -129,12 +129,10 @@ class ProductDetailViewModel @Inject constructor(
         }
     }
 
-    private fun validateName(name: String): String? {
-        return when {
-            name.isBlank() -> "Nama produk wajib diisi"
-            name.length < 2 -> "Nama produk minimal 2 karakter"
-            else -> null
-        }
+    private fun validateName(name: String): String? = when {
+        name.isBlank() -> "Nama produk wajib diisi"
+        name.length < 2 -> "Nama produk minimal 2 karakter"
+        else -> null
     }
 
     private fun validatePrice(price: String): String? {
@@ -145,24 +143,24 @@ class ProductDetailViewModel @Inject constructor(
             else -> null
         }
     }
-    
+
     private fun createAddOn(name: String, price: Long) {
         viewModelScope.launch {
             try {
                 val result = addOnRepository.createAddOn(name, price)
-                
+
                 if (result.isSuccess) {
                     val newAddOn = result.getOrThrow()
                     // Reload add-ons to update list - call suspend function here
                     val addOns = addOnRepository.observeActiveAddOns().first()
-                    
+
                     val currentState = _uiState.value
                     if (currentState is ProductDetailUiState.Form) {
                         // Auto-select the newly created add-on
                         val newIds = currentState.ekstraIds + newAddOn.id
                         _uiState.value = currentState.copy(
                             availableAddOns = addOns,
-                            ekstraIds = newIds
+                            ekstraIds = newIds,
                         )
                     }
                 } else {
@@ -183,7 +181,7 @@ class ProductDetailViewModel @Inject constructor(
         if (nameError != null || priceError != null) {
             _uiState.value = formState.copy(
                 nameError = nameError,
-                priceError = priceError
+                priceError = priceError,
             )
             return
         }
@@ -193,27 +191,27 @@ class ProductDetailViewModel @Inject constructor(
 
             try {
                 val productId = formState.id ?: UUID.randomUUID().toString()
-                
+
                 // Upload image if new image selected
                 val imageUrl: String? = if (formState.imageUri != null) {
                     Timber.d("Uploading new product image for product: $productId")
-                    
+
                     val uploadResult = imageUploader.uploadProductImage(
-                        context, 
-                        formState.imageUri, 
-                        productId
+                        context,
+                        formState.imageUri,
+                        productId,
                     )
-                    
+
                     uploadResult.fold(
                         onSuccess = { url -> url },
-                        onFailure = { 
+                        onFailure = {
                             formState.imageUrl // Keep existing if failed
-                        }
+                        },
                     )
                 } else {
                     formState.imageUrl
                 }
-                
+
                 val product = Product(
                     id = productId,
                     name = formState.name.trim(),
@@ -224,7 +222,7 @@ class ProductDetailViewModel @Inject constructor(
                     imageUrl = imageUrl,
                     description = formState.description.trim().ifBlank { null },
                     createdAt = System.currentTimeMillis(),
-                    updatedAt = System.currentTimeMillis()
+                    updatedAt = System.currentTimeMillis(),
                 )
 
                 val result = if (formState.isEditMode) {
@@ -245,7 +243,7 @@ class ProductDetailViewModel @Inject constructor(
                     .onFailure { e ->
                         Timber.e(e, "Failed to save product")
                         _uiState.value = formState.copy(
-                            isSubmitting = false
+                            isSubmitting = false,
                         )
                     }
             } catch (e: Exception) {
@@ -278,4 +276,3 @@ class ProductDetailViewModel @Inject constructor(
         }
     }
 }
-

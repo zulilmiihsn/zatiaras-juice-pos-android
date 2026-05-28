@@ -2,7 +2,6 @@ package com.zatiaras.pos.core.domain.util
 
 import java.time.Instant
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -28,14 +27,12 @@ object DateUtils {
      * @param timestamp Timestamp in milliseconds (defaults to now)
      * @return Timestamp at start of that day
      */
-    fun getStartOfDay(timestamp: Long = System.currentTimeMillis()): Long {
-        return Instant.ofEpochMilli(timestamp)
-            .atZone(ZONE_ID)
-            .toLocalDate()
-            .atStartOfDay(ZONE_ID)
-            .toInstant()
-            .toEpochMilli()
-    }
+    fun getStartOfDay(timestamp: Long = System.currentTimeMillis()): Long = Instant.ofEpochMilli(timestamp)
+        .atZone(ZONE_ID)
+        .toLocalDate()
+        .atStartOfDay(ZONE_ID)
+        .toInstant()
+        .toEpochMilli()
 
     /**
      * Get the end of day (23:59:59.999) for a given timestamp.
@@ -44,15 +41,13 @@ object DateUtils {
      * @param timestamp Timestamp in milliseconds (defaults to now)
      * @return Timestamp at end of that day
      */
-    fun getEndOfDay(timestamp: Long = System.currentTimeMillis()): Long {
-        return Instant.ofEpochMilli(timestamp)
-            .atZone(ZONE_ID)
-            .toLocalDate()
-            .atTime(LocalTime.MAX)
-            .atZone(ZONE_ID)
-            .toInstant()
-            .toEpochMilli()
-    }
+    fun getEndOfDay(timestamp: Long = System.currentTimeMillis()): Long = Instant.ofEpochMilli(timestamp)
+        .atZone(ZONE_ID)
+        .toLocalDate()
+        .atTime(LocalTime.MAX)
+        .atZone(ZONE_ID)
+        .toInstant()
+        .toEpochMilli()
 
     /**
      * Get today's date range as a pair of (startOfDay, startOfNextDay).
@@ -88,10 +83,10 @@ object DateUtils {
         val today = LocalDate.now(ZONE_ID)
         // Go to Monday
         val monday = today.with(java.time.temporal.TemporalAdjusters.previousOrSame(java.time.DayOfWeek.MONDAY))
-        
+
         val start = monday.atStartOfDay(ZONE_ID).toInstant().toEpochMilli()
         val end = today.plusDays(1).atStartOfDay(ZONE_ID).toInstant().toEpochMilli()
-        
+
         return start to end
     }
 
@@ -103,10 +98,10 @@ object DateUtils {
     fun getThisMonthRange(): Pair<Long, Long> {
         val today = LocalDate.now(ZONE_ID)
         val firstOfMonth = today.withDayOfMonth(1)
-        
+
         val start = firstOfMonth.atStartOfDay(ZONE_ID).toInstant().toEpochMilli()
         val end = today.plusDays(1).atStartOfDay(ZONE_ID).toInstant().toEpochMilli()
-        
+
         return start to end
     }
 
@@ -119,10 +114,10 @@ object DateUtils {
     fun getLastNDaysRange(days: Int): Pair<Long, Long> {
         val today = LocalDate.now(ZONE_ID)
         val startDate = today.minusDays((days - 1).toLong())
-        
+
         val start = startDate.atStartOfDay(ZONE_ID).toInstant().toEpochMilli()
         val end = today.plusDays(1).atStartOfDay(ZONE_ID).toInstant().toEpochMilli()
-        
+
         return start to end
     }
 
@@ -136,10 +131,10 @@ object DateUtils {
         val today = LocalDate.now(ZONE_ID)
         val thisMonday = today.with(java.time.temporal.TemporalAdjusters.previousOrSame(java.time.DayOfWeek.MONDAY))
         val previousMonday = thisMonday.minusWeeks(1)
-        
+
         val start = previousMonday.atStartOfDay(ZONE_ID).toInstant().toEpochMilli()
         val end = thisMonday.atStartOfDay(ZONE_ID).toInstant().toEpochMilli()
-        
+
         return start to end
     }
 

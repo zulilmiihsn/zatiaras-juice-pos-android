@@ -2,8 +2,8 @@ package com.zatiaras.pos.feature.pos.presentation.components
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -13,35 +13,33 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.ui.unit.dp
+import com.zatiaras.pos.core.domain.model.Product
 import com.zatiaras.pos.core.ui.theme.AppShapes
-import com.zatiaras.pos.core.ui.theme.Slate50
 import com.zatiaras.pos.core.ui.theme.Brand500
 import com.zatiaras.pos.core.ui.theme.Slate100
 import com.zatiaras.pos.core.ui.theme.Slate200
+import com.zatiaras.pos.core.ui.theme.Slate50
 import com.zatiaras.pos.core.ui.theme.Slate500
 import com.zatiaras.pos.core.ui.theme.Slate600
 import com.zatiaras.pos.core.ui.theme.Slate700
 import com.zatiaras.pos.core.ui.util.CurrencyFormatter
 import com.zatiaras.pos.feature.pos.R
-import com.zatiaras.pos.core.domain.model.Product
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun ProductOptionsBottomSheet(
     product: Product,
     onDismiss: () -> Unit,
-    onAddToCart: (Product, Int, String) -> Unit
+    onAddToCart: (Product, Int, String) -> Unit,
 ) {
     val modalBottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    
+
     var quantity by remember { mutableIntStateOf(1) }
     var notes by remember { mutableStateOf("") }
-    
+
     var selectedSugarLevel by remember { mutableStateOf("Normal") }
     var selectedIceLevel by remember { mutableStateOf("Normal") }
     val sugarLevels = listOf("Tanpa", "Sedikit", "Normal")
@@ -54,86 +52,86 @@ fun ProductOptionsBottomSheet(
         sheetState = modalBottomSheetState,
         shape = AppShapes.TopPanel,
         containerColor = MaterialTheme.colorScheme.surface,
-        dragHandle = { BottomSheetDefaults.DragHandle() }
+        dragHandle = { BottomSheetDefaults.DragHandle() },
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 24.dp)
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(rememberScrollState()),
         ) {
             // Header
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = product.name,
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = MaterialTheme.colorScheme.onSurface,
                     )
                     Text(
                         text = CurrencyFormatter.formatCurrency(product.price),
                         style = MaterialTheme.typography.titleMedium,
                         color = Brand500,
-                        fontWeight = FontWeight.SemiBold
+                        fontWeight = FontWeight.SemiBold,
                     )
                 }
-                
+
                 IconButton(onClick = onDismiss) {
                     Icon(
                         imageVector = Icons.Default.Close,
                         contentDescription = "Tutup",
-                        tint = Slate600
+                        tint = Slate600,
                     )
                 }
             }
-            
+
             HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp), color = Slate200.copy(alpha = 0.6f))
-            
+
             Text(
                 text = "Level Gula",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(bottom = 12.dp)
+                modifier = Modifier.padding(bottom = 12.dp),
             )
-            
+
             FlowRow(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+                verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 sugarLevels.forEach { level ->
                     OptionChip(
                         text = level,
                         isSelected = selectedSugarLevel == level,
-                        onClick = { selectedSugarLevel = level }
+                        onClick = { selectedSugarLevel = level },
                     )
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(24.dp))
-            
+
             Text(
                 text = "Level Es",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(bottom = 12.dp)
+                modifier = Modifier.padding(bottom = 12.dp),
             )
-            
+
             FlowRow(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+                verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 iceLevels.forEach { level ->
                     OptionChip(
                         text = level,
                         isSelected = selectedIceLevel == level,
-                        onClick = { selectedIceLevel = level }
+                        onClick = { selectedIceLevel = level },
                     )
                 }
             }
@@ -145,9 +143,9 @@ fun ProductOptionsBottomSheet(
                 text = stringResource(R.string.pos_notes),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(bottom = 12.dp)
+                modifier = Modifier.padding(bottom = 12.dp),
             )
-            
+
             OutlinedTextField(
                 value = notes,
                 onValueChange = { notes = it },
@@ -158,84 +156,84 @@ fun ProductOptionsBottomSheet(
                     focusedBorderColor = Brand500,
                     unfocusedBorderColor = Slate200,
                     focusedContainerColor = MaterialTheme.colorScheme.surface,
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surface
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
                 ),
-                maxLines = 3
+                maxLines = 3,
             )
-            
+
             Spacer(modifier = Modifier.height(24.dp))
-            
+
             // Quantity & Total
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 // Quantity Selector
                 Surface(
                     shape = AppShapes.L,
                     color = Slate100,
-                    modifier = Modifier.height(50.dp)
+                    modifier = Modifier.height(50.dp),
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(horizontal = 8.dp)
+                        modifier = Modifier.padding(horizontal = 8.dp),
                     ) {
                         IconButton(
                             onClick = { if (quantity > 1) quantity-- },
-                            enabled = quantity > 1
+                            enabled = quantity > 1,
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Remove, 
+                                imageVector = Icons.Default.Remove,
                                 contentDescription = "Kurangi",
-                                tint = if (quantity > 1) Slate700 else Slate500
+                                tint = if (quantity > 1) Slate700 else Slate500,
                             )
                         }
-                        
+
                         Text(
                             text = quantity.toString(),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(horizontal = 12.dp)
+                            modifier = Modifier.padding(horizontal = 12.dp),
                         )
-                        
+
                         IconButton(onClick = { quantity++ }) {
                             Icon(
-                                imageVector = Icons.Default.Add, 
+                                imageVector = Icons.Default.Add,
                                 contentDescription = "Tambah",
-                                tint = Brand500
+                                tint = Brand500,
                             )
                         }
                     }
                 }
-                
+
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
                         text = "Total Harga",
                         style = MaterialTheme.typography.bodySmall,
-                        color = Slate600
+                        color = Slate600,
                     )
                     Text(
                         text = CurrencyFormatter.formatCurrency(totalPrice),
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
-                        color = Brand500
+                        color = Brand500,
                     )
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(24.dp))
-            
+
             // Add to Cart Button
             Button(
-                onClick = { 
+                onClick = {
                     val finalNotes = buildString {
                         if (selectedSugarLevel != "Normal") append("Gula: $selectedSugarLevel, ")
                         if (selectedIceLevel != "Normal") append("Es: $selectedIceLevel, ")
                         if (notes.isNotEmpty()) append(notes)
                     }.removeSuffix(", ")
-                    
-                    onAddToCart(product, quantity, finalNotes) 
+
+                    onAddToCart(product, quantity, finalNotes)
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -245,14 +243,14 @@ fun ProductOptionsBottomSheet(
                 shape = AppShapes.L,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Brand500,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
                 ),
-                elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp)
+                elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp),
             ) {
                 Text(
                     text = stringResource(R.string.pos_add_to_cart),
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
                 )
             }
         }
@@ -263,7 +261,7 @@ fun ProductOptionsBottomSheet(
 private fun OptionChip(
     text: String,
     isSelected: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     Surface(
         onClick = onClick,
@@ -271,21 +269,20 @@ private fun OptionChip(
         color = if (isSelected) Slate50 else MaterialTheme.colorScheme.surface,
         border = BorderStroke(
             width = if (isSelected) 1.5.dp else 1.dp,
-            color = if (isSelected) Brand500 else Slate200
+            color = if (isSelected) Brand500 else Slate200,
         ),
-        modifier = Modifier.height(40.dp)
+        modifier = Modifier.height(40.dp),
     ) {
         Box(
             contentAlignment = Alignment.Center,
-            modifier = Modifier.padding(horizontal = 16.dp)
+            modifier = Modifier.padding(horizontal = 16.dp),
         ) {
             Text(
                 text = text,
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                color = if (isSelected) Brand500 else Slate600
+                color = if (isSelected) Brand500 else Slate600,
             )
         }
     }
 }
-

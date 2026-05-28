@@ -29,49 +29,57 @@ interface CashRecordDao {
     /**
      * Get all cash records for today.
      */
-    @Query("""
+    @Query(
+        """
         SELECT * FROM cash_records 
         WHERE createdAt >= :startOfDay 
         AND createdAt < :endOfDay 
         AND isDeleted = 0
         ORDER BY createdAt DESC
-    """)
+    """,
+    )
     fun getByDateRange(startOfDay: Long, endOfDay: Long): Flow<List<CashRecordEntity>>
 
     /**
      * Get records list for report generation (suspend)
      */
-    @Query("""
+    @Query(
+        """
         SELECT * FROM cash_records 
         WHERE createdAt >= :startOfDay 
         AND createdAt < :endOfDay 
         AND isDeleted = 0
         ORDER BY createdAt DESC
-    """)
+    """,
+    )
     suspend fun getRecordsListByDateRange(startOfDay: Long, endOfDay: Long): List<CashRecordEntity>
 
     /**
      * Get today's total income.
      */
-    @Query("""
+    @Query(
+        """
         SELECT COALESCE(SUM(amount), 0) FROM cash_records 
         WHERE type = 'INCOME' 
         AND createdAt >= :startOfDay 
         AND createdAt < :endOfDay 
         AND isDeleted = 0
-    """)
+    """,
+    )
     suspend fun getTotalIncomeForDay(startOfDay: Long, endOfDay: Long): Long
 
     /**
      * Get today's total expense.
      */
-    @Query("""
+    @Query(
+        """
         SELECT COALESCE(SUM(amount), 0) FROM cash_records 
         WHERE type = 'EXPENSE' 
         AND createdAt >= :startOfDay 
         AND createdAt < :endOfDay 
         AND isDeleted = 0
-    """)
+    """,
+    )
     suspend fun getTotalExpenseForDay(startOfDay: Long, endOfDay: Long): Long
 
     /**

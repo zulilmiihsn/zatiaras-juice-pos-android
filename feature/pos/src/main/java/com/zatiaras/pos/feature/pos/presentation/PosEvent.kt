@@ -12,10 +12,10 @@ sealed interface PosEvent {
     // Catalog events
     data class SearchQueryChanged(val query: String) : PosEvent
     data class CategorySelected(val categoryId: String?) : PosEvent
-    
+
     // Direct add to cart (for products without customizations)
     data class AddToCart(val product: Product) : PosEvent
-    
+
     // Product Options Dialog events
     data class ShowProductOptions(val product: Product) : PosEvent
     data object HideProductOptions : PosEvent
@@ -25,21 +25,21 @@ sealed interface PosEvent {
     data class SetProductNote(val note: String) : PosEvent
     data class SetProductQuantity(val quantity: Int) : PosEvent
     data object ConfirmAddToCart : PosEvent
-    
+
     // Cart item manipulation (by uniqueKey)
     data class IncrementItem(val uniqueKey: String) : PosEvent
     data class DecrementItem(val uniqueKey: String) : PosEvent
     data class RemoveFromCart(val uniqueKey: String) : PosEvent
     data class UpdateItemQuantity(val uniqueKey: String, val quantity: Int) : PosEvent
     data object ClearCart : PosEvent
-    
+
     // Navigation events
     data object ProceedToCheckout : PosEvent
     data object BackToCatalog : PosEvent
-    
+
     // Error handling
     data object DismissError : PosEvent
-    
+
     // UI Toggles
     data object ToggleViewMode : PosEvent
     data class AddCustomItem(val name: String, val price: Long, val quantity: Int = 1) : PosEvent

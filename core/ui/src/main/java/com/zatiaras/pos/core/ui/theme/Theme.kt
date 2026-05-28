@@ -1,7 +1,6 @@
 package com.zatiaras.pos.core.ui.theme
 
 import android.app.Activity
-import androidx.compose.ui.graphics.Color
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
@@ -12,6 +11,7 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
@@ -37,7 +37,7 @@ private val DarkColorScheme = darkColorScheme(
     outline = Slate800,
     outlineVariant = Slate900,
     error = ErrorRed,
-    onError = Slate50
+    onError = Slate50,
 )
 
 private val LightColorScheme = lightColorScheme(
@@ -62,7 +62,7 @@ private val LightColorScheme = lightColorScheme(
     outline = Slate200, // Thin borders
     outlineVariant = Slate100,
     error = ErrorRed,
-    onError = Slate50
+    onError = Slate50,
 )
 
 @Composable
@@ -71,7 +71,7 @@ fun ZatiarasPOSTheme(
     // We default to FALSE for dynamic color to enforce our Brand Identity
     // Dynamic color (Material You) overrides our meticulously picked colors.
     dynamicColor: Boolean = false,
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit,
 ) {
     val colorScheme = when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
@@ -81,7 +81,7 @@ fun ZatiarasPOSTheme(
         darkTheme -> DarkColorScheme
         else -> LightColorScheme
     }
-    
+
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
@@ -96,8 +96,7 @@ fun ZatiarasPOSTheme(
             colorScheme = colorScheme,
             typography = Typography,
             shapes = Shapes, // Use our new ShadCN shapes
-            content = content
+            content = content,
         )
     }
 }
-

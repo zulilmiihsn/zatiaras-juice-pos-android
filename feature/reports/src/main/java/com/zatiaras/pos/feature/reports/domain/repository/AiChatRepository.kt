@@ -22,6 +22,6 @@ interface AiChatRepository {
     suspend fun sendChatMessage(
         messages: List<AiChatMessage>,
         model: String = "qwen/qwen3-vl-30b-a3b-thinking",
-        provider: String = "openrouter"
+        provider: String = "openrouter",
     ): Result<String>
 }

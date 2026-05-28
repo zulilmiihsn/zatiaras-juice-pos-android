@@ -2,22 +2,22 @@ package com.zatiaras.pos.core.domain
 
 /**
  * Custom Result sealed interface for domain and presentation layers.
- * 
+ *
  * Usage Guidelines:
  * - Use this [Result] for domain layer operations (UseCases, ViewModels)
  * - Use [kotlin.Result] for low-level data operations (DataSource, networking)
  * - Avoid mixing both Result types in one file to prevent ambiguous API usage
  * - When both are needed, alias one import explicitly
- * 
+ *
  * This separation allows:
  * - Domain layer to have explicit Loading state
  * - Data layer to use native Kotlin patterns
- * 
+ *
  * Example:
  * ```kotlin
  * // In UseCase/ViewModel:
  * suspend fun login(): Result<Unit>
- * 
+ *
  * // In DataSource:
  * suspend fun fetchFromApi(): kotlin.Result<List<Entity>>
  * ```

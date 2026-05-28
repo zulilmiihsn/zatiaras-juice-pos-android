@@ -1,5 +1,6 @@
 package com.zatiaras.pos.feature.pos.presentation.checkout
 
+import android.content.Context
 import app.cash.turbine.test
 import com.zatiaras.pos.core.domain.Result
 import com.zatiaras.pos.core.domain.model.Category
@@ -9,8 +10,8 @@ import com.zatiaras.pos.feature.pos.domain.model.Cart
 import com.zatiaras.pos.feature.pos.domain.model.PaymentMethod
 import com.zatiaras.pos.feature.pos.domain.model.Transaction
 import com.zatiaras.pos.feature.pos.domain.repository.TransactionRepository
-import com.zatiaras.pos.feature.pos.presentation.CheckoutEvent
 import com.zatiaras.pos.feature.pos.domain.usecase.CalculateCheckoutTotalsUseCase
+import com.zatiaras.pos.feature.pos.presentation.CheckoutEvent
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -21,12 +22,10 @@ import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import androidx.lifecycle.SavedStateHandle
-import android.content.Context
 
 /**
  * Unit tests for CheckoutViewModel.
- * 
+ *
  * Tests:
  * - Initial state is loading
  * - Initialization with cart
@@ -49,7 +48,7 @@ class CheckoutViewModelTest {
     private lateinit var viewModel: CheckoutViewModel
 
     private val testCategory = Category(id = "cat-1", name = "Minuman")
-    
+
     private val testProduct1 = Product(
         id = "prod-1",
         name = "Es Teh",
@@ -58,9 +57,9 @@ class CheckoutViewModelTest {
         imageUrl = null,
         description = "Es teh manis",
         createdAt = System.currentTimeMillis(),
-        updatedAt = System.currentTimeMillis()
+        updatedAt = System.currentTimeMillis(),
     )
-    
+
     private val testProduct2 = Product(
         id = "prod-2",
         name = "Kopi Susu",
@@ -69,7 +68,7 @@ class CheckoutViewModelTest {
         imageUrl = null,
         description = "Kopi susu gula aren",
         createdAt = System.currentTimeMillis(),
-        updatedAt = System.currentTimeMillis()
+        updatedAt = System.currentTimeMillis(),
     )
 
     @Before
@@ -95,18 +94,18 @@ class CheckoutViewModelTest {
     @Test
     fun `initializeWithCart sets Ready state with cart data`() = runTest {
         val cart = Cart()
-            .addItem(testProduct1, quantity = 2)  // 5000 * 2 = 10000
-            .addItem(testProduct2, quantity = 1)  // 15000 * 1 = 15000
+            .addItem(testProduct1, quantity = 2) // 5000 * 2 = 10000
+            .addItem(testProduct2, quantity = 1) // 15000 * 1 = 15000
         // Subtotal = 25000
-        
+
         viewModel.uiState.test {
             awaitItem() // Loading
-            
+
             viewModel.initializeWithCart(cart)
-            
+
             val state = awaitItem()
             assertTrue(state is CheckoutUiState.Ready)
-            
+
             val readyState = state as CheckoutUiState.Ready
             assertEquals(25000L, readyState.subtotal)
             assertEquals(2, readyState.cart.uniqueItemCount)
@@ -120,14 +119,14 @@ class CheckoutViewModelTest {
     @Test
     fun `SetPaymentMethod changes payment method`() = runTest {
         val cart = Cart().addItem(testProduct1)
-        
+
         viewModel.uiState.test {
             awaitItem() // Loading
             viewModel.initializeWithCart(cart)
             awaitItem() // Ready with CASH
-            
+
             viewModel.onEvent(CheckoutEvent.SetPaymentMethod(PaymentMethod.QRIS))
-            
+
             val state = awaitItem() as CheckoutUiState.Ready
             assertEquals(PaymentMethod.QRIS, state.selectedPaymentMethod)
             cancelAndIgnoreRemainingEvents()
@@ -137,18 +136,18 @@ class CheckoutViewModelTest {
     @Test
     fun `switching to non-cash payment clears amountPaid`() = runTest {
         val cart = Cart().addItem(testProduct1)
-        
+
         viewModel.uiState.test {
             awaitItem() // Loading
             viewModel.initializeWithCart(cart)
             awaitItem() // Ready
-            
+
             viewModel.onEvent(CheckoutEvent.SetAmountPaid("10000"))
             awaitItem() // intermediate
             awaitItem() // recalculated
-            
+
             viewModel.onEvent(CheckoutEvent.SetPaymentMethod(PaymentMethod.QRIS))
-            
+
             val state = awaitItem() as CheckoutUiState.Ready
             assertEquals("", state.amountPaid)
             cancelAndIgnoreRemainingEvents()
@@ -161,14 +160,14 @@ class CheckoutViewModelTest {
     fun `SetAmountPaid updates amount and calculates change`() = runTest {
         val cart = Cart().addItem(testProduct1) // 5000
         // With 11% tax: grandTotal = 5000 + 550 = 5550
-        
+
         viewModel.uiState.test {
             awaitItem()
             viewModel.initializeWithCart(cart)
             awaitItem()
-            
+
             viewModel.onEvent(CheckoutEvent.SetAmountPaid("10000"))
-            
+
             awaitItem() // intermediate state
             val state = awaitItem() as CheckoutUiState.Ready
             assertEquals("10000", state.amountPaid)
@@ -180,14 +179,14 @@ class CheckoutViewModelTest {
     @Test
     fun `SetAmountPaid filters non-digit characters`() = runTest {
         val cart = Cart().addItem(testProduct1)
-        
+
         viewModel.uiState.test {
             awaitItem()
             viewModel.initializeWithCart(cart)
             awaitItem()
-            
+
             viewModel.onEvent(CheckoutEvent.SetAmountPaid("10.000 IDR"))
-            
+
             val state = awaitItem() as CheckoutUiState.Ready
             assertEquals("10000", state.amountPaid)
             cancelAndIgnoreRemainingEvents()
@@ -197,14 +196,14 @@ class CheckoutViewModelTest {
     @Test
     fun `setQuickAmount sets exact amount`() = runTest {
         val cart = Cart().addItem(testProduct1) // 5000
-        
+
         viewModel.uiState.test {
             awaitItem()
             viewModel.initializeWithCart(cart)
             awaitItem()
-            
+
             viewModel.setQuickAmount(20000)
-            
+
             val state = awaitItem() as CheckoutUiState.Ready
             assertEquals("20000", state.amountPaid)
             cancelAndIgnoreRemainingEvents()
@@ -214,14 +213,14 @@ class CheckoutViewModelTest {
     @Test
     fun `setExactAmount sets grandTotal as amountPaid`() = runTest {
         val cart = Cart().addItem(testProduct1) // 5000
-        
+
         viewModel.uiState.test {
             awaitItem()
             viewModel.initializeWithCart(cart)
             val initialState = awaitItem() as CheckoutUiState.Ready
-            
+
             viewModel.setExactAmount()
-            
+
             val state = awaitItem() as CheckoutUiState.Ready
             assertEquals(initialState.grandTotal.toString(), state.amountPaid)
             assertEquals(0L, state.changeAmount)
@@ -234,14 +233,14 @@ class CheckoutViewModelTest {
     @Test
     fun `SetDiscountPercent updates discount and recalculates total`() = runTest {
         val cart = Cart().addItem(testProduct1) // 5000
-        
+
         viewModel.uiState.test {
             awaitItem()
             viewModel.initializeWithCart(cart)
             awaitItem()
-            
+
             viewModel.onEvent(CheckoutEvent.SetDiscountPercent("10"))
-            
+
             awaitItem() // intermediate state
             val state = awaitItem() as CheckoutUiState.Ready
             assertEquals(10.0, state.discountPercent, 0.01)
@@ -254,14 +253,14 @@ class CheckoutViewModelTest {
     @Test
     fun `discount is capped at 100 percent`() = runTest {
         val cart = Cart().addItem(testProduct1)
-        
+
         viewModel.uiState.test {
             awaitItem()
             viewModel.initializeWithCart(cart)
             awaitItem()
-            
+
             viewModel.onEvent(CheckoutEvent.SetDiscountPercent("150"))
-            
+
             val state = awaitItem() as CheckoutUiState.Ready
             assertEquals(100.0, state.discountPercent, 0.01)
             cancelAndIgnoreRemainingEvents()
@@ -273,11 +272,11 @@ class CheckoutViewModelTest {
     @Test
     fun `tax is calculated as 11 percent by default`() = runTest {
         val cart = Cart().addItem(testProduct1) // 5000
-        
+
         viewModel.uiState.test {
             awaitItem()
             viewModel.initializeWithCart(cart)
-            
+
             val state = awaitItem() as CheckoutUiState.Ready
             assertEquals(11.0, state.taxPercent, 0.01)
             assertEquals(550L, state.taxAmount) // 11% of 5000
@@ -291,14 +290,14 @@ class CheckoutViewModelTest {
     @Test
     fun `canComplete is false when cash payment is insufficient`() = runTest {
         val cart = Cart().addItem(testProduct1) // Grand total ~5550
-        
+
         viewModel.uiState.test {
             awaitItem()
             viewModel.initializeWithCart(cart)
             awaitItem()
-            
+
             viewModel.onEvent(CheckoutEvent.SetAmountPaid("5000"))
-            
+
             val state = awaitItem() as CheckoutUiState.Ready
             assertFalse(state.canComplete)
             cancelAndIgnoreRemainingEvents()
@@ -308,14 +307,14 @@ class CheckoutViewModelTest {
     @Test
     fun `canComplete is true when cash payment is sufficient`() = runTest {
         val cart = Cart().addItem(testProduct1)
-        
+
         viewModel.uiState.test {
             awaitItem()
             viewModel.initializeWithCart(cart)
             awaitItem()
-            
+
             viewModel.setExactAmount()
-            
+
             val state = awaitItem() as CheckoutUiState.Ready
             assertTrue(state.canComplete)
             cancelAndIgnoreRemainingEvents()
@@ -325,14 +324,14 @@ class CheckoutViewModelTest {
     @Test
     fun `canComplete is always true for QRIS payment`() = runTest {
         val cart = Cart().addItem(testProduct1)
-        
+
         viewModel.uiState.test {
             awaitItem()
             viewModel.initializeWithCart(cart)
             awaitItem()
-            
+
             viewModel.onEvent(CheckoutEvent.SetPaymentMethod(PaymentMethod.QRIS))
-            
+
             val state = awaitItem() as CheckoutUiState.Ready
             assertTrue(state.canComplete)
             cancelAndIgnoreRemainingEvents()
@@ -344,15 +343,15 @@ class CheckoutViewModelTest {
     @Test
     fun `ConfirmPayment with insufficient amount shows error`() = runTest {
         val cart = Cart().addItem(testProduct1)
-        
+
         viewModel.uiState.test {
             awaitItem()
             viewModel.initializeWithCart(cart)
             awaitItem()
-            
+
             // Don't set amount paid
             viewModel.onEvent(CheckoutEvent.ConfirmPayment)
-            
+
             val state = awaitItem() as CheckoutUiState.Ready
             assertNotNull(state.paymentError)
             assertTrue(state.paymentError!!.contains("kurang"))
@@ -379,30 +378,30 @@ class CheckoutViewModelTest {
             notes = null,
             customerName = null,
             createdAt = System.currentTimeMillis(),
-            isSynced = false
+            isSynced = false,
         )
-        
-        coEvery { 
-            transactionRepository.createTransaction(any(), any(), any(), any(), any(), any(), any()) 
+
+        coEvery {
+            transactionRepository.createTransaction(any(), any(), any(), any(), any(), any(), any())
         } returns Result.Success(mockTransaction)
-        
+
         viewModel.uiState.test {
             awaitItem() // Loading
             viewModel.initializeWithCart(cart)
             awaitItem() // Ready
-            
+
             viewModel.setQuickAmount(10000)
             awaitItem() // intermediate amount
             awaitItem() // recalculated amount
-            
+
             viewModel.onEvent(CheckoutEvent.ConfirmPayment)
-            
+
             // Skip processing state if it appears
             var state = awaitItem()
             if (state is CheckoutUiState.Ready && state.isProcessing) {
                 state = awaitItem()
             }
-            
+
             assertTrue(state is CheckoutUiState.Success)
             assertEquals(mockTransaction.transactionNumber, (state as CheckoutUiState.Success).transaction.transactionNumber)
             cancelAndIgnoreRemainingEvents()
@@ -412,28 +411,28 @@ class CheckoutViewModelTest {
     @Test
     fun `ConfirmPayment failure shows error in Ready state`() = runTest {
         val cart = Cart().addItem(testProduct1)
-        
-        coEvery { 
-            transactionRepository.createTransaction(any(), any(), any(), any(), any(), any(), any()) 
+
+        coEvery {
+            transactionRepository.createTransaction(any(), any(), any(), any(), any(), any(), any())
         } returns Result.Error(Exception("Database error"))
-        
+
         viewModel.uiState.test {
             awaitItem()
             viewModel.initializeWithCart(cart)
             awaitItem()
-            
+
             viewModel.setExactAmount()
             awaitItem()
-            
+
             viewModel.onEvent(CheckoutEvent.ConfirmPayment)
             advanceUntilIdle()
-            
+
             // Skip states until we get the error
             var state: CheckoutUiState
             do {
                 state = awaitItem()
             } while (state is CheckoutUiState.Ready && state.isProcessing)
-            
+
             assertTrue(state is CheckoutUiState.Ready)
             assertNotNull((state as CheckoutUiState.Ready).paymentError)
             assertFalse(state.isProcessing)

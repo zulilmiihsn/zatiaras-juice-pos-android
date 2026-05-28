@@ -15,7 +15,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import com.zatiaras.pos.core.ui.theme.AppShapes
 import com.zatiaras.pos.core.ui.theme.LocalDimensions
 import com.zatiaras.pos.feature.reports.domain.model.ReportPeriod
@@ -28,7 +27,7 @@ fun PeriodSelector(
     selectedPeriod: ReportPeriod,
     onPeriodSelected: (ReportPeriod) -> Unit,
     modifier: Modifier = Modifier,
-    showCustomOption: Boolean = true
+    showCustomOption: Boolean = true,
 ) {
     val dimensions = LocalDimensions.current
     val periods = if (showCustomOption) {
@@ -36,17 +35,17 @@ fun PeriodSelector(
     } else {
         ReportPeriod.entries.filter { it != ReportPeriod.CUSTOM }
     }
-    
+
     Row(
         modifier = modifier
             .horizontalScroll(rememberScrollState()),
-        horizontalArrangement = Arrangement.spacedBy(dimensions.spacingXS)
+        horizontalArrangement = Arrangement.spacedBy(dimensions.spacingXS),
     ) {
         periods.forEach { period ->
             PeriodChip(
                 label = period.toDisplayName(),
                 isSelected = period == selectedPeriod,
-                onClick = { onPeriodSelected(period) }
+                onClick = { onPeriodSelected(period) },
             )
         }
     }
@@ -56,7 +55,7 @@ fun PeriodSelector(
 private fun PeriodChip(
     label: String,
     isSelected: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     val dimensions = LocalDimensions.current
     val backgroundColor = if (isSelected) {
@@ -64,26 +63,26 @@ private fun PeriodChip(
     } else {
         MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
     }
-    
+
     val textColor = if (isSelected) {
         MaterialTheme.colorScheme.onPrimary
     } else {
         MaterialTheme.colorScheme.onSurfaceVariant
     }
-    
+
     Box(
         modifier = Modifier
             .clip(AppShapes.XL)
             .background(backgroundColor)
             .clickable(onClick = onClick)
             .padding(horizontal = dimensions.paddingL, vertical = dimensions.paddingS),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         Text(
             text = label,
             style = MaterialTheme.typography.labelMedium,
             fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-            color = textColor
+            color = textColor,
         )
     }
 }

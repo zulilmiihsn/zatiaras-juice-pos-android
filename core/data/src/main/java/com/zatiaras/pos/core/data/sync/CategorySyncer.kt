@@ -24,7 +24,7 @@ import javax.inject.Singleton
 class CategorySyncer @Inject constructor(
     private val categoryDao: CategoryDao,
     private val remoteDataSource: InventoryRemoteDataSource,
-    private val syncPreferences: SyncPreferences
+    private val syncPreferences: SyncPreferences,
 ) : EntitySyncer {
 
     override val syncType: SyncType = SyncType.CATEGORIES
@@ -67,10 +67,10 @@ class CategorySyncer @Inject constructor(
                             onFailure = { error ->
                                 failed++
                                 Timber.e(error, "CategorySyncer: Failed to sync category ${category.id}")
-                            }
+                            },
                         )
                     }
-                }
+                },
             )
         }
 
@@ -116,7 +116,7 @@ class CategorySyncer @Inject constructor(
             onFailure = { error ->
                 failed++
                 Timber.e(error, "CategorySyncer: Failed to pull categories")
-            }
+            },
         )
 
         Timber.d("CategorySyncer: Completed — uploaded=$uploaded, downloaded=$downloaded, failed=$failed")
@@ -125,11 +125,9 @@ class CategorySyncer @Inject constructor(
             type = SyncType.CATEGORIES,
             uploaded = uploaded,
             downloaded = downloaded,
-            failed = failed
+            failed = failed,
         )
     }
 
-    override suspend fun getPendingCount(): Int {
-        return categoryDao.getUnsyncedCount()
-    }
+    override suspend fun getPendingCount(): Int = categoryDao.getUnsyncedCount()
 }

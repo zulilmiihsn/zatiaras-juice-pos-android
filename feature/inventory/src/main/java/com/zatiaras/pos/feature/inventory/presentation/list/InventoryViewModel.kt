@@ -24,24 +24,24 @@ private data class UiControlState(
     val searchQuery: String = "",
     val isGridView: Boolean = true,
     val isRefreshing: Boolean = false,
-    val snackbarMessage: String? = null
+    val snackbarMessage: String? = null,
 )
 
 /**
  * ViewModel for Inventory List Screen.
- * 
+ *
  * Responsibilities:
  * - Load and observe products/categories/add-ons from repository
  * - Handle search and category filter state
  * - Handle refresh/sync operations
  * - Manage CRUD operations with user feedback
- * 
+ *
  * Follows Single Responsibility: Only manages InventoryScreen state.
  */
 @HiltViewModel
 class InventoryViewModel @Inject constructor(
     private val productRepository: ProductRepository,
-    private val addOnRepository: AddOnRepository
+    private val addOnRepository: AddOnRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<InventoryUiState>(InventoryUiState.Loading)
@@ -61,7 +61,7 @@ class InventoryViewModel @Inject constructor(
                     productRepository.getProducts(),
                     productRepository.getCategories(),
                     addOnRepository.observeActiveAddOns(),
-                    _uiControlState
+                    _uiControlState,
                 ) { products, categories, addOns, controlState ->
                     InventoryUiState.Success(
                         products = products,
@@ -72,22 +72,22 @@ class InventoryViewModel @Inject constructor(
                         searchQuery = controlState.searchQuery,
                         isGridView = controlState.isGridView,
                         isRefreshing = controlState.isRefreshing,
-                        snackbarMessage = controlState.snackbarMessage
+                        snackbarMessage = controlState.snackbarMessage,
                     )
                 }
-                .catch { e ->
-                    Timber.e(e, "Error loading inventory")
-                    _uiState.value = InventoryUiState.Error(
-                        e.message ?: "Gagal memuat data"
-                    )
-                }
-                .collect { state ->
-                    _uiState.value = state
-                }
+                    .catch { e ->
+                        Timber.e(e, "Error loading inventory")
+                        _uiState.value = InventoryUiState.Error(
+                            e.message ?: "Gagal memuat data",
+                        )
+                    }
+                    .collect { state ->
+                        _uiState.value = state
+                    }
             } catch (e: Exception) {
                 Timber.e(e, "Error in loadData")
                 _uiState.value = InventoryUiState.Error(
-                    e.message ?: "Terjadi kesalahan"
+                    e.message ?: "Terjadi kesalahan",
                 )
             }
         }
@@ -98,21 +98,21 @@ class InventoryViewModel @Inject constructor(
             is InventoryEvent.Refresh -> refresh()
             is InventoryEvent.Search -> search(event.query)
             is InventoryEvent.ChangeTab -> changeTab(event.tab)
-            
+
             // Product
             is InventoryEvent.SelectCategory -> selectCategory(event.categoryId)
             is InventoryEvent.DeleteProduct -> deleteProduct(event.productId)
-            
+
             // Category
             is InventoryEvent.AddCategory -> addCategory(event.name, event.icon)
             is InventoryEvent.UpdateCategoryWithProducts -> updateCategoryWithProducts(event.categoryId, event.name, event.productIds)
             is InventoryEvent.DeleteCategory -> deleteCategory(event.categoryId)
-            
+
             // Add-On
             is InventoryEvent.AddAddOn -> addAddOn(event.name, event.price)
             is InventoryEvent.UpdateAddOn -> updateAddOn(event.addOnId, event.name, event.price)
             is InventoryEvent.DeleteAddOn -> deleteAddOn(event.addOnId)
-            
+
             // UI
             is InventoryEvent.ToggleViewMode -> toggleViewMode()
             is InventoryEvent.SnackbarDismissed -> clearSnackbar()
@@ -134,7 +134,7 @@ class InventoryViewModel @Inject constructor(
     private fun search(query: String) {
         updateControlState { it.copy(searchQuery = query) }
     }
-    
+
     private fun changeTab(tab: InventoryTab) {
         updateControlState { it.copy(selectedTab = tab) }
     }
@@ -147,13 +147,13 @@ class InventoryViewModel @Inject constructor(
         viewModelScope.launch {
             productRepository.deleteProduct(productId)
                 .onSuccess { showSnackbar("Produk berhasil dihapus") }
-                .onFailure { 
+                .onFailure {
                     Timber.e(it, "Failed to delete product: $productId")
                     showSnackbar("Gagal menghapus produk")
                 }
         }
     }
-    
+
     private fun addCategory(name: String, icon: String?) {
         viewModelScope.launch {
             productRepository.createCategory(name, icon)
@@ -169,40 +169,40 @@ class InventoryViewModel @Inject constructor(
                 }
         }
     }
-    
+
     private fun updateCategoryWithProducts(categoryId: String, name: String, productIds: List<String>) {
         viewModelScope.launch {
             // 1. Update category name
             productRepository.updateCategory(categoryId, name)
-                .onFailure { 
+                .onFailure {
                     Timber.e(it, "Failed to update category: $categoryId")
                     showSnackbar("Gagal memperbarui kategori")
                     return@launch
                 }
-            
+
             // 2. Assign products to this category
             productRepository.assignProductsToCategory(categoryId, productIds)
-                .onSuccess { 
-                    showSnackbar("Kategori dan produk berhasil diperbarui") 
+                .onSuccess {
+                    showSnackbar("Kategori dan produk berhasil diperbarui")
                 }
-                .onFailure { 
+                .onFailure {
                     Timber.e(it, "Failed to assign products to category: $categoryId")
                     showSnackbar("Kategori diperbarui tapi gagal mengatur produk")
                 }
         }
     }
-    
+
     private fun deleteCategory(categoryId: String) {
         viewModelScope.launch {
             productRepository.deleteCategory(categoryId)
                 .onSuccess { showSnackbar("Kategori berhasil dihapus") }
-                .onFailure { 
+                .onFailure {
                     Timber.e(it, "Failed to delete category: $categoryId")
                     showSnackbar("Gagal menghapus kategori")
                 }
         }
     }
-    
+
     private fun addAddOn(name: String, price: Long) {
         viewModelScope.launch {
             addOnRepository.createAddOn(name, price)
@@ -218,41 +218,41 @@ class InventoryViewModel @Inject constructor(
                 }
         }
     }
-    
+
     private fun updateAddOn(addOnId: String, name: String, price: Long) {
         viewModelScope.launch {
             addOnRepository.updateAddOn(addOnId, name, price)
                 .onSuccess { showSnackbar("Add-on berhasil diperbarui") }
-                .onFailure { 
+                .onFailure {
                     Timber.e(it, "Failed to update add-on: $addOnId")
                     showSnackbar("Gagal memperbarui add-on")
                 }
         }
     }
-    
+
     private fun deleteAddOn(addOnId: String) {
         viewModelScope.launch {
             addOnRepository.deleteAddOn(addOnId)
                 .onSuccess { showSnackbar("Add-on berhasil dihapus") }
-                .onFailure { 
+                .onFailure {
                     Timber.e(it, "Failed to delete add-on: $addOnId")
                     showSnackbar("Gagal menghapus add-on")
                 }
         }
     }
-    
+
     private fun toggleViewMode() {
         updateControlState { it.copy(isGridView = !it.isGridView) }
     }
-    
+
     private fun showSnackbar(message: String) {
         updateControlState { it.copy(snackbarMessage = message) }
     }
-    
+
     private fun clearSnackbar() {
         updateControlState { it.copy(snackbarMessage = null) }
     }
-    
+
     private inline fun updateControlState(update: (UiControlState) -> UiControlState) {
         _uiControlState.value = update(_uiControlState.value)
     }

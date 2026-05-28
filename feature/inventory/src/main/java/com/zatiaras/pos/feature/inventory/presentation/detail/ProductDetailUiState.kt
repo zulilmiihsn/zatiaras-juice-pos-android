@@ -7,52 +7,54 @@ import com.zatiaras.pos.core.domain.model.ProductType
 
 /**
  * UI State for Product Detail (Add/Edit) Screen.
- * 
+ *
  * Uses data class Form for mutable form state.
  */
 sealed interface ProductDetailUiState {
-    
+
     /**
      * Loading existing product data (edit mode).
      */
     data object Loading : ProductDetailUiState
-    
+
     /**
      * Form state for both create and edit modes.
      */
     data class Form(
-        val id: String? = null,           // null = create mode
+        val id: String? = null, // null = create mode
         val name: String = "",
         val price: String = "",
         val categoryId: String? = null,
         val type: ProductType = ProductType.MAKANAN,
         val ekstraIds: Set<String> = emptySet(),
         val imageUri: Uri? = null,
-        val imageUrl: String? = null,     // existing image URL (edit mode)
+        val imageUrl: String? = null, // existing image URL (edit mode)
         val description: String = "",
         val categories: List<Category> = emptyList(),
         val availableAddOns: List<AddOn> = emptyList(),
         val isSubmitting: Boolean = false,
         val nameError: String? = null,
-        val priceError: String? = null
+        val priceError: String? = null,
     ) : ProductDetailUiState {
-        
+
         val isEditMode: Boolean
             get() = id != null
-        
+
         val isValid: Boolean
-            get() = nameError == null && priceError == null && 
-                    name.isNotBlank() && price.isNotBlank()
-        
+            get() = nameError == null &&
+                priceError == null &&
+                name.isNotBlank() &&
+                price.isNotBlank()
+
         val selectedCategory: Category?
             get() = categories.find { it.id == categoryId }
     }
-    
+
     /**
      * Successfully saved product.
      */
     data class Success(val message: String) : ProductDetailUiState
-    
+
     /**
      * Error loading or saving product.
      */

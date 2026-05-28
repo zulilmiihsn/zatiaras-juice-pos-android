@@ -23,7 +23,7 @@ import org.junit.Test
 
 /**
  * Unit tests for InventoryViewModel.
- * 
+ *
  * Tests:
  * - Initial loading state
  * - Products and categories loading
@@ -43,7 +43,7 @@ class InventoryViewModelTest {
 
     private val testCategory1 = Category(id = "cat-1", name = "Minuman")
     private val testCategory2 = Category(id = "cat-2", name = "Makanan")
-    
+
     private val testProducts = listOf(
         Product(
             id = "prod-1",
@@ -53,7 +53,7 @@ class InventoryViewModelTest {
             imageUrl = null,
             description = "Es teh manis",
             createdAt = System.currentTimeMillis(),
-            updatedAt = System.currentTimeMillis()
+            updatedAt = System.currentTimeMillis(),
         ),
         Product(
             id = "prod-2",
@@ -63,7 +63,7 @@ class InventoryViewModelTest {
             imageUrl = null,
             description = "Kopi susu gula aren",
             createdAt = System.currentTimeMillis(),
-            updatedAt = System.currentTimeMillis()
+            updatedAt = System.currentTimeMillis(),
         ),
         Product(
             id = "prod-3",
@@ -73,8 +73,8 @@ class InventoryViewModelTest {
             imageUrl = null,
             description = "Nasi goreng spesial",
             createdAt = System.currentTimeMillis(),
-            updatedAt = System.currentTimeMillis()
-        )
+            updatedAt = System.currentTimeMillis(),
+        ),
     )
 
     private val testCategories = listOf(testCategory1, testCategory2)
@@ -82,10 +82,10 @@ class InventoryViewModelTest {
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
-        
+
         productRepository = mockk()
         addOnRepository = mockk(relaxed = true)
-        
+
         // Use MutableStateFlow (hot, never completes) so combine stays alive
         // flowOf completes after emission, killing combine's re-emission on control state changes
         every { productRepository.getProducts() } returns MutableStateFlow(testProducts)
@@ -98,16 +98,14 @@ class InventoryViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun createViewModel(): InventoryViewModel {
-        return InventoryViewModel(productRepository, addOnRepository)
-    }
+    private fun createViewModel(): InventoryViewModel = InventoryViewModel(productRepository, addOnRepository)
 
     // ==================== Initialization Tests ====================
 
     @Test
     fun `initial state is Loading`() = runTest {
         viewModel = createViewModel()
-        
+
         // Should start with Loading state
         assertTrue(viewModel.uiState.value is InventoryUiState.Loading)
     }
@@ -116,11 +114,11 @@ class InventoryViewModelTest {
     fun `loads products and categories on init`() = runTest {
         viewModel = createViewModel()
         testDispatcher.scheduler.advanceUntilIdle()
-        
+
         viewModel.uiState.test {
             val state = awaitItem()
             assertTrue(state is InventoryUiState.Success)
-            
+
             val successState = state as InventoryUiState.Success
             assertEquals(3, successState.products.size)
             assertEquals(2, successState.categories.size)
@@ -134,13 +132,13 @@ class InventoryViewModelTest {
     fun `search updates searchQuery in state`() = runTest {
         viewModel = createViewModel()
         testDispatcher.scheduler.advanceUntilIdle()
-        
+
         viewModel.uiState.test {
             awaitItem() // Initial
-            
+
             viewModel.onEvent(InventoryEvent.Search("Kopi"))
             testDispatcher.scheduler.advanceUntilIdle()
-            
+
             val state = awaitItem() as InventoryUiState.Success
             assertEquals("Kopi", state.searchQuery)
             cancelAndIgnoreRemainingEvents()
@@ -170,13 +168,13 @@ class InventoryViewModelTest {
     fun `selectCategory updates selectedCategoryId`() = runTest {
         viewModel = createViewModel()
         testDispatcher.scheduler.advanceUntilIdle()
-        
+
         viewModel.uiState.test {
             awaitItem()
-            
+
             viewModel.onEvent(InventoryEvent.SelectCategory("cat-1"))
             testDispatcher.scheduler.advanceUntilIdle()
-            
+
             val state = awaitItem() as InventoryUiState.Success
             assertEquals("cat-1", state.selectedCategoryId)
             cancelAndIgnoreRemainingEvents()
@@ -187,19 +185,19 @@ class InventoryViewModelTest {
     fun `selectCategory with null clears filter`() = runTest {
         viewModel = createViewModel()
         testDispatcher.scheduler.advanceUntilIdle()
-        
+
         viewModel.uiState.test {
             awaitItem()
-            
+
             // First select a category
             viewModel.onEvent(InventoryEvent.SelectCategory("cat-1"))
             testDispatcher.scheduler.advanceUntilIdle()
             awaitItem()
-            
+
             // Then clear it
             viewModel.onEvent(InventoryEvent.SelectCategory(null))
             testDispatcher.scheduler.advanceUntilIdle()
-            
+
             val state = awaitItem() as InventoryUiState.Success
             assertNull(state.selectedCategoryId)
             cancelAndIgnoreRemainingEvents()
@@ -226,13 +224,13 @@ class InventoryViewModelTest {
     @Test
     fun `refresh calls syncFromRemote`() = runTest {
         coEvery { productRepository.syncFromRemote() } returns Result.success(Unit)
-        
+
         viewModel = createViewModel()
         testDispatcher.scheduler.advanceUntilIdle()
-        
+
         viewModel.onEvent(InventoryEvent.Refresh)
         testDispatcher.scheduler.advanceUntilIdle()
-        
+
         coVerify { productRepository.syncFromRemote() }
     }
 
@@ -241,13 +239,13 @@ class InventoryViewModelTest {
     @Test
     fun `deleteProduct calls repository delete`() = runTest {
         coEvery { productRepository.deleteProduct(any()) } returns Result.success(Unit)
-        
+
         viewModel = createViewModel()
         testDispatcher.scheduler.advanceUntilIdle()
-        
+
         viewModel.onEvent(InventoryEvent.DeleteProduct("prod-1"))
         testDispatcher.scheduler.advanceUntilIdle()
-        
+
         coVerify { productRepository.deleteProduct("prod-1") }
     }
 
@@ -256,14 +254,14 @@ class InventoryViewModelTest {
     @Test
     fun `error during load sets Error state`() = runTest {
         every { productRepository.getProducts() } throws RuntimeException("Database error")
-        
+
         viewModel = createViewModel()
         testDispatcher.scheduler.advanceUntilIdle()
-        
+
         viewModel.uiState.test {
             val state = awaitItem()
             assertTrue(state is InventoryUiState.Error)
-            
+
             val errorState = state as InventoryUiState.Error
             assertTrue(errorState.message.contains("Database error") || errorState.message.contains("Gagal"))
             cancelAndIgnoreRemainingEvents()

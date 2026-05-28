@@ -25,18 +25,18 @@ import com.zatiaras.pos.core.data.local.entity.UserEntity
 
 /**
  * Main Room Database for ZatiarasPOS.
- * 
+ *
  * Design Decisions:
  * - Single database for all entities (simpler transactions)
  * - FTS4 virtual table for fast product search
  * - Version starts at 1, increment on schema changes
- * 
+ *
  * IMPORTANT: When adding new entities:
  * 1. Add to entities array
  * 2. Add abstract DAO getter
  * 3. Increment version
  * 4. Add migration or use fallbackToDestructiveMigration (dev only)
- * 
+ *
  * Version History:
  * - v1: Initial (Categories, Products, ProductFts)
  * - v2: Added Transactions and TransactionItems
@@ -57,10 +57,10 @@ import com.zatiaras.pos.core.data.local.entity.UserEntity
         UserEntity::class,
         AppSettingsEntity::class,
         AddOnEntity::class,
-        StoreSessionEntity::class
+        StoreSessionEntity::class,
     ],
     version = 12,
-    exportSchema = true
+    exportSchema = true,
 )
 @TypeConverters(LockedRoutesConverter::class)
 abstract class ZatiarasDatabase : RoomDatabase() {

@@ -15,7 +15,7 @@ import org.junit.runner.RunWith
 
 /**
  * Compose UI tests for CartSidebar component.
- * 
+ *
  * Tests:
  * - Empty cart display
  * - Cart with items display
@@ -29,7 +29,7 @@ class CartSidebarUiTest {
     val composeTestRule = createComposeRule()
 
     private val testCategory = Category(id = "cat-1", name = "Minuman")
-    
+
     private val testProduct1 = Product(
         id = "prod-1",
         name = "Es Teh Manis",
@@ -38,9 +38,9 @@ class CartSidebarUiTest {
         imageUrl = null,
         description = "Es teh manis segar",
         createdAt = System.currentTimeMillis(),
-        updatedAt = System.currentTimeMillis()
+        updatedAt = System.currentTimeMillis(),
     )
-    
+
     private val testProduct2 = Product(
         id = "prod-2",
         name = "Kopi Susu Gula Aren",
@@ -49,7 +49,7 @@ class CartSidebarUiTest {
         imageUrl = null,
         description = "Kopi susu dengan gula aren",
         createdAt = System.currentTimeMillis(),
-        updatedAt = System.currentTimeMillis()
+        updatedAt = System.currentTimeMillis(),
     )
 
     @Test
@@ -62,7 +62,7 @@ class CartSidebarUiTest {
                     onDecrement = {},
                     onRemove = {},
                     onCheckout = {},
-                    onClearCart = {}
+                    onClearCart = {},
                 )
             }
         }
@@ -77,8 +77,8 @@ class CartSidebarUiTest {
         val cart = Cart(
             items = listOf(
                 CartItem(product = testProduct1, quantity = 2),
-                CartItem(product = testProduct2, quantity = 1)
-            )
+                CartItem(product = testProduct2, quantity = 1),
+            ),
         )
 
         composeTestRule.setContent {
@@ -89,7 +89,7 @@ class CartSidebarUiTest {
                     onDecrement = {},
                     onRemove = {},
                     onCheckout = {},
-                    onClearCart = {}
+                    onClearCart = {},
                 )
             }
         }
@@ -109,8 +109,8 @@ class CartSidebarUiTest {
     fun cartWithItems_checkoutButtonIsEnabled() {
         val cart = Cart(
             items = listOf(
-                CartItem(product = testProduct1, quantity = 1)
-            )
+                CartItem(product = testProduct1, quantity = 1),
+            ),
         )
 
         composeTestRule.setContent {
@@ -121,7 +121,7 @@ class CartSidebarUiTest {
                     onDecrement = {},
                     onRemove = {},
                     onCheckout = {},
-                    onClearCart = {}
+                    onClearCart = {},
                 )
             }
         }
@@ -142,7 +142,7 @@ class CartSidebarUiTest {
                     onDecrement = {},
                     onRemove = {},
                     onCheckout = {},
-                    onClearCart = {}
+                    onClearCart = {},
                 )
             }
         }
@@ -157,11 +157,11 @@ class CartSidebarUiTest {
     fun incrementButton_callsOnIncrement() {
         var incrementCalled = false
         var incrementedProductId = ""
-        
+
         val cart = Cart(
             items = listOf(
-                CartItem(product = testProduct1, quantity = 1)
-            )
+                CartItem(product = testProduct1, quantity = 1),
+            ),
         )
 
         composeTestRule.setContent {
@@ -175,7 +175,7 @@ class CartSidebarUiTest {
                     onDecrement = {},
                     onRemove = {},
                     onCheckout = {},
-                    onClearCart = {}
+                    onClearCart = {},
                 )
             }
         }
@@ -192,11 +192,11 @@ class CartSidebarUiTest {
     fun decrementButton_callsOnDecrement() {
         var decrementCalled = false
         var decrementedProductId = ""
-        
+
         val cart = Cart(
             items = listOf(
-                CartItem(product = testProduct1, quantity = 2)
-            )
+                CartItem(product = testProduct1, quantity = 2),
+            ),
         )
 
         composeTestRule.setContent {
@@ -210,7 +210,7 @@ class CartSidebarUiTest {
                     },
                     onRemove = {},
                     onCheckout = {},
-                    onClearCart = {}
+                    onClearCart = {},
                 )
             }
         }
@@ -226,11 +226,11 @@ class CartSidebarUiTest {
     @Test
     fun checkoutButton_callsOnCheckout() {
         var checkoutCalled = false
-        
+
         val cart = Cart(
             items = listOf(
-                CartItem(product = testProduct1, quantity = 1)
-            )
+                CartItem(product = testProduct1, quantity = 1),
+            ),
         )
 
         composeTestRule.setContent {
@@ -241,7 +241,7 @@ class CartSidebarUiTest {
                     onDecrement = {},
                     onRemove = {},
                     onCheckout = { checkoutCalled = true },
-                    onClearCart = {}
+                    onClearCart = {},
                 )
             }
         }

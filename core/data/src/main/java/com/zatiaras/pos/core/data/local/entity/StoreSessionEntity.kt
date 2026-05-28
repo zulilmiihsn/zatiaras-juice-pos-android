@@ -13,8 +13,8 @@ import androidx.room.PrimaryKey
     indices = [
         Index("isActive"),
         Index("openingTime"),
-        Index("isSynced")
-    ]
+        Index("isSynced"),
+    ],
 )
 data class StoreSessionEntity(
     @PrimaryKey
@@ -24,9 +24,9 @@ data class StoreSessionEntity(
     val closingTime: Long? = null,
     val isActive: Boolean,
     val branchId: String? = null,
-    
+
     // Sync metadata
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis(),
-    val isSynced: Boolean = false
+    val isSynced: Boolean = false,
 )

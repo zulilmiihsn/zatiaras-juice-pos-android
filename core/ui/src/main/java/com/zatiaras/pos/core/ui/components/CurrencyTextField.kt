@@ -20,9 +20,9 @@ import com.zatiaras.pos.core.ui.util.CurrencyFormatter
 /**
  * A specialized text field for currency input that automatically formats
  * the input value with Indonesian Rupiah formatting (thousands separator).
- * 
+ *
  * As the user types "16000", it displays as "16.000" in the field.
- * 
+ *
  * @param value The current numeric value (unformatted)
  * @param onValueChange Callback when the numeric value changes
  * @param modifier Modifier for the text field
@@ -52,21 +52,21 @@ fun CurrencyTextField(
     colors: TextFieldColors = OutlinedTextFieldDefaults.colors(),
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     imeAction: ImeAction = ImeAction.Done,
-    singleLine: Boolean = true
+    singleLine: Boolean = true,
 ) {
     // Store the displayed text (formatted)
     var displayText by remember(value) {
         mutableStateOf(
-            if (value > 0) CurrencyFormatter.formatNumber(value) else ""
+            if (value > 0) CurrencyFormatter.formatNumber(value) else "",
         )
     }
-    
+
     OutlinedTextField(
         value = displayText,
         onValueChange = { newValue ->
             // Extract only digits
             val digitsOnly = newValue.filter { it.isDigit() }
-            
+
             if (digitsOnly.isEmpty()) {
                 displayText = ""
                 onValueChange(0L)
@@ -83,15 +83,19 @@ fun CurrencyTextField(
         supportingText = supportingText,
         enabled = enabled,
         isError = isError,
-        prefix = if (showPrefix) {{ Text("Rp ") }} else null,
+        prefix = if (showPrefix) {
+            { Text("Rp ") }
+        } else {
+            null
+        },
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Number,
-            imeAction = imeAction
+            imeAction = imeAction,
         ),
         keyboardActions = keyboardActions,
         singleLine = singleLine,
         shape = shape,
-        colors = colors
+        colors = colors,
     )
 }
 
@@ -114,11 +118,11 @@ fun CurrencyTextField(
     colors: TextFieldColors = OutlinedTextFieldDefaults.colors(),
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     imeAction: ImeAction = ImeAction.Done,
-    singleLine: Boolean = true
+    singleLine: Boolean = true,
 ) {
     // Parse string to long
     val numericValue = value.filter { it.isDigit() }.toLongOrNull() ?: 0L
-    
+
     CurrencyTextField(
         value = numericValue,
         onValueChange = { newValue ->
@@ -135,6 +139,6 @@ fun CurrencyTextField(
         colors = colors,
         keyboardActions = keyboardActions,
         imeAction = imeAction,
-        singleLine = singleLine
+        singleLine = singleLine,
     )
 }
