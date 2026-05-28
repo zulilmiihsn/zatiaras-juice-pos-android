@@ -12,7 +12,7 @@ import org.junit.Test
 
 /**
  * Unit tests for LoginUseCase.
- * 
+ *
  * Tests:
  * - Successful login returns Result.Success
  * - Failed login returns Result.Error with message
@@ -33,10 +33,10 @@ class LoginUseCaseTest {
     fun `login with valid credentials returns Success`() = runTest {
         // Given
         coEvery { authRepository.login(any(), any()) } returns Result.Success(Unit)
-        
+
         // When
         val result = loginUseCase("admin", "admin123")
-        
+
         // Then
         assertTrue(result is Result.Success)
         coVerify(exactly = 1) { authRepository.login("admin", "admin123") }
@@ -47,10 +47,10 @@ class LoginUseCaseTest {
         // Given
         val errorMessage = "Username tidak ditemukan"
         coEvery { authRepository.login(any(), any()) } returns Result.Error(Exception(errorMessage))
-        
+
         // When
         val result = loginUseCase("wronguser", "wrongpassword")
-        
+
         // Then
         assertTrue(result is Result.Error)
         assertTrue((result as Result.Error).exception?.message == errorMessage)
@@ -60,7 +60,7 @@ class LoginUseCaseTest {
     fun `login with empty username returns Error`() = runTest {
         // When
         val result = loginUseCase("", "password123")
-        
+
         // Then
         assertTrue(result is Result.Error)
         assertTrue((result as Result.Error).exception?.message?.contains("Username", ignoreCase = true) == true)
@@ -70,7 +70,7 @@ class LoginUseCaseTest {
     fun `login with empty password returns Error`() = runTest {
         // When
         val result = loginUseCase("admin", "")
-        
+
         // Then
         assertTrue(result is Result.Error)
         assertTrue((result as Result.Error).exception?.message?.contains("Password", ignoreCase = true) == true)

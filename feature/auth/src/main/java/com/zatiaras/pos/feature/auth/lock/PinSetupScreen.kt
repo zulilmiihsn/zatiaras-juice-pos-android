@@ -13,21 +13,20 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
-import com.zatiaras.pos.feature.auth.R
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.zatiaras.pos.core.ui.theme.LocalDimensions
+import com.zatiaras.pos.feature.auth.R
 
 enum class PinSetupStep {
     ENTER_NEW_PIN,
     CONFIRM_PIN,
-    VERIFY_CURRENT_PIN // For changing existing PIN
+    VERIFY_CURRENT_PIN, // For changing existing PIN
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -36,7 +35,7 @@ fun PinSetupRoute(
     isChangingPin: Boolean = false,
     onPinSet: () -> Unit,
     onNavigateBack: () -> Unit,
-    viewModel: PinSetupViewModel = hiltViewModel()
+    viewModel: PinSetupViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -56,7 +55,7 @@ fun PinSetupRoute(
         uiState = uiState,
         onDigitClick = viewModel::onDigitClick,
         onBackspaceClick = viewModel::onBackspaceClick,
-        onNavigateBack = onNavigateBack
+        onNavigateBack = onNavigateBack,
     )
 }
 
@@ -66,31 +65,31 @@ fun PinSetupScreen(
     uiState: PinSetupUiState,
     onDigitClick: (String) -> Unit,
     onBackspaceClick: () -> Unit,
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
 ) {
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             CenterAlignedTopAppBar(
-                title = { 
+                title = {
                     Text(
                         when (uiState.step) {
                             PinSetupStep.VERIFY_CURRENT_PIN -> stringResource(R.string.pin_setup_verify)
                             PinSetupStep.ENTER_NEW_PIN -> stringResource(R.string.pin_setup_set_new)
                             PinSetupStep.CONFIRM_PIN -> stringResource(R.string.pin_setup_confirm)
-                        }
-                    ) 
+                        },
+                    )
                 },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.auth_back)
+                            contentDescription = stringResource(R.string.auth_back),
                         )
                     }
-                }
+                },
             )
-        }
+        },
     ) { padding ->
         val dimensions = LocalDimensions.current
         Column(
@@ -98,7 +97,7 @@ fun PinSetupScreen(
                 .fillMaxSize()
                 .padding(padding)
                 .padding(dimensions.paddingXL),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Spacer(modifier = Modifier.height(dimensions.paddingXXL))
 
@@ -111,7 +110,7 @@ fun PinSetupScreen(
                 },
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
             )
 
             Spacer(modifier = Modifier.height(dimensions.paddingXXL))
@@ -119,12 +118,12 @@ fun PinSetupScreen(
             // PIN Dots
             Row(
                 horizontalArrangement = Arrangement.spacedBy(dimensions.spacingM),
-                modifier = Modifier.padding(vertical = dimensions.spacingM)
+                modifier = Modifier.padding(vertical = dimensions.spacingM),
             ) {
                 repeat(4) { index ->
                     PinSetupDot(
                         filled = index < uiState.currentPin.length,
-                        error = uiState.hasError
+                        error = uiState.hasError,
                     )
                 }
             }
@@ -132,31 +131,31 @@ fun PinSetupScreen(
             // Error or Success Message
             Box(
                 modifier = Modifier.height(48.dp),
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center,
             ) {
                 when {
                     uiState.errorMessage != null -> {
                         Text(
                             text = uiState.errorMessage,
                             color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodyMedium
+                            style = MaterialTheme.typography.bodyMedium,
                         )
                     }
                     uiState.isPinSet -> {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
                         ) {
                             Icon(
                                 imageVector = Icons.Filled.Check,
                                 contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary
+                                tint = MaterialTheme.colorScheme.primary,
                             )
                             Text(
                                 text = stringResource(R.string.pin_setup_success),
                                 color = MaterialTheme.colorScheme.primary,
                                 style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Medium
+                                fontWeight = FontWeight.Medium,
                             )
                         }
                     }
@@ -168,7 +167,7 @@ fun PinSetupScreen(
             // PIN Keypad
             PinSetupKeypad(
                 onDigitClick = onDigitClick,
-                onBackspaceClick = onBackspaceClick
+                onBackspaceClick = onBackspaceClick,
             )
 
             Spacer(modifier = Modifier.height(dimensions.paddingXXL))
@@ -179,7 +178,7 @@ fun PinSetupScreen(
 @Composable
 private fun PinSetupDot(
     filled: Boolean,
-    error: Boolean
+    error: Boolean,
 ) {
     val color = when {
         error -> MaterialTheme.colorScheme.error
@@ -196,30 +195,30 @@ private fun PinSetupDot(
                     Modifier.background(color)
                 } else {
                     Modifier.border(2.dp, color, CircleShape)
-                }
-            )
+                },
+            ),
     )
 }
 
 @Composable
 private fun PinSetupKeypad(
     onDigitClick: (String) -> Unit,
-    onBackspaceClick: () -> Unit
+    onBackspaceClick: () -> Unit,
 ) {
     val digits = listOf(
         listOf("1", "2", "3"),
         listOf("4", "5", "6"),
         listOf("7", "8", "9"),
-        listOf("", "0", "del")
+        listOf("", "0", "del"),
     )
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         digits.forEach { row ->
             Row(
-                horizontalArrangement = Arrangement.spacedBy(20.dp)
+                horizontalArrangement = Arrangement.spacedBy(20.dp),
             ) {
                 row.forEach { key ->
                     when (key) {
@@ -233,9 +232,9 @@ private fun PinSetupKeypad(
                                     Icon(
                                         imageVector = Icons.AutoMirrored.Filled.Backspace,
                                         contentDescription = stringResource(R.string.auth_delete),
-                                        modifier = Modifier.size(28.dp)
+                                        modifier = Modifier.size(28.dp),
                                     )
-                                }
+                                },
                             )
                         }
                         else -> {
@@ -245,9 +244,9 @@ private fun PinSetupKeypad(
                                     Text(
                                         text = key,
                                         style = MaterialTheme.typography.headlineSmall,
-                                        fontWeight = FontWeight.Medium
+                                        fontWeight = FontWeight.Medium,
                                     )
-                                }
+                                },
                             )
                         }
                     }
@@ -260,7 +259,7 @@ private fun PinSetupKeypad(
 @Composable
 private fun KeypadSetupButton(
     onClick: () -> Unit,
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit,
 ) {
     Box(
         modifier = Modifier
@@ -268,10 +267,10 @@ private fun KeypadSetupButton(
             .clip(CircleShape)
             .background(MaterialTheme.colorScheme.surfaceVariant)
             .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         CompositionLocalProvider(
-            LocalContentColor provides MaterialTheme.colorScheme.onSurfaceVariant
+            LocalContentColor provides MaterialTheme.colorScheme.onSurfaceVariant,
         ) {
             content()
         }

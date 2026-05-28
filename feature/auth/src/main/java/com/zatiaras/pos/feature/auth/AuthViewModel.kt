@@ -5,14 +5,15 @@ import androidx.lifecycle.viewModelScope
 import com.zatiaras.pos.core.data.repository.LocalAuthRepository
 import com.zatiaras.pos.core.domain.Result
 import com.zatiaras.pos.core.domain.usecase.LoginUseCase
+import com.zatiaras.pos.core.ui.util.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
+import io.sentry.Sentry
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import com.zatiaras.pos.core.ui.util.UiText
 import javax.inject.Inject
 
 sealed interface AuthUiState {
@@ -26,12 +27,12 @@ sealed interface AuthUiState {
 @HiltViewModel
 class AuthViewModel @Inject constructor(
     private val loginUseCase: LoginUseCase,
-    private val localAuthRepository: LocalAuthRepository
+    private val localAuthRepository: LocalAuthRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<AuthUiState>(AuthUiState.Idle)
     val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
-    
+
     private val _syncStatus = MutableStateFlow<UiText?>(null)
     val syncStatus: StateFlow<UiText?> = _syncStatus.asStateFlow()
 
@@ -47,7 +48,7 @@ class AuthViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { AuthUiState.Syncing }
             _syncStatus.value = UiText.StringResource(R.string.auth_syncing_data)
-            
+
             when (val result = localAuthRepository.syncUsersWithResult()) {
                 is Result.Success -> {
                     val syncedCount = result.data
@@ -56,7 +57,8 @@ class AuthViewModel @Inject constructor(
                 }
                 is Result.Error -> {
                     Timber.e(result.exception, "Sync failed: ${result.exception?.message}")
-                    
+                    result.exception?.let(Sentry::captureException)
+
                     // Check if we have local users for offline mode
                     val localUsers = localAuthRepository.getAllUsers()
                     if (localUsers.isEmpty()) {
@@ -69,11 +71,11 @@ class AuthViewModel @Inject constructor(
                     // Should not happen
                 }
             }
-            
+
             _uiState.update { AuthUiState.Idle }
         }
     }
-    
+
     /**
      * Manual sync triggered by user.
      */
@@ -87,12 +89,12 @@ class AuthViewModel @Inject constructor(
                 _uiState.update { AuthUiState.Error(UiText.StringResource(R.string.auth_error_branch_required)) }
                 return@launch
             }
-            
+
             _uiState.update { AuthUiState.Loading }
-            
+
             // TODO(P2): Validasi role-user terhadap branch membutuhkan dukungan endpoint backend.
             // Authentication is handled by the login use case.
-            
+
             when (val result = loginUseCase(username, password)) {
                 is Result.Success -> {
                     // Logic to store selected branch pref can go here
@@ -100,6 +102,7 @@ class AuthViewModel @Inject constructor(
                     _uiState.update { AuthUiState.Success }
                 }
                 is Result.Error -> {
+                    result.exception?.let(Sentry::captureException)
                     val errorMessage = result.exception?.message ?: ""
                     val uiError = if (errorMessage.isNotBlank()) {
                         UiText.DynamicString(errorMessage)
@@ -112,7 +115,7 @@ class AuthViewModel @Inject constructor(
             }
         }
     }
-    
+
     fun resetState() {
         _uiState.update { AuthUiState.Idle }
     }

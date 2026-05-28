@@ -1,6 +1,5 @@
 package com.zatiaras.pos.navigation
 
-import android.graphics.drawable.BitmapDrawable
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -21,7 +20,7 @@ import com.zatiaras.pos.core.ui.R as CoreUiR
  */
 @Composable
 fun SplashScreen(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     // Animated scale for logo
     val infiniteTransition = rememberInfiniteTransition(label = "logo_pulse")
@@ -30,20 +29,20 @@ fun SplashScreen(
         targetValue = 1.05f,
         animationSpec = infiniteRepeatable(
             animation = tween(1000, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
+            repeatMode = RepeatMode.Reverse,
         ),
-        label = "logo_scale"
+        label = "logo_scale",
     )
-    
+
     Box(
         modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = Arrangement.Center,
         ) {
             // Logo with animation - using drawable from core:ui module
             Image(
@@ -51,15 +50,15 @@ fun SplashScreen(
                 contentDescription = "Zatiaras Juice Logo",
                 modifier = Modifier
                     .size(180.dp)
-                    .scale(scale)
+                    .scale(scale),
             )
-            
+
             Spacer(modifier = Modifier.height(32.dp))
-            
+
             // Loading indicator
             CircularProgressIndicator(
                 modifier = Modifier.size(40.dp),
-                color = MaterialTheme.colorScheme.primary
+                color = MaterialTheme.colorScheme.primary,
             )
         }
     }

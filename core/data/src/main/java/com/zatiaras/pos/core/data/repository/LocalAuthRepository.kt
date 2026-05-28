@@ -15,7 +15,7 @@ import javax.inject.Singleton
 
 /**
  * Local implementation of AuthRepository using Room database.
- * 
+ *
  * Supports offline-first authentication:
  * - Login with username/password
  * - User profiles synced from Supabase when online
@@ -29,22 +29,22 @@ class LocalAuthRepository @Inject constructor(
     private val userDao: UserDao,
     private val userRemoteDataSource: UserRemoteDataSource,
     private val credentialStore: LocalCredentialStore,
-    private val sessionPreferences: SessionPreferences
+    private val sessionPreferences: SessionPreferences,
 ) : AuthRepository {
 
     // Session state - tracks if user is logged in
-    private val _isLoggedIn = MutableStateFlow(false)
+    private val isLoggedInState = MutableStateFlow(false)
     private var _currentUser: UserEntity? = null
 
     override suspend fun login(email: String, password: String): Result<Unit> {
         // Note: 'email' parameter is actually username for backward compatibility
         val username = email
-        
+
         return try {
             Timber.d("Attempting local login with username: $username")
-            
+
             val localUser = userDao.getUserByUsername(username)
-            
+
             if (localUser == null) {
                 Timber.w("User not found: $username")
                 val remoteUser = authenticateRemoteAndCache(username, password, null)
@@ -52,12 +52,12 @@ class LocalAuthRepository @Inject constructor(
                 completeLogin(remoteUser)
                 return Result.Success(Unit)
             }
-            
+
             if (!localUser.isActive) {
                 Timber.w("User is inactive: $username")
                 return Result.Error(Exception("Akun tidak aktif"))
             }
-            
+
             val authenticatedUser = when {
                 credentialStore.verifyPassword(localUser.id, password) -> localUser
                 localUser.passwordHash.isNotBlank() && UserEntity.verifyPassword(password, localUser.passwordHash) -> {
@@ -72,9 +72,9 @@ class LocalAuthRepository @Inject constructor(
                 Timber.w("Invalid password for user: $username")
                 return Result.Error(Exception("Password salah"))
             }
-            
+
             completeLogin(authenticatedUser)
-            
+
             Result.Success(Unit)
         } catch (e: Exception) {
             Timber.e(e, "Login failed: ${e.message}")
@@ -82,19 +82,19 @@ class LocalAuthRepository @Inject constructor(
         }
     }
 
-    override fun isUserLoggedIn(): Flow<Boolean> = _isLoggedIn
+    override fun isUserLoggedIn(): Flow<Boolean> = isLoggedInState
 
     override suspend fun logout() {
         Timber.d("User logged out: ${_currentUser?.username}")
         _currentUser = null
-        _isLoggedIn.value = false
+        isLoggedInState.value = false
         sessionPreferences.clearSession()
     }
 
     /**
      * Restore session from saved preferences.
      * Call this on app startup before showing login screen.
-     * 
+     *
      * @return true if session was restored, false if user needs to login
      */
     suspend fun restoreSession(): Boolean {
@@ -102,19 +102,19 @@ class LocalAuthRepository @Inject constructor(
             Timber.d("No saved session found")
             return false
         }
-        
+
         val userId = sessionPreferences.getUserId() ?: return false
         val user = userDao.getUserById(userId)
-        
+
         if (user == null || !user.isActive) {
             Timber.w("Saved session user not found or inactive, clearing session")
             sessionPreferences.clearSession()
             return false
         }
-        
+
         // Restore session
         _currentUser = user
-        _isLoggedIn.value = true
+        isLoggedInState.value = true
         Timber.d("Session restored for: ${user.username} (${user.displayName})")
         return true
     }
@@ -122,9 +122,7 @@ class LocalAuthRepository @Inject constructor(
     /**
      * Check if there's a saved session (without fully restoring).
      */
-    fun hasSavedSession(): Boolean {
-        return sessionPreferences.isLoggedIn()
-    }
+    fun hasSavedSession(): Boolean = sessionPreferences.isLoggedIn()
 
     /**
      * Get current logged in user.
@@ -133,12 +131,12 @@ class LocalAuthRepository @Inject constructor(
 
     private suspend fun completeLogin(user: UserEntity) {
         _currentUser = user
-        _isLoggedIn.value = true
+        isLoggedInState.value = true
         sessionPreferences.saveSession(
             userId = user.id,
             username = user.username,
             displayName = user.displayName,
-            role = user.role
+            role = user.role,
         )
         Timber.d("Login successful for: ${user.username} (${user.displayName})")
     }
@@ -146,7 +144,7 @@ class LocalAuthRepository @Inject constructor(
     private suspend fun authenticateRemoteAndCache(
         username: String,
         password: String,
-        existingUser: UserEntity?
+        existingUser: UserEntity?,
     ): UserEntity? {
         return when (val remoteResult = userRemoteDataSource.fetchActiveUserWithPassword(username)) {
             is Result.Success -> {
@@ -180,7 +178,7 @@ class LocalAuthRepository @Inject constructor(
      */
     override suspend fun changeCurrentUserPassword(
         currentPassword: String,
-        newPassword: String
+        newPassword: String,
     ): Result<Unit> {
         return try {
             val user = resolveCurrentUser()
@@ -210,7 +208,7 @@ class LocalAuthRepository @Inject constructor(
 
             val refreshedUser = user.copy(
                 passwordHash = "",
-                updatedAt = System.currentTimeMillis()
+                updatedAt = System.currentTimeMillis(),
             )
             _currentUser = refreshedUser
 
@@ -234,58 +232,54 @@ class LocalAuthRepository @Inject constructor(
     /**
      * Sync users from Supabase to local Room database.
      * Call this on app start when online.
-     * 
+     *
      * @return Number of users synced, or -1 if failed
      */
-    suspend fun syncUsersFromRemote(): Int {
-        return when (val result = syncUsersWithResult()) {
-            is Result.Success -> result.data
-            is Result.Error -> -1
-            is Result.Loading -> -1
-        }
+    suspend fun syncUsersFromRemote(): Int = when (val result = syncUsersWithResult()) {
+        is Result.Success -> result.data
+        is Result.Error -> -1
+        is Result.Loading -> -1
     }
-    
+
     /**
      * Sync users with detailed result for error handling.
      */
-    suspend fun syncUsersWithResult(): Result<Int> {
-        return try {
-            Timber.d("Starting user sync from Supabase...")
-            
-            when (val result = userRemoteDataSource.fetchActiveUsers()) {
-                is Result.Success -> {
-                    val remoteUsers = result.data
-                    Timber.d("Fetched ${remoteUsers.size} users from Supabase")
-                    
-                    // Sync each user to local database
-                    var syncedCount = 0
-                    for (dto in remoteUsers) {
-                        syncUserToLocal(dto)
-                        syncedCount++
-                    }
-                    
-                    Timber.d("User sync completed: $syncedCount users")
-                    Result.Success(syncedCount)
+    suspend fun syncUsersWithResult(): Result<Int> = try {
+        Timber.d("Starting user sync from Supabase...")
+
+        when (val result = userRemoteDataSource.fetchActiveUsers()) {
+            is Result.Success -> {
+                val remoteUsers = result.data
+                Timber.d("Fetched ${remoteUsers.size} users from Supabase")
+
+                // Sync each user to local database
+                var syncedCount = 0
+                for (dto in remoteUsers) {
+                    syncUserToLocal(dto)
+                    syncedCount++
                 }
-                is Result.Error -> {
-                    Timber.e(result.exception, "Failed to sync users: ${result.exception?.message}")
-                    Result.Error(result.exception ?: Exception("Unknown sync error"))
-                }
-                is Result.Loading -> Result.Loading
+
+                Timber.d("User sync completed: $syncedCount users")
+                Result.Success(syncedCount)
             }
-        } catch (e: Exception) {
-            Timber.e(e, "User sync failed: ${e.message}")
-            Result.Error(e)
+            is Result.Error -> {
+                Timber.e(result.exception, "Failed to sync users: ${result.exception?.message}")
+                Result.Error(result.exception ?: Exception("Unknown sync error"))
+            }
+            is Result.Loading -> Result.Loading
         }
+    } catch (e: Exception) {
+        Timber.e(e, "User sync failed: ${e.message}")
+        Result.Error(e)
     }
-    
+
     /**
      * Sync a single user from Supabase DTO to local Room.
      * If user exists, update; otherwise insert.
      */
     private suspend fun syncUserToLocal(dto: UserDto): UserEntity {
         val existing = userDao.getUserByUsername(dto.username)
-        
+
         val user = UserEntity(
             id = dto.id,
             username = dto.username,
@@ -294,9 +288,9 @@ class LocalAuthRepository @Inject constructor(
             role = dto.role,
             isActive = dto.isActive,
             createdAt = existing?.createdAt ?: System.currentTimeMillis(),
-            updatedAt = System.currentTimeMillis()
+            updatedAt = System.currentTimeMillis(),
         )
-        
+
         if (existing != null) {
             // Update existing user
             userDao.insertUser(user) // REPLACE strategy
@@ -312,14 +306,10 @@ class LocalAuthRepository @Inject constructor(
     /**
      * Check if this is a first-run setup (no users exist locally).
      */
-    suspend fun isFirstRun(): Boolean {
-        return userDao.getUserCount() == 0
-    }
+    suspend fun isFirstRun(): Boolean = userDao.getUserCount() == 0
 
     /**
      * Get all local users.
      */
-    suspend fun getAllUsers(): List<UserEntity> {
-        return userDao.getAllUsersList()
-    }
+    suspend fun getAllUsers(): List<UserEntity> = userDao.getAllUsersList()
 }

@@ -11,7 +11,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -26,14 +25,14 @@ data class AppLockUiState(
     val biometricAvailable: Boolean = false,
     val pinSet: Boolean = false,
     val showPinInput: Boolean = false,
-    val isLoading: Boolean = false
+    val isLoading: Boolean = false,
 )
 
 @HiltViewModel
 class AppLockViewModel @Inject constructor(
     private val appLockPreferences: AppLockPreferences,
     private val biometricManager: AppBiometricManager,
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AppLockUiState())
@@ -48,14 +47,14 @@ class AppLockViewModel @Inject constructor(
             val biometricEnabled = appLockPreferences.isBiometricEnabledNow()
             val biometricAvailable = biometricManager.isBiometricAvailable()
             val pinSet = appLockPreferences.isPinSetNow()
-            
+
             _uiState.update { state ->
                 state.copy(
                     biometricEnabled = biometricEnabled,
                     biometricAvailable = biometricAvailable,
                     pinSet = pinSet,
                     // Show PIN input if biometric is not available but PIN is set
-                    showPinInput = pinSet && (!biometricEnabled || !biometricAvailable)
+                    showPinInput = pinSet && (!biometricEnabled || !biometricAvailable),
                 )
             }
 
@@ -72,7 +71,7 @@ class AppLockViewModel @Inject constructor(
             state.copy(
                 enteredPin = newPin,
                 pinError = false,
-                errorMessage = null
+                errorMessage = null,
             )
         }
 
@@ -90,7 +89,7 @@ class AppLockViewModel @Inject constructor(
             state.copy(
                 enteredPin = currentPin.dropLast(1),
                 pinError = false,
-                errorMessage = null
+                errorMessage = null,
             )
         }
     }
@@ -104,7 +103,7 @@ class AppLockViewModel @Inject constructor(
                         enteredPin = "",
                         pinError = true,
                         errorMessage = formatLockoutMessage(lockoutRemaining),
-                        isLoading = false
+                        isLoading = false,
                     )
                 }
                 return@launch
@@ -113,18 +112,18 @@ class AppLockViewModel @Inject constructor(
             // Add a small delay to allow the user to see the 4th dot filled
             // before showing the verification result
             delay(200)
-            
+
             _uiState.update { it.copy(isLoading = true) }
-            
+
             val isValid = appLockPreferences.verifyPin(pin)
-            
+
             if (isValid) {
                 Timber.d("PIN verified successfully")
                 appLockPreferences.clearPinLockout()
                 _uiState.update { state ->
                     state.copy(
                         isUnlocked = true,
-                        isLoading = false
+                        isLoading = false,
                     )
                 }
             } else {
@@ -140,7 +139,7 @@ class AppLockViewModel @Inject constructor(
                         enteredPin = "",
                         pinError = true,
                         errorMessage = errorMessage,
-                        isLoading = false
+                        isLoading = false,
                     )
                 }
             }
@@ -168,7 +167,7 @@ class AppLockViewModel @Inject constructor(
             activity = activity,
             title = context.getString(R.string.app_lock_title),
             subtitle = context.getString(R.string.app_lock_bio_hint),
-            negativeButtonText = context.getString(R.string.bio_prompt_neg_button)
+            negativeButtonText = context.getString(R.string.bio_prompt_neg_button),
         ) { result ->
             when (result) {
                 is BiometricResult.Success -> {
@@ -184,12 +183,13 @@ class AppLockViewModel @Inject constructor(
                     _uiState.update { state ->
                         state.copy(
                             showPinInput = true,
-                            errorMessage = result.message
+                            errorMessage = result.message,
                         )
                     }
                 }
                 is BiometricResult.NotAvailable,
-                is BiometricResult.NotEnrolled -> {
+                is BiometricResult.NotEnrolled,
+                -> {
                     _uiState.update { it.copy(showPinInput = true) }
                 }
             }

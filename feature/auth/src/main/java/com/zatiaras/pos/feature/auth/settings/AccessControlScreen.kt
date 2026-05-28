@@ -3,6 +3,7 @@ package com.zatiaras.pos.feature.auth.settings
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -14,26 +15,23 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
-import com.zatiaras.pos.feature.auth.R
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.zatiaras.pos.core.data.access.LockableRoute
 import com.zatiaras.pos.core.ui.theme.AppShapes
 import com.zatiaras.pos.core.ui.theme.ErrorRed
 import com.zatiaras.pos.core.ui.theme.InfoBlue
 import com.zatiaras.pos.core.ui.theme.SuccessGreen
 import com.zatiaras.pos.core.ui.theme.WarningAmber
-import androidx.compose.foundation.border
+import com.zatiaras.pos.feature.auth.R
 
 // Icon colors for consistent theming
 private val OwnerPinColor = WarningAmber
@@ -50,9 +48,9 @@ private val InfoColor = InfoBlue
 fun AccessControlScreen(
     onNavigateBack: () -> Unit,
     onNavigateToOwnerPinSetup: () -> Unit,
-    viewModel: SettingsViewModel = hiltViewModel()
+    viewModel: SettingsViewModel = hiltViewModel(),
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val lifecycleOwner = LocalLifecycleOwner.current
 
     // Refresh owner PIN status when screen becomes visible
@@ -75,53 +73,53 @@ fun AccessControlScreen(
                 title = {
                     Text(
                         text = stringResource(R.string.access_control_title),
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.auth_back)
+                            contentDescription = stringResource(R.string.auth_back),
                         )
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
+                    containerColor = MaterialTheme.colorScheme.surface,
+                ),
             )
-        }
+        },
     ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
                 .verticalScroll(rememberScrollState())
-                .padding(16.dp)
+                .padding(16.dp),
         ) {
             // Description Badge
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = AppShapes.L,
                 colors = CardDefaults.cardColors(
-                    containerColor = InfoColor.copy(alpha = 0.1f)
-                )
+                    containerColor = InfoColor.copy(alpha = 0.1f),
+                ),
             ) {
                 Row(
                     modifier = Modifier.padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.Info,
                         contentDescription = null,
                         tint = InfoColor,
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(24.dp),
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
                         text = stringResource(R.string.access_control_desc),
                         style = MaterialTheme.typography.bodyMedium,
-                        color = InfoColor
+                        color = InfoColor,
                     )
                 }
             }
@@ -131,7 +129,7 @@ fun AccessControlScreen(
             // Section Header
             SectionHeader(
                 title = stringResource(R.string.access_control_owner_pin),
-                subtitle = stringResource(R.string.access_control_pin_hint)
+                subtitle = stringResource(R.string.access_control_pin_hint),
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -142,7 +140,7 @@ fun AccessControlScreen(
                     .fillMaxWidth()
                     .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f), AppShapes.XL),
                 shape = AppShapes.XL,
-                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
             ) {
                 Box(
                     modifier = Modifier
@@ -151,33 +149,33 @@ fun AccessControlScreen(
                             brush = Brush.linearGradient(
                                 colors = listOf(
                                     OwnerPinColor,
-                                    OwnerPinColor.copy(alpha = 0.8f)
-                                )
-                            )
+                                    OwnerPinColor.copy(alpha = 0.8f),
+                                ),
+                            ),
                         )
-                        .padding(20.dp)
+                        .padding(20.dp),
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Row(
                             modifier = Modifier.weight(1f),
-                            verticalAlignment = Alignment.CenterVertically
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Box(
                                 modifier = Modifier
                                     .size(48.dp)
                                     .clip(CircleShape)
                                     .background(MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.2f)),
-                                contentAlignment = Alignment.Center
+                                contentAlignment = Alignment.Center,
                             ) {
                                 Icon(
                                     imageVector = Icons.Outlined.Key,
                                     contentDescription = null,
                                     tint = MaterialTheme.colorScheme.onPrimary,
-                                    modifier = Modifier.size(26.dp)
+                                    modifier = Modifier.size(26.dp),
                                 )
                             }
                             Spacer(modifier = Modifier.width(16.dp))
@@ -186,7 +184,7 @@ fun AccessControlScreen(
                                     text = if (uiState.ownerPinSet) "Ubah PIN Pemilik" else "Atur PIN Pemilik",
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onPrimary
+                                    color = MaterialTheme.colorScheme.onPrimary,
                                 )
                                 Text(
                                     text = if (uiState.ownerPinSet) {
@@ -195,22 +193,22 @@ fun AccessControlScreen(
                                         stringResource(R.string.access_control_no_pin)
                                     },
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f)
+                                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f),
                                 )
                             }
                         }
-                        
+
                         Button(
                             onClick = onNavigateToOwnerPinSetup,
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.onPrimary,
-                                contentColor = OwnerPinColor
+                                contentColor = OwnerPinColor,
                             ),
-                            shape = AppShapes.M
+                            shape = AppShapes.M,
                         ) {
                             Text(
                                 if (uiState.ownerPinSet) stringResource(R.string.auth_change) else stringResource(R.string.auth_configure),
-                                fontWeight = FontWeight.SemiBold
+                                fontWeight = FontWeight.SemiBold,
                             )
                         }
                     }
@@ -222,7 +220,7 @@ fun AccessControlScreen(
             // Section Header for Lock Routes
             SectionHeader(
                 title = stringResource(R.string.access_control_lock_menu_title),
-                subtitle = stringResource(R.string.access_control_lock_menu_desc)
+                subtitle = stringResource(R.string.access_control_lock_menu_desc),
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -234,21 +232,21 @@ fun AccessControlScreen(
                     .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f), AppShapes.XL),
                 shape = AppShapes.XL,
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
                 ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
             ) {
                 Column(modifier = Modifier.padding(8.dp)) {
                     uiState.lockableRoutes.forEachIndexed { index, (route, isLocked) ->
                         LockableRouteItem(
                             route = route,
                             isLocked = isLocked,
-                            onToggle = { viewModel.toggleRouteLock(route) }
+                            onToggle = { viewModel.toggleRouteLock(route) },
                         )
                         if (index < uiState.lockableRoutes.size - 1) {
                             HorizontalDivider(
                                 modifier = Modifier.padding(horizontal = 16.dp),
-                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
                             )
                         }
                     }
@@ -262,23 +260,23 @@ fun AccessControlScreen(
                 modifier = Modifier.fillMaxWidth(),
                 shape = AppShapes.L,
                 colors = CardDefaults.cardColors(
-                    containerColor = SuccessGreen.copy(alpha = 0.1f)
-                )
+                    containerColor = SuccessGreen.copy(alpha = 0.1f),
+                ),
             ) {
                 Row(
-                    modifier = Modifier.padding(16.dp)
+                    modifier = Modifier.padding(16.dp),
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.Lightbulb,
                         contentDescription = null,
                         tint = SuccessGreen,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(20.dp),
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
                         text = stringResource(R.string.access_control_hint),
                         style = MaterialTheme.typography.bodySmall,
-                        color = SuccessGreen
+                        color = SuccessGreen,
                     )
                 }
             }
@@ -294,21 +292,21 @@ fun AccessControlScreen(
 @Composable
 private fun SectionHeader(
     title: String,
-    subtitle: String
+    subtitle: String,
 ) {
     Column(
-        modifier = Modifier.padding(horizontal = 4.dp)
+        modifier = Modifier.padding(horizontal = 4.dp),
     ) {
         Text(
             text = title,
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface
+            color = MaterialTheme.colorScheme.onSurface,
         )
         Text(
             text = subtitle,
             style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
 }
@@ -320,18 +318,18 @@ private fun SectionHeader(
 private fun LockableRouteItem(
     route: LockableRoute,
     isLocked: Boolean,
-    onToggle: () -> Unit
+    onToggle: () -> Unit,
 ) {
     val iconColor by animateColorAsState(
         targetValue = if (isLocked) LockColor else UnlockColor,
         animationSpec = tween(300),
-        label = "iconColor"
+        label = "iconColor",
     )
-    
+
     val backgroundColor by animateColorAsState(
         targetValue = if (isLocked) LockColor.copy(alpha = 0.1f) else UnlockColor.copy(alpha = 0.1f),
         animationSpec = tween(300),
-        label = "bgColor"
+        label = "bgColor",
     )
 
     Row(
@@ -339,11 +337,11 @@ private fun LockableRouteItem(
             .fillMaxWidth()
             .padding(horizontal = 12.dp, vertical = 14.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Row(
             modifier = Modifier.weight(1f),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             // Animated icon background
             Box(
@@ -351,33 +349,33 @@ private fun LockableRouteItem(
                     .size(44.dp)
                     .clip(AppShapes.M)
                     .background(backgroundColor),
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center,
             ) {
                 Icon(
                     imageVector = if (isLocked) Icons.Outlined.Lock else Icons.Outlined.LockOpen,
                     contentDescription = null,
                     tint = iconColor,
-                    modifier = Modifier.size(22.dp)
+                    modifier = Modifier.size(22.dp),
                 )
             }
-            
+
             Spacer(modifier = Modifier.width(16.dp))
-            
+
             Column {
                 Text(
                     text = route.displayName,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
                 Text(
                     text = if (isLocked) stringResource(R.string.access_control_locked) else stringResource(R.string.access_control_unlocked),
                     style = MaterialTheme.typography.bodySmall,
-                    color = iconColor
+                    color = iconColor,
                 )
             }
         }
-        
+
         Switch(
             checked = isLocked,
             onCheckedChange = { onToggle() },
@@ -385,8 +383,8 @@ private fun LockableRouteItem(
                 checkedThumbColor = MaterialTheme.colorScheme.surface,
                 checkedTrackColor = LockColor,
                 uncheckedThumbColor = MaterialTheme.colorScheme.surface,
-                uncheckedTrackColor = MaterialTheme.colorScheme.outline
-            )
+                uncheckedTrackColor = MaterialTheme.colorScheme.outline,
+            ),
         )
     }
 }

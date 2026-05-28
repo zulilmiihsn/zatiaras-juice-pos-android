@@ -8,7 +8,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -21,7 +20,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -33,11 +31,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.zatiaras.pos.core.ui.components.OwnerPinDialog
 import com.zatiaras.pos.core.ui.components.ZatDialog
-import com.zatiaras.pos.core.ui.theme.Slate50
+import com.zatiaras.pos.core.ui.theme.AppShapes
 import com.zatiaras.pos.core.ui.theme.Brand500
 import com.zatiaras.pos.core.ui.theme.ErrorRed
 import com.zatiaras.pos.core.ui.theme.IncomeGreen
-import com.zatiaras.pos.core.ui.theme.AppShapes
 import com.zatiaras.pos.core.ui.theme.Slate100
 import com.zatiaras.pos.core.ui.theme.Slate200
 import com.zatiaras.pos.core.ui.theme.Slate300
@@ -60,7 +57,7 @@ import java.util.Locale
 fun TransactionHistoryRoute(
     onNavigateBack: () -> Unit,
     onNavigateToReceipt: (Transaction) -> Unit,
-    viewModel: TransactionHistoryViewModel = hiltViewModel()
+    viewModel: TransactionHistoryViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -80,7 +77,7 @@ fun TransactionHistoryRoute(
             onNavigateToReceipt(it)
         },
         verifyPin = viewModel::verifyOwnerPin,
-        onErrorDismiss = viewModel::clearError
+        onErrorDismiss = viewModel::clearError,
     )
 }
 
@@ -99,7 +96,7 @@ fun TransactionHistoryScreen(
     onUpdatePaymentMethod: (PaymentMethod) -> Unit,
     onPrintReceiptClick: (Transaction) -> Unit,
     verifyPin: suspend (String) -> Boolean,
-    onErrorDismiss: () -> Unit
+    onErrorDismiss: () -> Unit,
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     var showPinDialogForDelete by remember { mutableStateOf(false) }
@@ -119,39 +116,39 @@ fun TransactionHistoryScreen(
                     Text(
                         text = stringResource(R.string.pos_history_today_title),
                         style = MaterialTheme.typography.titleLarge.copy(
-                            fontWeight = FontWeight.Bold
-                        )
+                            fontWeight = FontWeight.Bold,
+                        ),
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.pos_back)
+                            contentDescription = stringResource(R.string.pos_back),
                         )
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface,
                     titleContentColor = Slate800,
-                    navigationIconContentColor = Slate800
+                    navigationIconContentColor = Slate800,
                 ),
-                modifier = Modifier
+                modifier = Modifier,
             )
         },
-        snackbarHost = { SnackbarHost(snackbarHostState) }
+        snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
+                .padding(paddingValues),
         ) {
             // Search & Filter Header
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(MaterialTheme.colorScheme.surface)
-                    .padding(horizontal = 20.dp, vertical = 16.dp)
+                    .padding(horizontal = 20.dp, vertical = 16.dp),
             ) {
                 OutlinedTextField(
                     value = uiState.searchQuery,
@@ -160,14 +157,14 @@ fun TransactionHistoryScreen(
                     placeholder = {
                         Text(
                             stringResource(R.string.pos_history_search_placeholder),
-                            color = Slate400
+                            color = Slate400,
                         )
                     },
                     leadingIcon = {
                         Icon(
                             Icons.Default.Search,
                             contentDescription = null,
-                            tint = Brand500
+                            tint = Brand500,
                         )
                     },
                     shape = AppShapes.M,
@@ -175,10 +172,10 @@ fun TransactionHistoryScreen(
                         focusedBorderColor = Brand500,
                         unfocusedBorderColor = Slate200,
                         focusedContainerColor = MaterialTheme.colorScheme.surface,
-                        unfocusedContainerColor = Slate50
+                        unfocusedContainerColor = Slate50,
                     ),
                     singleLine = true,
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search)
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -187,7 +184,7 @@ fun TransactionHistoryScreen(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState())
+                        .horizontalScroll(rememberScrollState()),
                 ) {
                     PaymentFilter.values().forEach { filter ->
                         FilterChip(
@@ -196,26 +193,26 @@ fun TransactionHistoryScreen(
                             label = {
                                 Text(
                                     text = filter.label,
-                                    fontWeight = if (uiState.paymentFilter == filter) FontWeight.Bold else FontWeight.Medium
+                                    fontWeight = if (uiState.paymentFilter == filter) FontWeight.Bold else FontWeight.Medium,
                                 )
                             },
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = Brand500,
                                 selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
                                 containerColor = Slate100,
-                                labelColor = Slate600
+                                labelColor = Slate600,
                             ),
                             border = FilterChipDefaults.filterChipBorder(
                                 enabled = true,
                                 selected = uiState.paymentFilter == filter,
-                                borderColor = if (uiState.paymentFilter == filter) Brand500 else Color.Transparent
+                                borderColor = if (uiState.paymentFilter == filter) Brand500 else Color.Transparent,
                             ),
-                            shape = AppShapes.XL
+                            shape = AppShapes.XL,
                         )
                     }
                 }
             }
-            
+
             HorizontalDivider(color = Slate200, thickness = 1.dp)
 
             // Transaction List
@@ -230,13 +227,13 @@ fun TransactionHistoryScreen(
                             imageVector = Icons.AutoMirrored.Outlined.ReceiptLong,
                             contentDescription = null,
                             modifier = Modifier.size(64.dp),
-                            tint = Slate300
+                            tint = Slate300,
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
                             text = stringResource(R.string.pos_history_empty_today),
                             style = MaterialTheme.typography.bodyLarge,
-                            color = Slate600
+                            color = Slate600,
                         )
                     }
                 }
@@ -244,13 +241,13 @@ fun TransactionHistoryScreen(
                 LazyColumn(
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize(),
                 ) {
                     items(uiState.displayedTransactions, key = { it.id }) { trx ->
                         TransactionHistoryCard(
                             transaction = trx,
                             onClick = { onTransactionClick(trx) },
-                            onDeleteClick = { onDeleteClick(trx) }
+                            onDeleteClick = { onDeleteClick(trx) },
                         )
                     }
                 }
@@ -271,7 +268,7 @@ fun TransactionHistoryScreen(
                     onPrintReceiptClick = {
                         dismiss()
                         onPrintReceiptClick(selectedTransaction)
-                    }
+                    },
                 )
             }
         }
@@ -291,7 +288,7 @@ fun TransactionHistoryScreen(
                             dismiss()
                             onDeleteConfirm()
                         }
-                    }
+                    },
                 )
             }
         }
@@ -303,7 +300,7 @@ fun TransactionHistoryScreen(
                     showPinDialogForDelete = false
                     onDeleteConfirm()
                 },
-                verifyPin = verifyPin
+                verifyPin = verifyPin,
             )
         }
     }
@@ -313,7 +310,7 @@ fun TransactionHistoryScreen(
 fun TransactionHistoryCard(
     transaction: Transaction,
     onClick: () -> Unit,
-    onDeleteClick: () -> Unit
+    onDeleteClick: () -> Unit,
 ) {
     Card(
         modifier = Modifier
@@ -321,11 +318,11 @@ fun TransactionHistoryCard(
             .clickable(onClick = onClick),
         shape = AppShapes.L,
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)),
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             // Icon Placeholder
             Box(
@@ -333,68 +330,68 @@ fun TransactionHistoryCard(
                     .size(48.dp)
                     .clip(AppShapes.M)
                     .background(Slate50),
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center,
             ) {
                 Text(
                     text = transaction.customerName?.firstOrNull()?.toString()?.uppercase() ?: "#",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = Brand500
+                    color = Brand500,
                 )
             }
-            
+
             Spacer(modifier = Modifier.width(16.dp))
-            
+
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = transaction.customerName.takeUnless { it.isNullOrBlank() } 
+                    text = transaction.customerName.takeUnless { it.isNullOrBlank() }
                         ?: transaction.transactionNumber,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = Slate900,
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
                 )
-                
+
                 Spacer(modifier = Modifier.height(4.dp))
-                
+
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = SimpleDateFormat("HH:mm", Locale("id", "ID")).format(Date(transaction.createdAt)),
                         style = MaterialTheme.typography.bodySmall,
-                        color = Slate600
+                        color = Slate600,
                     )
                     Text(
                         text = " • ",
                         style = MaterialTheme.typography.bodySmall,
-                        color = Slate400
+                        color = Slate400,
                     )
                     Text(
                         text = transaction.paymentMethod.name.replace("_", " "),
                         style = MaterialTheme.typography.labelSmall,
                         color = Brand500,
-                        fontWeight = FontWeight.SemiBold
+                        fontWeight = FontWeight.SemiBold,
                     )
                 }
             }
-            
+
             Column(horizontalAlignment = Alignment.End) {
                 Text(
                     text = CurrencyFormatter.formatCurrency(transaction.grandTotal),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = IncomeGreen
+                    color = IncomeGreen,
                 )
-                
+
                 IconButton(
                     onClick = onDeleteClick,
-                    modifier = Modifier.size(32.dp)
+                    modifier = Modifier.size(32.dp),
                 ) {
                     Icon(
                         imageVector = Icons.Default.DeleteOutline,
                         contentDescription = stringResource(com.zatiaras.pos.core.ui.R.string.btn_delete),
                         tint = ErrorRed,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(20.dp),
                     )
                 }
             }
@@ -408,7 +405,7 @@ fun TransactionDetailDialogContent(
     transaction: Transaction,
     onDismiss: () -> Unit,
     onUpdatePaymentMethod: (PaymentMethod) -> Unit,
-    onPrintReceiptClick: () -> Unit
+    onPrintReceiptClick: () -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
 
@@ -418,25 +415,25 @@ fun TransactionDetailDialogContent(
             .padding(16.dp),
         shape = AppShapes.XXL,
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
     ) {
         Column(modifier = Modifier.padding(24.dp)) {
             // Header
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
                     text = stringResource(R.string.pos_history_detail_title),
                     style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
                 )
                 IconButton(
                     onClick = onDismiss,
                     modifier = Modifier
                         .size(32.dp)
-                        .background(Slate100, CircleShape)
+                        .background(Slate100, CircleShape),
                 ) {
                     Icon(Icons.Default.Close, contentDescription = stringResource(com.zatiaras.pos.core.ui.R.string.btn_close), modifier = Modifier.size(18.dp))
                 }
@@ -448,19 +445,19 @@ fun TransactionDetailDialogContent(
             DetailRow(label = stringResource(R.string.pos_history_customer), value = transaction.customerName ?: "-")
             DetailRow(label = stringResource(R.string.pos_history_transaction_id), value = transaction.transactionNumber)
             DetailRow(label = stringResource(R.string.pos_history_date), value = SimpleDateFormat("dd MMM yyyy, HH:mm", Locale("id", "ID")).format(Date(transaction.createdAt)))
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             // Payment Method
             Text(
                 text = stringResource(R.string.pos_history_payment_type),
                 style = MaterialTheme.typography.labelMedium,
-                color = Slate600
+                color = Slate600,
             )
             Spacer(modifier = Modifier.height(8.dp))
             ExposedDropdownMenuBox(
                 expanded = expanded,
-                onExpandedChange = { expanded = it }
+                onExpandedChange = { expanded = it },
             ) {
                 OutlinedTextField(
                     value = transaction.paymentMethod.name.replace("_", " "),
@@ -473,12 +470,12 @@ fun TransactionDetailDialogContent(
                     shape = AppShapes.M,
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = Brand500,
-                        unfocusedBorderColor = Slate200
-                    )
+                        unfocusedBorderColor = Slate200,
+                    ),
                 )
                 ExposedDropdownMenu(
                     expanded = expanded,
-                    onDismissRequest = { expanded = false }
+                    onDismissRequest = { expanded = false },
                 ) {
                     PaymentMethod.values().forEach { method ->
                         DropdownMenuItem(
@@ -488,7 +485,7 @@ fun TransactionDetailDialogContent(
                                 if (method != transaction.paymentMethod) {
                                     onUpdatePaymentMethod(method)
                                 }
-                            }
+                            },
                         )
                     }
                 }
@@ -503,28 +500,28 @@ fun TransactionDetailDialogContent(
                     .background(Slate50, AppShapes.M)
                     .padding(16.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
                     text = stringResource(R.string.checkout_total_payment_label),
                     style = MaterialTheme.typography.titleMedium,
-                    color = Brand500
+                    color = Brand500,
                 )
                 Text(
                     text = CurrencyFormatter.formatCurrency(transaction.grandTotal),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
-                    color = Brand500
+                    color = Brand500,
                 )
             }
-            
+
             Spacer(modifier = Modifier.height(24.dp))
-            
+
             Button(
                 onClick = onPrintReceiptClick,
                 modifier = Modifier.fillMaxWidth().height(50.dp),
                 shape = AppShapes.M,
-                colors = ButtonDefaults.buttonColors(containerColor = Brand500)
+                colors = ButtonDefaults.buttonColors(containerColor = Brand500),
             ) {
                 Icon(Icons.AutoMirrored.Outlined.ReceiptLong, contentDescription = null, modifier = Modifier.size(20.dp))
                 Spacer(modifier = Modifier.width(8.dp))
@@ -540,14 +537,14 @@ fun DetailRow(label: String, value: String) {
         Text(
             text = label,
             style = MaterialTheme.typography.labelMedium,
-            color = Slate600
+            color = Slate600,
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = value,
             style = MaterialTheme.typography.bodyLarge,
             fontWeight = FontWeight.Medium,
-            color = Slate900
+            color = Slate900,
         )
     }
 }
@@ -555,42 +552,42 @@ fun DetailRow(label: String, value: String) {
 @Composable
 fun DeleteConfirmationContent(
     onDismiss: () -> Unit,
-    onConfirm: () -> Unit
+    onConfirm: () -> Unit,
 ) {
     Card(
         modifier = Modifier.fillMaxWidth().padding(24.dp),
         shape = AppShapes.XXL,
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
     ) {
         Column(
             modifier = Modifier.padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Box(
                 modifier = Modifier
                     .size(64.dp)
                     .background(WarningAmberBg, CircleShape),
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center,
             ) {
                 Icon(
                     Icons.Default.DeleteOutline,
                     contentDescription = null,
                     tint = ErrorRed,
-                    modifier = Modifier.size(32.dp)
+                    modifier = Modifier.size(32.dp),
                 )
             }
             Spacer(modifier = Modifier.height(16.dp))
             Text(
                 text = stringResource(R.string.pos_history_delete_title),
                 style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = stringResource(R.string.pos_history_delete_message),
                 textAlign = TextAlign.Center,
-                color = Slate600
+                color = Slate600,
             )
             Spacer(modifier = Modifier.height(24.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -598,7 +595,7 @@ fun DeleteConfirmationContent(
                     onClick = onDismiss,
                     modifier = Modifier.weight(1f).height(48.dp),
                     shape = AppShapes.M,
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Slate700)
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Slate700),
                 ) {
                     Text(stringResource(com.zatiaras.pos.core.ui.R.string.btn_cancel))
                 }
@@ -606,7 +603,7 @@ fun DeleteConfirmationContent(
                     onClick = onConfirm,
                     modifier = Modifier.weight(1f).height(48.dp),
                     shape = AppShapes.M,
-                    colors = ButtonDefaults.buttonColors(containerColor = ErrorRed)
+                    colors = ButtonDefaults.buttonColors(containerColor = ErrorRed),
                 ) {
                     Text(stringResource(com.zatiaras.pos.core.ui.R.string.btn_delete))
                 }

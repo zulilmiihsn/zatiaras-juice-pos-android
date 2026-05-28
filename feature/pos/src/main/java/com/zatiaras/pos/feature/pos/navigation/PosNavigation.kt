@@ -1,8 +1,8 @@
 package com.zatiaras.pos.feature.pos.navigation
 
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavOptions
@@ -23,7 +23,7 @@ object PosRoutes {
     const val RECEIPT = "receipt/{transactionId}"
     const val CASH_RECORD = "cash_record"
     const val TRANSACTION_HISTORY = "transaction_history"
-    
+
     fun receipt(transactionId: String) = "receipt/$transactionId"
 }
 
@@ -73,11 +73,11 @@ fun NavController.navigateToTransactionHistory() {
 fun NavGraphBuilder.posScreen(
     cartHolder: CartHolder,
     onNavigateBack: () -> Unit,
-    onNavigateToCheckout: () -> Unit
+    onNavigateToCheckout: () -> Unit,
 ) {
     composable(route = PosRoutes.POS) {
         val viewModel: PosViewModel = hiltViewModel()
-        
+
         PosScreen(
             onNavigateBack = onNavigateBack,
             onProceedToCheckout = {
@@ -85,7 +85,7 @@ fun NavGraphBuilder.posScreen(
                 cartHolder.updateCart(viewModel.getCurrentCart())
                 onNavigateToCheckout()
             },
-            viewModel = viewModel
+            viewModel = viewModel,
         )
     }
 }
@@ -96,11 +96,11 @@ fun NavGraphBuilder.posScreen(
 fun NavGraphBuilder.checkoutScreen(
     cartHolder: CartHolder,
     onNavigateBack: () -> Unit,
-    onTransactionComplete: (Transaction) -> Unit
+    onTransactionComplete: (Transaction) -> Unit,
 ) {
     composable(route = PosRoutes.CHECKOUT) {
-        val cart by cartHolder.cart.collectAsState()
-        
+        val cart by cartHolder.cart.collectAsStateWithLifecycle()
+
         CheckoutRoute(
             cart = cart,
             onNavigateBack = onNavigateBack,
@@ -108,7 +108,7 @@ fun NavGraphBuilder.checkoutScreen(
                 // Clear cart after successful transaction
                 cartHolder.clearCart()
                 onTransactionComplete(transaction)
-            }
+            },
         )
     }
 }
@@ -120,25 +120,25 @@ fun NavGraphBuilder.checkoutScreen(
 fun NavGraphBuilder.cashRecordScreen(
     onNavigateBack: () -> Unit,
     onNavigateToReceipt: (Transaction) -> Unit,
-    accessControlManager: com.zatiaras.pos.core.data.access.AccessControlManager? = null
+    accessControlManager: com.zatiaras.pos.core.domain.access.AccessChecker? = null,
 ) {
     composable(route = PosRoutes.CASH_RECORD) {
         if (accessControlManager != null) {
             com.zatiaras.pos.core.ui.components.AccessControlGate(
-                accessControlManager = accessControlManager,
+                accessChecker = accessControlManager,
                 route = com.zatiaras.pos.core.data.access.LockableRoute.CASH_RECORD_TAB.route,
                 screenName = "Buku Kas",
-                onAccessDenied = onNavigateBack
+                onAccessDenied = onNavigateBack,
             ) {
                 CashRecordScreen(
                     onNavigateBack = onNavigateBack,
-                    onNavigateToReceipt = onNavigateToReceipt
+                    onNavigateToReceipt = onNavigateToReceipt,
                 )
             }
         } else {
             CashRecordScreen(
                 onNavigateBack = onNavigateBack,
-                onNavigateToReceipt = onNavigateToReceipt
+                onNavigateToReceipt = onNavigateToReceipt,
             )
         }
     }
@@ -149,13 +149,12 @@ fun NavGraphBuilder.cashRecordScreen(
  */
 fun NavGraphBuilder.transactionHistoryScreen(
     onNavigateBack: () -> Unit,
-    onNavigateToReceipt: (Transaction) -> Unit
+    onNavigateToReceipt: (Transaction) -> Unit,
 ) {
     composable(route = PosRoutes.TRANSACTION_HISTORY) {
         com.zatiaras.pos.feature.pos.presentation.history.TransactionHistoryRoute(
             onNavigateBack = onNavigateBack,
-            onNavigateToReceipt = onNavigateToReceipt
+            onNavigateToReceipt = onNavigateToReceipt,
         )
     }
 }
-

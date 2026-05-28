@@ -25,7 +25,7 @@ import javax.inject.Inject
 class TransactionHistoryViewModel @Inject constructor(
     private val transactionRepository: TransactionRepository,
     private val accessControlManager: AccessControlManager,
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(TransactionHistoryUiState())
@@ -48,23 +48,23 @@ class TransactionHistoryViewModel @Inject constructor(
         _uiState.update { it.copy(isLoading = true) }
         transactionRepository.getTodayTransactions()
             .onEach { transactions ->
-                _uiState.update { 
+                _uiState.update {
                     it.copy(
                         allTransactions = transactions,
-                        isLoading = false
-                    ) 
+                        isLoading = false,
+                    )
                 }
             }
             .catch { e ->
                 Timber.e(e, "Error loading today's transactions")
-                _uiState.update { 
+                _uiState.update {
                     it.copy(
                         isLoading = false,
                         error = context.getString(
                             R.string.pos_history_error_load_with_reason,
-                            e.message ?: context.getString(R.string.pos_error_generic)
-                        )
-                    ) 
+                            e.message ?: context.getString(R.string.pos_error_generic),
+                        ),
+                    )
                 }
             }
             .launchIn(viewModelScope)
@@ -79,38 +79,38 @@ class TransactionHistoryViewModel @Inject constructor(
     }
 
     fun showDetail(transaction: Transaction) {
-        _uiState.update { 
+        _uiState.update {
             it.copy(
                 selectedTransaction = transaction,
-                showDetailDialog = true
-            ) 
+                showDetailDialog = true,
+            )
         }
     }
 
     fun hideDetail() {
-        _uiState.update { 
+        _uiState.update {
             it.copy(
                 selectedTransaction = null,
-                showDetailDialog = false
-            ) 
+                showDetailDialog = false,
+            )
         }
     }
 
     fun showDeleteConfirm(transaction: Transaction) {
-        _uiState.update { 
+        _uiState.update {
             it.copy(
                 selectedTransaction = transaction,
-                showDeleteConfirmDialog = true
-            ) 
+                showDeleteConfirmDialog = true,
+            )
         }
     }
 
     fun hideDeleteConfirm() {
-        _uiState.update { 
+        _uiState.update {
             it.copy(
                 selectedTransaction = null,
-                showDeleteConfirmDialog = false
-            ) 
+                showDeleteConfirmDialog = false,
+            )
         }
     }
 
@@ -120,20 +120,20 @@ class TransactionHistoryViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = true) }
             val result = transactionRepository.deleteTransaction(transaction.id)
             if (result is com.zatiaras.pos.core.domain.Result.Success) {
-                _uiState.update { 
+                _uiState.update {
                     it.copy(
                         showDeleteConfirmDialog = false,
                         selectedTransaction = null,
                         isLoading = false,
-                        error = null
-                    ) 
+                        error = null,
+                    )
                 }
             } else if (result is com.zatiaras.pos.core.domain.Result.Error) {
-                _uiState.update { 
+                _uiState.update {
                     it.copy(
                         isLoading = false,
-                        error = context.getString(R.string.pos_history_error_delete)
-                    ) 
+                        error = context.getString(R.string.pos_history_error_delete),
+                    )
                 }
             }
         }
@@ -146,28 +146,26 @@ class TransactionHistoryViewModel @Inject constructor(
             val result = transactionRepository.updatePaymentMethod(transaction.id, method)
             if (result is com.zatiaras.pos.core.domain.Result.Success) {
                 // Keep dialog open, update the transaction details from the flow automatically
-                _uiState.update { 
+                _uiState.update {
                     it.copy(
                         isLoading = false,
                         error = null,
-                        // Close detail dialog or just let it update? 
+                        // Close detail dialog or just let it update?
                         // The flow will emit a new list with updated transaction
-                    ) 
+                    )
                 }
             } else if (result is com.zatiaras.pos.core.domain.Result.Error) {
-                _uiState.update { 
+                _uiState.update {
                     it.copy(
                         isLoading = false,
-                        error = context.getString(R.string.pos_history_error_payment_update)
-                    ) 
+                        error = context.getString(R.string.pos_history_error_payment_update),
+                    )
                 }
             }
         }
     }
 
-    suspend fun verifyOwnerPin(pin: String): Boolean {
-        return accessControlManager.verifyOwnerPin(pin)
-    }
+    suspend fun verifyOwnerPin(pin: String): Boolean = accessControlManager.verifyOwnerPin(pin)
 
     fun clearError() {
         _uiState.update { it.copy(error = null) }

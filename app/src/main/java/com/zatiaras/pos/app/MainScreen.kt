@@ -38,13 +38,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -64,31 +62,31 @@ sealed class BottomNavItem(
     val route: String,
     val title: String,
     val iconFilled: ImageVector,
-    val iconOutlined: ImageVector
+    val iconOutlined: ImageVector,
 ) {
     data object Home : BottomNavItem(
         NavRoutes.HOME,
         "Beranda",
         Icons.Filled.Home,
-        Icons.Outlined.Home
+        Icons.Outlined.Home,
     )
     data object Pos : BottomNavItem(
         PosRoutes.POS,
         "Kasir",
         Icons.Filled.ShoppingCart,
-        Icons.Outlined.ShoppingCart
+        Icons.Outlined.ShoppingCart,
     )
     data object CashRecord : BottomNavItem(
         NavRoutes.CASH_RECORD,
         "Catat",
         Icons.Filled.Receipt,
-        Icons.Outlined.Receipt
+        Icons.Outlined.Receipt,
     )
     data object Reports : BottomNavItem(
         NavRoutes.REPORTS,
         "Laporan",
         Icons.Filled.Analytics,
-        Icons.Outlined.Analytics
+        Icons.Outlined.Analytics,
     )
 }
 
@@ -101,13 +99,13 @@ fun MainScreen(
     onNavigateToChat: () -> Unit,
     onNavigateToReceipt: (Transaction) -> Unit,
     onNavigateToSettings: () -> Unit = {},
-    accessControlManager: com.zatiaras.pos.core.data.access.AccessControlManager? = null
+    accessControlManager: com.zatiaras.pos.core.domain.access.AccessChecker? = null,
 ) {
     val items = listOf(
         BottomNavItem.Home,
         BottomNavItem.Pos,
         BottomNavItem.CashRecord,
-        BottomNavItem.Reports
+        BottomNavItem.Reports,
     )
 
     Scaffold(
@@ -115,10 +113,10 @@ fun MainScreen(
         bottomBar = {
             val navBackStackEntry by navController.currentBackStackEntryAsState()
             val currentDestination = navBackStackEntry?.destination
-            
+
             // Only show bottom bar on top-level destinations
             val isTopLevel = items.any { it.route == currentDestination?.route }
-            
+
             if (isTopLevel) {
                 EnhancedBottomNavigationBar(
                     items = items,
@@ -131,32 +129,32 @@ fun MainScreen(
                             launchSingleTop = true
                             restoreState = true
                         }
-                    }
+                    },
                 )
             }
-        }
+        },
     ) { innerPadding ->
         NavHost(
             navController = navController,
             startDestination = NavRoutes.HOME,
-            modifier = Modifier.padding(innerPadding)
+            modifier = Modifier.padding(innerPadding),
         ) {
             // Tab 1: Home (Complete Business Dashboard with stats, charts, top products)
             homeDashboardScreen(
                 route = NavRoutes.HOME,
-                onNavigateToSettings = onNavigateToSettings
+                onNavigateToSettings = onNavigateToSettings,
             )
-            
+
             // Tab 2: POS
             posScreen(
                 cartHolder = cartHolder,
                 onNavigateBack = { /* No back action for tab */ },
-                onNavigateToCheckout = onNavigateToCheckout
+                onNavigateToCheckout = onNavigateToCheckout,
             )
-            
+
             // Tab 3: Cash Record (Buku Kas) - Protected by Access Control
             cashRecordScreen(
-                onNavigateBack = { 
+                onNavigateBack = {
                     // Navigate to Home when access denied
                     navController.navigate(NavRoutes.HOME) {
                         popUpTo(navController.graph.findStartDestination().id) {
@@ -166,13 +164,13 @@ fun MainScreen(
                     }
                 },
                 onNavigateToReceipt = onNavigateToReceipt,
-                accessControlManager = accessControlManager
+                accessControlManager = accessControlManager,
             )
-            
+
             // Tab 4: Reports (P&L Report with Tanya AI) - Protected by Access Control
             reportsScreen(
                 route = NavRoutes.REPORTS,
-                onNavigateBack = { 
+                onNavigateBack = {
                     // Navigate to Home when access denied
                     navController.navigate(NavRoutes.HOME) {
                         popUpTo(navController.graph.findStartDestination().id) {
@@ -182,7 +180,7 @@ fun MainScreen(
                     }
                 },
                 onNavigateToChat = onNavigateToChat,
-                accessControlManager = accessControlManager
+                accessControlManager = accessControlManager,
             )
         }
     }
@@ -193,13 +191,13 @@ private fun EnhancedBottomNavigationBar(
     items: List<BottomNavItem>,
     currentRoute: String?,
     onItemClick: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Surface(
         modifier = modifier.fillMaxWidth(),
         color = MaterialTheme.colorScheme.surface,
         shadowElevation = 8.dp,
-        tonalElevation = 0.dp
+        tonalElevation = 0.dp,
     ) {
         NavigationBar(
             modifier = Modifier
@@ -207,15 +205,15 @@ private fun EnhancedBottomNavigationBar(
                 .height(72.dp),
             containerColor = MaterialTheme.colorScheme.surface,
             contentColor = MaterialTheme.colorScheme.onSurface,
-            tonalElevation = 0.dp
+            tonalElevation = 0.dp,
         ) {
             items.forEach { item ->
                 val isSelected = currentRoute == item.route
-                
+
                 EnhancedNavigationBarItem(
                     item = item,
                     selected = isSelected,
-                    onClick = { onItemClick(item.route) }
+                    onClick = { onItemClick(item.route) },
                 )
             }
         }
@@ -226,26 +224,26 @@ private fun EnhancedBottomNavigationBar(
 private fun RowScope.EnhancedNavigationBarItem(
     item: BottomNavItem,
     selected: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     // Smooth animations
     val animationSpec: AnimationSpec<Float> = tween(
         durationMillis = 300,
-        easing = FastOutSlowInEasing
+        easing = FastOutSlowInEasing,
     )
-    
+
     val scale by animateFloatAsState(
         targetValue = if (selected) 1.1f else 1f,
         animationSpec = animationSpec,
-        label = "iconScale"
+        label = "iconScale",
     )
-    
+
     val alpha by animateFloatAsState(
         targetValue = if (selected) 1f else 0.7f,
         animationSpec = animationSpec,
-        label = "alpha"
+        label = "alpha",
     )
-    
+
     val iconColor by animateColorAsState(
         targetValue = if (selected) {
             MaterialTheme.colorScheme.primary
@@ -253,9 +251,9 @@ private fun RowScope.EnhancedNavigationBarItem(
             MaterialTheme.colorScheme.onSurfaceVariant
         },
         animationSpec = tween(durationMillis = 300),
-        label = "iconColor"
+        label = "iconColor",
     )
-    
+
     val textColor by animateColorAsState(
         targetValue = if (selected) {
             MaterialTheme.colorScheme.primary
@@ -263,16 +261,16 @@ private fun RowScope.EnhancedNavigationBarItem(
             MaterialTheme.colorScheme.onSurfaceVariant
         },
         animationSpec = tween(durationMillis = 300),
-        label = "textColor"
+        label = "textColor",
     )
-    
+
     val indicatorWidth by animateDpAsState(
         targetValue = if (selected) 32.dp else 0.dp,
         animationSpec = tween(
             durationMillis = 300,
-            easing = FastOutSlowInEasing
+            easing = FastOutSlowInEasing,
         ),
-        label = "indicatorWidth"
+        label = "indicatorWidth",
     )
 
     NavigationBarItem(
@@ -281,7 +279,7 @@ private fun RowScope.EnhancedNavigationBarItem(
         icon = {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+                verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 // Animated indicator pill on top of icon
                 Box(
@@ -289,10 +287,10 @@ private fun RowScope.EnhancedNavigationBarItem(
                         .size(width = indicatorWidth, height = 3.dp)
                         .background(
                             color = MaterialTheme.colorScheme.primary,
-                            shape = AppShapes.XS
-                        )
+                            shape = AppShapes.XS,
+                        ),
                 )
-                
+
                 // Icon with scale animation
                 Icon(
                     imageVector = if (selected) item.iconFilled else item.iconOutlined,
@@ -301,7 +299,7 @@ private fun RowScope.EnhancedNavigationBarItem(
                     modifier = Modifier
                         .size(26.dp)
                         .scale(scale)
-                        .alpha(alpha)
+                        .alpha(alpha),
                 )
             }
         },
@@ -311,7 +309,7 @@ private fun RowScope.EnhancedNavigationBarItem(
                 color = textColor,
                 fontSize = 12.sp,
                 fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
-                modifier = Modifier.alpha(alpha)
+                modifier = Modifier.alpha(alpha),
             )
         },
         colors = NavigationBarItemDefaults.colors(
@@ -319,8 +317,8 @@ private fun RowScope.EnhancedNavigationBarItem(
             selectedTextColor = MaterialTheme.colorScheme.primary,
             indicatorColor = Color.Transparent, // We use custom indicator
             unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-            unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+            unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
         ),
-        alwaysShowLabel = true
+        alwaysShowLabel = true,
     )
 }

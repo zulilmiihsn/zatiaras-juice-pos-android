@@ -15,13 +15,13 @@ object InventoryNavigation {
     const val INVENTORY_ROUTE = "inventory"
     const val PRODUCT_DETAIL_ROUTE = "inventory/product/{productId}"
     const val PRODUCT_CREATE_ROUTE = "inventory/product/new"
-    
+
     fun productDetailRoute(productId: String) = "inventory/product/$productId"
 }
 
 /**
  * Extension function to add Inventory navigation graph.
- * 
+ *
  * Usage in MainActivity:
  * ```
  * NavHost(...) {
@@ -31,7 +31,7 @@ object InventoryNavigation {
  */
 /**
  * Extension function to add Inventory navigation graph.
- * 
+ *
  * Usage in MainActivity:
  * ```
  * NavHost(...) {
@@ -41,16 +41,16 @@ object InventoryNavigation {
  */
 fun NavGraphBuilder.inventoryNavGraph(
     navController: NavController,
-    accessControlManager: com.zatiaras.pos.core.data.access.AccessControlManager? = null
+    accessControlManager: com.zatiaras.pos.core.domain.access.AccessChecker? = null,
 ) {
     // Inventory List Screen
     composable(InventoryNavigation.INVENTORY_ROUTE) {
         if (accessControlManager != null) {
             com.zatiaras.pos.core.ui.components.AccessControlGate(
-                accessControlManager = accessControlManager,
+                accessChecker = accessControlManager,
                 route = com.zatiaras.pos.core.data.access.LockableRoute.INVENTORY.route,
                 screenName = "Inventaris",
-                onAccessDenied = { navController.popBackStack() }
+                onAccessDenied = { navController.popBackStack() },
             ) {
                 InventoryScreen(
                     onNavigateBack = { navController.popBackStack() },
@@ -60,7 +60,7 @@ fun NavGraphBuilder.inventoryNavGraph(
                         } else {
                             navController.navigate(InventoryNavigation.PRODUCT_CREATE_ROUTE)
                         }
-                    }
+                    },
                 )
             }
         } else {
@@ -72,29 +72,29 @@ fun NavGraphBuilder.inventoryNavGraph(
                     } else {
                         navController.navigate(InventoryNavigation.PRODUCT_CREATE_ROUTE)
                     }
-                }
+                },
             )
         }
     }
-    
+
     // Product Detail Screen (Edit mode)
     composable(
         route = InventoryNavigation.PRODUCT_DETAIL_ROUTE,
         arguments = listOf(
-            navArgument("productId") { type = NavType.StringType }
-        )
+            navArgument("productId") { type = NavType.StringType },
+        ),
     ) {
         ProductDetailScreen(
             onNavigateBack = { navController.popBackStack() },
-            onSaveSuccess = { navController.popBackStack() }
+            onSaveSuccess = { navController.popBackStack() },
         )
     }
-    
+
     // Product Create Screen (Create mode)
     composable(InventoryNavigation.PRODUCT_CREATE_ROUTE) {
         ProductDetailScreen(
             onNavigateBack = { navController.popBackStack() },
-            onSaveSuccess = { navController.popBackStack() }
+            onSaveSuccess = { navController.popBackStack() },
         )
     }
 }

@@ -4,8 +4,8 @@ import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
 import androidx.fragment.app.FragmentActivity
 import androidx.navigation.compose.rememberNavController
@@ -19,38 +19,37 @@ import javax.inject.Inject
 
 /**
  * Main entry point for the ZatiarasPOS application.
- * 
+ *
  * Uses FragmentActivity to support biometric authentication prompts.
  * Simplified to follow KISS principle - navigation logic extracted to AppNavGraph.
  */
 @AndroidEntryPoint
 class MainActivity : FragmentActivity() {
-    
     @Inject
     lateinit var cartHolder: CartHolder
-    
+
     @Inject
     lateinit var transactionHolder: TransactionHolder
-    
+
     @Inject
     lateinit var accessControlManager: AccessControlManager
-    
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             ZatiarasPOSTheme {
                 val navController = rememberNavController()
-                
+
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
-                    containerColor = MaterialTheme.colorScheme.background
+                    containerColor = MaterialTheme.colorScheme.background,
                 ) { innerPadding ->
                     AppNavGraph(
                         navController = navController,
                         cartHolder = cartHolder,
                         transactionHolder = transactionHolder,
                         accessControlManager = accessControlManager,
-                        modifier = Modifier.padding(innerPadding)
+                        modifier = Modifier.padding(innerPadding),
                     )
                 }
             }

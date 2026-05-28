@@ -4,8 +4,8 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
-import com.zatiaras.pos.core.data.access.AccessControlManager
 import com.zatiaras.pos.core.data.access.LockableRoute
+import com.zatiaras.pos.core.domain.access.AccessChecker
 import com.zatiaras.pos.core.ui.components.AccessControlGate
 import com.zatiaras.pos.feature.reports.presentation.home.HomeDashboardRoute
 import com.zatiaras.pos.feature.reports.presentation.pnl.PnlReportRoute
@@ -34,11 +34,11 @@ fun NavController.navigateToReportChat(navOptions: NavOptions? = null) {
  */
 fun NavGraphBuilder.homeDashboardScreen(
     route: String = HOME_DASHBOARD_ROUTE,
-    onNavigateToSettings: () -> Unit = {}
+    onNavigateToSettings: () -> Unit = {},
 ) {
     composable(route = route) {
         HomeDashboardRoute(
-            onNavigateToSettings = onNavigateToSettings
+            onNavigateToSettings = onNavigateToSettings,
         )
     }
 }
@@ -54,27 +54,27 @@ fun NavGraphBuilder.reportsScreen(
     route: String = REPORTS_ROUTE,
     onNavigateBack: (() -> Unit)?,
     onNavigateToChat: () -> Unit = {},
-    accessControlManager: AccessControlManager? = null
+    accessControlManager: AccessChecker? = null,
 ) {
     composable(route = route) {
         if (accessControlManager != null) {
             AccessControlGate(
-                accessControlManager = accessControlManager,
+                accessChecker = accessControlManager,
                 route = LockableRoute.REPORTS_TAB.route,
                 screenName = "Laporan",
-                onAccessDenied = { onNavigateBack?.invoke() }
+                onAccessDenied = { onNavigateBack?.invoke() },
             ) {
                 // Pass null for onNavigateBack to hide back button in tab view
                 PnlReportRoute(
                     onNavigateBack = null,
-                    onNavigateToChat = onNavigateToChat
+                    onNavigateToChat = onNavigateToChat,
                 )
             }
         } else {
             // Pass null for onNavigateBack to hide back button in tab view
             PnlReportRoute(
                 onNavigateBack = null,
-                onNavigateToChat = onNavigateToChat
+                onNavigateToChat = onNavigateToChat,
             )
         }
     }
@@ -87,19 +87,19 @@ fun NavGraphBuilder.reportsScreen(
 fun NavGraphBuilder.pnlReportScreen(
     onNavigateBack: () -> Unit,
     onNavigateToChat: () -> Unit = {},
-    accessControlManager: AccessControlManager? = null
+    accessControlManager: AccessChecker? = null,
 ) {
     composable(route = PNL_REPORT_ROUTE) {
         if (accessControlManager != null) {
             PnlReportRoute(
                 onNavigateBack = onNavigateBack,
                 onNavigateToChat = onNavigateToChat,
-                accessControlManager = accessControlManager
+                accessControlManager = accessControlManager,
             )
         } else {
             PnlReportRoute(
                 onNavigateBack = onNavigateBack,
-                onNavigateToChat = onNavigateToChat
+                onNavigateToChat = onNavigateToChat,
             )
         }
     }
@@ -109,11 +109,11 @@ fun NavGraphBuilder.pnlReportScreen(
  * AI Chat Assistant Screen
  */
 fun NavGraphBuilder.reportChatScreen(
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
 ) {
     composable(route = REPORT_CHAT_ROUTE) {
         com.zatiaras.pos.feature.reports.presentation.chat.ReportChatRoute(
-            onNavigateBack = onNavigateBack
+            onNavigateBack = onNavigateBack,
         )
     }
 }

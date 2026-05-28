@@ -13,21 +13,21 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
-import com.zatiaras.pos.feature.auth.R
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.zatiaras.pos.core.ui.theme.LocalDimensions
+import com.zatiaras.pos.feature.auth.R
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 enum class OwnerPinSetupStep {
     ENTER_NEW_PIN,
-    CONFIRM_PIN
+    CONFIRM_PIN,
 }
 
 /**
@@ -38,11 +38,11 @@ enum class OwnerPinSetupStep {
 fun OwnerPinSetupScreen(
     onPinSet: () -> Unit,
     onNavigateBack: () -> Unit,
-    viewModel: SettingsViewModel = hiltViewModel()
+    viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val dimensions = LocalDimensions.current
-    
+
     var step by remember { mutableStateOf(OwnerPinSetupStep.ENTER_NEW_PIN) }
     var currentPin by remember { mutableStateOf("") }
     var newPin by remember { mutableStateOf("") }
@@ -50,7 +50,7 @@ fun OwnerPinSetupScreen(
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var isPinSet by remember { mutableStateOf(false) }
     val pinMismatchMessage = stringResource(R.string.pin_setup_mismatch)
-    
+
     // Handle PIN set success
     LaunchedEffect(isPinSet) {
         if (isPinSet) {
@@ -58,38 +58,38 @@ fun OwnerPinSetupScreen(
             onPinSet()
         }
     }
-    
+
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             CenterAlignedTopAppBar(
-                title = { 
+                title = {
                     Text(
                         when (step) {
                             OwnerPinSetupStep.ENTER_NEW_PIN -> if (uiState.ownerPinSet) stringResource(R.string.access_control_change_pin) else stringResource(R.string.access_control_set_new)
                             OwnerPinSetupStep.CONFIRM_PIN -> stringResource(R.string.pin_setup_confirm)
-                        }
-                    ) 
+                        },
+                    )
                 },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.auth_back)
+                            contentDescription = stringResource(R.string.auth_back),
                         )
                     }
-                }
+                },
             )
-        }
+        },
     ) { padding ->
         val scope = rememberCoroutineScope()
-        
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
                 .padding(dimensions.paddingXL),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Spacer(modifier = Modifier.height(dimensions.paddingXXL))
 
@@ -101,7 +101,7 @@ fun OwnerPinSetupScreen(
                 },
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
             )
 
             Spacer(modifier = Modifier.height(dimensions.paddingXXL))
@@ -109,12 +109,12 @@ fun OwnerPinSetupScreen(
             // PIN Dots
             Row(
                 horizontalArrangement = Arrangement.spacedBy(dimensions.spacingM),
-                modifier = Modifier.padding(vertical = dimensions.spacingM)
+                modifier = Modifier.padding(vertical = dimensions.spacingM),
             ) {
                 repeat(4) { index ->
                     OwnerPinDot(
                         filled = index < currentPin.length,
-                        error = hasError
+                        error = hasError,
                     )
                 }
             }
@@ -122,31 +122,31 @@ fun OwnerPinSetupScreen(
             // Error or Success Message
             Box(
                 modifier = Modifier.height(48.dp),
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center,
             ) {
                 when {
                     errorMessage != null -> {
                         Text(
-                            text = errorMessage!!,
+                            text = errorMessage.orEmpty(),
                             color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodyMedium
+                            style = MaterialTheme.typography.bodyMedium,
                         )
                     }
                     isPinSet -> {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
                         ) {
                             Icon(
                                 imageVector = Icons.Filled.Check,
                                 contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary
+                                tint = MaterialTheme.colorScheme.primary,
                             )
                             Text(
                                 text = stringResource(R.string.owner_pin_set_success),
                                 color = MaterialTheme.colorScheme.primary,
                                 style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Medium
+                                fontWeight = FontWeight.Medium,
                             )
                         }
                     }
@@ -159,12 +159,12 @@ fun OwnerPinSetupScreen(
             OwnerPinKeypad(
                 onDigitClick = { digit ->
                     if (currentPin.length >= 4) return@OwnerPinKeypad
-                    
+
                     val newPinInput = currentPin + digit
                     currentPin = newPinInput
                     hasError = false
                     errorMessage = null
-                    
+
                     // Auto-process when 4 digits entered
                     if (newPinInput.length == 4) {
                         scope.launch {
@@ -206,7 +206,7 @@ fun OwnerPinSetupScreen(
                         hasError = false
                         errorMessage = null
                     }
-                }
+                },
             )
 
             Spacer(modifier = Modifier.height(dimensions.paddingXXL))
@@ -217,7 +217,7 @@ fun OwnerPinSetupScreen(
 @Composable
 private fun OwnerPinDot(
     filled: Boolean,
-    error: Boolean
+    error: Boolean,
 ) {
     val color = when {
         error -> MaterialTheme.colorScheme.error
@@ -234,30 +234,30 @@ private fun OwnerPinDot(
                     Modifier.background(color)
                 } else {
                     Modifier.border(2.dp, color, CircleShape)
-                }
-            )
+                },
+            ),
     )
 }
 
 @Composable
 private fun OwnerPinKeypad(
     onDigitClick: (String) -> Unit,
-    onBackspaceClick: () -> Unit
+    onBackspaceClick: () -> Unit,
 ) {
     val digits = listOf(
         listOf("1", "2", "3"),
         listOf("4", "5", "6"),
         listOf("7", "8", "9"),
-        listOf("", "0", "del")
+        listOf("", "0", "del"),
     )
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         digits.forEach { row ->
             Row(
-                horizontalArrangement = Arrangement.spacedBy(20.dp)
+                horizontalArrangement = Arrangement.spacedBy(20.dp),
             ) {
                 row.forEach { key ->
                     when (key) {
@@ -271,9 +271,9 @@ private fun OwnerPinKeypad(
                                     Icon(
                                         imageVector = Icons.AutoMirrored.Filled.Backspace,
                                         contentDescription = stringResource(R.string.auth_delete),
-                                        modifier = Modifier.size(28.dp)
+                                        modifier = Modifier.size(28.dp),
                                     )
-                                }
+                                },
                             )
                         }
                         else -> {
@@ -283,9 +283,9 @@ private fun OwnerPinKeypad(
                                     Text(
                                         text = key,
                                         style = MaterialTheme.typography.headlineSmall,
-                                        fontWeight = FontWeight.Medium
+                                        fontWeight = FontWeight.Medium,
                                     )
-                                }
+                                },
                             )
                         }
                     }
@@ -298,7 +298,7 @@ private fun OwnerPinKeypad(
 @Composable
 private fun OwnerKeypadButton(
     onClick: () -> Unit,
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit,
 ) {
     Box(
         modifier = Modifier
@@ -306,10 +306,10 @@ private fun OwnerKeypadButton(
             .clip(CircleShape)
             .background(MaterialTheme.colorScheme.surfaceVariant)
             .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         CompositionLocalProvider(
-            LocalContentColor provides MaterialTheme.colorScheme.onSurfaceVariant
+            LocalContentColor provides MaterialTheme.colorScheme.onSurfaceVariant,
         ) {
             content()
         }

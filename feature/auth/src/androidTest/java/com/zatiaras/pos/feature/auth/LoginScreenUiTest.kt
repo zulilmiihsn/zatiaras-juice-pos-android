@@ -10,7 +10,7 @@ import org.junit.runner.RunWith
 
 /**
  * Compose UI tests for Login screen.
- * 
+ *
  * Tests:
  * - Login form display
  * - Username/password input
@@ -39,7 +39,7 @@ class LoginScreenUiTest {
                     onUsernameChange = {},
                     onPasswordChange = {},
                     onLoginClick = {},
-                    onPasswordVisibilityToggle = {}
+                    onPasswordVisibilityToggle = {},
                 )
             }
         }
@@ -58,7 +58,7 @@ class LoginScreenUiTest {
                     onUsernameChange = {},
                     onPasswordChange = {},
                     onLoginClick = {},
-                    onPasswordVisibilityToggle = {}
+                    onPasswordVisibilityToggle = {},
                 )
             }
         }
@@ -77,7 +77,7 @@ class LoginScreenUiTest {
                     onUsernameChange = {},
                     onPasswordChange = {},
                     onLoginClick = {},
-                    onPasswordVisibilityToggle = {}
+                    onPasswordVisibilityToggle = {},
                 )
             }
         }
@@ -96,7 +96,7 @@ class LoginScreenUiTest {
                     onUsernameChange = {},
                     onPasswordChange = {},
                     onLoginClick = {},
-                    onPasswordVisibilityToggle = {}
+                    onPasswordVisibilityToggle = {},
                 )
             }
         }
@@ -111,9 +111,9 @@ class LoginScreenUiTest {
     fun loginScreen_filledFields_loginButtonEnabled() {
         val filledState = defaultState.copy(
             username = "admin",
-            password = "password123"
+            password = "password123",
         )
-        
+
         composeTestRule.setContent {
             ZatiarasPOSTheme {
                 LoginScreenContent(
@@ -121,7 +121,7 @@ class LoginScreenUiTest {
                     onUsernameChange = {},
                     onPasswordChange = {},
                     onLoginClick = {},
-                    onPasswordVisibilityToggle = {}
+                    onPasswordVisibilityToggle = {},
                 )
             }
         }
@@ -135,9 +135,9 @@ class LoginScreenUiTest {
     @Test
     fun loginScreen_loading_showsProgressIndicator() {
         val loadingState = defaultState.copy(
-            isLoading = true
+            isLoading = true,
         )
-        
+
         composeTestRule.setContent {
             ZatiarasPOSTheme {
                 LoginScreenContent(
@@ -145,7 +145,7 @@ class LoginScreenUiTest {
                     onUsernameChange = {},
                     onPasswordChange = {},
                     onLoginClick = {},
-                    onPasswordVisibilityToggle = {}
+                    onPasswordVisibilityToggle = {},
                 )
             }
         }
@@ -158,9 +158,9 @@ class LoginScreenUiTest {
     @Test
     fun loginScreen_error_showsErrorMessage() {
         val errorState = defaultState.copy(
-            error = "Username tidak ditemukan"
+            error = "Username tidak ditemukan",
         )
-        
+
         composeTestRule.setContent {
             ZatiarasPOSTheme {
                 LoginScreenContent(
@@ -168,7 +168,7 @@ class LoginScreenUiTest {
                     onUsernameChange = {},
                     onPasswordChange = {},
                     onLoginClick = {},
-                    onPasswordVisibilityToggle = {}
+                    onPasswordVisibilityToggle = {},
                 )
             }
         }
@@ -181,7 +181,7 @@ class LoginScreenUiTest {
     @Test
     fun loginScreen_typeUsername_callsOnUsernameChange() {
         var usernameValue = ""
-        
+
         composeTestRule.setContent {
             ZatiarasPOSTheme {
                 LoginScreenContent(
@@ -189,7 +189,7 @@ class LoginScreenUiTest {
                     onUsernameChange = { usernameValue = it },
                     onPasswordChange = {},
                     onLoginClick = {},
-                    onPasswordVisibilityToggle = {}
+                    onPasswordVisibilityToggle = {},
                 )
             }
         }
@@ -204,7 +204,7 @@ class LoginScreenUiTest {
     @Test
     fun loginScreen_typePassword_callsOnPasswordChange() {
         var passwordValue = ""
-        
+
         composeTestRule.setContent {
             ZatiarasPOSTheme {
                 LoginScreenContent(
@@ -212,7 +212,7 @@ class LoginScreenUiTest {
                     onUsernameChange = {},
                     onPasswordChange = { passwordValue = it },
                     onLoginClick = {},
-                    onPasswordVisibilityToggle = {}
+                    onPasswordVisibilityToggle = {},
                 )
             }
         }
@@ -227,12 +227,12 @@ class LoginScreenUiTest {
     @Test
     fun loginScreen_clickLogin_callsOnLoginClick() {
         var loginClicked = false
-        
+
         val filledState = defaultState.copy(
             username = "admin",
-            password = "password"
+            password = "password",
         )
-        
+
         composeTestRule.setContent {
             ZatiarasPOSTheme {
                 LoginScreenContent(
@@ -240,7 +240,7 @@ class LoginScreenUiTest {
                     onUsernameChange = {},
                     onPasswordChange = {},
                     onLoginClick = { loginClicked = true },
-                    onPasswordVisibilityToggle = {}
+                    onPasswordVisibilityToggle = {},
                 )
             }
         }
@@ -261,7 +261,7 @@ class LoginScreenUiTest {
                     onUsernameChange = {},
                     onPasswordChange = {},
                     onLoginClick = {},
-                    onPasswordVisibilityToggle = {}
+                    onPasswordVisibilityToggle = {},
                 )
             }
         }
@@ -280,7 +280,7 @@ class LoginScreenUiTest {
                     onUsernameChange = {},
                     onPasswordChange = {},
                     onLoginClick = {},
-                    onPasswordVisibilityToggle = {}
+                    onPasswordVisibilityToggle = {},
                 )
             }
         }

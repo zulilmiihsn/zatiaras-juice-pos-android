@@ -20,7 +20,7 @@ import org.junit.Test
 
 /**
  * Unit tests for LocalAuthRepository.
- * 
+ *
  * Tests:
  * - Login with valid credentials
  * - Login with invalid credentials
@@ -48,13 +48,13 @@ class LocalAuthRepositoryTest {
         role = "pemilik",
         isActive = true,
         createdAt = System.currentTimeMillis(),
-        updatedAt = System.currentTimeMillis()
+        updatedAt = System.currentTimeMillis(),
     )
 
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
-        
+
         userDao = mockk(relaxed = true)
         userRemoteDataSource = mockk(relaxed = true)
         credentialStore = mockk(relaxed = true)
@@ -66,7 +66,7 @@ class LocalAuthRepositoryTest {
         every { credentialStore.savePassword(any(), any()) } just Runs
         every { credentialStore.clearCredential(any()) } just Runs
         coEvery { userRemoteDataSource.fetchActiveUserWithPassword(any()) } returns Result.Success(null)
-        
+
         repository = LocalAuthRepository(userDao, userRemoteDataSource, credentialStore, sessionPreferences)
     }
 
@@ -81,9 +81,9 @@ class LocalAuthRepositoryTest {
     fun `login with valid credentials returns Success`() = runTest {
         coEvery { userDao.getUserByUsername("admin") } returns testUser
         every { credentialStore.verifyPassword(testUser.id, "admin123") } returns true
-        
+
         val result = repository.login("admin", "admin123")
-        
+
         assertTrue(result is Result.Success)
     }
 
@@ -91,25 +91,25 @@ class LocalAuthRepositoryTest {
     fun `login with valid credentials saves session`() = runTest {
         coEvery { userDao.getUserByUsername("admin") } returns testUser
         every { credentialStore.verifyPassword(testUser.id, "admin123") } returns true
-        
+
         repository.login("admin", "admin123")
-        
-        coVerify { 
+
+        coVerify {
             sessionPreferences.saveSession(
                 userId = testUser.id,
                 username = testUser.username,
                 displayName = testUser.displayName,
-                role = testUser.role
-            ) 
+                role = testUser.role,
+            )
         }
     }
 
     @Test
     fun `login with non-existent user returns Error`() = runTest {
         coEvery { userDao.getUserByUsername("unknown") } returns null
-        
+
         val result = repository.login("unknown", "password")
-        
+
         assertTrue(result is Result.Error)
         assertTrue((result as Result.Error).exception?.message?.contains("tidak ditemukan") == true)
     }
@@ -117,9 +117,9 @@ class LocalAuthRepositoryTest {
     @Test
     fun `login with wrong password returns Error`() = runTest {
         coEvery { userDao.getUserByUsername("admin") } returns testUser
-        
+
         val result = repository.login("admin", "wrongpassword")
-        
+
         assertTrue(result is Result.Error)
         assertTrue((result as Result.Error).exception?.message?.contains("Password salah") == true)
     }
@@ -133,7 +133,7 @@ class LocalAuthRepositoryTest {
             passwordHash = remoteHash,
             displayName = "Administrator",
             role = "pemilik",
-            isActive = true
+            isActive = true,
         )
         coEvery { userDao.getUserByUsername("admin") } returnsMany listOf(null, null)
         coEvery { userRemoteDataSource.fetchActiveUserWithPassword("admin") } returns Result.Success(remoteUser)
@@ -149,9 +149,9 @@ class LocalAuthRepositoryTest {
     fun `login with inactive user returns Error`() = runTest {
         val inactiveUser = testUser.copy(isActive = false)
         coEvery { userDao.getUserByUsername("admin") } returns inactiveUser
-        
+
         val result = repository.login("admin", "admin123")
-        
+
         assertTrue(result is Result.Error)
         assertTrue((result as Result.Error).exception?.message?.contains("tidak aktif") == true)
     }
@@ -164,10 +164,10 @@ class LocalAuthRepositoryTest {
         coEvery { userDao.getUserByUsername("admin") } returns testUser
         every { credentialStore.verifyPassword(testUser.id, "admin123") } returns true
         repository.login("admin", "admin123")
-        
+
         // Then logout
         repository.logout()
-        
+
         coVerify { sessionPreferences.clearSession() }
     }
 
@@ -176,11 +176,11 @@ class LocalAuthRepositoryTest {
         coEvery { userDao.getUserByUsername("admin") } returns testUser
         every { credentialStore.verifyPassword(testUser.id, "admin123") } returns true
         repository.login("admin", "admin123")
-        
+
         assertEquals(testUser, repository.getCurrentUser())
-        
+
         repository.logout()
-        
+
         assertNull(repository.getCurrentUser())
     }
 
@@ -191,9 +191,9 @@ class LocalAuthRepositoryTest {
         every { sessionPreferences.isLoggedIn() } returns true
         every { sessionPreferences.getUserId() } returns testUser.id
         coEvery { userDao.getUserById(testUser.id) } returns testUser
-        
+
         val result = repository.restoreSession()
-        
+
         assertTrue(result)
         assertEquals(testUser, repository.getCurrentUser())
     }
@@ -201,9 +201,9 @@ class LocalAuthRepositoryTest {
     @Test
     fun `restoreSession returns false when no session exists`() = runTest {
         every { sessionPreferences.isLoggedIn() } returns false
-        
+
         val result = repository.restoreSession()
-        
+
         assertFalse(result)
     }
 
@@ -212,9 +212,9 @@ class LocalAuthRepositoryTest {
         every { sessionPreferences.isLoggedIn() } returns true
         every { sessionPreferences.getUserId() } returns testUser.id
         coEvery { userDao.getUserById(testUser.id) } returns null
-        
+
         val result = repository.restoreSession()
-        
+
         assertFalse(result)
         coVerify { sessionPreferences.clearSession() }
     }
@@ -225,9 +225,9 @@ class LocalAuthRepositoryTest {
         every { sessionPreferences.isLoggedIn() } returns true
         every { sessionPreferences.getUserId() } returns testUser.id
         coEvery { userDao.getUserById(testUser.id) } returns inactiveUser
-        
+
         val result = repository.restoreSession()
-        
+
         assertFalse(result)
         coVerify { sessionPreferences.clearSession() }
     }
@@ -237,14 +237,14 @@ class LocalAuthRepositoryTest {
     @Test
     fun `hasSavedSession returns true when logged in`() {
         every { sessionPreferences.isLoggedIn() } returns true
-        
+
         assertTrue(repository.hasSavedSession())
     }
 
     @Test
     fun `hasSavedSession returns false when not logged in`() {
         every { sessionPreferences.isLoggedIn() } returns false
-        
+
         assertFalse(repository.hasSavedSession())
     }
 
@@ -253,14 +253,14 @@ class LocalAuthRepositoryTest {
     @Test
     fun `isFirstRun returns true when no users exist`() = runTest {
         coEvery { userDao.getUserCount() } returns 0
-        
+
         assertTrue(repository.isFirstRun())
     }
 
     @Test
     fun `isFirstRun returns false when users exist`() = runTest {
         coEvery { userDao.getUserCount() } returns 5
-        
+
         assertFalse(repository.isFirstRun())
     }
 
@@ -270,25 +270,25 @@ class LocalAuthRepositoryTest {
     fun `syncUsersFromRemote returns count of synced users`() = runTest {
         val remoteUsers = listOf(
             UserDto(
-                id = "user-1", 
-                username = "admin", 
+                id = "user-1",
+                username = "admin",
                 displayName = "Admin",
                 role = "pemilik",
-                isActive = true
+                isActive = true,
             ),
             UserDto(
-                id = "user-2", 
-                username = "kasir1", 
+                id = "user-2",
+                username = "kasir1",
                 displayName = "Kasir 1",
                 role = "kasir",
-                isActive = true
-            )
+                isActive = true,
+            ),
         )
         coEvery { userRemoteDataSource.fetchActiveUsers() } returns Result.Success(remoteUsers)
         coEvery { userDao.getUserByUsername(any()) } returns null
-        
+
         val count = repository.syncUsersFromRemote()
-        
+
         assertEquals(2, count)
         coVerify(exactly = 2) { userDao.insertUser(any()) }
     }
@@ -296,9 +296,9 @@ class LocalAuthRepositoryTest {
     @Test
     fun `syncUsersFromRemote returns -1 on failure`() = runTest {
         coEvery { userRemoteDataSource.fetchActiveUsers() } returns Result.Error(Exception("Network error"))
-        
+
         val count = repository.syncUsersFromRemote()
-        
+
         assertEquals(-1, count)
     }
 
@@ -308,9 +308,9 @@ class LocalAuthRepositoryTest {
     fun `getAllUsers returns list from DAO`() = runTest {
         val users = listOf(testUser, testUser.copy(id = "user-2", username = "kasir"))
         coEvery { userDao.getAllUsersList() } returns users
-        
+
         val result = repository.getAllUsers()
-        
+
         assertEquals(2, result.size)
     }
 

@@ -22,7 +22,7 @@ import org.junit.Test
 
 /**
  * Unit tests for AuthViewModel.
- * 
+ *
  * Tests:
  * - Initial state starts with Syncing then goes to Idle
  * - Login success navigates to Success state
@@ -43,11 +43,11 @@ class AuthViewModelTest {
         Dispatchers.setMain(testDispatcher)
         loginUseCase = mockk()
         localAuthRepository = mockk(relaxed = true)
-        
+
         // Mock sync-related methods
         coEvery { localAuthRepository.syncUsersWithResult() } returns Result.Success(1)
         coEvery { localAuthRepository.getAllUsers() } returns emptyList()
-        
+
         viewModel = AuthViewModel(loginUseCase, localAuthRepository)
     }
 
@@ -75,14 +75,14 @@ class AuthViewModelTest {
     fun `login success updates state to Success`() = runTest {
         // Wait for initial sync
         advanceUntilIdle()
-        
+
         // Given
         coEvery { loginUseCase(any(), any()) } returns Result.Success(Unit)
-        
+
         // When
         viewModel.login("test@test.com", "password", "branch-1")
         advanceUntilIdle()
-        
+
         // Then
         assertEquals(AuthUiState.Success, viewModel.uiState.value)
         coVerify(exactly = 1) { loginUseCase("test@test.com", "password") }
@@ -92,15 +92,15 @@ class AuthViewModelTest {
     fun `login failure updates state to Error with message`() = runTest {
         // Wait for initial sync
         advanceUntilIdle()
-        
+
         // Given
         val errorMessage = "Email atau password salah"
         coEvery { loginUseCase(any(), any()) } returns Result.Error(Exception(errorMessage))
-        
+
         // When
         viewModel.login("wrong@test.com", "wrongpass", "branch-1")
         advanceUntilIdle()
-        
+
         // Then
         val state = viewModel.uiState.value
         assertTrue(state is AuthUiState.Error)
@@ -113,18 +113,18 @@ class AuthViewModelTest {
     fun `login shows Loading state before result`() = runTest {
         // Wait for initial sync
         advanceUntilIdle()
-        
+
         // Given
         coEvery { loginUseCase(any(), any()) } returns Result.Success(Unit)
-        
+
         // When
         viewModel.login("test@test.com", "password", "branch-1")
-        
+
         // Then - during execution, state should be Loading
         // Note: With StandardTestDispatcher, we can check intermediate states
         // The Loading state happens before advanceUntilIdle
         advanceUntilIdle()
-        
+
         // After completion, should be Success
         assertEquals(AuthUiState.Success, viewModel.uiState.value)
     }
@@ -133,16 +133,16 @@ class AuthViewModelTest {
     fun `resetState returns to Idle`() = runTest {
         // Wait for initial sync
         advanceUntilIdle()
-        
+
         // Given - login success first
         coEvery { loginUseCase(any(), any()) } returns Result.Success(Unit)
         viewModel.login("test@test.com", "password", "branch-1")
         advanceUntilIdle()
         assertEquals(AuthUiState.Success, viewModel.uiState.value)
-        
+
         // When
         viewModel.resetState()
-        
+
         // Then
         assertEquals(AuthUiState.Idle, viewModel.uiState.value)
     }

@@ -43,7 +43,6 @@ import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -64,29 +63,22 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.zatiaras.pos.core.ui.theme.AppShapes
-import com.zatiaras.pos.core.ui.theme.Brand100
-import com.zatiaras.pos.core.ui.theme.Brand200
-import com.zatiaras.pos.core.ui.theme.Brand50
 import com.zatiaras.pos.core.ui.theme.Brand500
-import com.zatiaras.pos.core.ui.theme.Brand600
 import com.zatiaras.pos.core.ui.theme.LocalDimensions
-import com.zatiaras.pos.core.ui.theme.Slate50
 import com.zatiaras.pos.core.ui.theme.Slate200
+import com.zatiaras.pos.core.ui.theme.Slate50
 import com.zatiaras.pos.core.ui.theme.SuccessGreen
 import com.zatiaras.pos.core.ui.theme.WarningAmber
-import com.zatiaras.pos.core.ui.util.CurrencyFormatter
 import com.zatiaras.pos.feature.auth.R
 import com.zatiaras.pos.core.ui.R as CoreUiR
 
 // Brand colors
 private val PrimaryPink = Brand500
-private val DarkPink = Brand600
 private val LightPink = Slate50
 private val SurfacePink = androidx.compose.ui.graphics.Color.White
 private val InputBackground = Slate50
@@ -95,7 +87,7 @@ private val WarningOrange = WarningAmber
 @Composable
 fun LoginRoute(
     onLoginSuccess: () -> Unit,
-    viewModel: AuthViewModel = hiltViewModel()
+    viewModel: AuthViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val syncStatus by viewModel.syncStatus.collectAsStateWithLifecycle()
@@ -107,7 +99,7 @@ fun LoginRoute(
             viewModel.resetState()
         }
     }
-    
+
     // Logic to show error snackbar
     val errorState = uiState as? AuthUiState.Error
     if (errorState != null) {
@@ -123,7 +115,7 @@ fun LoginRoute(
         syncStatus = syncStatus,
         onLoginClick = viewModel::login,
         onResyncClick = viewModel::resync,
-        snackbarHostState = snackbarHostState
+        snackbarHostState = snackbarHostState,
     )
 }
 
@@ -134,25 +126,25 @@ fun LoginScreen(
     syncStatus: com.zatiaras.pos.core.ui.util.UiText?,
     onLoginClick: (String, String, String) -> Unit,
     onResyncClick: () -> Unit = {},
-    snackbarHostState: SnackbarHostState
+    snackbarHostState: SnackbarHostState,
 ) {
     val dimensions = LocalDimensions.current
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
-    
+
     // Branch Selection State
     var branchExpanded by remember { mutableStateOf(false) }
     var selectedBranch by remember { mutableStateOf<String?>("samarinda_juanda") }
     val branches = listOf(
         "samarinda_juanda" to stringResource(R.string.auth_branch_samarinda_juanda),
         "samarinda_slamet" to stringResource(R.string.auth_branch_samarinda_slamet),
-        "berau" to stringResource(R.string.auth_branch_berau)
+        "berau" to stringResource(R.string.auth_branch_berau),
     )
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
-        snackbarHost = { com.zatiaras.pos.core.ui.components.ZatSnackbarHost(snackbarHostState) }
+        snackbarHost = { com.zatiaras.pos.core.ui.components.ZatSnackbarHost(snackbarHostState) },
     ) { padding ->
         Box(
             modifier = Modifier
@@ -162,18 +154,18 @@ fun LoginScreen(
                         colors = listOf(
                             LightPink,
                             SurfacePink,
-                            MaterialTheme.colorScheme.surface
-                        )
-                    )
+                            MaterialTheme.colorScheme.surface,
+                        ),
+                    ),
                 )
-                .padding(padding)
+                .padding(padding),
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(horizontal = dimensions.paddingXL),
                 verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 // Logo with glow effect
                 Box(
@@ -184,46 +176,46 @@ fun LoginScreen(
                             brush = Brush.radialGradient(
                                 colors = listOf(
                                     PrimaryPink.copy(alpha = 0.1f),
-                                    Color.Transparent
-                                )
-                            )
+                                    Color.Transparent,
+                                ),
+                            ),
                         ),
-                    contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.Center,
                 ) {
                     Image(
                         painter = painterResource(id = CoreUiR.drawable.zatiaras_logo),
                         contentDescription = stringResource(R.string.brand_logo_content_desc),
-                        modifier = Modifier.size(dimensions.iconSizeHero + dimensions.paddingM)
+                        modifier = Modifier.size(dimensions.iconSizeHero + dimensions.paddingM),
                     )
                 }
-                
+
                 Spacer(modifier = Modifier.height(dimensions.spacingL))
-                
+
                 // App title with gradient text effect (simulated)
                 Text(
                     text = stringResource(R.string.auth_title),
                     style = MaterialTheme.typography.headlineLarge,
                     fontWeight = FontWeight.Bold,
-                    color = PrimaryPink
+                    color = PrimaryPink,
                 )
-                
+
                 Text(
                     text = stringResource(R.string.auth_pos_title),
                     style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                
+
                 Spacer(modifier = Modifier.height(dimensions.spacingM))
-                
+
                 // Sync Status Badge - Compact and stylish
                 syncStatus?.let { status ->
                     SyncStatusBadge(
                         statusText = status,
                         isSyncing = uiState is AuthUiState.Syncing,
-                        onResyncClick = onResyncClick
+                        onResyncClick = onResyncClick,
                     )
                 }
-                
+
                 Spacer(modifier = Modifier.height(dimensions.paddingXXL))
 
                 // Login Card with premium feel
@@ -231,27 +223,27 @@ fun LoginScreen(
                     modifier = Modifier.fillMaxWidth(),
                     shape = AppShapes.L,
                     colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
                     ),
                     border = BorderStroke(1.dp, Slate200),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
                 ) {
                     Column(
                         modifier = Modifier.padding(dimensions.paddingXL),
-                        verticalArrangement = Arrangement.spacedBy(dimensions.spacingM)
+                        verticalArrangement = Arrangement.spacedBy(dimensions.spacingM),
                     ) {
                         Text(
                             text = stringResource(R.string.auth_login_button),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = PrimaryPink
+                            color = PrimaryPink,
                         )
 
                         // Branch Selection Dropdown - Enhanced
                         ExposedDropdownMenuBox(
                             expanded = branchExpanded,
                             onExpandedChange = { branchExpanded = !branchExpanded },
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
                         ) {
                             OutlinedTextField(
                                 value = branches.find { it.first == selectedBranch }?.second ?: "",
@@ -262,7 +254,7 @@ fun LoginScreen(
                                     Icon(
                                         Icons.Default.Store,
                                         contentDescription = null,
-                                        tint = PrimaryPink
+                                        tint = PrimaryPink,
                                     )
                                 },
                                 trailingIcon = {
@@ -274,17 +266,17 @@ fun LoginScreen(
                                     cursorColor = PrimaryPink,
                                     unfocusedBorderColor = Slate200,
                                     unfocusedContainerColor = InputBackground,
-                                    focusedContainerColor = MaterialTheme.colorScheme.surface
+                                    focusedContainerColor = MaterialTheme.colorScheme.surface,
                                 ),
                                 shape = AppShapes.M,
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .menuAnchor(MenuAnchorType.PrimaryNotEditable)
+                                    .menuAnchor(MenuAnchorType.PrimaryNotEditable),
                             )
 
                             ExposedDropdownMenu(
                                 expanded = branchExpanded,
-                                onDismissRequest = { branchExpanded = false }
+                                onDismissRequest = { branchExpanded = false },
                             ) {
                                 branches.forEach { (id, label) ->
                                     DropdownMenuItem(
@@ -298,10 +290,10 @@ fun LoginScreen(
                                                 Icons.Default.Store,
                                                 contentDescription = null,
                                                 tint = if (selectedBranch == id) PrimaryPink else MaterialTheme.colorScheme.onSurfaceVariant,
-                                                modifier = Modifier.size(20.dp)
+                                                modifier = Modifier.size(20.dp),
                                             )
                                         },
-                                        contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
+                                        contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
                                     )
                                 }
                             }
@@ -316,7 +308,7 @@ fun LoginScreen(
                                 Icon(
                                     Icons.Default.Person,
                                     contentDescription = null,
-                                    tint = PrimaryPink
+                                    tint = PrimaryPink,
                                 )
                             },
                             modifier = Modifier.fillMaxWidth(),
@@ -329,9 +321,9 @@ fun LoginScreen(
                                 cursorColor = PrimaryPink,
                                 unfocusedBorderColor = Slate200,
                                 unfocusedContainerColor = InputBackground,
-                                focusedContainerColor = MaterialTheme.colorScheme.surface
+                                focusedContainerColor = MaterialTheme.colorScheme.surface,
                             ),
-                            shape = AppShapes.M
+                            shape = AppShapes.M,
                         )
 
                         // Password Field - Enhanced with visibility toggle
@@ -343,7 +335,7 @@ fun LoginScreen(
                                 Icon(
                                     Icons.Default.Lock,
                                     contentDescription = null,
-                                    tint = PrimaryPink
+                                    tint = PrimaryPink,
                                 )
                             },
                             trailingIcon = {
@@ -351,7 +343,7 @@ fun LoginScreen(
                                     Icon(
                                         imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
                                         contentDescription = if (passwordVisible) stringResource(R.string.auth_hide_password) else stringResource(R.string.auth_show_password),
-                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                     )
                                 }
                             },
@@ -366,9 +358,9 @@ fun LoginScreen(
                                 cursorColor = PrimaryPink,
                                 unfocusedBorderColor = Slate200,
                                 unfocusedContainerColor = InputBackground,
-                                focusedContainerColor = MaterialTheme.colorScheme.surface
+                                focusedContainerColor = MaterialTheme.colorScheme.surface,
                             ),
-                            shape = AppShapes.M
+                            shape = AppShapes.M,
                         )
                     }
                 }
@@ -387,26 +379,26 @@ fun LoginScreen(
                             enabled = false,
                             colors = ButtonDefaults.buttonColors(
                                 disabledContainerColor = PrimaryPink.copy(alpha = 0.5f),
-                                disabledContentColor = MaterialTheme.colorScheme.onPrimary
-                            )
+                                disabledContentColor = MaterialTheme.colorScheme.onPrimary,
+                            ),
                         ) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(24.dp),
                                 color = MaterialTheme.colorScheme.onPrimary,
-                                strokeWidth = 2.dp
+                                strokeWidth = 2.dp,
                             )
                             Spacer(modifier = Modifier.width(12.dp))
                             Text(
                                 if (uiState is AuthUiState.Syncing) stringResource(R.string.auth_sync_progress) else stringResource(R.string.auth_login_progress),
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
                             )
                         }
                     }
                     else -> {
                         Button(
-                            onClick = { 
-                                if (selectedBranch != null) {
-                                    onLoginClick(username, password, selectedBranch!!) 
+                            onClick = {
+                                selectedBranch?.let { branchId ->
+                                    onLoginClick(username, password, branchId)
                                 }
                             },
                             modifier = Modifier
@@ -417,22 +409,22 @@ fun LoginScreen(
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = PrimaryPink,
                                 contentColor = MaterialTheme.colorScheme.onPrimary,
-                                disabledContainerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
+                                disabledContainerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
                             ),
                             elevation = ButtonDefaults.buttonElevation(
                                 defaultElevation = 0.dp,
-                                pressedElevation = 0.dp
-                            )
+                                pressedElevation = 0.dp,
+                            ),
                         ) {
                             Text(
                                 stringResource(R.string.auth_login_button),
                                 fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp
+                                fontSize = 16.sp,
                             )
                         }
                     }
                 }
-                
+
                 Spacer(modifier = Modifier.height(dimensions.paddingXXL + dimensions.spacingM))
             }
         }
@@ -446,13 +438,13 @@ fun LoginScreen(
 private fun SyncStatusBadge(
     statusText: com.zatiaras.pos.core.ui.util.UiText,
     isSyncing: Boolean,
-    onResyncClick: () -> Unit
+    onResyncClick: () -> Unit,
 ) {
     val dimensions = LocalDimensions.current
     val status = statusText.asString()
-    val isOffline = status.contains("offline", ignoreCase = true) || 
-                    status.contains("koneksi", ignoreCase = true)
-    
+    val isOffline = status.contains("offline", ignoreCase = true) ||
+        status.contains("koneksi", ignoreCase = true)
+
     val backgroundColor by animateColorAsState(
         targetValue = when {
             isSyncing -> PrimaryPink.copy(alpha = 0.1f)
@@ -460,37 +452,37 @@ private fun SyncStatusBadge(
             else -> SuccessGreen.copy(alpha = 0.1f)
         },
         animationSpec = tween(300),
-        label = "bgColor"
+        label = "bgColor",
     )
-    
+
     val contentColor = when {
         isSyncing -> PrimaryPink
         isOffline -> WarningOrange
         else -> SuccessGreen
     }
-    
+
     Card(
         shape = AppShapes.XL,
         colors = CardDefaults.cardColors(containerColor = backgroundColor),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
     ) {
         Row(
             modifier = Modifier.padding(horizontal = dimensions.paddingM, vertical = dimensions.paddingXS),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
+            horizontalArrangement = Arrangement.Center,
         ) {
             if (isSyncing) {
                 CircularProgressIndicator(
                     modifier = Modifier.size(16.dp),
                     strokeWidth = 2.dp,
-                    color = contentColor
+                    color = contentColor,
                 )
             } else {
                 Icon(
                     imageVector = if (isOffline) Icons.Default.CloudOff else Icons.Default.CloudDone,
                     contentDescription = null,
                     tint = contentColor,
-                    modifier = Modifier.size(16.dp)
+                    modifier = Modifier.size(16.dp),
                 )
             }
             Spacer(modifier = Modifier.width(8.dp))
@@ -498,28 +490,28 @@ private fun SyncStatusBadge(
                 text = status,
                 style = MaterialTheme.typography.labelMedium,
                 color = contentColor,
-                fontWeight = FontWeight.Medium
+                fontWeight = FontWeight.Medium,
             )
-            
+
             // Show resync button when offline
             if (isOffline && !isSyncing) {
                 Spacer(modifier = Modifier.width(8.dp))
                 TextButton(
                     onClick = onResyncClick,
-                    contentPadding = ButtonDefaults.TextButtonContentPadding
+                    contentPadding = ButtonDefaults.TextButtonContentPadding,
                 ) {
                     Icon(
                         Icons.Default.Sync,
                         contentDescription = null,
                         modifier = Modifier.size(14.dp),
-                        tint = contentColor
+                        tint = contentColor,
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         "Sync",
                         style = MaterialTheme.typography.labelSmall,
                         color = contentColor,
-                        fontWeight = FontWeight.SemiBold
+                        fontWeight = FontWeight.SemiBold,
                     )
                 }
             }

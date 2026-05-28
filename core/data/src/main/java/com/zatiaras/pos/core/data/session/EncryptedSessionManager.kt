@@ -14,16 +14,16 @@ import javax.inject.Singleton
 
 /**
  * Secure Session Manager using Android's EncryptedSharedPreferences.
- * 
+ *
  * This implementation stores Supabase tokens encrypted at rest using AES256-GCM.
  * Token data is protected even if the device is rooted or the app data is extracted.
- * 
+ *
  * Security: MasterKey uses Android Keystore for key management.
  */
 @Singleton
 class EncryptedSessionManager @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val json: Json
+    private val json: Json,
 ) : SessionManager {
 
     private val masterKey: MasterKey by lazy {
@@ -44,7 +44,7 @@ class EncryptedSessionManager @Inject constructor(
                 ENCRYPTED_PREFS_FILE,
                 masterKey,
                 EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM,
             )
         } catch (e: Exception) {
             Timber.e(e, "Failed to create EncryptedSharedPreferences for secure session storage")

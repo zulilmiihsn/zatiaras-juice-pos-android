@@ -11,10 +11,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
-import com.zatiaras.pos.core.ui.R
-import com.zatiaras.pos.core.data.access.AccessCheckResult
-import com.zatiaras.pos.core.data.access.AccessControlManager
+import com.zatiaras.pos.core.domain.access.AccessCheckResult
+import com.zatiaras.pos.core.domain.access.AccessChecker
 
 /**
  * State for access control gate.
@@ -28,11 +26,11 @@ sealed class AccessGateState {
 
 /**
  * A composable wrapper that protects content based on access control rules.
- * 
+ *
  * Usage:
  * ```
  * AccessControlGate(
- *     accessControlManager = accessControlManager,
+ *     accessChecker = accessChecker,
  *     route = LockableRoute.SETTINGS.route,
  *     screenName = stringResource(R.string.core_pengaturan),
  *     onAccessDenied = { navController.popBackStack() }
@@ -40,15 +38,15 @@ sealed class AccessGateState {
  *     SettingsScreen(...)
  * }
  * ```
- * 
+ *
  * Behavior:
  * - If user is Owner: Shows content immediately
  * - If route is not locked: Shows content immediately
  * - If route is locked for Kasir: Shows PIN dialog first
  * - On successful PIN entry: Shows content
  * - On dismiss: Calls onAccessDenied (usually navigate back)
- * 
- * @param accessControlManager The access control manager instance
+ *
+ * @param accessChecker The access checker instance
  * @param route The route to check access for
  * @param screenName Display name for the screen (shown in PIN dialog)
  * @param onAccessDenied Called when user cancels PIN entry
@@ -56,24 +54,24 @@ sealed class AccessGateState {
  */
 @Composable
 fun AccessControlGate(
-    accessControlManager: AccessControlManager,
+    accessChecker: AccessChecker,
     route: String,
     screenName: String,
     onAccessDenied: () -> Unit,
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit,
 ) {
     var gateState by remember { mutableStateOf<AccessGateState>(AccessGateState.Loading) }
     var showPinDialog by remember { mutableStateOf(false) }
 
     // Check access on first composition
     LaunchedEffect(route) {
-        val result = accessControlManager.checkAccessNow(route)
+        val result = accessChecker.checkAccessNow(route)
         gateState = when (result) {
             is AccessCheckResult.Granted -> AccessGateState.Granted
             is AccessCheckResult.RequiresOwnerPin -> AccessGateState.RequiresPin
             is AccessCheckResult.DeniedOwnerPinNotSet -> AccessGateState.Denied
         }
-        
+
         if (gateState == AccessGateState.RequiresPin) {
             showPinDialog = true
         }
@@ -83,7 +81,7 @@ fun AccessControlGate(
         AccessGateState.Loading -> {
             Box(
                 modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center,
             ) {
                 CircularProgressIndicator()
             }
@@ -97,7 +95,7 @@ fun AccessControlGate(
             // Show a placeholder while waiting for PIN
             Box(
                 modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center,
             ) {
                 CircularProgressIndicator()
             }
@@ -113,9 +111,9 @@ fun AccessControlGate(
                         gateState = AccessGateState.Granted
                     },
                     verifyPin = { pin ->
-                        accessControlManager.verifyOwnerPin(pin)
+                        accessChecker.verifyOwnerPin(pin)
                     },
-                    screenName = screenName
+                    screenName = screenName,
                 )
             }
         }

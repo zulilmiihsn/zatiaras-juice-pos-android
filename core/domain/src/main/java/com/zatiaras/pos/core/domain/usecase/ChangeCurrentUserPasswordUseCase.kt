@@ -5,9 +5,7 @@ import com.zatiaras.pos.core.domain.Result
 import javax.inject.Inject
 
 class ChangeCurrentUserPasswordUseCase @Inject constructor(
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
 ) {
-    suspend operator fun invoke(currentPassword: String, newPassword: String): Result<Unit> {
-        return authRepository.changeCurrentUserPassword(currentPassword, newPassword)
-    }
+    suspend operator fun invoke(currentPassword: String, newPassword: String): Result<Unit> = authRepository.changeCurrentUserPassword(currentPassword, newPassword)
 }

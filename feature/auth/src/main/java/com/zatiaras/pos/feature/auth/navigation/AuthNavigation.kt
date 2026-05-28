@@ -6,12 +6,12 @@ import androidx.navigation.compose.composable
 import com.zatiaras.pos.feature.auth.LoginRoute
 import com.zatiaras.pos.feature.auth.lock.AppLockRoute
 import com.zatiaras.pos.feature.auth.lock.PinSetupRoute
-import com.zatiaras.pos.feature.auth.settings.SettingsRoute
-import com.zatiaras.pos.feature.auth.settings.SecuritySettingsScreen
+import com.zatiaras.pos.feature.auth.settings.AboutScreen
 import com.zatiaras.pos.feature.auth.settings.AccessControlScreen
 import com.zatiaras.pos.feature.auth.settings.OwnerPinSetupScreen
+import com.zatiaras.pos.feature.auth.settings.SecuritySettingsScreen
+import com.zatiaras.pos.feature.auth.settings.SettingsRoute
 import com.zatiaras.pos.feature.auth.settings.SyncSettingsScreen
-import com.zatiaras.pos.feature.auth.settings.AboutScreen
 
 /**
  * Navigation routes for the Auth feature module.
@@ -32,7 +32,7 @@ object AuthRoutes {
  * Add Login screen to navigation graph.
  */
 fun NavGraphBuilder.loginScreen(
-    onLoginSuccess: () -> Unit
+    onLoginSuccess: () -> Unit,
 ) {
     composable(AuthRoutes.LOGIN) {
         LoginRoute(onLoginSuccess = onLoginSuccess)
@@ -43,7 +43,7 @@ fun NavGraphBuilder.loginScreen(
  * Add App Lock screen to navigation graph.
  */
 fun NavGraphBuilder.appLockScreen(
-    onUnlocked: () -> Unit
+    onUnlocked: () -> Unit,
 ) {
     composable(AuthRoutes.APP_LOCK) {
         AppLockRoute(onUnlocked = onUnlocked)
@@ -64,15 +64,15 @@ fun NavGraphBuilder.settingsScreen(
     onNavigateToSync: () -> Unit = {},
     onNavigateToAbout: () -> Unit = {},
     onLogout: () -> Unit,
-    accessControlManager: com.zatiaras.pos.core.data.access.AccessControlManager? = null
+    accessControlManager: com.zatiaras.pos.core.domain.access.AccessChecker? = null,
 ) {
     composable(AuthRoutes.SETTINGS) {
         if (accessControlManager != null) {
             com.zatiaras.pos.core.ui.components.AccessControlGate(
-                accessControlManager = accessControlManager,
+                accessChecker = accessControlManager,
                 route = com.zatiaras.pos.core.data.access.LockableRoute.SETTINGS.route,
                 screenName = "Pengaturan",
-                onAccessDenied = onNavigateBack
+                onAccessDenied = onNavigateBack,
             ) {
                 SettingsRoute(
                     onNavigateBack = onNavigateBack,
@@ -83,7 +83,7 @@ fun NavGraphBuilder.settingsScreen(
                     onNavigateToTransactionHistory = onNavigateToTransactionHistory,
                     onNavigateToSync = onNavigateToSync,
                     onNavigateToAbout = onNavigateToAbout,
-                    onLogout = onLogout
+                    onLogout = onLogout,
                 )
             }
         } else {
@@ -96,7 +96,7 @@ fun NavGraphBuilder.settingsScreen(
                 onNavigateToTransactionHistory = onNavigateToTransactionHistory,
                 onNavigateToSync = onNavigateToSync,
                 onNavigateToAbout = onNavigateToAbout,
-                onLogout = onLogout
+                onLogout = onLogout,
             )
         }
     }
@@ -107,12 +107,12 @@ fun NavGraphBuilder.settingsScreen(
  */
 fun NavGraphBuilder.securitySettingsScreen(
     onNavigateBack: () -> Unit,
-    onNavigateToPinSetup: () -> Unit
+    onNavigateToPinSetup: () -> Unit,
 ) {
     composable(AuthRoutes.SETTINGS_SECURITY) {
         SecuritySettingsScreen(
             onNavigateBack = onNavigateBack,
-            onChangePinClick = onNavigateToPinSetup
+            onChangePinClick = onNavigateToPinSetup,
         )
     }
 }
@@ -122,12 +122,12 @@ fun NavGraphBuilder.securitySettingsScreen(
  */
 fun NavGraphBuilder.accessControlScreen(
     onNavigateBack: () -> Unit,
-    onNavigateToOwnerPinSetup: () -> Unit
+    onNavigateToOwnerPinSetup: () -> Unit,
 ) {
     composable(AuthRoutes.SETTINGS_ACCESS_CONTROL) {
         AccessControlScreen(
             onNavigateBack = onNavigateBack,
-            onNavigateToOwnerPinSetup = onNavigateToOwnerPinSetup
+            onNavigateToOwnerPinSetup = onNavigateToOwnerPinSetup,
         )
     }
 }
@@ -136,11 +136,11 @@ fun NavGraphBuilder.accessControlScreen(
  * Add Sync Settings sub-screen to navigation graph.
  */
 fun NavGraphBuilder.syncSettingsScreen(
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
 ) {
     composable(AuthRoutes.SETTINGS_SYNC) {
         SyncSettingsScreen(
-            onNavigateBack = onNavigateBack
+            onNavigateBack = onNavigateBack,
         )
     }
 }
@@ -149,11 +149,11 @@ fun NavGraphBuilder.syncSettingsScreen(
  * Add About sub-screen to navigation graph.
  */
 fun NavGraphBuilder.aboutScreen(
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
 ) {
     composable(AuthRoutes.SETTINGS_ABOUT) {
         AboutScreen(
-            onNavigateBack = onNavigateBack
+            onNavigateBack = onNavigateBack,
         )
     }
 }
@@ -163,13 +163,13 @@ fun NavGraphBuilder.aboutScreen(
  */
 fun NavGraphBuilder.pinSetupScreen(
     onPinSet: () -> Unit,
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
 ) {
     composable(AuthRoutes.PIN_SETUP) {
         PinSetupRoute(
             isChangingPin = false,
             onPinSet = onPinSet,
-            onNavigateBack = onNavigateBack
+            onNavigateBack = onNavigateBack,
         )
     }
 }
@@ -179,12 +179,12 @@ fun NavGraphBuilder.pinSetupScreen(
  */
 fun NavGraphBuilder.ownerPinSetupScreen(
     onPinSet: () -> Unit,
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
 ) {
     composable(AuthRoutes.OWNER_PIN_SETUP) {
         OwnerPinSetupScreen(
             onPinSet = onPinSet,
-            onNavigateBack = onNavigateBack
+            onNavigateBack = onNavigateBack,
         )
     }
 }

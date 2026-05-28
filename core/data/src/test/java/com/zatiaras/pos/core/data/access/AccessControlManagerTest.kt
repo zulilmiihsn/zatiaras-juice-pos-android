@@ -1,9 +1,10 @@
 package com.zatiaras.pos.core.data.access
 
-import com.zatiaras.pos.core.data.local.entity.AppSettingsEntity
 import com.zatiaras.pos.core.data.local.dao.AppSettingsDao
+import com.zatiaras.pos.core.data.local.entity.AppSettingsEntity
 import com.zatiaras.pos.core.data.repository.AppSettingsRepository
 import com.zatiaras.pos.core.data.session.SessionPreferences
+import com.zatiaras.pos.core.domain.access.AccessCheckResult
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -37,7 +38,7 @@ class AccessControlManagerTest {
             sessionPreferences = sessionPreferences,
             accessControlPreferences = accessControlPreferences,
             appSettingsRepository = appSettingsRepository,
-            appSettingsDao = appSettingsDao
+            appSettingsDao = appSettingsDao,
         )
     }
 
@@ -84,8 +85,8 @@ class AccessControlManagerTest {
         } returns flowOf(
             AppSettingsEntity(
                 lockedRoutes = listOf(LockableRoute.PNL_REPORT.route),
-                ownerPinHash = null
-            )
+                ownerPinHash = null,
+            ),
         )
 
         val result = manager.checkAccessNow(LockableRoute.PNL_REPORT.route)
@@ -101,8 +102,8 @@ class AccessControlManagerTest {
         } returns flowOf(
             AppSettingsEntity(
                 lockedRoutes = listOf(LockableRoute.PNL_REPORT.route),
-                ownerPinHash = "hash"
-            )
+                ownerPinHash = "hash",
+            ),
         )
 
         val result = manager.checkAccessNow(LockableRoute.PNL_REPORT.route)
@@ -118,8 +119,8 @@ class AccessControlManagerTest {
         } returns flowOf(
             AppSettingsEntity(
                 lockedRoutes = listOf(LockableRoute.PNL_REPORT.route),
-                ownerPinHash = null
-            )
+                ownerPinHash = null,
+            ),
         )
 
         val result = manager.checkAccessNow(LockableRoute.PNL_REPORT.route)

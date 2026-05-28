@@ -30,7 +30,7 @@ enum class PasswordChangeMessage {
     CONFIRMATION_MISMATCH,
     SAME_AS_CURRENT,
     PASSWORD_CHANGED,
-    GENERIC_FAILURE
+    GENERIC_FAILURE,
 }
 
 enum class LastSyncUnit {
@@ -38,12 +38,12 @@ enum class LastSyncUnit {
     JUST_NOW,
     MINUTES_AGO,
     HOURS_AGO,
-    DAYS_AGO
+    DAYS_AGO,
 }
 
 data class LastSyncInfo(
     val unit: LastSyncUnit,
-    val value: Int = 0
+    val value: Int = 0,
 )
 
 data class SettingsUiState(
@@ -52,36 +52,36 @@ data class SettingsUiState(
     val userEmail: String = "",
     val userRole: UserRole = UserRole.KASIR,
     val branchName: String = "",
-    
+
     // Security
     val lockEnabled: Boolean = false,
     val biometricEnabled: Boolean = false,
     val biometricAvailable: Boolean = false,
     val pinSet: Boolean = false,
-    
+
     // Access Control (Owner only)
     val isOwner: Boolean = false,
     val ownerPinSet: Boolean = false,
     val lockableRoutes: List<Pair<LockableRoute, Boolean>> = emptyList(),
-    
+
     // Sync
     val lastSyncInfo: LastSyncInfo = LastSyncInfo(LastSyncUnit.NEVER),
     val pendingCount: Int = 0,
     val isSyncing: Boolean = false,
-    
+
     // Tax
     val taxPercentage: Double = 0.5,
-    
+
     // Performance
     val lowPerformanceMode: Boolean = false,
-    
+
     // State
     val isLoggedOut: Boolean = false,
     val isLoading: Boolean = false,
     val isChangingPassword: Boolean = false,
     val passwordChangeError: PasswordChangeMessage? = null,
     val passwordChangeErrorDetail: String? = null,
-    val passwordChangeSuccess: PasswordChangeMessage? = null
+    val passwordChangeSuccess: PasswordChangeMessage? = null,
 )
 
 @HiltViewModel
@@ -93,7 +93,7 @@ class SettingsViewModel @Inject constructor(
     private val accessControlManager: AccessControlManager,
     private val sessionPreferences: SessionPreferences,
     private val appSettingsRepository: AppSettingsRepository,
-    private val changeCurrentUserPasswordUseCase: ChangeCurrentUserPasswordUseCase
+    private val changeCurrentUserPasswordUseCase: ChangeCurrentUserPasswordUseCase,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SettingsUiState())
@@ -126,7 +126,11 @@ class SettingsViewModel @Inject constructor(
                 val pinSet = appLockPreferences.isPinSetNow()
 
                 // Load access control settings (for owner)
-                val ownerPinSet = try { accessControlManager.isOwnerPinSetNow() } catch (_: Exception) { false }
+                val ownerPinSet = try {
+                    accessControlManager.isOwnerPinSetNow()
+                } catch (_: Exception) {
+                    false
+                }
                 val lockableRoutes = try {
                     accessControlManager.getLockableRoutesWithStatus().first()
                 } catch (_: Exception) {
@@ -134,15 +138,31 @@ class SettingsViewModel @Inject constructor(
                 }
 
                 // Load sync info
-                val pendingCount = try { syncManager.getPendingCount() } catch (_: Exception) { 0 }
-                val lastSync = try { syncManager.getLastSyncTimestamp() } catch (_: Exception) { 0L }
+                val pendingCount = try {
+                    syncManager.getPendingCount()
+                } catch (_: Exception) {
+                    0
+                }
+                val lastSync = try {
+                    syncManager.getLastSyncTimestamp()
+                } catch (_: Exception) {
+                    0L
+                }
                 val lastSyncInfo = formatLastSync(lastSync)
 
                 // Load tax percentage
-                val taxPercentage = try { appSettingsRepository.getDefaultTaxPercentage() } catch (_: Exception) { 0.5 }
+                val taxPercentage = try {
+                    appSettingsRepository.getDefaultTaxPercentage()
+                } catch (_: Exception) {
+                    0.5
+                }
 
                 // Load performance mode
-                val lowPerformanceMode = try { appSettingsRepository.getSettings()?.lowPerformanceMode ?: false } catch (_: Exception) { false }
+                val lowPerformanceMode = try {
+                    appSettingsRepository.getSettings()?.lowPerformanceMode ?: false
+                } catch (_: Exception) {
+                    false
+                }
 
                 _uiState.update { state ->
                     state.copy(
@@ -159,7 +179,7 @@ class SettingsViewModel @Inject constructor(
                         pendingCount = pendingCount,
                         lastSyncInfo = lastSyncInfo,
                         taxPercentage = taxPercentage,
-                        lowPerformanceMode = lowPerformanceMode
+                        lowPerformanceMode = lowPerformanceMode,
                     )
                 }
 
@@ -230,13 +250,11 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    private fun extractUserName(user: UserInfo): String {
-        return user.email?.substringBefore("@")?.replaceFirstChar { it.uppercase() } ?: "User"
-    }
+    private fun extractUserName(user: UserInfo): String = user.email?.substringBefore("@")?.replaceFirstChar { it.uppercase() } ?: "User"
 
     private fun formatLastSync(timestamp: Long): LastSyncInfo {
         if (timestamp == 0L) return LastSyncInfo(LastSyncUnit.NEVER)
-        
+
         val diff = System.currentTimeMillis() - timestamp
         return when {
             diff < 60_000 -> LastSyncInfo(LastSyncUnit.JUST_NOW)
@@ -289,7 +307,7 @@ class SettingsViewModel @Inject constructor(
                 _uiState.update { state ->
                     state.copy(
                         pendingCount = pendingCount,
-                        lastSyncInfo = formatLastSync(lastSync)
+                        lastSyncInfo = formatLastSync(lastSync),
                     )
                 }
             } catch (e: Exception) {
@@ -310,7 +328,7 @@ class SettingsViewModel @Inject constructor(
                 _uiState.update { state ->
                     state.copy(
                         pendingCount = pendingCount,
-                        lastSyncInfo = formatLastSync(lastSync)
+                        lastSyncInfo = formatLastSync(lastSync),
                     )
                 }
             } catch (e: Exception) {
@@ -357,7 +375,7 @@ class SettingsViewModel @Inject constructor(
                     it.copy(
                         passwordChangeError = PasswordChangeMessage.REQUIRED_FIELDS,
                         passwordChangeErrorDetail = null,
-                        passwordChangeSuccess = null
+                        passwordChangeSuccess = null,
                     )
                 }
                 return
@@ -367,7 +385,7 @@ class SettingsViewModel @Inject constructor(
                     it.copy(
                         passwordChangeError = PasswordChangeMessage.MIN_LENGTH,
                         passwordChangeErrorDetail = null,
-                        passwordChangeSuccess = null
+                        passwordChangeSuccess = null,
                     )
                 }
                 return
@@ -377,7 +395,7 @@ class SettingsViewModel @Inject constructor(
                     it.copy(
                         passwordChangeError = PasswordChangeMessage.CONFIRMATION_MISMATCH,
                         passwordChangeErrorDetail = null,
-                        passwordChangeSuccess = null
+                        passwordChangeSuccess = null,
                     )
                 }
                 return
@@ -387,7 +405,7 @@ class SettingsViewModel @Inject constructor(
                     it.copy(
                         passwordChangeError = PasswordChangeMessage.SAME_AS_CURRENT,
                         passwordChangeErrorDetail = null,
-                        passwordChangeSuccess = null
+                        passwordChangeSuccess = null,
                     )
                 }
                 return
@@ -400,7 +418,7 @@ class SettingsViewModel @Inject constructor(
                     isChangingPassword = true,
                     passwordChangeError = null,
                     passwordChangeErrorDetail = null,
-                    passwordChangeSuccess = null
+                    passwordChangeSuccess = null,
                 )
             }
 
@@ -410,7 +428,7 @@ class SettingsViewModel @Inject constructor(
                         it.copy(
                             isChangingPassword = false,
                             passwordChangeSuccess = PasswordChangeMessage.PASSWORD_CHANGED,
-                            passwordChangeError = null
+                            passwordChangeError = null,
                         )
                     }
                 }
@@ -420,7 +438,7 @@ class SettingsViewModel @Inject constructor(
                             isChangingPassword = false,
                             passwordChangeError = PasswordChangeMessage.GENERIC_FAILURE,
                             passwordChangeErrorDetail = result.exception?.message,
-                            passwordChangeSuccess = null
+                            passwordChangeSuccess = null,
                         )
                     }
                 }
@@ -436,7 +454,7 @@ class SettingsViewModel @Inject constructor(
             it.copy(
                 passwordChangeError = null,
                 passwordChangeErrorDetail = null,
-                passwordChangeSuccess = null
+                passwordChangeSuccess = null,
             )
         }
     }

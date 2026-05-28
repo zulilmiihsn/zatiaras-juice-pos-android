@@ -19,12 +19,12 @@ data class PinSetupUiState(
     val hasError: Boolean = false,
     val errorMessage: String? = null,
     val isPinSet: Boolean = false,
-    val isChangingPin: Boolean = false
+    val isChangingPin: Boolean = false,
 )
 
 @HiltViewModel
 class PinSetupViewModel @Inject constructor(
-    private val appLockPreferences: AppLockPreferences
+    private val appLockPreferences: AppLockPreferences,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PinSetupUiState())
@@ -48,18 +48,18 @@ class PinSetupViewModel @Inject constructor(
         viewModelScope.launch {
             val pinExists = appLockPreferences.isPinSetNow()
             if (isChanging && pinExists) {
-                _uiState.update { 
+                _uiState.update {
                     it.copy(
                         isChangingPin = true,
-                        step = PinSetupStep.VERIFY_CURRENT_PIN
-                    ) 
+                        step = PinSetupStep.VERIFY_CURRENT_PIN,
+                    )
                 }
             } else {
-                _uiState.update { 
+                _uiState.update {
                     it.copy(
                         isChangingPin = false,
-                        step = PinSetupStep.ENTER_NEW_PIN
-                    ) 
+                        step = PinSetupStep.ENTER_NEW_PIN,
+                    )
                 }
             }
         }
@@ -74,7 +74,7 @@ class PinSetupViewModel @Inject constructor(
             state.copy(
                 currentPin = newPinInput,
                 hasError = false,
-                errorMessage = null
+                errorMessage = null,
             )
         }
 
@@ -92,7 +92,7 @@ class PinSetupViewModel @Inject constructor(
             state.copy(
                 currentPin = currentPinInput.dropLast(1),
                 hasError = false,
-                errorMessage = null
+                errorMessage = null,
             )
         }
     }
@@ -111,7 +111,7 @@ class PinSetupViewModel @Inject constructor(
                         state.copy(
                             newPin = pin,
                             currentPin = "",
-                            step = PinSetupStep.CONFIRM_PIN
+                            step = PinSetupStep.CONFIRM_PIN,
                         )
                     }
                 }
@@ -124,13 +124,13 @@ class PinSetupViewModel @Inject constructor(
 
     private suspend fun verifyCurrentPin(pin: String) {
         val isValid = appLockPreferences.verifyPin(pin)
-        
+
         if (isValid) {
             Timber.d("Current PIN verified")
             _uiState.update { state ->
                 state.copy(
                     currentPin = "",
-                    step = PinSetupStep.ENTER_NEW_PIN
+                    step = PinSetupStep.ENTER_NEW_PIN,
                 )
             }
         } else {
@@ -139,7 +139,7 @@ class PinSetupViewModel @Inject constructor(
                 state.copy(
                     currentPin = "",
                     hasError = true,
-                    errorMessage = "PIN salah"
+                    errorMessage = "PIN salah",
                 )
             }
         }
@@ -147,20 +147,20 @@ class PinSetupViewModel @Inject constructor(
 
     private suspend fun confirmPin(pin: String) {
         val newPin = _uiState.value.newPin
-        
+
         if (pin == newPin) {
             // PINs match, save it
             try {
                 appLockPreferences.setPin(pin)
                 // Also enable lock when PIN is set
                 appLockPreferences.setLockEnabled(true)
-                
+
                 Timber.d("PIN set successfully")
                 _uiState.update { state ->
                     state.copy(
                         isPinSet = true,
                         hasError = false,
-                        errorMessage = null
+                        errorMessage = null,
                     )
                 }
             } catch (e: Exception) {
@@ -169,7 +169,7 @@ class PinSetupViewModel @Inject constructor(
                     state.copy(
                         currentPin = "",
                         hasError = true,
-                        errorMessage = "Gagal menyimpan PIN"
+                        errorMessage = "Gagal menyimpan PIN",
                     )
                 }
             }
@@ -180,10 +180,10 @@ class PinSetupViewModel @Inject constructor(
                 state.copy(
                     currentPin = "",
                     hasError = true,
-                    errorMessage = "PIN tidak cocok"
+                    errorMessage = "PIN tidak cocok",
                 )
             }
-            
+
             // Reset to enter new PIN after delay
             delay(1500)
             _uiState.update { state ->
@@ -191,7 +191,7 @@ class PinSetupViewModel @Inject constructor(
                     newPin = "",
                     step = PinSetupStep.ENTER_NEW_PIN,
                     hasError = false,
-                    errorMessage = null
+                    errorMessage = null,
                 )
             }
         }

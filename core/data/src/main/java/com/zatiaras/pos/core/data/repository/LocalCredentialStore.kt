@@ -19,7 +19,7 @@ import javax.inject.Singleton
  */
 @Singleton
 class LocalCredentialStore @Inject constructor(
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
 ) {
     private val masterKey = MasterKey.Builder(context)
         .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
@@ -32,7 +32,7 @@ class LocalCredentialStore @Inject constructor(
                 SECURE_PREFS_FILE,
                 masterKey,
                 EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM,
             )
         } catch (e: Exception) {
             Timber.e(e, "Failed to create encrypted local credential store")
@@ -40,9 +40,7 @@ class LocalCredentialStore @Inject constructor(
         }
     }
 
-    fun hasCredential(userId: String): Boolean {
-        return encryptedPrefs.contains(keyFor(userId))
-    }
+    fun hasCredential(userId: String): Boolean = encryptedPrefs.contains(keyFor(userId))
 
     fun verifyPassword(userId: String, password: String): Boolean {
         val storedHash = encryptedPrefs.getString(keyFor(userId), null) ?: return false

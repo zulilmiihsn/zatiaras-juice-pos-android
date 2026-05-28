@@ -5,7 +5,7 @@ import com.zatiaras.pos.core.domain.Result
 import javax.inject.Inject
 
 class LoginUseCase @Inject constructor(
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
 ) {
     suspend operator fun invoke(username: String, password: String): Result<Unit> {
         if (username.isBlank()) {

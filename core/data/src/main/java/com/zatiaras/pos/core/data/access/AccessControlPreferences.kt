@@ -7,9 +7,9 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
-import com.zatiaras.pos.core.data.util.PasswordHasher
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
+import com.zatiaras.pos.core.data.util.PasswordHasher
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -19,19 +19,19 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 private val Context.accessControlDataStore: DataStore<Preferences> by preferencesDataStore(
-    name = "access_control_prefs"
+    name = "access_control_prefs",
 )
 
 /**
  * Manages access control preferences with sensitive data stored in EncryptedSharedPreferences.
- * 
+ *
  * Features:
  * - Owner PIN: Stored encrypted at rest using AES256.
  * - Locked Routes: List of routes that require owner PIN.
  */
 @Singleton
 class AccessControlPreferences @Inject constructor(
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
 ) {
     private val masterKey = MasterKey.Builder(context)
         .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
@@ -44,7 +44,7 @@ class AccessControlPreferences @Inject constructor(
                 SECURE_PREFS_FILE,
                 masterKey,
                 EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM,
             )
         } catch (e: Exception) {
             Timber.e(e, "Failed to create EncryptedSharedPreferences for AccessControlPreferences")
@@ -80,9 +80,7 @@ class AccessControlPreferences @Inject constructor(
     /**
      * Check if owner PIN is set (suspend).
      */
-    suspend fun isOwnerPinSetNow(): Boolean {
-        return encryptedPrefs.contains(KEY_OWNER_PIN_HASH)
-    }
+    suspend fun isOwnerPinSetNow(): Boolean = encryptedPrefs.contains(KEY_OWNER_PIN_HASH)
 
     /**
      * Set owner PIN (stores hashed value in encrypted storage).
@@ -94,7 +92,7 @@ class AccessControlPreferences @Inject constructor(
             .putInt(KEY_OWNER_PIN_FAILED_ATTEMPTS, 0)
             .putLong(KEY_OWNER_PIN_LOCKOUT_UNTIL, 0L)
             .apply()
-        
+
         // Trigger a change in DataStore just to notify observers of isOwnerPinSet()
         // This is a common pattern to bridge SharedPreferences items that UI observes via Flow
         context.accessControlDataStore.edit { prefs ->
@@ -166,43 +164,33 @@ class AccessControlPreferences @Inject constructor(
     /**
      * Get set of locked route strings.
      */
-    fun getLockedRoutes(): Flow<Set<String>> {
-        return context.accessControlDataStore.data.map { prefs ->
-            prefs[KEY_LOCKED_ROUTES] ?: emptySet()
-        }
+    fun getLockedRoutes(): Flow<Set<String>> = context.accessControlDataStore.data.map { prefs ->
+        prefs[KEY_LOCKED_ROUTES] ?: emptySet()
     }
 
     /**
      * Get locked routes as LockableRoute enum list.
      */
-    fun getLockedRoutesEnum(): Flow<List<LockableRoute>> {
-        return getLockedRoutes().map { routeStrings ->
-            routeStrings.mapNotNull { LockableRoute.fromRoute(it) }
-        }
+    fun getLockedRoutesEnum(): Flow<List<LockableRoute>> = getLockedRoutes().map { routeStrings ->
+        routeStrings.mapNotNull { LockableRoute.fromRoute(it) }
     }
 
     /**
      * Get locked routes now (suspend).
      */
-    suspend fun getLockedRoutesNow(): Set<String> {
-        return getLockedRoutes().first()
-    }
+    suspend fun getLockedRoutesNow(): Set<String> = getLockedRoutes().first()
 
     /**
      * Check if a specific route is locked.
      */
-    fun isRouteLocked(route: String): Flow<Boolean> {
-        return getLockedRoutes().map { lockedRoutes ->
-            lockedRoutes.contains(route)
-        }
+    fun isRouteLocked(route: String): Flow<Boolean> = getLockedRoutes().map { lockedRoutes ->
+        lockedRoutes.contains(route)
     }
 
     /**
      * Check if route is locked (suspend).
      */
-    suspend fun isRouteLockedNow(route: String): Boolean {
-        return getLockedRoutesNow().contains(route)
-    }
+    suspend fun isRouteLockedNow(route: String): Boolean = getLockedRoutesNow().contains(route)
 
     /**
      * Set locked routes.
@@ -249,4 +237,3 @@ class AccessControlPreferences @Inject constructor(
         context.accessControlDataStore.edit { it.clear() }
     }
 }
-

@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.Flow
 
 /**
  * Data Access Object for User operations.
- * 
+ *
  * Handles local authentication and user management.
  */
 @Dao

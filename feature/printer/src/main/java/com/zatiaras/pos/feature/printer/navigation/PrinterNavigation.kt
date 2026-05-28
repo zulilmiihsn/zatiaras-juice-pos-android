@@ -25,23 +25,23 @@ fun NavController.navigateToPrinterSettings() {
  */
 fun NavGraphBuilder.printerSettingsScreen(
     onNavigateBack: () -> Unit,
-    accessControlManager: com.zatiaras.pos.core.data.access.AccessControlManager? = null
+    accessControlManager: com.zatiaras.pos.core.domain.access.AccessChecker? = null,
 ) {
     composable(PrinterRoutes.PRINTER_SETTINGS) {
         if (accessControlManager != null) {
             com.zatiaras.pos.core.ui.components.AccessControlGate(
-                accessControlManager = accessControlManager,
+                accessChecker = accessControlManager,
                 route = com.zatiaras.pos.core.data.access.LockableRoute.PRINTER_SETTINGS.route,
                 screenName = "Pengaturan Printer",
-                onAccessDenied = onNavigateBack
+                onAccessDenied = onNavigateBack,
             ) {
                 PrinterSettingsRoute(
-                    onNavigateBack = onNavigateBack
+                    onNavigateBack = onNavigateBack,
                 )
             }
         } else {
             PrinterSettingsRoute(
-                onNavigateBack = onNavigateBack
+                onNavigateBack = onNavigateBack,
             )
         }
     }

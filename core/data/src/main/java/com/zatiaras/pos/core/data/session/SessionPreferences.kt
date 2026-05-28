@@ -10,15 +10,15 @@ import javax.inject.Singleton
 
 /**
  * Manages user login session persistence.
- * 
+ *
  * Uses EncryptedSharedPreferences to securely store session data.
  * Session persists across app restarts until user logs out or session expires.
- * 
+ *
  * Session timeout: 8 hours (configurable via companion object)
  */
 @Singleton
 class SessionPreferences @Inject constructor(
-    private val context: Context
+    private val context: Context,
 ) {
     private val masterKey = MasterKey.Builder(context)
         .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
@@ -29,7 +29,7 @@ class SessionPreferences @Inject constructor(
         "zatiaras_session",
         masterKey,
         EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-        EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+        EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM,
     )
 
     /**
@@ -51,22 +51,20 @@ class SessionPreferences @Inject constructor(
     /**
      * Check if user has an active session.
      */
-    fun isLoggedIn(): Boolean {
-        return prefs.getBoolean(KEY_IS_LOGGED_IN, false)
-    }
+    fun isLoggedIn(): Boolean = prefs.getBoolean(KEY_IS_LOGGED_IN, false)
 
     /**
      * Check if session has expired based on SESSION_TIMEOUT_MS.
-     * 
+     *
      * @return true if session is expired and user needs to re-login
      */
     fun isSessionExpired(): Boolean {
         if (!isLoggedIn()) return true
-        
+
         val loginTime = getLoginTime()
         val currentTime = System.currentTimeMillis()
         val elapsed = currentTime - loginTime
-        
+
         val isExpired = elapsed > SESSION_TIMEOUT_MS
         if (isExpired) {
             Timber.d("Session expired. Elapsed: ${elapsed / 1000 / 60} minutes")
@@ -77,44 +75,32 @@ class SessionPreferences @Inject constructor(
     /**
      * Check if session is valid (logged in and not expired).
      */
-    fun isSessionValid(): Boolean {
-        return isLoggedIn() && !isSessionExpired()
-    }
+    fun isSessionValid(): Boolean = isLoggedIn() && !isSessionExpired()
 
     /**
      * Get saved user ID from session.
      */
-    fun getUserId(): String? {
-        return prefs.getString(KEY_USER_ID, null)
-    }
+    fun getUserId(): String? = prefs.getString(KEY_USER_ID, null)
 
     /**
      * Get saved username from session.
      */
-    fun getUsername(): String? {
-        return prefs.getString(KEY_USERNAME, null)
-    }
+    fun getUsername(): String? = prefs.getString(KEY_USERNAME, null)
 
     /**
      * Get saved display name from session.
      */
-    fun getDisplayName(): String? {
-        return prefs.getString(KEY_DISPLAY_NAME, null)
-    }
+    fun getDisplayName(): String? = prefs.getString(KEY_DISPLAY_NAME, null)
 
     /**
      * Get saved role from session.
      */
-    fun getRole(): String? {
-        return prefs.getString(KEY_ROLE, null)
-    }
+    fun getRole(): String? = prefs.getString(KEY_ROLE, null)
 
     /**
      * Get login timestamp.
      */
-    fun getLoginTime(): Long {
-        return prefs.getLong(KEY_LOGIN_TIME, 0)
-    }
+    fun getLoginTime(): Long = prefs.getLong(KEY_LOGIN_TIME, 0)
 
     /**
      * Clear session on logout.
@@ -142,7 +128,7 @@ class SessionPreferences @Inject constructor(
         private const val KEY_ROLE = "role"
         private const val KEY_LOGIN_TIME = "login_time"
         private const val KEY_IS_LOGGED_IN = "is_logged_in"
-        
+
         /**
          * Session timeout duration.
          * Default: 8 hours (reasonable for a full work shift)

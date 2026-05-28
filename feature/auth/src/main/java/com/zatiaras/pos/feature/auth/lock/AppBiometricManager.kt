@@ -31,12 +31,12 @@ enum class BiometricAvailability {
     AVAILABLE,
     NOT_AVAILABLE,
     NOT_ENROLLED,
-    HARDWARE_UNAVAILABLE
+    HARDWARE_UNAVAILABLE,
 }
 
 /**
  * Manages biometric authentication for app lock.
- * 
+ *
  * Supports:
  * - Fingerprint
  * - Face recognition
@@ -44,40 +44,34 @@ enum class BiometricAvailability {
  */
 @Singleton
 class AppBiometricManager @Inject constructor(
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
 ) {
     private val biometricManager = BiometricManager.from(context)
 
     /**
      * Check if biometric authentication is available.
      */
-    fun checkAvailability(): BiometricAvailability {
-        return when (biometricManager.canAuthenticate(BIOMETRIC_STRONG or BIOMETRIC_WEAK)) {
-            BiometricManager.BIOMETRIC_SUCCESS -> BiometricAvailability.AVAILABLE
-            BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE -> BiometricAvailability.NOT_AVAILABLE
-            BiometricManager.BIOMETRIC_ERROR_HW_UNAVAILABLE -> BiometricAvailability.HARDWARE_UNAVAILABLE
-            BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED -> BiometricAvailability.NOT_ENROLLED
-            else -> BiometricAvailability.NOT_AVAILABLE
-        }
+    fun checkAvailability(): BiometricAvailability = when (biometricManager.canAuthenticate(BIOMETRIC_STRONG or BIOMETRIC_WEAK)) {
+        BiometricManager.BIOMETRIC_SUCCESS -> BiometricAvailability.AVAILABLE
+        BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE -> BiometricAvailability.NOT_AVAILABLE
+        BiometricManager.BIOMETRIC_ERROR_HW_UNAVAILABLE -> BiometricAvailability.HARDWARE_UNAVAILABLE
+        BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED -> BiometricAvailability.NOT_ENROLLED
+        else -> BiometricAvailability.NOT_AVAILABLE
     }
 
     /**
      * Check if biometric is available and enrolled.
      */
-    fun isBiometricAvailable(): Boolean {
-        return checkAvailability() == BiometricAvailability.AVAILABLE
-    }
+    fun isBiometricAvailable(): Boolean = checkAvailability() == BiometricAvailability.AVAILABLE
 
     /**
      * Check if device credential (PIN/Pattern/Password) is available.
      */
-    fun isDeviceCredentialAvailable(): Boolean {
-        return biometricManager.canAuthenticate(DEVICE_CREDENTIAL) == BiometricManager.BIOMETRIC_SUCCESS
-    }
+    fun isDeviceCredentialAvailable(): Boolean = biometricManager.canAuthenticate(DEVICE_CREDENTIAL) == BiometricManager.BIOMETRIC_SUCCESS
 
     /**
      * Show biometric prompt for authentication.
-     * 
+     *
      * @param activity The activity to show the prompt on
      * @param title Title text for the prompt
      * @param subtitle Subtitle text for the prompt
@@ -89,7 +83,7 @@ class AppBiometricManager @Inject constructor(
         title: String = "Verifikasi Identitas",
         subtitle: String = "Gunakan sidik jari atau wajah untuk membuka aplikasi",
         negativeButtonText: String = "Gunakan PIN",
-        onResult: (BiometricResult) -> Unit
+        onResult: (BiometricResult) -> Unit,
     ) {
         if (!isBiometricAvailable()) {
             Timber.w("Biometric not available")
@@ -109,10 +103,11 @@ class AppBiometricManager @Inject constructor(
             override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
                 super.onAuthenticationError(errorCode, errString)
                 Timber.w("Biometric authentication error: $errorCode - $errString")
-                
+
                 when (errorCode) {
                     BiometricPrompt.ERROR_USER_CANCELED,
-                    BiometricPrompt.ERROR_NEGATIVE_BUTTON -> {
+                    BiometricPrompt.ERROR_NEGATIVE_BUTTON,
+                    -> {
                         onResult(BiometricResult.Cancelled)
                     }
                     BiometricPrompt.ERROR_NO_BIOMETRICS -> {
@@ -149,7 +144,7 @@ class AppBiometricManager @Inject constructor(
         activity: FragmentActivity,
         title: String = "Verifikasi Identitas",
         subtitle: String = "Gunakan sidik jari, wajah, atau PIN perangkat",
-        onResult: (BiometricResult) -> Unit
+        onResult: (BiometricResult) -> Unit,
     ) {
         val executor = ContextCompat.getMainExecutor(context)
 
@@ -163,7 +158,7 @@ class AppBiometricManager @Inject constructor(
             override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
                 super.onAuthenticationError(errorCode, errString)
                 Timber.w("Authentication error: $errorCode - $errString")
-                
+
                 when (errorCode) {
                     BiometricPrompt.ERROR_USER_CANCELED -> {
                         onResult(BiometricResult.Cancelled)
