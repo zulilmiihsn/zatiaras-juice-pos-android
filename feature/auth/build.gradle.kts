@@ -8,7 +8,7 @@ plugins {
 
 android {
     namespace = "com.zatiaras.pos.feature.auth"
-    compileSdk = 34
+    compileSdk = 36
 
     defaultConfig {
         minSdk = 26
@@ -53,9 +53,13 @@ dependencies {
 
     // DataStore (for lock preferences)
     implementation(libs.androidx.datastore.preferences)
-    
+
+    // Encrypted storage for lock PIN material
+    implementation(libs.androidx.security.crypto)
+
     // Timber
     implementation(libs.timber)
+    implementation(libs.sentry.android)
 
     // Testing
     testImplementation(libs.junit)

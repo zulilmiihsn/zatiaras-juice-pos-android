@@ -71,7 +71,7 @@ fun ProductList(viewModel: ProductViewModel) {
 // ✅ DO: Handle ALL states
 @Composable
 fun ProductList(viewModel: ProductViewModel) {
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     
     when (uiState) {
         is ProductUiState.Loading -> LoadingIndicator()

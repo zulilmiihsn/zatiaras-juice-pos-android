@@ -10,6 +10,8 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    env:
+      HAS_SNYK_TOKEN: ${{ secrets.SNYK_TOKEN != '' }}
 
     steps:
       - name: Checkout
@@ -33,8 +35,32 @@ jobs:
       - name: Run all unit tests
         run: ./gradlew test --no-daemon --console=plain
 
+      - name: Run formatting check
+        run: ./gradlew spotlessCheck --no-daemon --console=plain
+
+      - name: Run static analysis
+        run: ./gradlew detekt --no-daemon --console=plain
+
       - name: Run Android lint
         run: ./gradlew lintDebug --no-daemon --console=plain
 
+      - name: Generate coverage report
+        run: ./gradlew koverXmlReport --no-daemon --console=plain
+
       - name: Verify release build
+        env:
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         run: ./gradlew :app:assembleRelease --no-daemon --console=plain
+
+      - name: Run dependency vulnerability scan
+        if: ${{ env.HAS_SNYK_TOKEN == 'true' }}
+        uses: snyk/actions/gradle@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --all-sub-projects --severity-threshold=high

@@ -9,7 +9,7 @@ plugins {
 
 android {
     namespace = "com.zatiaras.pos.feature.pos"
-    compileSdk = 34
+    compileSdk = 36
 
     defaultConfig {
         minSdk = 26
@@ -22,7 +22,7 @@ android {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                "proguard-rules.pro",
             )
         }
     }
@@ -43,7 +43,6 @@ dependencies {
     implementation(project(":core:ui"))
     implementation(project(":core:domain"))
     implementation(project(":core:data"))
-
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -69,6 +68,7 @@ dependencies {
 
     // Timber
     implementation(libs.timber)
+    implementation(libs.sentry.android)
 
     // Coil for image loading
     implementation(libs.coil.compose)

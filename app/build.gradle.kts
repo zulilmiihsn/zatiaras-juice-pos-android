@@ -1,23 +1,49 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
     alias(libs.plugins.hiltAndroid)
     alias(libs.plugins.ksp)
     alias(libs.plugins.composeCompiler)
+    alias(libs.plugins.sentryAndroid)
 }
+
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.inputStream().use(localProperties::load)
+}
+
+fun readConfigValue(name: String): String =
+    (System.getenv(name) ?: localProperties.getProperty(name) ?: "")
+        .replace("\"", "")
+
+val sentryDsn = readConfigValue("SENTRY_DSN")
+val sentryEnvironment = readConfigValue("SENTRY_ENVIRONMENT").ifBlank { "production" }
+val sentryOrg = readConfigValue("SENTRY_ORG")
+val sentryProject = readConfigValue("SENTRY_PROJECT")
+val sentryAuthToken = System.getenv("SENTRY_AUTH_TOKEN").orEmpty()
+val sentryUploadEnabled =
+    sentryOrg.isNotBlank() &&
+        sentryProject.isNotBlank() &&
+        sentryAuthToken.isNotBlank()
 
 android {
     namespace = "com.zatiaras"
-    compileSdk = 34
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.zatiaras.pos"
         minSdk = 26
-        targetSdk = 34
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        manifestPlaceholders["sentryDsn"] = sentryDsn
+        manifestPlaceholders["sentryEnvironment"] = sentryEnvironment
+        manifestPlaceholders["sentryRelease"] = "$applicationId@$versionName+$versionCode"
         vectorDrawables {
             useSupportLibrary = true
         }
@@ -29,7 +55,7 @@ android {
             isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                "proguard-rules.pro",
             )
         }
     }
@@ -49,6 +75,17 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+}
+
+sentry {
+    autoInstallation {
+        enabled.set(false)
+    }
+    autoUploadProguardMapping.set(sentryUploadEnabled)
+    includeSourceContext.set(sentryUploadEnabled)
+    org.set(sentryOrg)
+    projectName.set(sentryProject)
+    authToken.set(sentryAuthToken)
 }
 
 dependencies {
@@ -84,6 +121,7 @@ dependencies {
 
     // Timber
     implementation(libs.timber)
+    implementation(libs.sentry.android)
 
     // Coil
     implementation(libs.coil)

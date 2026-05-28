@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "com.zatiaras.pos.core.ui"
-    compileSdk = 34
+    compileSdk = 36
 
     defaultConfig {
         minSdk = 26
@@ -24,8 +24,8 @@ android {
 }
 
 dependencies {
-    implementation(project(":core:data"))
-    
+    implementation(project(":core:domain"))
+
     implementation(libs.androidx.core.ktx)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)

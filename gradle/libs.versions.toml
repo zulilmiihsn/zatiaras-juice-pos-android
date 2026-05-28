@@ -1,6 +1,11 @@
 [versions]
 agp = "8.9.2"
 kotlin = "2.1.0"
+sentryAndroid = "8.42.0"
+sentryGradle = "6.8.1"
+spotless = "7.0.4"
+detekt = "1.23.8"
+kover = "0.9.1"
 coreKtx = "1.12.0"
 junit = "4.13.2"
 junitVersion = "1.2.1"
@@ -60,6 +65,7 @@ androidx-hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navig
 
 # Timber
 timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "timber" }
+sentry-android = { group = "io.sentry", name = "sentry-android", version.ref = "sentryAndroid" }
 
 # Coroutines
 kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "coroutines" }
@@ -136,3 +142,7 @@ ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 kotlinJvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+sentryAndroid = { id = "io.sentry.android.gradle", version.ref = "sentryGradle" }
+spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
+detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
+kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }

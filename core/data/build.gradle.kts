@@ -1,5 +1,4 @@
 import java.util.Properties
-import java.io.FileInputStream
 
 plugins {
     alias(libs.plugins.androidLibrary)
@@ -17,19 +16,23 @@ if (localPropertiesFile.exists()) {
     }
 }
 
-val supabaseUrl = (localProperties.getProperty("SUPABASE_URL") ?: "").replace("\"", "")
-val supabaseKey = (localProperties.getProperty("SUPABASE_KEY") ?: "").replace("\"", "")
+fun readConfigValue(name: String): String =
+    (System.getenv(name) ?: localProperties.getProperty(name) ?: "")
+        .replace("\"", "")
+
+val supabaseUrl = readConfigValue("SUPABASE_URL")
+val supabaseAnonKey = readConfigValue("SUPABASE_ANON_KEY")
 
 android {
     namespace = "com.zatiaras.pos.core.data"
-    compileSdk = 34
+    compileSdk = 36
 
     defaultConfig {
         minSdk = 26
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
         buildConfigField("String", "SUPABASE_URL", "\"$supabaseUrl\"")
-        buildConfigField("String", "SUPABASE_KEY", "\"$supabaseKey\"")
+        buildConfigField("String", "SUPABASE_ANON_KEY", "\"$supabaseAnonKey\"")
     }
 
     buildFeatures {
@@ -41,7 +44,7 @@ android {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                "proguard-rules.pro",
             )
         }
     }
@@ -78,9 +81,10 @@ dependencies {
 
     // Coroutines
     implementation(libs.kotlinx.coroutines.android)
-    
+
     // Timber
     implementation(libs.timber)
+    implementation(libs.sentry.android)
 
     // Supabase - used by features, so using api
     api(libs.supabase.gotrue)

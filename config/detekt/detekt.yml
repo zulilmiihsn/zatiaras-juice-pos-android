@@ -1,0 +1,53 @@
+complexity:
+  CyclomaticComplexMethod:
+    active: true
+    threshold: 25
+  LongMethod:
+    active: true
+    threshold: 400
+  LongParameterList:
+    active: true
+    functionThreshold: 14
+    constructorThreshold: 12
+    ignoreDefaultParameters: true
+  NestedBlockDepth:
+    active: true
+    threshold: 8
+  TooManyFunctions:
+    active: true
+    thresholdInFiles: 40
+    thresholdInClasses: 30
+    thresholdInInterfaces: 30
+    thresholdInObjects: 20
+
+exceptions:
+  SwallowedException:
+    active: false
+  TooGenericExceptionCaught:
+    active: false
+
+performance:
+  SpreadOperator:
+    active: false
+
+naming:
+  FunctionNaming:
+    active: true
+    functionPattern: '[a-z][a-zA-Z0-9]*'
+    ignoreAnnotated:
+      - Composable
+  MatchingDeclarationName:
+    active: false
+
+style:
+  MagicNumber:
+    active: false
+  MaxLineLength:
+    active: false
+  ReturnCount:
+    active: true
+    max: 5
+  UnusedParameter:
+    active: false
+  WildcardImport:
+    active: false
