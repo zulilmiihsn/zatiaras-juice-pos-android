@@ -66,9 +66,16 @@ import com.zatiaras.pos.feature.printer.domain.model.PaperWidth
 import com.zatiaras.pos.feature.printer.domain.model.PrinterDevice
 import com.zatiaras.pos.feature.printer.domain.model.PrinterStatus
 
-// Icon colors
+// Keep printer-specific icon aliases here so reusable cards can stay theme
+// driven without knowing which settings section they render.
 private val SettingsIconColor = IconColors.Settings
 
+/**
+ * Wires Android Bluetooth permissions, enable intents, and ViewModel events.
+ *
+ * PrinterSettingsScreen below is intentionally platform-light; this route owns
+ * ActivityResult launchers and Toast side effects.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PrinterSettingsRoute(
@@ -78,7 +85,7 @@ fun PrinterSettingsRoute(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
-    // Bluetooth enable launcher
+    // Bluetooth enable is a system activity result, not a ViewModel concern.
     val enableBluetoothLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult(),
     ) { result ->
@@ -87,7 +94,8 @@ fun PrinterSettingsRoute(
         }
     }
 
-    // Permission launcher for Android 12+
+    // Android 12+ requires runtime Bluetooth permissions before scanning or
+    // connecting to paired devices.
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions(),
     ) { permissions ->
@@ -99,7 +107,8 @@ fun PrinterSettingsRoute(
         }
     }
 
-    // Handle events
+    // Collect one-off events once per route instance. The ViewModel exposes
+    // intent-like events so Android APIs stay out of business state.
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
             when (event) {
@@ -127,7 +136,8 @@ fun PrinterSettingsRoute(
         }
     }
 
-    // Check permissions on launch
+    // Initial device list depends on permission status. Older Android versions
+    // can refresh immediately because paired-device access is install-time.
     LaunchedEffect(Unit) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             permissionLauncher.launch(
@@ -158,6 +168,12 @@ fun PrinterSettingsRoute(
     )
 }
 
+/**
+ * Printer settings content and section ordering.
+ *
+ * Keep receipt branding, paper width, device list, and preview in one screen so
+ * operators can verify the selected device and printed output together.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun PrinterSettingsScreen(
@@ -177,19 +193,22 @@ private fun PrinterSettingsScreen(
 ) {
     val context = LocalContext.current
 
-    // Image picker launcher
+    // Store logo uses a persistable URI where providers allow it, otherwise the
+    // app still stores the selected URI and lets downstream loading handle it.
     val imagePickerLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent(),
     ) { uri: Uri? ->
         uri?.let {
-            // Take persistent permission so the URI remains valid
+            // Take persistent permission so the logo remains readable after the
+            // picker activity closes or the app restarts.
             try {
                 context.contentResolver.takePersistableUriPermission(
                     it,
                     Intent.FLAG_GRANT_READ_URI_PERMISSION,
                 )
             } catch (e: SecurityException) {
-                // Some providers don't support persistent permissions
+                // Some providers do not support persistable permissions.
+                // Selection should still succeed for the current URI.
             }
             onStoreLogoChange(it.toString())
         }
@@ -248,7 +267,8 @@ private fun PrinterSettingsScreen(
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            // Connection Status Card - Prominent
+            // Put connection status first because every setting below depends
+            // on knowing whether the target printer is ready.
             item {
                 EnhancedConnectionStatusCard(
                     status = uiState.printerStatus,
@@ -258,7 +278,6 @@ private fun PrinterSettingsScreen(
                 )
             }
 
-            // Section: Perangkat Bluetooth
             item {
                 SectionHeader(
                     title = stringResource(R.string.printer_section_bluetooth_title),
@@ -266,7 +285,8 @@ private fun PrinterSettingsScreen(
                 )
             }
 
-            // Auto Connect toggle - now in Bluetooth section
+            // Auto-connect belongs near devices so users understand which
+            // printer list it applies to.
             item {
                 EnhancedToggleCard(
                     icon = Icons.Default.Bluetooth,
@@ -292,7 +312,6 @@ private fun PrinterSettingsScreen(
                 }
             }
 
-            // Section: Pengaturan Cetak
             item {
                 SectionHeader(
                     title = stringResource(R.string.printer_section_print_title),
@@ -300,7 +319,7 @@ private fun PrinterSettingsScreen(
                 )
             }
 
-            // Paper Width & Auto Connect
+            // Paper width affects both live print commands and the preview.
             item {
                 EnhancedSettingsCard(
                     icon = Icons.Outlined.Print,
@@ -330,7 +349,6 @@ private fun PrinterSettingsScreen(
                 )
             }
 
-            // Section: Info Toko
             item {
                 SectionHeader(
                     title = stringResource(R.string.printer_section_store_title),
@@ -338,7 +356,6 @@ private fun PrinterSettingsScreen(
                 )
             }
 
-            // Store Logo
             item {
                 StoreLogoCard(
                     logoUri = uiState.storeLogoUri,
@@ -357,7 +374,6 @@ private fun PrinterSettingsScreen(
                 )
             }
 
-            // Section: Preview Struk
             item {
                 SectionHeader(
                     title = stringResource(R.string.printer_section_preview_title),
@@ -374,7 +390,6 @@ private fun PrinterSettingsScreen(
                 )
             }
 
-            // Bottom spacing
             item {
                 Spacer(modifier = Modifier.height(32.dp))
             }

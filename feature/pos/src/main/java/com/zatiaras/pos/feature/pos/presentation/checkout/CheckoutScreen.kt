@@ -51,6 +51,13 @@ import com.zatiaras.pos.feature.pos.domain.model.PaymentMethod
 import com.zatiaras.pos.feature.pos.domain.model.Transaction
 import com.zatiaras.pos.feature.pos.presentation.CheckoutEvent
 
+/**
+ * Binds an immutable cart snapshot to checkout UI state.
+ *
+ * The route owns one-off effects: initializing from the cart and navigating
+ * after a successful payment. Keep those effects out of CheckoutContent so the
+ * form stays deterministic.
+ */
 @Composable
 fun CheckoutRoute(
     cart: Cart,
@@ -77,6 +84,12 @@ fun CheckoutRoute(
     )
 }
 
+/**
+ * State switcher for the checkout flow.
+ *
+ * Business validation lives in CheckoutViewModel; this screen should only map
+ * each state to the correct visual surface and forward events upward.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CheckoutScreen(
@@ -160,6 +173,13 @@ fun CheckoutScreen(
     }
 }
 
+/**
+ * Main checkout form.
+ *
+ * Keep this composable as event wiring plus section ordering. Calculation rules
+ * such as tax, discount, change, and completion eligibility must remain in the
+ * ViewModel/state layer so UI edits do not drift from business behavior.
+ */
 @Composable
 fun CheckoutContent(
     state: CheckoutUiState.Ready,
@@ -173,7 +193,8 @@ fun CheckoutContent(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        // Grand Total Card
+        // Grand total is pinned first because cashiers verify it before
+        // selecting tender or entering customer details.
         Card(
             colors = CardDefaults.cardColors(
                 containerColor = Brand500,
@@ -205,7 +226,8 @@ fun CheckoutContent(
             }
         }
 
-        // Customer Info
+        // Customer details are optional metadata; never block payment on these
+        // fields unless the domain validation explicitly changes.
         Card(
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)),
             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
@@ -258,7 +280,8 @@ fun CheckoutContent(
             }
         }
 
-        // Payment Method Selection
+        // Payment method changes drive the conditional fields below. Add new
+        // tender types here and in the ViewModel event handling together.
         Text(
             text = stringResource(R.string.checkout_payment_method),
             style = MaterialTheme.typography.titleMedium.copy(
@@ -295,7 +318,8 @@ fun CheckoutContent(
             )
         }
 
-        // Payment Details (Cash only)
+        // Cash is the only method that needs amount-paid and change handling.
+        // Non-cash methods intentionally skip this section.
         AnimatedVisibility(
             visible = state.selectedPaymentMethod == PaymentMethod.CASH,
             enter = expandVertically() + fadeIn(),
@@ -338,7 +362,8 @@ fun CheckoutContent(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Quick amounts
+                    // Suggestions avoid underpayment and keep large totals from
+                    // showing irrelevant fixed denominations.
                     Row(
                         modifier = Modifier.horizontalScroll(rememberScrollState()),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -391,7 +416,8 @@ fun CheckoutContent(
             }
         }
 
-        // Order Summary
+        // Summary mirrors values already computed by CheckoutUiState.Ready.
+        // Avoid recalculating monetary values in this UI layer.
         Card(
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)),
             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
@@ -427,7 +453,8 @@ fun CheckoutContent(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Discount Input
+                // Discount input stores a percentage; the ViewModel owns
+                // parsing, bounds, and discount amount calculation.
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
@@ -530,7 +557,8 @@ fun CheckoutContent(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Confirm Button
+        // Disable from state.canComplete so UI and business validation share a
+        // single source of truth.
         Button(
             onClick = { onEvent(CheckoutEvent.ConfirmPayment) },
             enabled = state.canComplete && !state.isProcessing,
@@ -563,6 +591,12 @@ fun CheckoutContent(
     }
 }
 
+/**
+ * Fixed-size payment option tile.
+ *
+ * The parent owns selection. This component only visualizes selected/unselected
+ * state so it can be reused when payment methods grow.
+ */
 @Composable
 fun PaymentMethodCard(
     title: String,

@@ -70,14 +70,11 @@ import com.zatiaras.pos.core.ui.theme.LocalDimensions
 import com.zatiaras.pos.feature.inventory.R
 
 /**
- * Product Detail Screen for Add/Edit product.
+ * Add/edit product workflow.
  *
- * Features:
- * - Image picker from gallery
- * - Form fields: name, price, category, description
- * - Validation with error messages
- * - Save button with loading state
- * - Delete button (edit mode only)
+ * This screen owns Android-only concerns such as image picking and runtime
+ * permissions. Product validation and persistence stay in ProductDetailViewModel
+ * so the form can remain a thin event-forwarding layer.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -88,14 +85,16 @@ fun ProductDetailScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    // Image picker launcher
+    // The picker only returns a URI; persistence/upload decisions are handled
+    // downstream by the ViewModel/repository.
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
     ) { uri: Uri? ->
         uri?.let { viewModel.onEvent(ProductDetailEvent.SetImageUri(it)) }
     }
 
-    // Permission launcher — request before opening gallery
+    // Request media permission before opening gallery. Android 13+ uses the
+    // scoped image permission, older versions fall back to external storage.
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
     ) { isGranted ->
@@ -104,7 +103,7 @@ fun ProductDetailScreen(
         }
     }
 
-    // Function to pick image with permission check
+    // Keep the SDK branch in one lambda so ImagePickerBox stays platform-free.
     val pickImage: () -> Unit = {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             permissionLauncher.launch(Manifest.permission.READ_MEDIA_IMAGES)
@@ -113,7 +112,8 @@ fun ProductDetailScreen(
         }
     }
 
-    // Handle success navigation
+    // Success is terminal for this screen; navigation stays outside the
+    // ViewModel so domain state does not know about app routing.
     LaunchedEffect(uiState) {
         if (uiState is ProductDetailUiState.Success) {
             onSaveSuccess()
@@ -193,13 +193,20 @@ fun ProductDetailScreen(
                 )
             }
             is ProductDetailUiState.Success -> {
-                // Will navigate away via LaunchedEffect
+                // Keep a stable loading surface while LaunchedEffect performs
+                // the actual navigation.
                 LoadingContent(modifier = Modifier.padding(paddingValues))
             }
         }
     }
 }
 
+/**
+ * Product form layout only.
+ *
+ * Every input emits ProductDetailEvent immediately. Avoid keeping duplicated
+ * local field state here; it makes validation and save behavior harder to audit.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun FormContent(
@@ -216,14 +223,12 @@ private fun FormContent(
             .padding(dimensions.paddingM),
         verticalArrangement = Arrangement.spacedBy(dimensions.spacingM),
     ) {
-        // Image Picker
         ImagePickerBox(
             imageUrl = state.imageUrl,
             imageUri = state.imageUri,
             onImageClick = onPickImage,
         )
 
-        // Name Field
         OutlinedTextField(
             value = state.name,
             onValueChange = { onEvent(ProductDetailEvent.SetName(it)) },
@@ -236,7 +241,8 @@ private fun FormContent(
             shape = AppShapes.M,
         )
 
-        // Price Field with currency formatting
+        // Use the shared currency field so POS and inventory parse prices the
+        // same way.
         CurrencyTextField(
             value = state.price,
             onValueChange = { onEvent(ProductDetailEvent.SetPrice(it)) },
@@ -248,7 +254,8 @@ private fun FormContent(
             shape = AppShapes.M,
         )
 
-        // Show price error if any
+        // CurrencyTextField owns formatting, but the screen keeps the
+        // validation message close to the field for accessibility.
         state.priceError?.let { error ->
             Text(
                 text = error,
@@ -258,20 +265,19 @@ private fun FormContent(
             )
         }
 
-        // Category Dropdown
         CategoryDropdown(
             categories = state.categories,
             selectedCategoryId = state.categoryId,
             onCategorySelected = { onEvent(ProductDetailEvent.SetCategory(it)) },
         )
 
-        // Product Type Selector
         ProductTypeSelector(
             selectedType = state.type,
             onTypeSelected = { onEvent(ProductDetailEvent.SetType(it)) },
         )
 
-        // Add-Ons Selector
+        // Add-ons can be toggled or created inline. The dialog is local UI
+        // state; the resulting add-on still flows through the ViewModel.
         var showAddOnDialog by remember { mutableStateOf(false) }
 
         AddOnSelector(
@@ -291,7 +297,6 @@ private fun FormContent(
             )
         }
 
-        // Description Field
         OutlinedTextField(
             value = state.description,
             onValueChange = { onEvent(ProductDetailEvent.SetDescription(it)) },
@@ -306,7 +311,8 @@ private fun FormContent(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Save Button
+        // Submit availability comes from state.isSubmitting. Validation errors
+        // are owned by the ViewModel and rendered beside their fields.
         Button(
             onClick = { onEvent(ProductDetailEvent.Save) },
             modifier = Modifier
@@ -333,6 +339,12 @@ private fun FormContent(
     }
 }
 
+/**
+ * Image picker preview box.
+ *
+ * Prefer a freshly selected URI over an existing remote/local URL so users see
+ * the pending replacement before saving.
+ */
 @Composable
 private fun ImagePickerBox(
     imageUrl: String?,
@@ -392,6 +404,11 @@ private fun ImagePickerBox(
     }
 }
 
+/**
+ * Category selector with an explicit "no category" option.
+ *
+ * The nullable category ID is intentional; products can be saved uncategorized.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun CategoryDropdown(
@@ -423,7 +440,7 @@ private fun CategoryDropdown(
             expanded = expanded,
             onDismissRequest = { expanded = false },
         ) {
-            // "None" option
+            // Null category is a valid inventory state, not an error fallback.
             DropdownMenuItem(
                 text = { Text(stringResource(R.string.product_category_none)) },
                 onClick = {
@@ -445,6 +462,12 @@ private fun CategoryDropdown(
     }
 }
 
+/**
+ * Delete confirmation body for edit mode.
+ *
+ * The parent screen decides when delete is available; this dialog only protects
+ * against accidental destructive taps.
+ */
 @Composable
 private fun DeleteConfirmationDialog(
     onConfirm: () -> Unit,

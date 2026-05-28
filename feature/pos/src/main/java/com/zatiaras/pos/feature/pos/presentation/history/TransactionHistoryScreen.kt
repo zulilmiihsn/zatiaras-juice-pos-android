@@ -53,6 +53,12 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+/**
+ * Connects the history ViewModel to a stateless screen.
+ *
+ * Keep navigation side effects in this route so the screen remains previewable
+ * and easier for junior engineers or small AI agents to reason about.
+ */
 @Composable
 fun TransactionHistoryRoute(
     onNavigateBack: () -> Unit,
@@ -81,6 +87,13 @@ fun TransactionHistoryRoute(
     )
 }
 
+/**
+ * Displays today's transactions and owns only screen-local UI state.
+ *
+ * Deletion is intentionally two-step: the selected transaction comes from the
+ * ViewModel, then this screen asks for an owner PIN only when the current user
+ * is not already an owner. Keep that authorization flow close to the dialogs.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TransactionHistoryScreen(
@@ -143,7 +156,8 @@ fun TransactionHistoryScreen(
                 .fillMaxSize()
                 .padding(paddingValues),
         ) {
-            // Search & Filter Header
+            // Filters are kept above the list so loading, empty, and populated
+            // states all share the same query/payment context.
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -215,7 +229,8 @@ fun TransactionHistoryScreen(
 
             HorizontalDivider(color = Slate200, thickness = 1.dp)
 
-            // Transaction List
+            // Prefer one explicit branch per list state; it prevents loading,
+            // empty, and populated UI from accidentally rendering together.
             if (uiState.isLoading && uiState.allTransactions.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator(color = Brand500)
@@ -254,7 +269,8 @@ fun TransactionHistoryScreen(
             }
         }
 
-        // Detail Dialog
+        // Detail and delete dialogs both read the ViewModel-selected
+        // transaction. Avoid copying the transaction into local state here.
         if (uiState.showDetailDialog && uiState.selectedTransaction != null) {
             val selectedTransaction = uiState.selectedTransaction
             ZatDialog(onDismissRequest = onHideDetail) { dismiss ->
@@ -273,7 +289,8 @@ fun TransactionHistoryScreen(
             }
         }
 
-        // Delete Dialog
+        // Non-owner deletion is deferred to OwnerPinDialog; owners can confirm
+        // directly from this warning dialog.
         if (uiState.showDeleteConfirmDialog && uiState.selectedTransaction != null) {
             ZatDialog(onDismissRequest = onHideDeleteConfirm) { dismiss ->
                 DeleteConfirmationContent(
@@ -306,6 +323,12 @@ fun TransactionHistoryScreen(
     }
 }
 
+/**
+ * Compact list row for one transaction.
+ *
+ * This row is intentionally presentation-only. Mutations such as delete or
+ * payment updates should stay in the screen/ViewModel boundary above.
+ */
 @Composable
 fun TransactionHistoryCard(
     transaction: Transaction,
@@ -324,7 +347,8 @@ fun TransactionHistoryCard(
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            // Icon Placeholder
+            // Use a deterministic text avatar instead of loading customer
+            // images in a dense transaction list.
             Box(
                 modifier = Modifier
                     .size(48.dp)
@@ -399,6 +423,12 @@ fun TransactionHistoryCard(
     }
 }
 
+/**
+ * Shows editable transaction metadata before receipt navigation.
+ *
+ * Payment method correction is allowed from history because cashiers often fix
+ * tender mistakes after checkout; totals and line items remain immutable here.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TransactionDetailDialogContent(
@@ -418,7 +448,6 @@ fun TransactionDetailDialogContent(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
     ) {
         Column(modifier = Modifier.padding(24.dp)) {
-            // Header
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -441,14 +470,13 @@ fun TransactionDetailDialogContent(
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp), color = Slate100)
 
-            // Details
             DetailRow(label = stringResource(R.string.pos_history_customer), value = transaction.customerName ?: "-")
             DetailRow(label = stringResource(R.string.pos_history_transaction_id), value = transaction.transactionNumber)
             DetailRow(label = stringResource(R.string.pos_history_date), value = SimpleDateFormat("dd MMM yyyy, HH:mm", Locale("id", "ID")).format(Date(transaction.createdAt)))
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Payment Method
+            // Payment method is the only editable field in this dialog.
             Text(
                 text = stringResource(R.string.pos_history_payment_type),
                 style = MaterialTheme.typography.labelMedium,
@@ -493,7 +521,6 @@ fun TransactionDetailDialogContent(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Total
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -531,6 +558,10 @@ fun TransactionDetailDialogContent(
     }
 }
 
+/**
+ * Simple label/value pair used inside dialogs where table layout would be too
+ * dense on small screens.
+ */
 @Composable
 fun DetailRow(label: String, value: String) {
     Column(modifier = Modifier.padding(vertical = 8.dp)) {
@@ -549,6 +580,10 @@ fun DetailRow(label: String, value: String) {
     }
 }
 
+/**
+ * Confirmation body only. Owner authorization is handled by the parent screen
+ * so this component can stay reusable for owner and non-owner flows.
+ */
 @Composable
 fun DeleteConfirmationContent(
     onDismiss: () -> Unit,

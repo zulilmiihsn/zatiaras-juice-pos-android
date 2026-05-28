@@ -77,13 +77,20 @@ import com.zatiaras.pos.core.ui.theme.WarningAmber
 import com.zatiaras.pos.feature.auth.R
 import com.zatiaras.pos.core.ui.R as CoreUiR
 
-// Brand colors
+// Login uses a small local alias layer so older styling names can map to the
+// shared design tokens without spreading legacy color names through the screen.
 private val PrimaryPink = Brand500
 private val LightPink = Slate50
 private val SurfacePink = androidx.compose.ui.graphics.Color.White
 private val InputBackground = Slate50
 private val WarningOrange = WarningAmber
 
+/**
+ * Connects authentication state to navigation and transient snackbars.
+ *
+ * Keep success/error side effects in the route. LoginScreen should remain a
+ * local form renderer that only emits login and resync commands.
+ */
 @Composable
 fun LoginRoute(
     onLoginSuccess: () -> Unit,
@@ -100,7 +107,8 @@ fun LoginRoute(
         }
     }
 
-    // Logic to show error snackbar
+    // Error state is consumed once and reset so snackbars do not replay after
+    // recomposition or configuration changes.
     val errorState = uiState as? AuthUiState.Error
     if (errorState != null) {
         val errorMessage = errorState.message.asString()
@@ -119,6 +127,12 @@ fun LoginRoute(
     )
 }
 
+/**
+ * Login form with branch selection.
+ *
+ * Username/password are local draft state. Branch IDs are stable backend values;
+ * labels are localized display text and must not be sent to AuthViewModel.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(
@@ -133,7 +147,8 @@ fun LoginScreen(
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
 
-    // Branch Selection State
+    // Default to the primary branch so operators can login quickly on shared
+    // devices, but still allow branch switching before submit.
     var branchExpanded by remember { mutableStateOf(false) }
     var selectedBranch by remember { mutableStateOf<String?>("samarinda_juanda") }
     val branches = listOf(
@@ -167,7 +182,6 @@ fun LoginScreen(
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                // Logo with glow effect
                 Box(
                     modifier = Modifier
                         .size(dimensions.iconSizeHero + dimensions.paddingXL)
@@ -191,7 +205,6 @@ fun LoginScreen(
 
                 Spacer(modifier = Modifier.height(dimensions.spacingL))
 
-                // App title with gradient text effect (simulated)
                 Text(
                     text = stringResource(R.string.auth_title),
                     style = MaterialTheme.typography.headlineLarge,
@@ -207,7 +220,8 @@ fun LoginScreen(
 
                 Spacer(modifier = Modifier.height(dimensions.spacingM))
 
-                // Sync Status Badge - Compact and stylish
+                // Sync status stays visible before login because offline data
+                // freshness determines whether operators should resync first.
                 syncStatus?.let { status ->
                     SyncStatusBadge(
                         statusText = status,
@@ -218,7 +232,6 @@ fun LoginScreen(
 
                 Spacer(modifier = Modifier.height(dimensions.paddingXXL))
 
-                // Login Card with premium feel
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = AppShapes.L,
@@ -239,7 +252,7 @@ fun LoginScreen(
                             color = PrimaryPink,
                         )
 
-                        // Branch Selection Dropdown - Enhanced
+                        // Send the branch ID, not the localized branch label.
                         ExposedDropdownMenuBox(
                             expanded = branchExpanded,
                             onExpandedChange = { branchExpanded = !branchExpanded },
@@ -299,7 +312,6 @@ fun LoginScreen(
                             }
                         }
 
-                        // Username Field - Enhanced
                         OutlinedTextField(
                             value = username,
                             onValueChange = { username = it },
@@ -326,7 +338,6 @@ fun LoginScreen(
                             shape = AppShapes.M,
                         )
 
-                        // Password Field - Enhanced with visibility toggle
                         OutlinedTextField(
                             value = password,
                             onValueChange = { password = it },
@@ -367,7 +378,8 @@ fun LoginScreen(
 
                 Spacer(modifier = Modifier.height(dimensions.spacingL))
 
-                // Login Button - Premium gradient style
+                // Disable submit during sync/login so AuthViewModel receives a
+                // single in-flight authentication request.
                 when (uiState) {
                     is AuthUiState.Loading, is AuthUiState.Syncing -> {
                         Button(
@@ -432,7 +444,10 @@ fun LoginScreen(
 }
 
 /**
- * Compact sync status badge with modern styling
+ * Compact status surface for pre-login sync health.
+ *
+ * Offline detection is text-based because the sync layer currently exposes a
+ * localized UiText instead of a typed status enum. Keep that limitation local.
  */
 @Composable
 private fun SyncStatusBadge(
@@ -493,7 +508,8 @@ private fun SyncStatusBadge(
                 fontWeight = FontWeight.Medium,
             )
 
-            // Show resync button when offline
+            // Resync is only useful when offline/stale and no sync is already
+            // running.
             if (isOffline && !isSyncing) {
                 Spacer(modifier = Modifier.width(8.dp))
                 TextButton(
