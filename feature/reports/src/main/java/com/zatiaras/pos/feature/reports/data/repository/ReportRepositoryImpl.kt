@@ -21,8 +21,10 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Implementation of ReportRepository.
- * Aggregates data from TransactionDao for reports.
+ * Local report aggregation backed by transaction and cash-record DAOs.
+ *
+ * Keep heavy aggregation in SQL/DAO calls where possible, then map results into
+ * report-domain models for the presentation layer.
  */
 @Singleton
 class ReportRepositoryImpl @Inject constructor(
@@ -31,17 +33,14 @@ class ReportRepositoryImpl @Inject constructor(
 ) : ReportRepository {
 
     override suspend fun getDashboardStats(): Result<DashboardStats> {
-        // Today's range
+        // Dashboard stats compare fixed calendar ranges in the device timezone.
         val todayStart = DateUtils.getStartOfDay()
         val todayEnd = DateUtils.getEndOfDay()
 
-        // This week's range (Monday to today)
         val (weekStart, weekEnd) = DateUtils.getThisWeekRange()
 
-        // This month's range
         val (monthStart, _) = DateUtils.getThisMonthRange()
 
-        // Previous week for comparison
         val (prevWeekStart, prevWeekEnd) = DateUtils.getPreviousWeekRange()
 
         return try {
@@ -62,7 +61,8 @@ class ReportRepositoryImpl @Inject constructor(
                 val monthlySummary = monthlySummaryDeferred.await()
                 val prevWeekSummary = prevWeekSummaryDeferred.await()
 
-                // Calculate growth percentage
+                // Growth uses previous week as baseline; no previous revenue but
+                // current revenue counts as full growth.
                 val growth = if (prevWeekSummary.totalRevenue > 0) {
                     (
                         (weeklySummary.totalRevenue - prevWeekSummary.totalRevenue).toDouble() /
@@ -92,13 +92,12 @@ class ReportRepositoryImpl @Inject constructor(
         val (startDate, endDate) = DateUtils.getLastNDaysRange(days)
 
         return try {
-            // Calculate timezone offset for SQL grouping
+            // Pass timezone offset into SQL so day buckets match local business
+            // dates instead of UTC boundaries.
             val timeOffset = java.util.TimeZone.getDefault().rawOffset.toLong()
 
-            // Use SQL aggregation for better performance on large datasets
             val dailyRevenueEntities = transactionDao.getDailyRevenue(startDate, endDate, timeOffset)
 
-            // Map to a dictionary for fast lookup
             val dailyMap = dailyRevenueEntities.associateBy { it.dayTimestamp }
 
             val result = mutableListOf<DailyRevenue>()
@@ -106,7 +105,7 @@ class ReportRepositoryImpl @Inject constructor(
                 .atZone(ZoneId.systemDefault())
                 .toLocalDate()
 
-            // Iterate through each day in the range to ensure continuous data (fill gaps with 0)
+            // Fill missing days with zero so charts stay continuous.
             repeat(days) {
                 val dayStart = currentDate
                     .atStartOfDay(ZoneId.systemDefault())
@@ -153,11 +152,11 @@ class ReportRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getRawProfitLossData(startDate: Long, endDate: Long): Result<RawProfitLossData> = try {
-        // 1. Get POS Revenue
+        // POS revenue and manual cash records are separated here; P&L use cases
+        // decide which manual records become income or expense categories.
         val posSummary = transactionDao.getRevenueSummary(startDate, endDate)
         val posTransactions = transactionDao.getTransactionCountForDay(startDate, endDate)
 
-        // 2. Get Product Sales Breakdown
         val productSales = transactionDao.getTopSellingProducts(startDate, endDate, 100)
             .map { entity ->
                 ProductSaleItem(
@@ -168,7 +167,6 @@ class ReportRepositoryImpl @Inject constructor(
                 )
             }
 
-        // 3. Get Manual Records
         val manualRecordsEntity = cashRecordDao.getRecordsListByDateRange(startDate, endDate)
         val manualRecords = manualRecordsEntity.map { entity ->
             ManualCashRecord(

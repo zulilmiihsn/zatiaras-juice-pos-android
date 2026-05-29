@@ -51,16 +51,10 @@ import java.text.SimpleDateFormat
 import java.util.Date
 
 /**
- * Reusable date filter component with date range picker and quick period chips.
+ * Shared date filter for report-like screens.
  *
- * Used by:
- * - PnlReportScreen (Laporan Laba Rugi)
- * - CashRecordScreen (Buku Kas)
- *
- * Features:
- * - Date range is always visible and clickable (primary interaction)
- * - Quick period chips below as shortcuts
- * - Active chip is determined by matching date range
+ * The explicit start/end range is the source of truth. Quick chips are shortcuts
+ * that emit a DatePeriod; callers own the actual range calculation.
  */
 @Composable
 fun DateFilterRow(
@@ -91,7 +85,8 @@ fun DateFilterRow(
 
         Spacer(modifier = Modifier.height(6.dp))
 
-        // === PRIMARY: Date Range Selector ===
+        // Keep the concrete range above presets so exports and reports always
+        // have a visible date boundary.
         DateRangeRow(
             startDate = startDate?.let { dateFormat.format(Date(it)) } ?: stringResource(R.string.core_pilih_tanggal),
             endDate = endDate?.let { dateFormat.format(Date(it)) } ?: stringResource(R.string.core_pilih_tanggal),
@@ -101,7 +96,7 @@ fun DateFilterRow(
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        // === SECONDARY: Quick Period Chips ===
+        // Presets are secondary shortcuts, not hidden state.
         QuickPeriodChips(
             activePeriod = activePeriod,
             quickPeriods = quickPeriods,
@@ -122,7 +117,6 @@ private fun DateRangeRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        // Start Date Button
         DatePickerButton(
             label = stringResource(R.string.core_dari),
             dateText = startDate,
@@ -130,7 +124,6 @@ private fun DateRangeRow(
             modifier = Modifier.weight(1f),
         )
 
-        // Arrow/Dash Separator
         Icon(
             imageVector = Icons.Default.DateRange,
             contentDescription = null,
@@ -138,7 +131,6 @@ private fun DateRangeRow(
             modifier = Modifier.size(18.dp),
         )
 
-        // End Date Button
         DatePickerButton(
             label = stringResource(R.string.core_sampai),
             dateText = endDate,
@@ -313,7 +305,6 @@ fun DateRangePickerDialog(
                     modifier = Modifier.padding(24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    // Header Icon
                     Box(
                         modifier = Modifier
                             .size(64.dp)
@@ -356,7 +347,8 @@ fun DateRangePickerDialog(
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    // Date Selection Inputs
+                    // End date is disabled until start date exists so invalid
+                    // ranges cannot be confirmed.
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -418,7 +410,6 @@ fun DateRangePickerDialog(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Action Buttons
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -455,7 +446,7 @@ fun DateRangePickerDialog(
         }
     }
 
-    // Start Date Picker Dialog
+    // Start changes can invalidate an already selected end date.
     if (showStartPicker) {
         val datePickerState = androidx.compose.material3.rememberDatePickerState(
             initialSelectedDateMillis = startDate ?: System.currentTimeMillis(),
@@ -487,7 +478,7 @@ fun DateRangePickerDialog(
         }
     }
 
-    // End Date Picker Dialog
+    // End date must be on or after the selected start date.
     if (showEndPicker) {
         val datePickerState = androidx.compose.material3.rememberDatePickerState(
             initialSelectedDateMillis = endDate ?: startDate ?: System.currentTimeMillis(),

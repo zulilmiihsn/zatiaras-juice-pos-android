@@ -6,7 +6,10 @@ import com.zatiaras.pos.feature.pos.domain.model.Transaction
 import com.zatiaras.pos.feature.pos.domain.repository.CashSummary
 
 /**
- * Unified cash flow item representing either a POS transaction or manual cash record.
+ * Unified row model for POS sales and manual cash-book entries.
+ *
+ * POS transactions are read-only income rows; manual records can represent
+ * income or expense and can be deleted from the cash-book screen.
  */
 sealed class CashFlowItem(
     open val id: String,
@@ -16,7 +19,7 @@ sealed class CashFlowItem(
     open val isIncome: Boolean,
 ) {
     /**
-     * POS Transaction (income from sales).
+     * POS transaction income from completed sales.
      */
     data class FromTransaction(
         val transaction: Transaction,
@@ -31,7 +34,7 @@ sealed class CashFlowItem(
     }
 
     /**
-     * Manual Cash Record (income/expense).
+     * Manual cash-book record entered by an operator.
      */
     data class FromCashRecord(
         val record: CashRecord,
@@ -49,7 +52,7 @@ sealed class CashFlowItem(
 }
 
 /**
- * UI State for Cash Record (Buku Kas) screen.
+ * Render state for the cash-book screen.
  */
 data class CashRecordUiState(
     val items: List<CashFlowItem> = emptyList(),
@@ -62,7 +65,7 @@ data class CashRecordUiState(
 )
 
 /**
- * UI State for Add/Edit Cash Record form.
+ * Draft state for the add/edit cash record sheet.
  */
 data class CashRecordFormState(
     val type: CashRecordType = CashRecordType.INCOME,
@@ -83,17 +86,17 @@ data class CashRecordFormState(
 }
 
 /**
- * Events for Cash Record screens.
+ * User intents from cash-book list and form screens.
  */
 sealed interface CashRecordEvent {
-    // Filter events
+    // Date filtering.
     data class SetDateFilter(
         val period: com.zatiaras.pos.core.domain.model.DatePeriod,
         val customStartDate: Long? = null,
         val customEndDate: Long? = null,
     ) : CashRecordEvent
 
-    // Form events
+    // Form updates.
     data class SetType(val type: CashRecordType) : CashRecordEvent
     data class SetAmount(val amount: String) : CashRecordEvent
     data class SetDescription(val description: String) : CashRecordEvent
@@ -102,7 +105,7 @@ sealed interface CashRecordEvent {
     data class SetDate(val date: Long?) : CashRecordEvent
     data object SaveRecord : CashRecordEvent
 
-    // List events
+    // List mutations and transient UI events.
     data class DeleteRecord(val id: String) : CashRecordEvent
     data object DismissError : CashRecordEvent
 }

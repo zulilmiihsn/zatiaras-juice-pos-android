@@ -48,6 +48,9 @@ import com.zatiaras.pos.feature.printer.domain.model.PrinterStatus
 
 private val PrinterIconColor = IconColors.Printer
 
+/**
+ * Current printer connection status and connected-device actions.
+ */
 @Composable
 internal fun EnhancedConnectionStatusCard(
     status: PrinterStatus,
@@ -84,7 +87,6 @@ internal fun EnhancedConnectionStatusCard(
             Row(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                // Status icon with background
                 Box(
                     modifier = Modifier
                         .size(56.dp)
@@ -171,6 +173,12 @@ internal fun EnhancedConnectionStatusCard(
     }
 }
 
+/**
+ * One paired Bluetooth device row.
+ *
+ * Connection is disabled while another connection attempt is running to prevent
+ * duplicate Bluetooth operations.
+ */
 @Composable
 internal fun EnhancedPrinterDeviceItem(
     device: PrinterDevice,
@@ -203,7 +211,6 @@ internal fun EnhancedPrinterDeviceItem(
                 .padding(dimensions.paddingM),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            // Icon with background
             Box(
                 modifier = Modifier
                     .size(48.dp)
@@ -268,6 +275,9 @@ internal fun EnhancedPrinterDeviceItem(
     }
 }
 
+/**
+ * Empty state for paired-device discovery.
+ */
 @Composable
 internal fun EnhancedEmptyDevicesCard(isBluetoothEnabled: Boolean) {
     val dimensions = LocalDimensions.current

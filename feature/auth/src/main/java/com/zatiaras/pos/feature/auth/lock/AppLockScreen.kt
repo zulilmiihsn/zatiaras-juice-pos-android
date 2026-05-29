@@ -25,6 +25,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.zatiaras.pos.core.ui.theme.LocalDimensions
 import com.zatiaras.pos.feature.auth.R
 
+/**
+ * Route boundary for local app unlock.
+ *
+ * Biometric APIs require FragmentActivity, so this route translates Compose
+ * context into ViewModel calls and keeps AppLockScreen platform-light.
+ */
 @Composable
 fun AppLockRoute(
     onUnlocked: () -> Unit,
@@ -33,7 +39,8 @@ fun AppLockRoute(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
-    // Safe cast to FragmentActivity for biometric support
+    // BiometricPrompt requires FragmentActivity; non-fragment contexts simply
+    // fall back to PIN entry.
     val fragmentActivity = context as? FragmentActivity
 
     LaunchedEffect(uiState.isUnlocked) {
@@ -42,8 +49,8 @@ fun AppLockRoute(
         }
     }
 
-    // Auto-trigger biometric on first load if enabled
-    // Use the state values as key so it triggers after settings are loaded
+    // Trigger after settings load, not at initial composition, otherwise
+    // biometric can fire before availability is known.
     LaunchedEffect(uiState.biometricEnabled, uiState.biometricAvailable) {
         if (uiState.biometricEnabled && uiState.biometricAvailable && fragmentActivity != null) {
             viewModel.authenticateWithBiometric(fragmentActivity)
@@ -60,6 +67,9 @@ fun AppLockRoute(
     )
 }
 
+/**
+ * Local unlock surface for PIN and biometric modes.
+ */
 @Composable
 fun AppLockScreen(
     uiState: AppLockUiState,
@@ -89,7 +99,6 @@ fun AppLockScreen(
         ) {
             Spacer(modifier = Modifier.height(dimensions.iconSizeXL))
 
-            // Lock Icon and Title
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Box(
                     modifier = Modifier
@@ -124,10 +133,10 @@ fun AppLockScreen(
                 )
             }
 
-            // PIN Display
+            // Show PIN keypad whenever PIN is enabled or the user chooses PIN
+            // fallback from biometric-first mode.
             if (uiState.showPinInput || uiState.pinSet) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    // PIN Dots
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(dimensions.spacingM),
                         modifier = Modifier.padding(vertical = dimensions.paddingXXL),
@@ -140,7 +149,6 @@ fun AppLockScreen(
                         }
                     }
 
-                    // Error Message
                     if (uiState.errorMessage != null) {
                         Text(
                             text = uiState.errorMessage,
@@ -150,7 +158,6 @@ fun AppLockScreen(
                         )
                     }
 
-                    // PIN Keypad
                     PinKeypad(
                         onDigitClick = onPinDigitClick,
                         onBackspaceClick = onBackspaceClick,
@@ -162,7 +169,8 @@ fun AppLockScreen(
                     )
                 }
             } else {
-                // Biometric Only Mode
+                // Biometric-only mode keeps PIN controls hidden until fallback
+                // becomes necessary.
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier.padding(vertical = 32.dp),

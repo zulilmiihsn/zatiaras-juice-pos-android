@@ -99,7 +99,7 @@ class CheckoutViewModelTest {
         // Subtotal = 25000
 
         viewModel.uiState.test {
-            awaitItem() // Loading
+            awaitItem() // Initial Loading state before cart hydration.
 
             viewModel.initializeWithCart(cart)
 
@@ -121,9 +121,9 @@ class CheckoutViewModelTest {
         val cart = Cart().addItem(testProduct1)
 
         viewModel.uiState.test {
-            awaitItem() // Loading
+            awaitItem() // Initial Loading state before cart hydration.
             viewModel.initializeWithCart(cart)
-            awaitItem() // Ready with CASH
+            awaitItem() // Ready with default CASH payment.
 
             viewModel.onEvent(CheckoutEvent.SetPaymentMethod(PaymentMethod.QRIS))
 
@@ -138,9 +138,9 @@ class CheckoutViewModelTest {
         val cart = Cart().addItem(testProduct1)
 
         viewModel.uiState.test {
-            awaitItem() // Loading
+            awaitItem() // Initial Loading state before cart hydration.
             viewModel.initializeWithCart(cart)
-            awaitItem() // Ready
+            awaitItem() // Ready state after cart hydration.
 
             viewModel.onEvent(CheckoutEvent.SetAmountPaid("10000"))
             awaitItem() // intermediate
@@ -386,9 +386,9 @@ class CheckoutViewModelTest {
         } returns Result.Success(mockTransaction)
 
         viewModel.uiState.test {
-            awaitItem() // Loading
+            awaitItem() // Initial Loading state before cart hydration.
             viewModel.initializeWithCart(cart)
-            awaitItem() // Ready
+            awaitItem() // Ready state after cart hydration.
 
             viewModel.setQuickAmount(10000)
             awaitItem() // intermediate amount

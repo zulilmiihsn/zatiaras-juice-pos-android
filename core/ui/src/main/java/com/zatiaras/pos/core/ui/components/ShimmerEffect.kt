@@ -29,8 +29,10 @@ import androidx.compose.ui.unit.dp
 import com.zatiaras.pos.core.ui.theme.AppShapes
 
 /**
- * Shimmer effect modifier for loading placeholders.
- * Creates a smooth, animated gradient that moves across the element.
+ * Shared brush for loading placeholders.
+ *
+ * Use this instead of ad hoc animated gradients so all skeleton states move at
+ * the same speed and read as one design pattern.
  */
 @Composable
 fun shimmerBrush(): Brush {
@@ -59,8 +61,7 @@ fun shimmerBrush(): Brush {
 }
 
 /**
- * A shimmer box placeholder.
- * Use as a loading placeholder for any rectangular content.
+ * Primitive rectangular shimmer used by the composed skeleton components below.
  */
 @Composable
 fun ShimmerBox(
@@ -91,7 +92,6 @@ fun ShimmerProductCard(
             .background(MaterialTheme.colorScheme.surface)
             .padding(8.dp),
     ) {
-        // Image placeholder
         ShimmerBox(
             height = 120.dp,
             shape = AppShapes.S,
@@ -99,7 +99,6 @@ fun ShimmerProductCard(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Title placeholder
         ShimmerBox(
             height = 16.dp,
             shape = AppShapes.XS,
@@ -107,7 +106,6 @@ fun ShimmerProductCard(
 
         Spacer(modifier = Modifier.height(4.dp))
 
-        // Price placeholder
         ShimmerBox(
             width = 80.dp,
             height = 14.dp,
@@ -128,7 +126,6 @@ fun ShimmerCartItem(
             .fillMaxWidth()
             .padding(12.dp),
     ) {
-        // Image placeholder
         Box(
             modifier = Modifier
                 .size(56.dp)
@@ -139,7 +136,6 @@ fun ShimmerCartItem(
         Spacer(modifier = Modifier.width(12.dp))
 
         Column(modifier = Modifier.weight(1f)) {
-            // Title
             ShimmerBox(
                 height = 14.dp,
                 shape = AppShapes.XS,
@@ -147,7 +143,6 @@ fun ShimmerCartItem(
 
             Spacer(modifier = Modifier.height(6.dp))
 
-            // Subtitle
             ShimmerBox(
                 width = 60.dp,
                 height = 12.dp,
@@ -157,7 +152,6 @@ fun ShimmerCartItem(
 
         Spacer(modifier = Modifier.width(8.dp))
 
-        // Quantity controls placeholder
         Box(
             modifier = Modifier
                 .size(80.dp, 32.dp)
@@ -179,7 +173,6 @@ fun ShimmerListItem(
             .fillMaxWidth()
             .padding(16.dp),
     ) {
-        // Avatar/icon placeholder
         Box(
             modifier = Modifier
                 .size(48.dp)
@@ -190,7 +183,6 @@ fun ShimmerListItem(
         Spacer(modifier = Modifier.width(16.dp))
 
         Column(modifier = Modifier.weight(1f)) {
-            // Title
             ShimmerBox(
                 height = 16.dp,
                 shape = AppShapes.XS,
@@ -198,7 +190,6 @@ fun ShimmerListItem(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Subtitle
             ShimmerBox(
                 width = 120.dp,
                 height = 12.dp,
@@ -221,7 +212,6 @@ fun ShimmerStatCard(
             .background(MaterialTheme.colorScheme.surface)
             .padding(16.dp),
     ) {
-        // Icon placeholder
         Box(
             modifier = Modifier
                 .size(40.dp)
@@ -231,7 +221,6 @@ fun ShimmerStatCard(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Value placeholder
         ShimmerBox(
             width = 80.dp,
             height = 24.dp,
@@ -240,7 +229,6 @@ fun ShimmerStatCard(
 
         Spacer(modifier = Modifier.height(4.dp))
 
-        // Label placeholder
         ShimmerBox(
             width = 60.dp,
             height = 12.dp,

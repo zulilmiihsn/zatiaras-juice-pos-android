@@ -50,7 +50,10 @@ private val StoreIconColor = IconColors.Store
 private val LogoIconColor = IconColors.Logo
 
 /**
- * Card for selecting store logo
+ * Store logo selector used by receipt branding.
+ *
+ * The parent owns URI permission and persistence; this card only previews and
+ * emits selection/clear actions.
  */
 @Composable
 internal fun StoreLogoCard(
@@ -73,7 +76,6 @@ internal fun StoreLogoCard(
         Column(
             modifier = Modifier.padding(16.dp),
         ) {
-            // Header
             Row(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -108,7 +110,8 @@ internal fun StoreLogoCard(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Logo preview
+            // Fall back to the app logo so receipt preview and printing always
+            // have a visual identity.
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center,
@@ -140,7 +143,6 @@ internal fun StoreLogoCard(
                             contentScale = ContentScale.Fit,
                         )
                     } else {
-                        // Default app icon
                         Image(
                             painter = painterResource(id = com.zatiaras.pos.core.ui.R.drawable.zatiaras_logo),
                             contentDescription = stringResource(R.string.printer_store_logo_default_cd),
@@ -155,7 +157,6 @@ internal fun StoreLogoCard(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Action buttons
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -199,6 +200,12 @@ internal fun StoreLogoCard(
     }
 }
 
+/**
+ * Editable store identity printed on receipt headers.
+ *
+ * Saving is explicit so operators can review name and address together before
+ * updating printer settings.
+ */
 @Composable
 internal fun EnhancedStoreInfoCard(
     storeName: String,
@@ -220,7 +227,6 @@ internal fun EnhancedStoreInfoCard(
         Column(
             modifier = Modifier.padding(16.dp),
         ) {
-            // Header
             Row(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -255,7 +261,6 @@ internal fun EnhancedStoreInfoCard(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Store Name
             OutlinedTextField(
                 value = storeName,
                 onValueChange = onStoreNameChange,
@@ -268,7 +273,6 @@ internal fun EnhancedStoreInfoCard(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Store Address
             OutlinedTextField(
                 value = storeAddress,
                 onValueChange = onStoreAddressChange,

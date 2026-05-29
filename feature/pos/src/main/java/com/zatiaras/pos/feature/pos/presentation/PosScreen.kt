@@ -47,13 +47,10 @@ import compose.icons.evaicons.outline.ArrowIosForward
 import compose.icons.evaicons.outline.Lock
 
 /**
- * Main POS Screen with product catalog and floating cart bar.
+ * Main cashier surface for catalog browsing and cart building.
  *
- * Features:
- * - Floating cart summary bar at bottom (like GoFood/GrabFood)
- * - Slide-in cart sidebar when tapped
- * - Full-width product catalog
- * - Product options bottom sheet for add-ons, sugar/ice customization
+ * Keep responsive layout decisions here because cart presentation differs
+ * between tablet side-by-side mode and mobile slide-over mode.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -67,7 +64,7 @@ fun PosScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     var isCartVisible by remember { mutableStateOf(false) }
 
-    // Show error snackbar
+    // Errors are one-shot UI messages; consume them after snackbar dispatch.
     LaunchedEffect(uiState.error) {
         uiState.error?.let { error ->
             snackbarHostState.showSnackbar(error)
@@ -75,7 +72,8 @@ fun PosScreen(
         }
     }
 
-    // Auto-hide cart sidebar when cart becomes empty
+    // Hide the mobile cart panel once no items remain so an empty overlay cannot
+    // block catalog interaction.
     LaunchedEffect(uiState.cart.isEmpty()) {
         if (uiState.cart.isEmpty()) {
             isCartVisible = false
@@ -89,7 +87,6 @@ fun PosScreen(
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
-        // Remove old top bar to make it full screen premium look
         snackbarHost = { com.zatiaras.pos.core.ui.components.ZatSnackbarHost(snackbarHostState) },
     ) { paddingValues ->
         BoxWithConstraints(
@@ -109,9 +106,9 @@ fun PosScreen(
             val isWideScreen = maxWidth >= 600.dp
 
             if (isWideScreen) {
-                // Persistent Side-by-Side Layout for Tablet / Wide Screens
+                // Wide screens keep the cart persistent because there is enough
+                // space to review cart and catalog together.
                 Row(modifier = Modifier.fillMaxSize()) {
-                    // Left Side: Product Catalog
                     Box(modifier = Modifier.weight(1f).fillMaxHeight()) {
                         PagedProductCatalog(
                             products = pagedProducts,
@@ -131,7 +128,6 @@ fun PosScreen(
                         )
                     }
 
-                    // Right Side: Persistent Cart Sidebar
                     Box(
                         modifier = Modifier
                             .width(350.dp)
@@ -153,7 +149,8 @@ fun PosScreen(
                     }
                 }
             } else {
-                // Mobile Layout: Floating Cart or Vertical Split
+                // Mobile uses a floating summary plus slide-over cart to keep
+                // product browsing as the primary view.
                 Box(modifier = Modifier.fillMaxSize()) {
                     PagedProductCatalog(
                         products = pagedProducts,
@@ -223,7 +220,8 @@ fun PosScreen(
         }
     }
 
-    // Product Options Bottom Sheet
+    // Product customization is confirmed from the bottom sheet before cart
+    // mutation so partially edited options never leak into cart state.
     val selectedProduct = uiState.selectedProduct
     if (uiState.showProductOptionsSheet && selectedProduct != null) {
         ProductOptionsBottomSheet(
@@ -239,7 +237,7 @@ fun PosScreen(
 }
 
 /**
- * Premium Floating Cart Bar
+ * Mobile summary action that opens the cart panel.
  */
 @Composable
 private fun FloatingCartBar(
@@ -273,7 +271,6 @@ private fun FloatingCartBar(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                // Left: Icon & Count
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -299,7 +296,6 @@ private fun FloatingCartBar(
                     )
                 }
 
-                // Right: Total & Action
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -323,6 +319,11 @@ private fun FloatingCartBar(
     }
 }
 
+/**
+ * Full-screen block shown when the store is closed.
+ *
+ * POS actions are unavailable until the dashboard opens the store for the day.
+ */
 @Composable
 private fun StoreClosedOverlay(onNavigateBack: () -> Unit) {
     Box(
@@ -338,7 +339,6 @@ private fun StoreClosedOverlay(onNavigateBack: () -> Unit) {
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            // Icon Container
             Box(
                 modifier = Modifier
                     .size(120.dp)

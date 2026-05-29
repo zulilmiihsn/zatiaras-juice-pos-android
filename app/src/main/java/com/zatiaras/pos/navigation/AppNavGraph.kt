@@ -50,8 +50,9 @@ import com.zatiaras.pos.feature.reports.navigation.reportChatScreen
 /**
  * Main navigation graph for the ZatiarasPOS app.
  *
- * Extracted from MainActivity to follow KISS principle (Activity under 100 lines).
- * Contains all top-level navigation routes.
+ * Keep app-wide holders and protected feature entry points wired here. Feature
+ * modules own their internal graphs; this file should only describe how those
+ * top-level surfaces connect.
  */
 @Composable
 fun AppNavGraph(
@@ -68,7 +69,8 @@ fun AppNavGraph(
         startDestination = NavRoutes.STARTUP,
         modifier = modifier,
     ) {
-        // Startup screen - checks for saved session and app lock
+        // Startup is a transient route: it decides whether to restore a session,
+        // require PIN unlock, or fall through to login.
         composable(NavRoutes.STARTUP) {
             val viewModel: StartupViewModel = hiltViewModel()
             val state by viewModel.state.collectAsStateWithLifecycle()
@@ -81,7 +83,6 @@ fun AppNavGraph(
                         }
                     }
                     is StartupState.NeedsUnlock -> {
-                        // Session is valid but app lock is enabled
                         navController.navigate(NavRoutes.APP_LOCK) {
                             popUpTo(NavRoutes.STARTUP) { inclusive = true }
                         }
@@ -94,16 +95,16 @@ fun AppNavGraph(
                         }
                     }
                     is StartupState.Loading -> {
-                        // Stay on splash screen
+                        // Stay on splash while the ViewModel resolves storage.
                     }
                 }
             }
 
-            // Animated splash screen with logo
             SplashScreen()
         }
 
-        // App Lock screen - shown when session is valid but lock is enabled
+        // App lock only appears after a valid restored session requires local
+        // unlock. Login should not be repeated for this path.
         composable(NavRoutes.APP_LOCK) {
             AppLockRoute(
                 onUnlocked = {
@@ -128,8 +129,8 @@ fun AppNavGraph(
             MainScreen(
                 cartHolder = cartHolder,
                 onNavigateBackFromMain = {
-                    // Handle back from main screen (e.g. minimize or double back to exit)
-                    // For now, do nothing - Home is the end.
+                    // Home is the root after login; back handling is owned by
+                    // the Activity/system rather than the nested graph.
                 },
                 onNavigateToCheckout = {
                     navController.navigateToCheckout()
@@ -148,10 +149,10 @@ fun AppNavGraph(
             )
         }
 
-        // Inventory feature navigation graph
         inventoryNavGraph(navController, accessControlManager)
 
-        // Checkout (Full Screen)
+        // Checkout receives the current cart via CartHolder because the route
+        // itself has no stable serializable cart argument.
         checkoutScreen(
             cartHolder = cartHolder,
             onNavigateBack = {
@@ -165,7 +166,7 @@ fun AppNavGraph(
             },
         )
 
-        // Settings (Full Screen)
+        // Settings fans out to protected operational screens.
         settingsScreen(
             onNavigateBack = {
                 navController.popBackStack()
@@ -199,7 +200,6 @@ fun AppNavGraph(
             accessControlManager = accessControlManager,
         )
 
-        // Security Settings Sub-Screen
         securitySettingsScreen(
             onNavigateBack = {
                 navController.popBackStack()
@@ -209,7 +209,6 @@ fun AppNavGraph(
             },
         )
 
-        // Access Control Sub-Screen
         accessControlScreen(
             onNavigateBack = {
                 navController.popBackStack()
@@ -219,21 +218,20 @@ fun AppNavGraph(
             },
         )
 
-        // Sync Settings Sub-Screen
         syncSettingsScreen(
             onNavigateBack = {
                 navController.popBackStack()
             },
         )
 
-        // About Sub-Screen
         aboutScreen(
             onNavigateBack = {
                 navController.popBackStack()
             },
         )
 
-        // Reports P&L (Full Screen) - For deep linking, protected by Access Control
+        // P&L can be opened directly and still enforces access control inside
+        // the reports navigation entry.
         pnlReportScreen(
             onNavigateBack = {
                 navController.popBackStack()
@@ -244,14 +242,14 @@ fun AppNavGraph(
             accessControlManager = accessControlManager,
         )
 
-        // Reports AI Chat (Full Screen)
         reportChatScreen(
             onNavigateBack = {
                 navController.popBackStack()
             },
         )
 
-        // Transaction History (Full Screen)
+        // Receipt navigation uses TransactionHolder for the selected history
+        // transaction to avoid oversized navigation arguments.
         transactionHistoryScreen(
             onNavigateBack = {
                 navController.popBackStack()
@@ -262,7 +260,6 @@ fun AppNavGraph(
             },
         )
 
-        // Pin Setup
         pinSetupScreen(
             onPinSet = {
                 navController.popBackStack()
@@ -272,7 +269,6 @@ fun AppNavGraph(
             },
         )
 
-        // Owner Pin Setup
         ownerPinSetupScreen(
             onPinSet = {
                 navController.popBackStack()
@@ -282,7 +278,6 @@ fun AppNavGraph(
             },
         )
 
-        // Printer Settings - Protected by Access Control
         printerSettingsScreen(
             onNavigateBack = {
                 navController.popBackStack()
@@ -290,7 +285,6 @@ fun AppNavGraph(
             accessControlManager = accessControlManager,
         )
 
-        // Receipt screen
         composable(NavRoutes.RECEIPT) {
             ReceiptRoute(
                 transactionHolder = transactionHolder,
@@ -302,7 +296,10 @@ fun AppNavGraph(
 }
 
 /**
- * Receipt route extracted to keep AppNavGraph clean.
+ * Bridges receipt navigation holder state into ReceiptViewModel state.
+ *
+ * The ViewModel remains the primary source of truth after hydration; the holder
+ * is consumed only for cross-graph navigation.
  */
 @Composable
 private fun ReceiptRoute(
@@ -313,10 +310,11 @@ private fun ReceiptRoute(
     val receiptViewModel: ReceiptViewModel = hiltViewModel()
     val receiptUiState by receiptViewModel.uiState.collectAsStateWithLifecycle()
 
-    // Primary source of truth is the ViewModel's state
+    // Primary source of truth is the ViewModel's state after hydration.
     val transaction = receiptUiState.transaction
 
-    // Only attempt to consume from holder if we don't have a transaction in ViewModel yet
+    // Consume the holder once so process-local navigation state cannot replay
+    // stale receipts after this screen is recreated.
     LaunchedEffect(Unit) {
         if (receiptViewModel.uiState.value.transaction == null) {
             transactionHolder.consumeTransaction()?.let {
@@ -325,7 +323,8 @@ private fun ReceiptRoute(
         }
     }
 
-    // Handle receipt events
+    // Keep Android side effects in the route; ReceiptViewModel emits plain
+    // events that this boundary translates to toast/navigation.
     LaunchedEffect(Unit) {
         receiptViewModel.events.collect { event ->
             when (event) {
@@ -333,7 +332,8 @@ private fun ReceiptRoute(
                     Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
                 }
                 is ReceiptEvent.PrintSuccess -> {
-                    // Print success handled in ShowToast
+                    // Print success also emits ShowToast, so no navigation is
+                    // needed for this event.
                 }
                 is ReceiptEvent.NavigateToPrinterSettings -> {
                     navController.navigateToPrinterSettings()
@@ -349,8 +349,8 @@ private fun ReceiptRoute(
                 navController.popBackStack()
             },
             onNewTransaction = {
-                // Navigate to HOME which contains the MainScreen with tabs
-                // POS is a tab inside MainScreen's nested NavHost
+                // Home owns the POS tab. Returning there resets the receipt
+                // flow without constructing a POS route manually.
                 navController.navigate(NavRoutes.HOME) {
                     popUpTo(NavRoutes.HOME) { inclusive = true }
                 }
@@ -367,7 +367,8 @@ private fun ReceiptRoute(
             printerName = receiptUiState.printerName,
         )
     } else {
-        // Loading or fallback
+        // Fallback while the holder is consumed or if a stale receipt route is
+        // opened without transaction state.
         Box(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center,

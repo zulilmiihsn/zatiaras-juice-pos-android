@@ -47,7 +47,10 @@ import com.zatiaras.pos.feature.printer.domain.model.PaperWidth
 private val PreviewIconColor = IconColors.Preview
 
 /**
- * Premium Receipt Preview that simulates a high-end minimarket receipt
+ * Preview of the configured thermal receipt.
+ *
+ * The layout intentionally mirrors printer constraints instead of normal app UI
+ * spacing so operators can spot paper-width and branding issues before printing.
  */
 @Composable
 internal fun ReceiptPreviewCard(
@@ -72,7 +75,6 @@ internal fun ReceiptPreviewCard(
         Column(
             modifier = Modifier.padding(16.dp),
         ) {
-            // Header
             Row(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -110,7 +112,6 @@ internal fun ReceiptPreviewCard(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Premium Receipt
             Box(
                 modifier = Modifier.fillMaxWidth(),
                 contentAlignment = Alignment.Center,
@@ -126,7 +127,6 @@ internal fun ReceiptPreviewCard(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Info text
             Text(
                 text = stringResource(R.string.printer_preview_hint),
                 style = MaterialTheme.typography.bodySmall,
@@ -146,13 +146,14 @@ internal fun PremiumReceipt(
     receiptWidth: androidx.compose.ui.unit.Dp,
     context: android.content.Context,
 ) {
-    // Thermal print colors - use centralized ReceiptColors tokens
+    // Use centralized thermal-print tokens so preview and printable templates
+    // stay visually aligned.
     val textBlack = ReceiptColors.TextBlack
     val textGray = ReceiptColors.TextGray
     val textLightGray = ReceiptColors.TextLightGray
     val dividerColor = ReceiptColors.Divider
 
-    // Receipt paper with shadow
+    // Receipt width is passed by the settings screen to match selected paper.
     Card(
         modifier = Modifier
             .width(receiptWidth)
@@ -167,7 +168,8 @@ internal fun PremiumReceipt(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(
-                    // Thermal paper yellowish tint
+                    // Thermal paper tint helps distinguish the simulated receipt
+                    // from normal app cards.
                     brush = androidx.compose.ui.graphics.Brush.verticalGradient(
                         colors = listOf(
                             ReceiptColors.PaperWhite,
@@ -179,9 +181,8 @@ internal fun PremiumReceipt(
                 .padding(horizontal = 16.dp, vertical = 20.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            // ===== HEADER SECTION =====
-
-            // Store Logo (grayscale effect)
+            // Prefer a custom logo, but always fall back to the app logo so the
+            // preview never shows an empty brand block.
             Box(
                 modifier = Modifier
                     .size(56.dp)
@@ -224,7 +225,6 @@ internal fun PremiumReceipt(
                 color = textBlack,
             )
 
-            // Store address
             if (storeAddress.isNotBlank()) {
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
@@ -238,7 +238,6 @@ internal fun PremiumReceipt(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Double line divider
             Column {
                 HorizontalDivider(thickness = 1.dp, color = dividerColor)
                 Spacer(modifier = Modifier.height(2.dp))
@@ -247,7 +246,6 @@ internal fun PremiumReceipt(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Transaction info
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -282,7 +280,6 @@ internal fun PremiumReceipt(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Dashed divider
             Text(
                 text = stringResource(R.string.printer_receipt_separator),
                 style = MaterialTheme.typography.labelSmall,
@@ -292,9 +289,8 @@ internal fun PremiumReceipt(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // ===== ITEMS SECTION =====
-
-            // Item rows
+            // Sample rows keep the preview stable and independent of live cart
+            // state.
             ReceiptItemMono(
                 name = stringResource(R.string.printer_item_sample_1),
                 qty = 1,
@@ -325,7 +321,6 @@ internal fun PremiumReceipt(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Dashed divider
             Text(
                 text = stringResource(R.string.printer_receipt_separator),
                 style = MaterialTheme.typography.labelSmall,
@@ -335,9 +330,6 @@ internal fun PremiumReceipt(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // ===== TOTALS SECTION =====
-
-            // Subtotal
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text(stringResource(R.string.printer_receipt_subtotal), style = MaterialTheme.typography.bodySmall, color = textGray)
                 Text(stringResource(R.string.printer_receipt_subtotal_sample), style = MaterialTheme.typography.bodySmall, color = textBlack)
@@ -345,7 +337,6 @@ internal fun PremiumReceipt(
 
             Spacer(modifier = Modifier.height(4.dp))
 
-            // Tax
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text(stringResource(R.string.printer_receipt_tax_sample), style = MaterialTheme.typography.bodySmall, color = textLightGray)
                 Text(stringResource(R.string.printer_receipt_tax_amount_sample), style = MaterialTheme.typography.bodySmall, color = textLightGray)
@@ -353,12 +344,10 @@ internal fun PremiumReceipt(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Solid divider
             HorizontalDivider(thickness = 1.dp, color = dividerColor)
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Grand Total - Bold and prominent
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -380,7 +369,6 @@ internal fun PremiumReceipt(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Payment info - simple text format (like real receipt)
             HorizontalDivider(thickness = 1.dp, color = dividerColor)
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -399,7 +387,6 @@ internal fun PremiumReceipt(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Double line divider
             Column {
                 HorizontalDivider(thickness = 1.dp, color = dividerColor)
                 Spacer(modifier = Modifier.height(2.dp))
@@ -408,9 +395,6 @@ internal fun PremiumReceipt(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // ===== FOOTER SECTION =====
-
-            // Thank you message
             Text(
                 text = stringResource(R.string.printer_receipt_thanks_title),
                 style = MaterialTheme.typography.titleSmall,
@@ -441,7 +425,6 @@ internal fun PremiumReceipt(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Powered by
             Text(
                 text = stringResource(R.string.printer_receipt_separator),
                 style = MaterialTheme.typography.labelSmall,
@@ -461,7 +444,7 @@ internal fun PremiumReceipt(
 }
 
 /**
- * Receipt item row for thermal printer style output
+ * One sample line item rendered with receipt-safe spacing.
  */
 @Composable
 internal fun ReceiptItemMono(

@@ -55,6 +55,12 @@ import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.Date
 
+/**
+ * Row for one cash-flow entry.
+ *
+ * Only manual cash records are deletable; POS transaction rows are immutable
+ * audit records and navigate to receipt details instead.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun CashFlowItemRow(
@@ -110,7 +116,8 @@ internal fun CashFlowItemRow(
         CashFlowItemCard(item, priceFormatter, timeFormatter, onClick)
     }
 
-    // Delete confirmation dialog
+    // Swipe only opens confirmation; actual deletion happens after explicit
+    // confirmation to protect cash-book audit data.
     if (showDeleteDialog) {
         ZatDialog(
             onDismissRequest = { showDeleteDialog = false },
@@ -215,7 +222,6 @@ private fun CashFlowItemCard(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            // Type Icon
             Surface(
                 shape = AppShapes.S,
                 color = iconColor.copy(alpha = 0.1f),
@@ -234,7 +240,6 @@ private fun CashFlowItemCard(
 
             Spacer(modifier = Modifier.width(12.dp))
 
-            // Details
             Column(modifier = Modifier.weight(1f)) {
                 if (item is CashFlowItem.FromTransaction) {
                     val trxItem = item.transaction
@@ -249,7 +254,7 @@ private fun CashFlowItemCard(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
 
-                    // Show item details
+                    // Show up to two sold items so transaction rows stay compact.
                     val detailsText = trxItem.items.take(2).joinToString(", ") { "${it.productName} x${it.quantity}" } + if (trxItem.items.size > 2) ", dll..." else ""
                     Text(
                         text = detailsText,
@@ -260,7 +265,6 @@ private fun CashFlowItemCard(
                         modifier = Modifier.padding(top = 2.dp),
                     )
 
-                    // Show transaction notes
                     if (!trxItem.notes.isNullOrBlank()) {
                         Text(
                             text = trxItem.notes,
@@ -285,7 +289,6 @@ private fun CashFlowItemCard(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
 
-                    // Show item count for transactions
                     if (item is CashFlowItem.FromTransaction) {
                         Text(
                             text = stringResource(R.string.cash_flow_item_count, item.itemCount),
@@ -294,7 +297,6 @@ private fun CashFlowItemCard(
                         )
                     }
 
-                    // Show category for manual records
                     if (item is CashFlowItem.FromCashRecord && !item.category.isNullOrBlank()) {
                         Text(
                             text = stringResource(R.string.cash_flow_category, item.category.orEmpty()),
@@ -305,7 +307,6 @@ private fun CashFlowItemCard(
                 }
             }
 
-            // Amount
             Text(
                 text = stringResource(
                     R.string.cash_flow_amount_signed,

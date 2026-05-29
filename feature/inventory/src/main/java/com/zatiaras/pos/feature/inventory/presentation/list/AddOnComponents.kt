@@ -46,6 +46,11 @@ import com.zatiaras.pos.core.ui.theme.AppShapes
 import com.zatiaras.pos.core.ui.util.CurrencyFormatter
 import com.zatiaras.pos.feature.inventory.R
 
+/**
+ * Add-on maintenance list.
+ *
+ * Deletion is confirmed locally before emitting the destructive ViewModel event.
+ */
 @Composable
 fun AddOnListContent(
     addOns: List<AddOn>,
@@ -101,7 +106,6 @@ fun AddOnListContent(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
-                        // Add-on info
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 text = addOn.name,
@@ -117,7 +121,6 @@ fun AddOnListContent(
                             )
                         }
 
-                        // Action buttons
                         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                             IconButton(
                                 onClick = { onEditAddOn(addOn) },
@@ -148,7 +151,6 @@ fun AddOnListContent(
             }
         }
 
-        // Delete confirmation dialog
         addOnToDelete?.let { addOn ->
             DeleteAddOnConfirmDialog(
                 addOnName = addOn.name,

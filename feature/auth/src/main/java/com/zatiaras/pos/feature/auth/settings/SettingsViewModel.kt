@@ -75,7 +75,7 @@ data class SettingsUiState(
     // Performance
     val lowPerformanceMode: Boolean = false,
 
-    // State
+    // Transient operation flags and messages consumed by settings screens.
     val isLoggedOut: Boolean = false,
     val isLoading: Boolean = false,
     val isChangingPassword: Boolean = false,
@@ -109,23 +109,23 @@ class SettingsViewModel @Inject constructor(
     private fun loadSettings() {
         viewModelScope.launch {
             try {
-                // Load user info
                 val currentUser = auth.currentUserOrNull()
                 val userName = currentUser?.let { extractUserName(it) } ?: ""
                 val userEmail = currentUser?.email ?: ""
 
-                // Load role info
+                // Role comes from local session preferences because settings
+                // must remain usable while offline.
                 val role = UserRole.fromString(sessionPreferences.getRole())
                 val isOwner = role.isOwner()
-                // Load biometric availability
+
                 val biometricAvailable = biometricManager.isBiometricAvailable()
 
-                // Load lock settings
                 val lockEnabled = appLockPreferences.isLockEnabledNow()
                 val biometricEnabled = appLockPreferences.isBiometricEnabledNow()
                 val pinSet = appLockPreferences.isPinSetNow()
 
-                // Load access control settings (for owner)
+                // Access-control reads are defensive so settings still render if
+                // encrypted storage or migration state is temporarily unavailable.
                 val ownerPinSet = try {
                     accessControlManager.isOwnerPinSetNow()
                 } catch (_: Exception) {
@@ -137,7 +137,6 @@ class SettingsViewModel @Inject constructor(
                     emptyList()
                 }
 
-                // Load sync info
                 val pendingCount = try {
                     syncManager.getPendingCount()
                 } catch (_: Exception) {
@@ -150,14 +149,12 @@ class SettingsViewModel @Inject constructor(
                 }
                 val lastSyncInfo = formatLastSync(lastSync)
 
-                // Load tax percentage
                 val taxPercentage = try {
                     appSettingsRepository.getDefaultTaxPercentage()
                 } catch (_: Exception) {
                     0.5
                 }
 
-                // Load performance mode
                 val lowPerformanceMode = try {
                     appSettingsRepository.getSettings()?.lowPerformanceMode ?: false
                 } catch (_: Exception) {
@@ -183,7 +180,8 @@ class SettingsViewModel @Inject constructor(
                     )
                 }
 
-                // Observe sync in progress
+                // Observe after the initial snapshot so the screen has a stable
+                // baseline before live sync updates arrive.
                 observeSyncStatus()
             } catch (e: Exception) {
                 Timber.e(e, "Error loading settings")
@@ -267,7 +265,8 @@ class SettingsViewModel @Inject constructor(
     fun setLockEnabled(enabled: Boolean) {
         viewModelScope.launch {
             appLockPreferences.setLockEnabled(enabled)
-            // If disabling lock, also disable biometric
+            // Biometric unlock without app lock is meaningless, so turn it off
+            // with the parent lock setting.
             if (!enabled) {
                 appLockPreferences.setBiometricEnabled(false)
             }

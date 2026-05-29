@@ -26,9 +26,15 @@ import com.zatiaras.pos.feature.auth.R
 enum class PinSetupStep {
     ENTER_NEW_PIN,
     CONFIRM_PIN,
-    VERIFY_CURRENT_PIN, // For changing existing PIN
+    VERIFY_CURRENT_PIN, // Used only when changing an existing PIN.
 }
 
+/**
+ * Route boundary for app-lock PIN setup.
+ *
+ * Navigation after success stays here so PinSetupScreen can remain a stateless
+ * keypad renderer driven entirely by PinSetupUiState.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PinSetupRoute(
@@ -59,6 +65,12 @@ fun PinSetupRoute(
     )
 }
 
+/**
+ * Stateless PIN setup keypad.
+ *
+ * The ViewModel owns validation, step transitions, and mismatch handling; this
+ * composable only renders the current step and forwards keypad events.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PinSetupScreen(
@@ -101,7 +113,6 @@ fun PinSetupScreen(
         ) {
             Spacer(modifier = Modifier.height(dimensions.paddingXXL))
 
-            // Instruction Text
             Text(
                 text = when (uiState.step) {
                     PinSetupStep.VERIFY_CURRENT_PIN -> stringResource(R.string.pin_setup_enter_current)
@@ -115,7 +126,6 @@ fun PinSetupScreen(
 
             Spacer(modifier = Modifier.height(dimensions.paddingXXL))
 
-            // PIN Dots
             Row(
                 horizontalArrangement = Arrangement.spacedBy(dimensions.spacingM),
                 modifier = Modifier.padding(vertical = dimensions.spacingM),
@@ -128,7 +138,8 @@ fun PinSetupScreen(
                 }
             }
 
-            // Error or Success Message
+            // Reserve a stable message area so keypad position does not jump
+            // when errors or success appear.
             Box(
                 modifier = Modifier.height(48.dp),
                 contentAlignment = Alignment.Center,
@@ -164,7 +175,6 @@ fun PinSetupScreen(
 
             Spacer(modifier = Modifier.weight(1f))
 
-            // PIN Keypad
             PinSetupKeypad(
                 onDigitClick = onDigitClick,
                 onBackspaceClick = onBackspaceClick,

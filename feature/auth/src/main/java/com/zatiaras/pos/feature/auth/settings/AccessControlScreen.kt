@@ -33,15 +33,17 @@ import com.zatiaras.pos.core.ui.theme.SuccessGreen
 import com.zatiaras.pos.core.ui.theme.WarningAmber
 import com.zatiaras.pos.feature.auth.R
 
-// Icon colors for consistent theming
+// Local aliases make lock semantics readable without scattering raw theme names.
 private val OwnerPinColor = WarningAmber
 private val LockColor = ErrorRed
 private val UnlockColor = SuccessGreen
 private val InfoColor = InfoBlue
 
 /**
- * Access Control Settings Sub-Screen (Owner Only)
- * Enhanced with premium styling and colorful icons
+ * Owner-only access control settings.
+ *
+ * This screen coordinates owner PIN availability and route lock toggles. Actual
+ * enforcement remains in AccessControlGate at feature entry points.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -53,7 +55,8 @@ fun AccessControlScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val lifecycleOwner = LocalLifecycleOwner.current
 
-    // Refresh owner PIN status when screen becomes visible
+    // Owner PIN may be created in a nested screen; refresh on resume so this
+    // screen reflects the latest protection state.
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
@@ -97,7 +100,6 @@ fun AccessControlScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp),
         ) {
-            // Description Badge
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = AppShapes.L,
@@ -126,7 +128,6 @@ fun AccessControlScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Section Header
             SectionHeader(
                 title = stringResource(R.string.access_control_owner_pin),
                 subtitle = stringResource(R.string.access_control_pin_hint),
@@ -134,7 +135,7 @@ fun AccessControlScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Owner PIN Card - Premium gradient
+            // Owner PIN is the prerequisite for meaningful route locks.
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -217,7 +218,6 @@ fun AccessControlScreen(
 
             Spacer(modifier = Modifier.height(28.dp))
 
-            // Section Header for Lock Routes
             SectionHeader(
                 title = stringResource(R.string.access_control_lock_menu_title),
                 subtitle = stringResource(R.string.access_control_lock_menu_desc),
@@ -225,7 +225,8 @@ fun AccessControlScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Lockable Routes Cards
+            // Route lock switches update SettingsViewModel immediately; there is
+            // no separate save step for access control.
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -255,7 +256,6 @@ fun AccessControlScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Info Card at bottom
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = AppShapes.L,
@@ -287,7 +287,7 @@ fun AccessControlScreen(
 }
 
 /**
- * Section header with emoji
+ * Small section label for access-control groups.
  */
 @Composable
 private fun SectionHeader(
@@ -312,7 +312,7 @@ private fun SectionHeader(
 }
 
 /**
- * Enhanced lockable route item with animated colors
+ * Toggle row for one route protected by owner PIN.
  */
 @Composable
 private fun LockableRouteItem(
@@ -343,7 +343,6 @@ private fun LockableRouteItem(
             modifier = Modifier.weight(1f),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            // Animated icon background
             Box(
                 modifier = Modifier
                     .size(44.dp)

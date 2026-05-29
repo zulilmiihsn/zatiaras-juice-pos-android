@@ -31,7 +31,10 @@ enum class OwnerPinSetupStep {
 }
 
 /**
- * Owner PIN Setup Screen with tap keypad (matching Security PIN style)
+ * Owner PIN setup flow used by access-control settings.
+ *
+ * This flow keeps PIN entry local until confirmation succeeds, then stores only
+ * the confirmed four-digit value through SettingsViewModel.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -51,7 +54,8 @@ fun OwnerPinSetupScreen(
     var isPinSet by remember { mutableStateOf(false) }
     val pinMismatchMessage = stringResource(R.string.pin_setup_mismatch)
 
-    // Handle PIN set success
+    // Show success briefly before leaving so users receive clear confirmation
+    // that the owner PIN changed.
     LaunchedEffect(isPinSet) {
         if (isPinSet) {
             delay(500) // Show success message briefly
@@ -93,7 +97,6 @@ fun OwnerPinSetupScreen(
         ) {
             Spacer(modifier = Modifier.height(dimensions.paddingXXL))
 
-            // Instruction Text
             Text(
                 text = when (step) {
                     OwnerPinSetupStep.ENTER_NEW_PIN -> stringResource(R.string.pin_setup_enter_new_4digit)
@@ -106,7 +109,6 @@ fun OwnerPinSetupScreen(
 
             Spacer(modifier = Modifier.height(dimensions.paddingXXL))
 
-            // PIN Dots
             Row(
                 horizontalArrangement = Arrangement.spacedBy(dimensions.spacingM),
                 modifier = Modifier.padding(vertical = dimensions.spacingM),
@@ -119,7 +121,8 @@ fun OwnerPinSetupScreen(
                 }
             }
 
-            // Error or Success Message
+            // Reserve message height so keypad layout does not jump between
+            // neutral, error, and success states.
             Box(
                 modifier = Modifier.height(48.dp),
                 contentAlignment = Alignment.Center,
@@ -155,7 +158,6 @@ fun OwnerPinSetupScreen(
 
             Spacer(modifier = Modifier.weight(1f))
 
-            // PIN Keypad
             OwnerPinKeypad(
                 onDigitClick = { digit ->
                     if (currentPin.length >= 4) return@OwnerPinKeypad
@@ -165,30 +167,32 @@ fun OwnerPinSetupScreen(
                     hasError = false
                     errorMessage = null
 
-                    // Auto-process when 4 digits entered
+                    // Process automatically on the fourth digit to match the
+                    // app-lock PIN interaction.
                     if (newPinInput.length == 4) {
                         scope.launch {
                             when (step) {
                                 OwnerPinSetupStep.ENTER_NEW_PIN -> {
-                                    // Add delay so user can see 4th dot filled
+                                    // Let the fourth dot render before moving
+                                    // to confirmation.
                                     delay(200)
                                     newPin = newPinInput
                                     currentPin = ""
                                     step = OwnerPinSetupStep.CONFIRM_PIN
                                 }
                                 OwnerPinSetupStep.CONFIRM_PIN -> {
-                                    // Add delay so user can see 4th dot filled
+                                    // Let the fourth dot render before showing
+                                    // success or mismatch.
                                     delay(200)
                                     if (newPinInput == newPin) {
-                                        // PINs match, save it
                                         viewModel.setOwnerPin(newPinInput)
                                         isPinSet = true
                                     } else {
-                                        // PINs don't match
                                         hasError = true
                                         errorMessage = pinMismatchMessage
                                         currentPin = ""
-                                        // Reset after delay
+                                        // Reset after the user has time to read
+                                        // the mismatch message.
                                         delay(1500)
                                         step = OwnerPinSetupStep.ENTER_NEW_PIN
                                         newPin = ""

@@ -68,9 +68,10 @@ import java.text.SimpleDateFormat
 import java.util.Date
 
 /**
- * Cash Record (Buku Kas) screen.
+ * Cash-book screen combining POS sales and manual cash movements.
  *
- * Displays both POS transactions and manual cash records in one unified view.
+ * POS transaction rows are immutable and navigate to receipt; manual cash rows
+ * can be inspected and deleted here.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -94,7 +95,7 @@ fun CashRecordScreen(
     val priceFormatter = CurrencyFormatter.getCurrencyFormatter()
     val timeFormatter = SimpleDateFormat("HH:mm", LocaleUtils.LOCALE_ID)
 
-    // Listen for save success
+    // Close the sheet only after ViewModel confirms save success.
     LaunchedEffect(Unit) {
         viewModel.saveSuccess.collect { success ->
             if (success) {
@@ -104,7 +105,7 @@ fun CashRecordScreen(
         }
     }
 
-    // Show error
+    // Errors are one-shot messages; consume after snackbar dispatch.
     LaunchedEffect(uiState.error) {
         uiState.error?.let { error ->
             snackbarHostState.showSnackbar(error)
@@ -151,7 +152,6 @@ fun CashRecordScreen(
                 .fillMaxSize()
                 .padding(paddingValues),
         ) {
-            // Summary Card
             CashSummaryCard(
                 totalIncome = uiState.summary.totalIncome,
                 totalExpense = uiState.summary.totalExpense,
@@ -161,14 +161,12 @@ fun CashRecordScreen(
                 modifier = Modifier.padding(dimensions.paddingM),
             )
 
-            // Shared Date Filter Component
             val selectedPeriod by viewModel.selectedDatePeriod.collectAsStateWithLifecycle()
 
-            // Logic to handle date filter events
+            // DateFilterRow uses a shared dialog component; this screen maps
+            // selected ranges back into CashRecordEvent.
             var showDateRangePicker by remember { mutableStateOf(false) }
 
-            // Note: DateFilterRow component from core:ui implements its own specific UI.
-            // We use it here to ensure consistency with Reports screen.
             DateFilterRow(
                 startDate = uiState.customStartDate,
                 endDate = uiState.customEndDate,
@@ -183,7 +181,6 @@ fun CashRecordScreen(
                 modifier = Modifier.padding(horizontal = dimensions.paddingM, vertical = dimensions.spacingXS),
             )
 
-            // Date Picker Dialog Logic
             if (showDateRangePicker) {
                 com.zatiaras.pos.core.ui.components.DateRangePickerDialog(
                     onDismiss = { showDateRangePicker = false },
@@ -194,7 +191,8 @@ fun CashRecordScreen(
                 )
             }
 
-            // Records List
+            // Prefer explicit list states so loading, empty, and populated views
+            // never overlap.
             if (uiState.isLoading) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
@@ -260,7 +258,8 @@ fun CashRecordScreen(
         }
     }
 
-    // Add Sheet
+    // Manual record creation lives in a bottom sheet to keep the list context
+    // visible when the sheet closes.
     if (showAddSheet) {
         ModalBottomSheet(
             onDismissRequest = { showAddSheet = false },
@@ -279,7 +278,7 @@ fun CashRecordScreen(
         }
     }
 
-    // Detail Dialog for Manual Records
+    // Manual records do not have receipts, so show their detail inline.
     selectedManualRecord?.let { record ->
         ZatDialog(
             onDismissRequest = { selectedManualRecord = null },

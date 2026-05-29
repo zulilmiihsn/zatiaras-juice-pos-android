@@ -39,6 +39,12 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+/**
+ * Post-checkout receipt surface.
+ *
+ * The transaction is immutable here. Actions are limited to printing and
+ * returning to a new POS transaction.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReceiptScreen(
@@ -90,7 +96,8 @@ fun ReceiptScreen(
             verticalArrangement = Arrangement.spacedBy(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            // Success Header
+            // Show success and transaction number before receipt details so
+            // cashiers can quickly confirm the completed order.
             item {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -127,7 +134,8 @@ fun ReceiptScreen(
                 }
             }
 
-            // Receipt Paper Effect
+            // App-side receipt preview. Printable formatting is handled by the
+            // printer module.
             item {
                 Card(
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)),
@@ -136,7 +144,6 @@ fun ReceiptScreen(
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Column(modifier = Modifier.padding(24.dp)) {
-                        // Store Info
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             modifier = Modifier.fillMaxWidth(),
@@ -171,7 +178,6 @@ fun ReceiptScreen(
                         GenerateDashedDivider()
                         Spacer(modifier = Modifier.height(24.dp))
 
-                        // Items
                         transaction.items.forEach { item ->
                             ReceiptItemRow(item)
                             Spacer(modifier = Modifier.height(12.dp))
@@ -181,7 +187,6 @@ fun ReceiptScreen(
                         GenerateDashedDivider()
                         Spacer(modifier = Modifier.height(24.dp))
 
-                        // Totals
                         ReceiptTotalRow(stringResource(R.string.checkout_payment_method), transaction.paymentMethod.displayName)
 
                         if (transaction.customerName != null) {
@@ -219,7 +224,8 @@ fun ReceiptScreen(
                 }
             }
 
-            // Printer Status if connected
+            // Connection hint is informational; print action still routes to
+            // printer settings when no printer is connected.
             if (isPrinterConnected) {
                 item {
                     Row(
@@ -244,7 +250,6 @@ fun ReceiptScreen(
                 }
             }
 
-            // Action Buttons
             item {
                 Column(
                     modifier = Modifier.fillMaxWidth(),
@@ -294,7 +299,6 @@ fun ReceiptScreen(
                 }
             }
 
-            // Bottom Spacer
             item {
                 Spacer(modifier = Modifier.height(24.dp))
             }

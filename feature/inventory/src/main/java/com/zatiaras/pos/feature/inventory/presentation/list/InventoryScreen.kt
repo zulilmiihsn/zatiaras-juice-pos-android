@@ -58,14 +58,10 @@ import compose.icons.evaicons.outline.Plus
 import kotlinx.coroutines.launch
 
 /**
- * Main Inventory List Screen.
+ * Inventory list route and dialog orchestration.
  *
- * Displays:
- * - Search bar
- * - Category filter chips
- * - Product grid (2 columns)
- * - FAB to add new product
- * - Empty state when no products match filters
+ * Product/category/add-on creation uses local dialog state, while all persisted
+ * changes flow through InventoryEvent into the ViewModel.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -77,36 +73,35 @@ fun InventoryScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val state = uiState
 
-    // Snackbar State
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
-    // Show snackbar when message is available
+    // Launch snackbar in an outer scope so clearing the message does not cancel
+    // the visible snackbar animation.
     val currentMessage = (state as? InventoryUiState.Success)?.snackbarMessage
     LaunchedEffect(currentMessage) {
         if (currentMessage != null) {
-            // MOST IMPORTANT: Launch in the enclosing scope so it isn't cancelled
-            // when LaunchedEffect(currentMessage) restarts with null.
             scope.launch {
                 snackbarHostState.showSnackbar(
                     message = currentMessage,
                     duration = SnackbarDuration.Short,
                 )
             }
-            // Clear the state so it doesn't repeatedly trigger on recomposition
+            // Consume the one-shot message after dispatch.
             viewModel.onEvent(InventoryEvent.SnackbarDismissed)
         }
     }
 
-    // Dialog States
+    // Dialog state remains screen-local because dialogs are transient UI, not
+    // inventory data.
     var showAddCategoryDialog by remember { mutableStateOf(false) }
     var showAddAddOnDialog by remember { mutableStateOf(false) }
 
-    // Edit Dialog States
     var categoryToEdit by remember { mutableStateOf<com.zatiaras.pos.core.domain.model.Category?>(null) }
     var addOnToEdit by remember { mutableStateOf<com.zatiaras.pos.core.domain.model.AddOn?>(null) }
 
-    // Determine FAB action based on current state
+    // FAB action follows the selected tab: product detail for menu, inline
+    // dialogs for categories/add-ons.
     val fabAction: () -> Unit = {
         if (state is InventoryUiState.Success) {
             when (state.selectedTab) {
@@ -156,7 +151,6 @@ fun InventoryScreen(
             modifier = Modifier.padding(paddingValues),
         )
 
-        // Add Category Dialog
         if (showAddCategoryDialog) {
             AddCategoryDialog(
                 onDismiss = { showAddCategoryDialog = false },
@@ -166,7 +160,6 @@ fun InventoryScreen(
             )
         }
 
-        // Add Add-on Dialog
         if (showAddAddOnDialog) {
             AddAddOnDialog(
                 onDismiss = { showAddAddOnDialog = false },
@@ -176,9 +169,9 @@ fun InventoryScreen(
             )
         }
 
-        // Edit Category Dialog
         categoryToEdit?.let { category ->
-            // Get products from uiState if Success
+            // Category editing needs product membership; avoid reading products
+            // when the screen is not in a loaded state.
             val products = if (state is InventoryUiState.Success) {
                 state.products
             } else {
@@ -195,7 +188,6 @@ fun InventoryScreen(
             )
         }
 
-        // Edit Add-on Dialog
         addOnToEdit?.let { addOn ->
             EditAddOnDialog(
                 addOn = addOn,
@@ -232,13 +224,13 @@ private fun InventoryContent(
 
         is InventoryUiState.Success -> {
             Column(modifier = modifier.fillMaxSize()) {
-                // Tabs
                 InventoryTabs(
                     selectedTab = uiState.selectedTab,
                     onTabSelected = { onEvent(InventoryEvent.ChangeTab(it)) },
                 )
 
-                // Show search and toggle only for Menu tab
+                // Search/category filters apply only to products, not category
+                // or add-on maintenance tabs.
                 if (uiState.selectedTab == InventoryTab.MENU) {
                     Row(
                         modifier = Modifier
@@ -253,7 +245,6 @@ private fun InventoryContent(
                             modifier = Modifier.weight(1f),
                         )
 
-                        // Toggle Grid/List View
                         IconButton(
                             onClick = { onEvent(InventoryEvent.ToggleViewMode) },
                             modifier = Modifier.size(48.dp),
@@ -331,7 +322,6 @@ fun ProductListContent(
         val dimensions = LocalDimensions.current
 
         if (isGridView) {
-            // Grid View
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),
                 modifier = Modifier.fillMaxSize(),
@@ -350,7 +340,6 @@ fun ProductListContent(
                 }
             }
         } else {
-            // List View
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(dimensions.paddingM),

@@ -15,14 +15,17 @@ import androidx.compose.ui.unit.dp
 import com.zatiaras.pos.core.ui.R as CoreUiR
 
 /**
- * Splash screen with Zatiaras Juice logo animation.
- * Shows logo with a subtle scale animation while loading.
+ * Startup splash while session restoration decides the first real destination.
+ *
+ * Keep this screen visual-only; routing decisions belong in StartupViewModel and
+ * AppNavGraph so startup behavior remains testable.
  */
 @Composable
 fun SplashScreen(
     modifier: Modifier = Modifier,
 ) {
-    // Animated scale for logo
+    // Use a subtle infinite pulse so startup feels alive without implying
+    // progress that the app cannot measure here.
     val infiniteTransition = rememberInfiniteTransition(label = "logo_pulse")
     val scale by infiniteTransition.animateFloat(
         initialValue = 0.95f,
@@ -44,7 +47,6 @@ fun SplashScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
-            // Logo with animation - using drawable from core:ui module
             Image(
                 painter = painterResource(id = CoreUiR.drawable.zatiaras_logo),
                 contentDescription = "Zatiaras Juice Logo",
@@ -55,7 +57,6 @@ fun SplashScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Loading indicator
             CircularProgressIndicator(
                 modifier = Modifier.size(40.dp),
                 color = MaterialTheme.colorScheme.primary,

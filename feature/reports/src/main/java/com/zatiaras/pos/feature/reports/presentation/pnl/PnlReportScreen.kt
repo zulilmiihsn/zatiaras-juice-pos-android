@@ -73,7 +73,8 @@ fun PnlReportRoute(
     accessControlManager: AccessChecker,
     viewModel: PnlReportViewModel = hiltViewModel(),
 ) {
-    // Wrap with access control gate
+    // Reports can be opened through multiple app paths, so the route performs
+    // access control before constructing report content.
     AccessControlGate(
         accessChecker = accessControlManager,
         route = LockableRoute.PNL_REPORT.route,
@@ -113,7 +114,8 @@ private fun PnlReportContent(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
-    // Handle export events
+    // Export side effects need Android context; keep them at this route/content
+    // boundary instead of inside the ViewModel.
     LaunchedEffect(Unit) {
         viewModel.exportEvent.collect { event ->
             when (event) {
@@ -200,7 +202,7 @@ fun PnlReportScreen(
 ) {
     val pullToRefreshState = rememberPullToRefreshState()
 
-    // Date range picker dialog
+    // Custom range is represented by one shared dialog for both date endpoints.
     if (uiState.showDatePicker) {
         com.zatiaras.pos.core.ui.components.DateRangePickerDialog(
             onDismiss = onHideDatePicker,
@@ -256,7 +258,8 @@ fun PnlReportScreen(
                 contentPadding = PaddingValues(dimensions.paddingM),
                 verticalArrangement = Arrangement.spacedBy(dimensions.spacingM),
             ) {
-                // Date Filter Row (always visible date range + quick period chips)
+                // Keep the active date range visible across loading, error, and
+                // report states so exported files match what operators see.
                 item {
                     DateFilterRow(
                         startDate = uiState.customStartDate,
@@ -268,7 +271,6 @@ fun PnlReportScreen(
                     )
                 }
 
-                // Loading State
                 if (uiState.isLoading && uiState.report == null) {
                     item {
                         Box(
@@ -282,7 +284,8 @@ fun PnlReportScreen(
                     }
                 }
 
-                // P&L Breakdown
+                // Show the last loaded report only when refresh is not actively
+                // replacing it; this avoids mixing stale totals with loading UI.
                 uiState.report?.let { report ->
                     item {
                         AnimatedVisibility(
@@ -294,7 +297,7 @@ fun PnlReportScreen(
                         }
                     }
 
-                    // Export Buttons
+                    // Export is only available after report data exists.
                     item {
                         ExportSection(
                             isExporting = uiState.isExporting,
@@ -304,7 +307,8 @@ fun PnlReportScreen(
                     }
                 }
 
-                // Error State
+                // Render errors inline so the date filter and prior report
+                // context remain visible to the user.
                 uiState.error?.let { error ->
                     item {
                         Box(
@@ -322,7 +326,6 @@ fun PnlReportScreen(
                     }
                 }
 
-                // Bottom spacing
                 item {
                     Spacer(modifier = Modifier.height(16.dp))
                 }
@@ -350,7 +353,8 @@ private fun ExportSection(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Single Export Button with Dropdown
+        // One export action keeps the screen compact; the dropdown owns the
+        // output format choice.
         Box {
             Button(
                 onClick = { showExportMenu = true },
@@ -376,7 +380,6 @@ private fun ExportSection(
                 }
             }
 
-            // Export Format Dropdown Menu
             androidx.compose.material3.DropdownMenu(
                 expanded = showExportMenu,
                 onDismissRequest = { showExportMenu = false },

@@ -114,7 +114,8 @@ fun MainScreen(
             val navBackStackEntry by navController.currentBackStackEntryAsState()
             val currentDestination = navBackStackEntry?.destination
 
-            // Only show bottom bar on top-level destinations
+            // Hide bottom navigation for nested flows so full-screen checkout,
+            // receipt, and protected screens keep their own navigation model.
             val isTopLevel = items.any { it.route == currentDestination?.route }
 
             if (isTopLevel) {
@@ -139,23 +140,21 @@ fun MainScreen(
             startDestination = NavRoutes.HOME,
             modifier = Modifier.padding(innerPadding),
         ) {
-            // Tab 1: Home (Complete Business Dashboard with stats, charts, top products)
             homeDashboardScreen(
                 route = NavRoutes.HOME,
                 onNavigateToSettings = onNavigateToSettings,
             )
 
-            // Tab 2: POS
             posScreen(
                 cartHolder = cartHolder,
                 onNavigateBack = { /* No back action for tab */ },
                 onNavigateToCheckout = onNavigateToCheckout,
             )
 
-            // Tab 3: Cash Record (Buku Kas) - Protected by Access Control
+            // Access-denied fallback returns to Home because the tab graph has
+            // no back stack entry outside the protected destination.
             cashRecordScreen(
                 onNavigateBack = {
-                    // Navigate to Home when access denied
                     navController.navigate(NavRoutes.HOME) {
                         popUpTo(navController.graph.findStartDestination().id) {
                             saveState = true
@@ -167,11 +166,11 @@ fun MainScreen(
                 accessControlManager = accessControlManager,
             )
 
-            // Tab 4: Reports (P&L Report with Tanya AI) - Protected by Access Control
+            // Reports shares the same access-denied fallback behavior as cash
+            // records because both are top-level tabs.
             reportsScreen(
                 route = NavRoutes.REPORTS,
                 onNavigateBack = {
-                    // Navigate to Home when access denied
                     navController.navigate(NavRoutes.HOME) {
                         popUpTo(navController.graph.findStartDestination().id) {
                             saveState = true
@@ -226,7 +225,8 @@ private fun RowScope.EnhancedNavigationBarItem(
     selected: Boolean,
     onClick: () -> Unit,
 ) {
-    // Smooth animations
+    // Reuse one timing curve so icon, text, and indicator transitions feel like
+    // a single bottom-nav state change.
     val animationSpec: AnimationSpec<Float> = tween(
         durationMillis = 300,
         easing = FastOutSlowInEasing,
@@ -281,7 +281,6 @@ private fun RowScope.EnhancedNavigationBarItem(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
-                // Animated indicator pill on top of icon
                 Box(
                     modifier = Modifier
                         .size(width = indicatorWidth, height = 3.dp)
@@ -291,7 +290,6 @@ private fun RowScope.EnhancedNavigationBarItem(
                         ),
                 )
 
-                // Icon with scale animation
                 Icon(
                     imageVector = if (selected) item.iconFilled else item.iconOutlined,
                     contentDescription = item.title,
@@ -315,7 +313,7 @@ private fun RowScope.EnhancedNavigationBarItem(
         colors = NavigationBarItemDefaults.colors(
             selectedIconColor = MaterialTheme.colorScheme.primary,
             selectedTextColor = MaterialTheme.colorScheme.primary,
-            indicatorColor = Color.Transparent, // We use custom indicator
+            indicatorColor = Color.Transparent, // Custom indicator is drawn above the icon.
             unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
             unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
         ),

@@ -58,6 +58,12 @@ import com.zatiaras.pos.feature.pos.domain.model.CashRecordType
 import java.text.SimpleDateFormat
 import java.util.Date
 
+/**
+ * Bottom-sheet form for manual cash income/expense records.
+ *
+ * Form validation and persistence are driven by CashRecordEvent; this component
+ * only renders the current form state and emits field changes.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun AddCashRecordSheet(
@@ -71,7 +77,6 @@ internal fun AddCashRecordSheet(
             .fillMaxWidth()
             .padding(dimensions.paddingXL),
     ) {
-        // Centered Title
         Text(
             text = stringResource(R.string.cash_record_add_title),
             style = MaterialTheme.typography.headlineSmall,
@@ -92,7 +97,8 @@ internal fun AddCashRecordSheet(
 
         Spacer(modifier = Modifier.height(dimensions.spacingL))
 
-        // Type Selection - LARGE Segmented Button Style
+        // Type choice drives category options and submit color, so it appears
+        // before all money/details fields.
         Text(
             text = stringResource(R.string.cash_record_type),
             style = MaterialTheme.typography.labelLarge,
@@ -100,14 +106,12 @@ internal fun AddCashRecordSheet(
         )
         Spacer(modifier = Modifier.height(dimensions.spacingS))
 
-        // Large segmented buttons for easy touch
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(dimensions.buttonHeightLarge), // Standard touch target
+                .height(dimensions.buttonHeightLarge),
             horizontalArrangement = Arrangement.spacedBy(dimensions.spacingS),
         ) {
-            // PEMASUKAN Button
             Surface(
                 onClick = { onEvent(CashRecordEvent.SetType(CashRecordType.INCOME)) },
                 modifier = Modifier
@@ -154,7 +158,6 @@ internal fun AddCashRecordSheet(
                 }
             }
 
-            // PENGELUARAN Button
             Surface(
                 onClick = { onEvent(CashRecordEvent.SetType(CashRecordType.EXPENSE)) },
                 modifier = Modifier
@@ -204,7 +207,8 @@ internal fun AddCashRecordSheet(
 
         Spacer(modifier = Modifier.height(dimensions.spacingM))
 
-        // Date Selection
+        // Default to today when creating a new record; edits can pass an
+        // explicit formState.date.
         val date = formState.date ?: System.currentTimeMillis()
         val dateFormatter = SimpleDateFormat("dd MMMM yyyy", LocaleUtils.LOCALE_ID)
         var showDatePicker by remember { mutableStateOf(false) }
@@ -231,7 +235,8 @@ internal fun AddCashRecordSheet(
                 shape = AppShapes.M,
             )
 
-            // Invisible clickable layer
+            // OutlinedTextField is read-only, so a transparent layer makes the
+            // entire field open the picker.
             Box(
                 modifier = Modifier
                     .matchParentSize()
@@ -269,7 +274,8 @@ internal fun AddCashRecordSheet(
 
         Spacer(modifier = Modifier.height(dimensions.spacingM))
 
-        // Amount with currency formatting
+        // Use CurrencyTextField so manual records parse money the same way as
+        // checkout and inventory.
         CurrencyTextField(
             value = formState.amount,
             onValueChange = { onEvent(CashRecordEvent.SetAmount(it)) },
@@ -281,7 +287,6 @@ internal fun AddCashRecordSheet(
             shape = AppShapes.M,
         )
 
-        // Show error if any
         if (formState.amountError != null) {
             Text(
                 text = formState.amountError,
@@ -293,7 +298,6 @@ internal fun AddCashRecordSheet(
 
         Spacer(modifier = Modifier.height(dimensions.spacingXS))
 
-        // Description
         OutlinedTextField(
             value = formState.description,
             onValueChange = { onEvent(CashRecordEvent.SetDescription(it)) },
@@ -308,7 +312,7 @@ internal fun AddCashRecordSheet(
 
         Spacer(modifier = Modifier.height(dimensions.spacingXS))
 
-        // Category (Dropdown)
+        // Category list follows the selected cash direction.
         val categories = if (formState.type == CashRecordType.INCOME) {
             com.zatiaras.pos.core.domain.model.CashCategories.INCOME_CATEGORIES
         } else {
@@ -353,7 +357,6 @@ internal fun AddCashRecordSheet(
 
         Spacer(modifier = Modifier.height(dimensions.spacingXS))
 
-        // Notes (optional)
         OutlinedTextField(
             value = formState.notes,
             onValueChange = { onEvent(CashRecordEvent.SetNotes(it)) },
@@ -365,7 +368,6 @@ internal fun AddCashRecordSheet(
 
         Spacer(modifier = Modifier.height(dimensions.spacingL))
 
-        // Buttons
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(dimensions.spacingS),

@@ -28,17 +28,11 @@ import timber.log.Timber
 import javax.inject.Inject
 
 /**
- * ViewModel for the main POS screen.
+ * ViewModel for the main POS catalog/cart screen.
  *
- * Manages:
- * - Product catalog display (with pagination)
- * - Category filtering
- * - Search functionality
- * - Shopping cart state
- * - Product options (add-ons, sugar/ice levels)
- *
- * The cart is stored in-memory only (not persisted).
- * This is intentional POS behavior - carts are session-based.
+ * Cart state is intentionally in-memory because an unfinished cashier cart is a
+ * session draft, not business data. Completed transactions are persisted by the
+ * checkout flow.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
@@ -51,7 +45,8 @@ class PosViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(PosUiState())
     val uiState: StateFlow<PosUiState> = _uiState.asStateFlow()
 
-    // Separate flows for category and search query to trigger pagination refresh
+    // Category and search are separate hot flows so paging refreshes without
+    // rebuilding the whole UI state object.
     private val _selectedCategoryId = MutableStateFlow<String?>(null)
     private val _searchQuery = MutableStateFlow("")
 
@@ -79,7 +74,7 @@ class PosViewModel @Inject constructor(
 
     private fun loadData() {
         viewModelScope.launch {
-            // Load categories (not paginated - typically small list)
+            // Categories are small reference data, so they stay non-paginated.
             productRepository.getCategories()
                 .catch { e ->
                     Timber.e(e, "Error loading categories")
@@ -95,7 +90,8 @@ class PosViewModel @Inject constructor(
                 }
         }
 
-        // Load product count for UI display
+        // Product count is separate from paged data for lightweight dashboard
+        // display.
         viewModelScope.launch {
             productRepository.getProductCount()
                 .catch { e ->
@@ -106,7 +102,7 @@ class PosViewModel @Inject constructor(
                 }
         }
 
-        // Observe Store Session
+        // POS is locked when no active store session exists.
         viewModelScope.launch {
             storeSessionRepository.getActiveSession().collectLatest { session ->
                 _uiState.value = _uiState.value.copy(isStoreOpen = session != null)
@@ -127,15 +123,12 @@ class PosViewModel @Inject constructor(
             }
 
             is PosEvent.AddToCart -> {
-                // Always show product options sheet (matching web app behavior)
-                // The sheet content adapts based on product type:
-                // - Sugar/ice options shown only for MINUMAN
-                // - Add-ons shown only if available
-                // - Quantity and notes always available
+                // Always route through the options sheet so quantity/notes are
+                // consistently available even for simple products.
                 showProductOptionsSheet(event.product)
             }
 
-            // Product Options Dialog Events
+            // Product customization sheet events.
             is PosEvent.ShowProductOptions -> showProductOptionsSheet(event.product)
             is PosEvent.HideProductOptions -> hideProductOptionsSheet()
             is PosEvent.ToggleAddOn -> toggleAddOn(event.addOnId)
@@ -145,7 +138,8 @@ class PosViewModel @Inject constructor(
             is PosEvent.SetProductQuantity -> setProductQuantity(event.quantity)
             is PosEvent.ConfirmAddToCart -> confirmAddToCart()
 
-            // Cart Operations (using uniqueKey)
+            // Cart operations use uniqueKey because customized rows can share a
+            // product ID but differ by add-ons or notes.
             is PosEvent.IncrementItem -> incrementItem(event.uniqueKey)
             is PosEvent.DecrementItem -> decrementItem(event.uniqueKey)
             is PosEvent.RemoveFromCart -> removeFromCart(event.uniqueKey)
@@ -176,22 +170,21 @@ class PosViewModel @Inject constructor(
                 addToCartSimple(customProduct, event.quantity)
             }
 
-            // Navigation events are handled by the UI layer
+            // Navigation events are intentionally ignored here; composable routes
+            // own navigation side effects.
             is PosEvent.ProceedToCheckout,
             is PosEvent.BackToCatalog,
             -> {
-                // No-op in ViewModel, handled by navigation
             }
         }
     }
-
-    // ==================== Product Options Dialog ====================
 
     private fun showProductOptionsSheet(product: Product) {
         viewModelScope.launch {
             Timber.d("Opening product options for: ${product.name}, type=${product.type}, ekstraIds=${product.ekstraIds}")
 
-            // Load available add-ons for this product
+            // Add-ons are loaded when the sheet opens so catalog paging remains
+            // lightweight.
             val addOns = if (product.ekstraIds.isNotEmpty()) {
                 addOnRepository.getAddOnsByIds(product.ekstraIds)
             } else {
@@ -258,12 +251,12 @@ class PosViewModel @Inject constructor(
         val state = _uiState.value
         val product = state.selectedProduct ?: return
 
-        // Get selected add-ons from available list
+        // Resolve selected IDs against loaded add-ons to avoid storing stale
+        // add-on objects in UI state.
         val selectedAddOns = state.availableAddOns.filter {
             state.selectedAddOnIds.contains(it.id)
         }
 
-        // Create cart item with customizations
         val cartItem = CartItem(
             product = product,
             quantity = state.productQuantity,
@@ -273,17 +266,13 @@ class PosViewModel @Inject constructor(
             notes = state.productNote,
         )
 
-        // Add to cart
         val updatedCart = state.cart.addItem(cartItem)
         _uiState.value = state.copy(cart = updatedCart)
 
         Timber.d("Added ${product.name} to cart with ${selectedAddOns.size} add-ons. Total items: ${updatedCart.itemCount}")
 
-        // Close the dialog
         hideProductOptionsSheet()
     }
-
-    // ==================== Cart Operations ====================
 
     private fun addToCartSimple(product: Product, quantity: Int = 1) {
         val currentCart = _uiState.value.cart

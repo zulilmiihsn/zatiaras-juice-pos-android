@@ -47,6 +47,12 @@ import com.zatiaras.pos.core.ui.theme.WarningAmberBg
 import com.zatiaras.pos.core.ui.theme.WarningAmberDark
 import com.zatiaras.pos.feature.reports.R
 
+/**
+ * Store-closing confirmation with the day's cash-flow summary.
+ *
+ * The numbers are read-only here; closing persistence is delegated to the caller
+ * after the operator confirms.
+ */
 @Composable
 internal fun CloseStoreDialog(
     todayRevenue: Long,
@@ -78,7 +84,6 @@ internal fun CloseStoreDialog(
                     modifier = Modifier.padding(24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    // Header with icon
                     Box(
                         modifier = Modifier
                             .size(80.dp)
@@ -103,7 +108,6 @@ internal fun CloseStoreDialog(
 
                     Spacer(modifier = Modifier.height(20.dp))
 
-                    // Title
                     Text(
                         text = stringResource(R.string.store_close_title),
                         style = MaterialTheme.typography.headlineSmall,
@@ -113,7 +117,6 @@ internal fun CloseStoreDialog(
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    // Description
                     Text(
                         text = stringResource(R.string.store_close_summary),
                         style = MaterialTheme.typography.bodyMedium,
@@ -122,7 +125,8 @@ internal fun CloseStoreDialog(
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    // Today's Summary Card
+                    // Show operational totals before cash flow so operators can
+                    // verify sales activity before closing the store.
                     Card(
                         colors = CardDefaults.cardColors(
                             containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
@@ -135,7 +139,6 @@ internal fun CloseStoreDialog(
                                 .padding(16.dp),
                             verticalArrangement = Arrangement.spacedBy(12.dp),
                         ) {
-                            // Revenue row
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -165,7 +168,6 @@ internal fun CloseStoreDialog(
 
                             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
-                            // Transactions row
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -195,7 +197,6 @@ internal fun CloseStoreDialog(
 
                             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
-                            // Items sold row
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -227,7 +228,8 @@ internal fun CloseStoreDialog(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Cash Flow Summary Card
+                    // Closing cash is derived from opening cash plus today's net
+                    // income, matching the dashboard/P&L terminology.
                     val netIncome = todayRevenue - todayExpenses
                     val currentCash = openingBalance + netIncome
 
@@ -253,7 +255,6 @@ internal fun CloseStoreDialog(
                                 .padding(16.dp),
                             verticalArrangement = Arrangement.spacedBy(8.dp),
                         ) {
-                            // Opening Balance
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -270,7 +271,6 @@ internal fun CloseStoreDialog(
                                 )
                             }
 
-                            // Net Income
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -292,7 +292,6 @@ internal fun CloseStoreDialog(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f),
                             )
 
-                            // Current Cash Total
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -316,7 +315,8 @@ internal fun CloseStoreDialog(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Confirmation message
+                    // Closing is intentionally explicit because it changes the
+                    // current operating day.
                     Card(
                         colors = CardDefaults.cardColors(
                             containerColor = WarningAmberBg,
@@ -344,7 +344,6 @@ internal fun CloseStoreDialog(
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    // Action buttons
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp),

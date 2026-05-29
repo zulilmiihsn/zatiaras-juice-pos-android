@@ -37,7 +37,8 @@ import com.zatiaras.pos.core.ui.theme.SuccessGreen
 import com.zatiaras.pos.core.ui.theme.WarningAmber
 import com.zatiaras.pos.feature.auth.R
 
-// Icon colors for consistent theming
+// Local aliases make sync status colors readable at the call site while still
+// using shared theme tokens.
 private val SyncIconColor = InfoBlue
 private val SuccessColor = SuccessGreen
 private val WarningColor = WarningAmber
@@ -45,8 +46,10 @@ private val ErrorColor = ErrorRed
 private val InfoColor = PurpleAccent
 
 /**
- * Sync Settings Sub-Screen - Enhanced with premium styling
- * Contains: Sync status, pending count, sync buttons
+ * Operational sync controls for offline-first data.
+ *
+ * Manual sync and force-full-sync remain explicit user actions because they can
+ * touch remote data and should not run from recomposition.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -87,7 +90,6 @@ fun SyncSettingsScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp),
         ) {
-            // Header Description
             Text(
                 text = stringResource(R.string.sync_desc),
                 style = MaterialTheme.typography.bodyMedium,
@@ -95,7 +97,6 @@ fun SyncSettingsScreen(
                 modifier = Modifier.padding(bottom = 20.dp),
             )
 
-            // Sync Status Card - Premium gradient style
             SyncStatusCard(
                 lastSyncInfo = uiState.lastSyncInfo,
                 pendingCount = uiState.pendingCount,
@@ -104,7 +105,6 @@ fun SyncSettingsScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Section Header
             SectionHeader(
                 title = stringResource(R.string.sync_action_title),
                 subtitle = stringResource(R.string.sync_action_desc),
@@ -112,7 +112,6 @@ fun SyncSettingsScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Sync Now Action Card
             SyncActionCard(
                 icon = Icons.Outlined.Sync,
                 iconColor = SyncIconColor,
@@ -126,7 +125,8 @@ fun SyncSettingsScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Force Full Sync Card
+            // Force sync is intentionally separate from normal sync because it
+            // resets timestamps and may be heavier on remote data.
             SyncActionCard(
                 icon = Icons.Outlined.CloudSync,
                 iconColor = WarningColor,
@@ -141,7 +141,6 @@ fun SyncSettingsScreen(
 
             Spacer(modifier = Modifier.height(28.dp))
 
-            // Section Header for Info
             SectionHeader(
                 title = stringResource(R.string.sync_about),
                 subtitle = stringResource(R.string.sync_about_desc),
@@ -149,7 +148,8 @@ fun SyncSettingsScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Info Card with bullet points - Enhanced
+            // Keep sync expectations visible near the destructive/heavy actions
+            // so operators know what offline-first behavior means.
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = AppShapes.XL,
@@ -220,7 +220,10 @@ fun SyncSettingsScreen(
 }
 
 /**
- * Premium sync status card with gradient and animations
+ * Current sync health summary.
+ *
+ * Pending count changes the visual severity because unsynced local writes are
+ * the most important operational risk on this screen.
  */
 @Composable
 private fun SyncStatusCard(
@@ -235,7 +238,8 @@ private fun SyncStatusCard(
         else -> SuccessColor
     }
 
-    // Rotating animation for sync icon
+    // Rotate only while active sync is running; pending/error states should feel
+    // stable instead of busy.
     val infiniteTransition = rememberInfiniteTransition(label = "sync")
     val rotation by infiniteTransition.animateFloat(
         initialValue = 0f,
@@ -272,7 +276,6 @@ private fun SyncStatusCard(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    // Status icon with animation
                     Box(
                         modifier = Modifier
                             .size(56.dp)
@@ -323,7 +326,6 @@ private fun SyncStatusCard(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Pending Count Row
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -373,7 +375,7 @@ private fun lastSyncInfoText(lastSyncInfo: LastSyncInfo): String = when (lastSyn
 }
 
 /**
- * Section header with emoji
+ * Small section label used to group sync actions and explanatory text.
  */
 @Composable
 private fun SectionHeader(
@@ -398,7 +400,10 @@ private fun SectionHeader(
 }
 
 /**
- * Sync action card with button
+ * Reusable sync command row.
+ *
+ * Button styling is passed in because normal sync and force sync have different
+ * risk levels.
  */
 @Composable
 private fun SyncActionCard(
@@ -428,7 +433,6 @@ private fun SyncActionCard(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            // Icon with colored background
             Box(
                 modifier = Modifier
                     .size(48.dp)
@@ -494,7 +498,7 @@ private fun SyncActionCard(
 }
 
 /**
- * Info bullet point with emoji
+ * One explanatory bullet in the sync behavior card.
  */
 @Composable
 private fun InfoBulletPoint(

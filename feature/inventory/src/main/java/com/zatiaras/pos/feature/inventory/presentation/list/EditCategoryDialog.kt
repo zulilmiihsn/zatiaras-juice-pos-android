@@ -41,6 +41,12 @@ import com.zatiaras.pos.core.ui.components.ZatDialog
 import com.zatiaras.pos.core.ui.theme.AppShapes
 import com.zatiaras.pos.feature.inventory.R
 
+/**
+ * Category edit dialog with product membership management.
+ *
+ * Product chips are grouped by current category to make reassignment impact
+ * visible before saving.
+ */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun EditCategoryDialog(
@@ -52,7 +58,8 @@ fun EditCategoryDialog(
     var name by remember { mutableStateOf(category.name) }
     var error by remember { mutableStateOf<String?>(null) }
 
-    // Get products currently in this category
+    // Start with products already assigned to this category so save preserves
+    // membership unless the user explicitly changes it.
     val initialProductIds = remember {
         allProducts.filter { it.category?.id == category.id }.map { it.id }.toSet()
     }
@@ -80,14 +87,12 @@ fun EditCategoryDialog(
                     .heightIn(max = 600.dp),
                 verticalArrangement = Arrangement.spacedBy(20.dp),
             ) {
-                // Header
                 Text(
                     text = stringResource(R.string.inventory_edit_category),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                 )
 
-                // Name field
                 OutlinedTextField(
                     value = name,
                     onValueChange = {
@@ -102,7 +107,6 @@ fun EditCategoryDialog(
                     modifier = Modifier.fillMaxWidth(),
                 )
 
-                // Products section header
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -127,7 +131,8 @@ fun EditCategoryDialog(
                     }
                 }
 
-                // Search products
+                // Search only filters the selectable chip list; it does not
+                // alter selectedProductIds.
                 var productSearchQuery by remember { mutableStateOf("") }
                 val filteredProducts = remember(allProducts, productSearchQuery) {
                     if (productSearchQuery.isBlank()) {
@@ -148,7 +153,6 @@ fun EditCategoryDialog(
                     modifier = Modifier.fillMaxWidth(),
                 )
 
-                // Products list with pills grouped by category
                 if (allProducts.isEmpty()) {
                     Box(
                         modifier = Modifier
@@ -187,7 +191,8 @@ fun EditCategoryDialog(
                         )
                     }
                 } else {
-                    // Group products by category
+                    // Grouping separates no-op selections from cross-category
+                    // moves, which are riskier for inventory organization.
                     val productsInThisCategory = remember(filteredProducts, category.id) {
                         filteredProducts.filter { it.category?.id == category.id }
                     }
@@ -207,7 +212,6 @@ fun EditCategoryDialog(
                             .heightIn(max = 300.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
-                        // Current category products
                         if (productsInThisCategory.isNotEmpty()) {
                             item {
                                 Text(
@@ -258,7 +262,6 @@ fun EditCategoryDialog(
                             }
                         }
 
-                        // Uncategorized products
                         if (productsWithoutCategory.isNotEmpty()) {
                             item {
                                 Text(
@@ -309,7 +312,6 @@ fun EditCategoryDialog(
                             }
                         }
 
-                        // Products in other categories
                         productsInOtherCategories.forEach { (categoryName, products) ->
                             item {
                                 Text(
@@ -366,7 +368,6 @@ fun EditCategoryDialog(
                     }
                 }
 
-                // Action buttons
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp),

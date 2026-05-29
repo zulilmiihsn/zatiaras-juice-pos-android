@@ -29,13 +29,16 @@ import com.zatiaras.pos.core.ui.theme.PurpleAccent
 import com.zatiaras.pos.feature.auth.R
 import com.zatiaras.pos.core.ui.R as CoreUiR
 
-// Icon colors for consistent theming
+// About screen uses stable brand token aliases because these cards are static
+// identity surfaces rather than status-driven UI.
 private val VersionIconColor = PurpleAccent
 private val BranchIconColor = Brand500
 
 /**
- * About Screen - Enhanced with premium styling
- * Contains: App version, branch info, user info, support links
+ * Static app identity and version information.
+ *
+ * Keep this screen data-light; dynamic account/session details should come from
+ * settings state instead of being hardcoded here.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -77,7 +80,6 @@ fun AboutScreen(
         ) {
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Premium App Logo Card with gradient
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -102,7 +104,6 @@ fun AboutScreen(
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
-                        // Logo with glow effect
                         Box(
                             modifier = Modifier
                                 .size(100.dp)
@@ -119,7 +120,6 @@ fun AboutScreen(
 
                         Spacer(modifier = Modifier.height(16.dp))
 
-                        // App Name
                         Text(
                             text = stringResource(R.string.auth_title),
                             style = MaterialTheme.typography.headlineMedium,
@@ -135,7 +135,6 @@ fun AboutScreen(
 
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        // Version Badge
                         Box(
                             modifier = Modifier
                                 .clip(AppShapes.XL)
@@ -155,7 +154,6 @@ fun AboutScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Section Header
             SectionHeader(
                 title = stringResource(R.string.about_account_info),
                 subtitle = stringResource(R.string.about_account_detail),
@@ -163,7 +161,6 @@ fun AboutScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Info Cards
             AboutInfoCard(
                 icon = Icons.Outlined.Store,
                 iconColor = BranchIconColor,
@@ -173,7 +170,6 @@ fun AboutScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Section Header for App Info
             SectionHeader(
                 title = stringResource(R.string.about_app_info),
                 subtitle = stringResource(R.string.about_version_detail),
@@ -190,7 +186,6 @@ fun AboutScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Copyright Footer - Stylized
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = AppShapes.L,
@@ -233,7 +228,7 @@ fun AboutScreen(
 }
 
 /**
- * Section header with emoji and subtitle
+ * Small section label for static about-page groups.
  */
 @Composable
 private fun SectionHeader(
@@ -260,7 +255,7 @@ private fun SectionHeader(
 }
 
 /**
- * Enhanced info card with colorful icon
+ * Label/value row for immutable about-page facts.
  */
 @Composable
 private fun AboutInfoCard(
@@ -285,7 +280,6 @@ private fun AboutInfoCard(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            // Colorful icon with background
             Box(
                 modifier = Modifier
                     .size(44.dp)

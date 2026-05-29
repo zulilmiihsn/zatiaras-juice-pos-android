@@ -41,7 +41,8 @@ class SyncManager @Inject constructor(
     private val _syncStatus = MutableStateFlow<SyncStatus>(SyncStatus.Idle)
     val syncStatus: StateFlow<SyncStatus> = _syncStatus.asStateFlow()
 
-    // List of all syncers for iteration
+    // Order matters: parent/reference data syncs before transactions that may
+    // depend on product or category records.
     private val syncers: List<EntitySyncer> = listOf(
         categorySyncer,
         productSyncer,
@@ -90,7 +91,8 @@ class SyncManager @Inject constructor(
                 results.add(result)
             }
 
-            // Update timestamps
+            // Treat the full-sync timestamp as successful once every syncer has
+            // returned; partial failures are represented in SyncStatus below.
             syncPreferences.updateLastFullSyncTimestamp()
 
             val totalSynced = results.sumOf { it.totalSynced }

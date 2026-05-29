@@ -8,10 +8,10 @@ import com.zatiaras.pos.core.domain.model.SugarLevel
 import com.zatiaras.pos.feature.pos.domain.model.Cart
 
 /**
- * UI State for the main POS screen (Catalog + Cart).
+ * Render state for the main POS screen.
  *
- * Note: Products are exposed separately as Flow<PagingData<Product>>
- * for efficient memory management with large catalogs.
+ * Products are exposed as Flow<PagingData<Product>> outside this state to keep
+ * large catalogs paged while cart and customization drafts remain small.
  */
 data class PosUiState(
     val categories: List<Category> = emptyList(),
@@ -21,10 +21,10 @@ data class PosUiState(
     val isLoading: Boolean = true,
     val productCount: Int = 0,
     val error: String? = null,
-    val isStoreOpen: Boolean = true, // Default to true until session loaded
+    val isStoreOpen: Boolean = true, // Optimistic until the store-session flow emits.
     val isGridView: Boolean = true,
 
-    // Product Options Dialog State
+    // Product customization draft state.
     val showProductOptionsSheet: Boolean = false,
     val selectedProduct: Product? = null,
     val availableAddOns: List<AddOn> = emptyList(),

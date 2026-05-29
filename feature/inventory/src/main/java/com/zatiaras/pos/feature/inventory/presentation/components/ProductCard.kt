@@ -34,13 +34,10 @@ import compose.icons.evaicons.Outline
 import compose.icons.evaicons.outline.Image
 
 /**
- * Card component to display a single product in the inventory grid.
+ * Compact product tile for the inventory grid.
  *
- * Shows:
- * - Product image (or placeholder icon)
- * - Product name
- * - Category badge (if available)
- * - Formatted price
+ * Keep this card read-only; editing and delete actions belong to the detail or
+ * list orchestration layer.
  */
 @Composable
 fun ProductCard(
@@ -62,7 +59,6 @@ fun ProductCard(
         ),
     ) {
         Column {
-            // Image
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -76,7 +72,7 @@ fun ProductCard(
                         model = ImageRequest.Builder(androidx.compose.ui.platform.LocalContext.current)
                             .data(product.imageUrl)
                             .crossfade(true)
-                            .size(300, 300) // Downsample for grid card to save memory
+                            .size(300, 300) // Downsample grid images to reduce memory pressure.
                             .diskCachePolicy(CachePolicy.ENABLED)
                             .memoryCachePolicy(CachePolicy.ENABLED)
                             .build(),
@@ -95,7 +91,8 @@ fun ProductCard(
                     )
                 }
 
-                // Category Badge (Overlay)
+                // Overlay category so filtering context is visible without
+                // increasing card height.
                 product.category?.let { category ->
                     Box(
                         modifier = Modifier
@@ -117,24 +114,22 @@ fun ProductCard(
                 }
             }
 
-            // Content
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(dimensions.paddingS),
                 verticalArrangement = Arrangement.spacedBy(dimensions.spacingXXS),
             ) {
-                // Product name (Fixed Height)
+                // Fixed two-line height keeps grid rows aligned across products.
                 Text(
                     text = product.name,
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.SemiBold,
                     maxLines = 2,
-                    minLines = 2, // Ensures consistent height
+                    minLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
 
-                // Price
                 Text(
                     text = CurrencyFormatter.formatIdr(product.price),
                     style = MaterialTheme.typography.titleMedium,

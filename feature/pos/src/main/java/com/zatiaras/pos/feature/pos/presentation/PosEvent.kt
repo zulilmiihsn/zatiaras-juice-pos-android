@@ -6,17 +6,17 @@ import com.zatiaras.pos.core.domain.model.SugarLevel
 import com.zatiaras.pos.feature.pos.domain.model.PaymentMethod
 
 /**
- * Events that can be triggered from POS UI.
+ * User intents from the POS catalog/cart surface.
  */
 sealed interface PosEvent {
-    // Catalog events
+    // Catalog filtering and browsing.
     data class SearchQueryChanged(val query: String) : PosEvent
     data class CategorySelected(val categoryId: String?) : PosEvent
 
-    // Direct add to cart (for products without customizations)
+    // Direct add to cart, used when a product has no customization flow.
     data class AddToCart(val product: Product) : PosEvent
 
-    // Product Options Dialog events
+    // Product customization sheet.
     data class ShowProductOptions(val product: Product) : PosEvent
     data object HideProductOptions : PosEvent
     data class ToggleAddOn(val addOnId: String) : PosEvent
@@ -26,21 +26,22 @@ sealed interface PosEvent {
     data class SetProductQuantity(val quantity: Int) : PosEvent
     data object ConfirmAddToCart : PosEvent
 
-    // Cart item manipulation (by uniqueKey)
+    // Cart item manipulation by uniqueKey because customized items can share
+    // the same product ID.
     data class IncrementItem(val uniqueKey: String) : PosEvent
     data class DecrementItem(val uniqueKey: String) : PosEvent
     data class RemoveFromCart(val uniqueKey: String) : PosEvent
     data class UpdateItemQuantity(val uniqueKey: String, val quantity: Int) : PosEvent
     data object ClearCart : PosEvent
 
-    // Navigation events
+    // Navigation requests emitted from POS interactions.
     data object ProceedToCheckout : PosEvent
     data object BackToCatalog : PosEvent
 
-    // Error handling
+    // One-shot error consumption.
     data object DismissError : PosEvent
 
-    // UI Toggles
+    // Local display preferences.
     data object ToggleViewMode : PosEvent
     data class AddCustomItem(val name: String, val price: Long, val quantity: Int = 1) : PosEvent
 }

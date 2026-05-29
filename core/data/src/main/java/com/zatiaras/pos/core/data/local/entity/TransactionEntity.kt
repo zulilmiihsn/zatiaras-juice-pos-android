@@ -35,8 +35,8 @@ data class TransactionEntity(
     val taxPercent: Double = 0.0, // Tax percentage (e.g., 11.0)
     val grandTotal: Long, // Final amount customer pays
     val paymentMethod: String, // CASH, QRIS, TRANSFER
-    val amountPaid: Long, // Amount given by customer
-    val changeAmount: Long, // Change returned
+    val amountPaid: Long, // Tender received before change calculation.
+    val changeAmount: Long, // Change returned to customer.
     val notes: String? = null, // Optional notes
     val customerName: String? = null, // Optional customer name
     val sessionId: String? = null, // Linked Store Session

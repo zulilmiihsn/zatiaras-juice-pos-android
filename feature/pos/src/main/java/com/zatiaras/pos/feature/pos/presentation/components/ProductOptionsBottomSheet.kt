@@ -28,6 +28,12 @@ import com.zatiaras.pos.core.ui.theme.Slate700
 import com.zatiaras.pos.core.ui.util.CurrencyFormatter
 import com.zatiaras.pos.feature.pos.R
 
+/**
+ * Product customization sheet before adding an item to cart.
+ *
+ * Local draft state is safe here because it is committed only through
+ * onAddToCart; dismissing the sheet drops the draft customizations.
+ */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun ProductOptionsBottomSheet(
@@ -60,7 +66,6 @@ fun ProductOptionsBottomSheet(
                 .padding(horizontal = 24.dp)
                 .verticalScroll(rememberScrollState()),
         ) {
-            // Header
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -138,7 +143,6 @@ fun ProductOptionsBottomSheet(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Notes
             Text(
                 text = stringResource(R.string.pos_notes),
                 style = MaterialTheme.typography.titleMedium,
@@ -163,13 +167,11 @@ fun ProductOptionsBottomSheet(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Quantity & Total
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                // Quantity Selector
                 Surface(
                     shape = AppShapes.L,
                     color = Slate100,
@@ -224,7 +226,8 @@ fun ProductOptionsBottomSheet(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Add to Cart Button
+            // Encode non-default sugar/ice choices into notes until the cart
+            // model grows typed customization fields.
             Button(
                 onClick = {
                     val finalNotes = buildString {

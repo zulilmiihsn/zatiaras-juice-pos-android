@@ -18,7 +18,10 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Service for exporting reports to CSV format (compatible with Excel).
+ * Creates CSV report files and share intents.
+ *
+ * The service writes to app cache first so every export has a FileProvider URI,
+ * then best-effort copies to public Downloads for user convenience.
  */
 @Singleton
 class CsvExportService @Inject constructor() {
@@ -33,14 +36,14 @@ class CsvExportService @Inject constructor() {
         report: ProfitLossReport,
         periodName: String,
     ): Result<Uri> = exportToCsv(context, "Laporan_Laba_Rugi") { writer ->
-        // Header
+        // Keep report metadata at the top so exported CSV files remain useful
+        // when shared outside the app.
         writer.appendLine("LAPORAN LABA RUGI")
         writer.appendLine("Periode,$periodName")
         writer.appendLine("Dibuat,${dateFormat.format(Date())}")
         writer.appendLine("Jumlah Transaksi,${report.transactionCount}")
         writer.appendLine()
 
-        // P&L Data
         writer.appendLine("Kategori,Jumlah")
         writer.appendLine("Pendapatan Operasional,${report.operatingRevenue}")
         writer.appendLine("Pendapatan Lainnya,${report.otherRevenue}")
@@ -53,7 +56,8 @@ class CsvExportService @Inject constructor() {
         writer.appendLine("Laba Bersih,${report.netProfit}")
         writer.appendLine()
 
-        // --- DETAIL PENDAPATAN (PRODUK) ---
+        // Detail sections are intentionally verbose; owners usually inspect CSV
+        // exports in spreadsheets rather than the mobile UI.
         writer.appendLine("=== DETAIL PENDAPATAN (PRODUK TERJUAL) ===")
         if (report.productSales.isEmpty()) {
             writer.appendLine("Tidak ada produk terjual")
@@ -65,7 +69,6 @@ class CsvExportService @Inject constructor() {
         }
         writer.appendLine()
 
-        // --- DETAIL PENDAPATAN TAMBAHAN (Jika Ada) ---
         if (report.manualIncomeItems.isNotEmpty() || report.otherIncomeItems.isNotEmpty()) {
             writer.appendLine("=== DETAIL PENDAPATAN TAMBAHAN ===")
             writer.appendLine("Deskripsi Kategori,Jumlah")
@@ -78,7 +81,6 @@ class CsvExportService @Inject constructor() {
             writer.appendLine()
         }
 
-        // --- DETAIL PENGELUARAN ---
         writer.appendLine("=== DETAIL BEBAN (PENGELUARAN) ===")
         if (report.expensesByCategory.isEmpty()) {
             writer.appendLine("Tidak ada data pengeluaran")
@@ -108,15 +110,14 @@ class CsvExportService @Inject constructor() {
         writer.appendLine("Dibuat,${dateFormat.format(Date())}")
         writer.appendLine()
 
-        // Header row
+        // Use a flat row shape so Excel/Sheets can filter and aggregate it.
         writer.appendLine("Tanggal,Pendapatan,Jumlah Transaksi")
 
-        // Data rows
         data.forEach { item ->
             writer.appendLine("${dateFormat.format(Date(item.date))},${item.revenue},${item.transactionCount}")
         }
 
-        // Summary
+        // Append a total row after the detail rows for quick spreadsheet review.
         writer.appendLine()
         writer.appendLine("Total,${data.sumOf { it.revenue }},${data.sumOf { it.transactionCount }}")
     }
@@ -134,16 +135,14 @@ class CsvExportService @Inject constructor() {
         writer.appendLine("Dibuat,${dateFormat.format(Date())}")
         writer.appendLine()
 
-        // Header row
+        // Rank is exported as a value so sorting in spreadsheets does not lose
+        // the original top-product order.
         writer.appendLine("Peringkat,Nama Produk,Jumlah Terjual,Total Pendapatan")
 
-        // Data rows
         products.forEachIndexed { index, product ->
             writer.appendLine("${index + 1},${escapeCSV(product.productName)},${product.quantitySold},${product.totalRevenue}")
         }
     }
-
-    // ==================== TEMPLATE METHOD ====================
 
     /**
      * Common CSV export template. Handles file creation, UTF-8 BOM,
@@ -162,12 +161,13 @@ class CsvExportService @Inject constructor() {
         val file = File(context.cacheDir, fileName)
 
         FileWriter(file).use { writer ->
-            // UTF-8 BOM for Excel compatibility
+            // UTF-8 BOM keeps Indonesian text readable in Excel defaults.
             writer.write("\uFEFF")
             writeContent(writer)
         }
 
-        // Try attempting to copy to public Downloads directly
+        // Downloads copy is best-effort; sharing still works from the cache URI
+        // if public storage is unavailable.
         try {
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
                 val resolver = context.contentResolver

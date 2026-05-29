@@ -42,9 +42,10 @@ import compose.icons.evaicons.outline.Close
 import compose.icons.evaicons.outline.Search
 
 /**
- * Product catalog component with search, category filter, and product grid.
+ * Product catalog with search, category chips, and grid content.
  *
- * Extracted from PosScreen for better separation of concerns.
+ * Kept separate from PosScreen so cart layout decisions do not mix with catalog
+ * filtering/paging presentation.
  */
 @Composable
 fun ProductCatalog(
@@ -61,7 +62,6 @@ fun ProductCatalog(
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier) {
-        // Search Bar
         SearchBar(
             query = searchQuery,
             onQueryChange = onSearchChange,
@@ -70,7 +70,6 @@ fun ProductCatalog(
                 .padding(horizontal = 16.dp, vertical = 8.dp),
         )
 
-        // Category Filter Chips
         CategoryChips(
             categories = categories,
             selectedCategoryId = selectedCategoryId,
@@ -82,7 +81,6 @@ fun ProductCatalog(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Product Grid
         ProductGrid(
             products = products,
             cart = cart,

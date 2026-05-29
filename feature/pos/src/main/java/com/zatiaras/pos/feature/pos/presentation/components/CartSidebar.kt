@@ -49,10 +49,8 @@ import compose.icons.evaicons.outline.ShoppingCart
 import compose.icons.evaicons.outline.Trash
 
 /**
- * Premium Cart Sidebar
- * - Clean white surface
- * - Pink gradient header
- * - Large checkout button
+ * Cart review panel used as persistent sidebar on tablets and slide-over panel
+ * on mobile.
  */
 @Composable
 fun CartSidebar(
@@ -75,7 +73,6 @@ fun CartSidebar(
         Column(
             modifier = Modifier.fillMaxSize(),
         ) {
-            // Premium Header with Gradient
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -122,7 +119,7 @@ fun CartSidebar(
                 }
             }
 
-            // Cart Items List
+            // Keep the footer visible while the item list scrolls.
             if (cart.items.isEmpty()) {
                 EmptyCartView()
             } else {
@@ -151,7 +148,6 @@ fun CartSidebar(
                 }
             }
 
-            // Footer
             CartFooter(
                 subtotal = cart.subtotal,
                 onCheckout = onCheckout,

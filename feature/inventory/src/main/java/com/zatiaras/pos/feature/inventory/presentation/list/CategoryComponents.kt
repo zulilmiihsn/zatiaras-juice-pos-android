@@ -43,6 +43,12 @@ import com.zatiaras.pos.core.ui.components.ZatDialog
 import com.zatiaras.pos.core.ui.theme.AppShapes
 import com.zatiaras.pos.feature.inventory.R
 
+/**
+ * Category maintenance list.
+ *
+ * Delete confirmation is local because it protects a single row action and does
+ * not need to survive navigation.
+ */
 @Composable
 fun CategoryListContent(
     categories: List<Category>,
@@ -75,7 +81,8 @@ fun CategoryListContent(
             }
         }
     } else {
-        // State for delete confirmation dialog
+        // Hold the pending row so the confirmation message can name the exact
+        // category being removed.
         var categoryToDelete by remember { mutableStateOf<Category?>(null) }
 
         LazyColumn(
@@ -106,13 +113,11 @@ fun CategoryListContent(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        // Category name
                         Row(
                             modifier = Modifier.weight(1f),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(12.dp),
                         ) {
-                            // Category info
                             Column {
                                 Text(
                                     text = category.name,
@@ -128,7 +133,6 @@ fun CategoryListContent(
                             }
                         }
 
-                        // Action buttons
                         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                             IconButton(
                                 onClick = { onEditCategory(category) },
@@ -159,7 +163,6 @@ fun CategoryListContent(
             }
         }
 
-        // Delete confirmation dialog
         categoryToDelete?.let { category ->
             DeleteCategoryConfirmDialog(
                 categoryName = category.name,

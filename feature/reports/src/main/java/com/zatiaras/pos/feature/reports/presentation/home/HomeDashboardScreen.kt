@@ -43,17 +43,11 @@ import com.zatiaras.pos.feature.reports.presentation.components.StatisticsSectio
 import com.zatiaras.pos.feature.reports.presentation.components.TopProductsList
 
 /**
- * Home Dashboard Screen - Complete Business Overview
- * This is the stringResource(R.string.home_tab_home) tab showing:
- * - Today's stats with revenue, transactions, items sold
- * - Weekly revenue chart
- * - Period summary (weekly & monthly)
- * - Top selling products
+ * Home dashboard orchestration for store status and sales summary.
  *
- * Components extracted to separate files:
- * - StoreStatusBanner, TodayStatsSection, PeriodSummarySection → DashboardSections.kt
- * - OpenStoreDialog, AmountChip, formatNumber → OpenStoreDialog.kt
- * - CloseStoreDialog → CloseStoreDialog.kt
+ * Keep the owner-gated open/close flow here because it coordinates dialog state,
+ * PIN verification, and dashboard refresh callbacks. Visual sections live in
+ * sibling component files.
  */
 @Composable
 fun HomeDashboardRoute(
@@ -86,7 +80,8 @@ fun HomeDashboardScreen(
     var showOpenStoreDialog by remember { mutableStateOf(false) }
     var showCloseStoreDialog by remember { mutableStateOf(false) }
 
-    // PIN Verification State
+    // Non-owner open/close actions wait here until the PIN dialog succeeds, then
+    // resume the intended store action dialog.
     var showPinDialog by remember { mutableStateOf(false) }
     var pendingStoreAction by remember { mutableStateOf<StoreAction?>(null) }
     val dimensions = LocalDimensions.current
@@ -147,7 +142,8 @@ fun HomeDashboardScreen(
                     contentPadding = PaddingValues(dimensions.paddingL),
                     verticalArrangement = Arrangement.spacedBy(dimensions.spacingL),
                 ) {
-                    // Error Display
+                    // Keep errors inline so operators can still inspect the
+                    // last loaded dashboard content.
                     if (uiState.error != null) {
                         item {
                             com.zatiaras.pos.core.ui.components.ErrorDisplay(
@@ -157,7 +153,8 @@ fun HomeDashboardScreen(
                         }
                     }
 
-                    // Store Status Banner (TOP - Most Prominent)
+                    // Store status is the primary operational control, so it
+                    // stays above metrics and charts.
                     item {
                         StoreStatusBanner(
                             isStoreOpen = uiState.isStoreOpen,
@@ -180,19 +177,18 @@ fun HomeDashboardScreen(
                         )
                     }
 
-                    // Today's Stats Section
                     item {
                         TodayStatsSection(uiState)
                     }
 
-                    // Top Products (PRIORITAS - di atas chart)
+                    // Top products are more actionable during a shift than the
+                    // trend chart, so they stay before the chart.
                     item {
                         TopProductsList(
                             products = uiState.topProducts,
                         )
                     }
 
-                    // Statistics Section (6 metrics in grid)
                     item {
                         StatisticsSection(
                             averageTransactions = uiState.averageTransactionsPerDay,
@@ -204,14 +200,12 @@ fun HomeDashboardScreen(
                         )
                     }
 
-                    // Weekly Revenue Chart (dipindah ke bawah)
                     item {
                         RevenueLineChart(
                             data = uiState.weeklyRevenue,
                         )
                     }
 
-                    // Bottom spacing
                     item {
                         Spacer(modifier = Modifier.height(dimensions.paddingXXL))
                     }
@@ -220,7 +214,8 @@ fun HomeDashboardScreen(
         }
     }
 
-    // PIN Verification Dialog
+    // PIN dialog is shared by open and close actions; pendingStoreAction carries
+    // the user's original intent through verification.
     if (showPinDialog) {
         OwnerPinDialog(
             onDismiss = {
@@ -241,7 +236,6 @@ fun HomeDashboardScreen(
         )
     }
 
-    // Open Store Dialog
     if (showOpenStoreDialog) {
         OpenStoreDialog(
             onDismiss = { showOpenStoreDialog = false },
@@ -252,7 +246,6 @@ fun HomeDashboardScreen(
         )
     }
 
-    // Close Store Dialog
     if (showCloseStoreDialog) {
         CloseStoreDialog(
             todayRevenue = uiState.stats.todayRevenue,

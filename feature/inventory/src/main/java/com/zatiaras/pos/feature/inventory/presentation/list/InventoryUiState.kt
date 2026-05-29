@@ -13,10 +13,10 @@ enum class InventoryTab(@StringRes val titleResId: Int) {
 }
 
 /**
- * UI State for Inventory List Screen.
+ * Complete render state for the inventory list screen.
  *
- * Represents all possible states the screen can be in.
- * ViewModel exposes this as StateFlow, UI observes it reactively.
+ * Filtering is derived from the loaded data so ViewModel writes stay simple and
+ * the screen can switch tabs/categories without mutating product lists.
  */
 sealed interface InventoryUiState {
 
@@ -48,12 +48,14 @@ sealed interface InventoryUiState {
             get() {
                 var result = products
 
-                // Filter by category
+                // Category narrows first so search runs over the visible tab
+                // context operators selected.
                 if (selectedCategoryId != null) {
                     result = result.filter { it.category?.id == selectedCategoryId }
                 }
 
-                // Filter by search query
+                // Search includes description because product names can be short
+                // or abbreviated in POS operations.
                 if (searchQuery.isNotBlank()) {
                     val query = searchQuery.lowercase()
                     result = result.filter { product ->
@@ -84,11 +86,11 @@ sealed interface InventoryEvent {
     data class Search(val query: String) : InventoryEvent
     data class ChangeTab(val tab: InventoryTab) : InventoryEvent
 
-    // Product Events
+    // Product commands.
     data class SelectCategory(val categoryId: String?) : InventoryEvent
     data class DeleteProduct(val productId: String) : InventoryEvent
 
-    // Category Events
+    // Category commands.
     data class AddCategory(val name: String, val icon: String? = null) : InventoryEvent
     data class UpdateCategoryWithProducts(
         val categoryId: String,
@@ -97,12 +99,12 @@ sealed interface InventoryEvent {
     ) : InventoryEvent
     data class DeleteCategory(val categoryId: String) : InventoryEvent
 
-    // Add-On Events
+    // Add-on commands.
     data class AddAddOn(val name: String, val price: Long) : InventoryEvent
     data class UpdateAddOn(val addOnId: String, val name: String, val price: Long) : InventoryEvent
     data class DeleteAddOn(val addOnId: String) : InventoryEvent
 
-    // UI Events
+    // Pure UI events.
     data object ToggleViewMode : InventoryEvent
     data object SnackbarDismissed : InventoryEvent
 }

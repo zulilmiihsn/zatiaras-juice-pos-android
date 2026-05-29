@@ -47,6 +47,12 @@ import com.zatiaras.pos.core.ui.theme.SuccessGreenLight
 import com.zatiaras.pos.core.ui.util.CurrencyFormatter
 import com.zatiaras.pos.feature.reports.R
 
+/**
+ * Store-opening dialog with optional opening cash balance.
+ *
+ * The caller owns owner authorization; this dialog only collects the balance
+ * that seeds the day's cash-flow report.
+ */
 @Composable
 internal fun OpenStoreDialog(
     onDismiss: () -> Unit,
@@ -77,7 +83,6 @@ internal fun OpenStoreDialog(
                     modifier = Modifier.padding(24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    // Header with animated icon
                     Box(
                         modifier = Modifier
                             .size(80.dp)
@@ -102,7 +107,6 @@ internal fun OpenStoreDialog(
 
                     Spacer(modifier = Modifier.height(20.dp))
 
-                    // Title
                     Text(
                         text = stringResource(R.string.store_open_title),
                         style = MaterialTheme.typography.headlineSmall,
@@ -112,7 +116,6 @@ internal fun OpenStoreDialog(
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    // Description
                     Text(
                         text = stringResource(R.string.store_open_desc),
                         style = MaterialTheme.typography.bodyMedium,
@@ -122,7 +125,8 @@ internal fun OpenStoreDialog(
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    // Quick amount selection chips
+                    // Presets cover common opening floats while still allowing
+                    // an exact manual amount below.
                     Text(
                         text = stringResource(R.string.store_open_quick_select),
                         style = MaterialTheme.typography.labelMedium,
@@ -133,7 +137,6 @@ internal fun OpenStoreDialog(
                             .padding(bottom = 8.dp),
                     )
 
-                    // Amount chips in 2x2 grid
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -169,7 +172,6 @@ internal fun OpenStoreDialog(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Divider with stringResource(R.string.store_open_or) text
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
@@ -191,7 +193,8 @@ internal fun OpenStoreDialog(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Custom amount input - using CurrencyTextField
+                    // Use CurrencyTextField so opening balance parsing matches
+                    // the rest of the POS money inputs.
                     CurrencyTextField(
                         value = openingBalance,
                         onValueChange = { newValue ->
@@ -208,7 +211,8 @@ internal fun OpenStoreDialog(
                         ),
                     )
 
-                    // Current selection display
+                    // Echo the selected amount before confirmation to prevent
+                    // opening a shift with the wrong cash balance.
                     if (openingBalance > 0) {
                         Spacer(modifier = Modifier.height(12.dp))
                         Card(
@@ -241,7 +245,6 @@ internal fun OpenStoreDialog(
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    // Action buttons
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp),

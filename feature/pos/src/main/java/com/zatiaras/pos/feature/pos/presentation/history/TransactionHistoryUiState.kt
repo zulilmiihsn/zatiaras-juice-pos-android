@@ -3,6 +3,12 @@ package com.zatiaras.pos.feature.pos.presentation.history
 import com.zatiaras.pos.feature.pos.domain.model.PaymentMethod
 import com.zatiaras.pos.feature.pos.domain.model.Transaction
 
+/**
+ * Render state for transaction history.
+ *
+ * Filtering is derived so the ViewModel can retain the full transaction list
+ * while the screen changes search/payment filters.
+ */
 data class TransactionHistoryUiState(
     val isLoading: Boolean = true,
     val isOwner: Boolean = false,
@@ -18,7 +24,8 @@ data class TransactionHistoryUiState(
         get() {
             var result = allTransactions
 
-            // Search filter
+            // Search transaction notes and numbers; customer names are displayed
+            // but may be blank for walk-in transactions.
             if (searchQuery.isNotBlank()) {
                 val query = searchQuery.lowercase()
                 result = result.filter {
@@ -27,7 +34,8 @@ data class TransactionHistoryUiState(
                 }
             }
 
-            // Payment filter
+            // Payment filters use cashier-facing labels but compare against the
+            // domain PaymentMethod enum.
             if (paymentFilter != PaymentFilter.ALL) {
                 result = result.filter {
                     when (paymentFilter) {
