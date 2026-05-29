@@ -66,8 +66,8 @@ class ProductRepositoryImpl @Inject constructor(
     }
 
     override fun searchProducts(query: String): Flow<List<Product>> {
-        // Use simple LIKE search for now
-        // FTS4 search is available but needs proper index population
+        // Keep plain LIKE search here because this method receives raw UI text.
+        // ProductDao.search() requires MATCH-compatible FTS query shaping.
         return combine(
             productDao.searchSimple(query),
             categoryDao.getAll(),
@@ -171,8 +171,7 @@ class ProductRepositoryImpl @Inject constructor(
         productDao.softDelete(id)
         Timber.d("Product soft-deleted: $id")
 
-        // Sync deletion in background
-        // Sync deletion in background
+        // Sync deletion in background.
         applicationScope.launch {
             productSyncer.sync()
         }
@@ -194,7 +193,7 @@ class ProductRepositoryImpl @Inject constructor(
             // Check if a category with this name already exists (including soft-deleted)
             val existing = categoryDao.getByName(name.trim())
 
-            // If already exists AND is active → do nothing, just notify caller
+            // If it already exists and is active, do nothing and notify caller.
             if (existing != null && existing.isActive) {
                 Timber.d("Category '${name.trim()}' already exists and is active, skipping")
                 return Result.failure(Exception("DUPLICATE_ACTIVE:${name.trim()}"))

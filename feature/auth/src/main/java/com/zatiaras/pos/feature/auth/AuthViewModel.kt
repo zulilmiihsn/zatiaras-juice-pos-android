@@ -3,6 +3,7 @@ package com.zatiaras.pos.feature.auth
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.zatiaras.pos.core.data.repository.LocalAuthRepository
+import com.zatiaras.pos.core.data.session.SessionPreferences
 import com.zatiaras.pos.core.domain.Result
 import com.zatiaras.pos.core.domain.usecase.LoginUseCase
 import com.zatiaras.pos.core.ui.util.UiText
@@ -28,6 +29,7 @@ sealed interface AuthUiState {
 class AuthViewModel @Inject constructor(
     private val loginUseCase: LoginUseCase,
     private val localAuthRepository: LocalAuthRepository,
+    private val sessionPreferences: SessionPreferences,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<AuthUiState>(AuthUiState.Idle)
@@ -92,13 +94,12 @@ class AuthViewModel @Inject constructor(
 
             _uiState.update { AuthUiState.Loading }
 
-            // TODO(P2): Validasi role-user terhadap branch membutuhkan dukungan endpoint backend.
-            // Authentication is handled by the login use case.
+            // Branch selection is persisted locally for session context. Actual
+            // user-role-to-branch authorization still needs backend policy data.
 
             when (val result = loginUseCase(username, password)) {
                 is Result.Success -> {
-                    // Logic to store selected branch pref can go here
-                    // e.g. sessionPreferences.saveBranchId(branchId)
+                    sessionPreferences.saveBranchId(branchId)
                     _uiState.update { AuthUiState.Success }
                 }
                 is Result.Error -> {

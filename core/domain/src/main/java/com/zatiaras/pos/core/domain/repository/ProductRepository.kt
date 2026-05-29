@@ -37,7 +37,8 @@ interface ProductRepository {
 
     /**
      * Search products by name/description.
-     * Uses FTS4 for fast typo-tolerant search.
+     * The current Room-backed implementation uses LIKE search so plain user
+     * input works consistently with paged and non-paged search.
      */
     fun searchProducts(query: String): Flow<List<Product>>
 

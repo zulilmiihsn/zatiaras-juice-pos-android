@@ -95,7 +95,7 @@ class ProductSyncer @Inject constructor(
             return true
         }
 
-        // Direct failed — try self-healing if product has a category
+        // Direct attempt failed; try self-healing if product has a category.
         Timber.w("ProductSyncer: Direct sync failed for ${product.id}. Attempting self-healing...")
         if (product.categoryId != null && trySelfHealProduct(product)) {
             return true
@@ -131,7 +131,7 @@ class ProductSyncer @Inject constructor(
             return false
         }
 
-        // Category synced — retry product
+        // Category synced; retry product.
         remoteDataSource.upsertProduct(product).fold(
             onSuccess = {
                 productDao.markAsSynced(product.id)

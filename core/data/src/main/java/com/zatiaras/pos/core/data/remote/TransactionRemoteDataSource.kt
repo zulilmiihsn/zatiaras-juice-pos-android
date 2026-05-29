@@ -95,7 +95,7 @@ class TransactionRemoteDataSource @Inject constructor(
     ): Result<List<Pair<TransactionEntity, List<TransactionItemEntity>>>> = withContext(Dispatchers.IO) {
         try {
             if (lastSyncTimestamp > 0L) {
-                Timber.d("Delta transaction sync is not implemented yet, running paged full pull")
+                Timber.d("Delta transaction sync is unavailable; running paged full pull")
             }
             val from = page * pageSize
             val to = from + pageSize - 1

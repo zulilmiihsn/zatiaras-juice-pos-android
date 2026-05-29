@@ -57,9 +57,10 @@ class CashRecordRemoteDataSource @Inject constructor(
     suspend fun fetchCashRecords(lastSyncTimestamp: Long = 0): Result<List<CashRecordEntity>> = withContext(Dispatchers.IO) {
         try {
             if (lastSyncTimestamp > 0L) {
-                Timber.d("Delta cash record sync is not implemented yet, running full pull")
+                Timber.d("Delta cash record sync is unavailable; running full pull")
             }
-            // Fetch all to avoid complex timestamp filters for now (same as Inventory)
+            // Delta pull still lacks a remote updated_at filter. Full pull keeps
+            // data correct at the cost of extra bandwidth.
             val response = postgrest.from(TABLE_BUKU_KAS)
                 .select()
                 .decodeList<BukuKasReadDto>()

@@ -12,7 +12,7 @@ import javax.inject.Singleton
 
 /**
  * Unified AI data source that routes requests through Supabase Edge Function (BFF pattern).
- * API keys are stored server-side as Supabase Secrets — never embedded in the client.
+ * API keys are stored server-side as Supabase Secrets, never embedded in the client.
  *
  * Replaces the old OpenRouterRemoteDataSource and GroqRemoteDataSource
  * which had hardcoded API keys.

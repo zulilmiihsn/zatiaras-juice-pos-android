@@ -128,7 +128,7 @@ class PdfExportService @Inject constructor() {
 
         document.close()
 
-        // Try attempting to copy to public Downloads directly
+        // Copy to public Downloads when the platform storage API allows it.
         try {
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
                 val resolver = context.contentResolver

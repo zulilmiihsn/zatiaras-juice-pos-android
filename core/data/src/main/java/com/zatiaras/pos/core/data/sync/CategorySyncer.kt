@@ -11,14 +11,14 @@ import javax.inject.Singleton
 /**
  * Syncer for Categories.
  *
- * Push: Upload all unsynced categories (both active and inactive).
- *   - Active categories → upsert with is_active=true
- *   - Inactive (deleted) categories → upsert with is_active=false (SOFT DELETE)
- *   - No more hard delete! This avoids FK constraint violations entirely.
+ * Push:
+ * - Active categories are upserted with is_active=true.
+ * - Inactive/deleted categories are upserted with is_active=false.
+ * - Soft delete avoids product foreign-key violations during sync.
  *
- * Pull: Fetch all remote categories, apply Last-Write-Wins conflict resolution.
- *   - Remote active → insert/update locally as active
- *   - Remote inactive → insert/update locally as inactive
+ * Pull:
+ * - Remote categories are applied with Last-Write-Wins by updatedAt.
+ * - Remote is_active is respected so deletes propagate locally.
  */
 @Singleton
 class CategorySyncer @Inject constructor(
@@ -34,17 +34,14 @@ class CategorySyncer @Inject constructor(
         var downloaded = 0
         var failed = 0
 
-        // ──────────────────────────────────────────────
-        // 1. PUSH: Upload ALL unsynced categories
-        //    Both active and inactive use upsert (soft delete).
-        //    No more hard delete = no more FK constraint issues!
-        // ──────────────────────────────────────────────
+        // Push all unsynced categories. Both active and inactive rows use
+        // upsert so the server sees soft deletes without hard-delete FK issues.
         val unsyncedCategories = categoryDao.getUnsynced()
 
         if (unsyncedCategories.isNotEmpty()) {
             Timber.d("CategorySyncer: Found ${unsyncedCategories.size} unsynced categories")
 
-            // Try batch upsert first (most efficient)
+            // Try batch upsert first, then isolate failures with individual upserts.
             remoteDataSource.upsertCategories(unsyncedCategories).fold(
                 onSuccess = {
                     categoryDao.markAsSynced(unsyncedCategories.map { it.id })
@@ -56,7 +53,6 @@ class CategorySyncer @Inject constructor(
                 onFailure = { batchError ->
                     Timber.w(batchError, "CategorySyncer: Batch sync failed, falling back to individual sync")
 
-                    // Fallback: sync one by one to isolate errors
                     for (category in unsyncedCategories) {
                         remoteDataSource.upsertCategory(category).fold(
                             onSuccess = {
@@ -74,11 +70,8 @@ class CategorySyncer @Inject constructor(
             )
         }
 
-        // ──────────────────────────────────────────────
-        // 2. PULL: Fetch remote categories
-        //    Apply Last-Write-Wins conflict resolution.
-        //    Respect is_active from remote.
-        // ──────────────────────────────────────────────
+        // Pull remote categories and apply Last-Write-Wins while preserving the
+        // remote active/deleted state.
         remoteDataSource.fetchCategories().fold(
             onSuccess = { remoteCategories ->
                 if (remoteCategories.isNotEmpty()) {
@@ -90,17 +83,14 @@ class CategorySyncer @Inject constructor(
                         val localCategory = categoryDao.getById(remoteCategory.id)
 
                         if (localCategory == null) {
-                            // New from remote → Insert as-is (respect remote is_active)
+                            // New remote category; insert as-is.
+                            categoriesToInsert.add(remoteCategory.copy(isSynced = true))
+                        } else if (remoteCategory.updatedAt > localCategory.updatedAt) {
+                            // Remote changed later; overwrite local copy.
                             categoriesToInsert.add(remoteCategory.copy(isSynced = true))
                         } else {
-                            // Conflict resolution: Last Write Wins
-                            if (remoteCategory.updatedAt > localCategory.updatedAt) {
-                                // Remote is newer → Overwrite local, keep remote's is_active
-                                categoriesToInsert.add(remoteCategory.copy(isSynced = true))
-                            } else {
-                                // Local is newer → Keep local state
-                                Timber.d("CategorySyncer: Keeping local version for ${remoteCategory.id} (local is newer)")
-                            }
+                            // Local changed later; keep local state.
+                            Timber.d("CategorySyncer: Keeping local version for ${remoteCategory.id} (local is newer)")
                         }
                     }
 
@@ -119,7 +109,7 @@ class CategorySyncer @Inject constructor(
             },
         )
 
-        Timber.d("CategorySyncer: Completed — uploaded=$uploaded, downloaded=$downloaded, failed=$failed")
+        Timber.d("CategorySyncer: Completed - uploaded=$uploaded, downloaded=$downloaded, failed=$failed")
 
         return SyncResult(
             type = SyncType.CATEGORIES,

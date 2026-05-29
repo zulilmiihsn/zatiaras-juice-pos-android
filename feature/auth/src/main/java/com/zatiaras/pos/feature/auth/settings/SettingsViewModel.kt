@@ -117,6 +117,7 @@ class SettingsViewModel @Inject constructor(
                 // must remain usable while offline.
                 val role = UserRole.fromString(sessionPreferences.getRole())
                 val isOwner = role.isOwner()
+                val branchName = sessionPreferences.getBranchId().orEmpty()
 
                 val biometricAvailable = biometricManager.isBiometricAvailable()
 
@@ -166,6 +167,7 @@ class SettingsViewModel @Inject constructor(
                         userName = userName,
                         userEmail = userEmail,
                         userRole = role,
+                        branchName = branchName,
                         isOwner = isOwner,
                         lockEnabled = lockEnabled,
                         biometricEnabled = biometricEnabled,

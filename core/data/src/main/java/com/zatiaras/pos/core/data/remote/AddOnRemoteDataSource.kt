@@ -34,7 +34,7 @@ class AddOnRemoteDataSource @Inject constructor(
     suspend fun fetchAddOns(lastSyncTimestamp: Long = 0): Result<List<AddOnEntity>> = withContext(Dispatchers.IO) {
         try {
             if (lastSyncTimestamp > 0L) {
-                Timber.d("Delta add-on sync is not implemented yet, running full pull")
+                Timber.d("Delta add-on sync is unavailable; running full pull")
             }
             val response = postgrest.from(TABLE_TAMBAHAN)
                 .select()

@@ -7,7 +7,8 @@ import androidx.room.Fts4
  * FTS4 Virtual Table for full-text search on products.
  * Linked to ProductEntity via contentEntity.
  *
- * Enables fast, typo-tolerant search on name and description.
+ * Supports MATCH-based token and prefix search once repository-level query
+ * shaping/backfill has been verified.
  */
 @Fts4(contentEntity = ProductEntity::class)
 @Entity(tableName = "products_fts")

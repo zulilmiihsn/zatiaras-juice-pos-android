@@ -130,7 +130,7 @@ class AddOnRepositoryImpl @Inject constructor(
             // Check if an add-on with this name already exists (including soft-deleted)
             val existing = addOnDao.getByName(name.trim())
 
-            // If already exists AND is active → notify caller
+            // If it already exists and is active, notify caller.
             if (existing != null && existing.isActive && !existing.isDeleted) {
                 Timber.d("Add-on '${name.trim()}' already exists and is active, skipping")
                 return Result.failure(Exception("DUPLICATE_ACTIVE:${name.trim()}"))

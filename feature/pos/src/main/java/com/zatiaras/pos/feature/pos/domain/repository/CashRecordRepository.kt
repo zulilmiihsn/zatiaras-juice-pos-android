@@ -47,7 +47,8 @@ interface CashRecordRepository {
     suspend fun getTodaySummary(): Result<CashSummary>
 
     /**
-     * Push unsynced records to remote.
+     * Run the configured cash-record sync boundary.
+     * Current implementation delegates to core:data's two-way CashRecordSyncer.
      */
     suspend fun syncToRemote(): Result<Unit>
 }

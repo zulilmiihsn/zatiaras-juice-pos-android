@@ -174,13 +174,14 @@ interface ProductDao {
     @Query("UPDATE products SET isSynced = 1 WHERE id IN (:ids)")
     suspend fun markAsSynced(ids: List<String>)
 
-    // ==================== SEARCH (FTS4) ====================
+    // ==================== SEARCH ====================
 
     /**
      * Full-text search on product name and description.
-     * Uses FTS4 for fast, typo-tolerant search.
+     * Requires a Room FTS MATCH-compatible query, for example "kopi*".
      *
-     * Query format: "kopi*" for prefix match.
+     * Keep repository search on searchSimple() until FTS query shaping and
+     * migration backfill are verified end-to-end.
      */
     @Query(
         """
@@ -194,7 +195,7 @@ interface ProductDao {
 
     /**
      * Simple LIKE search for basic queries.
-     * Fallback when FTS is not suitable.
+     * Accepts raw user input and is used by repository search.
      */
     @Query(
         """

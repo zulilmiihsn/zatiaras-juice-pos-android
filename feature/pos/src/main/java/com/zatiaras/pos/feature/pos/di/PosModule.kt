@@ -2,6 +2,7 @@ package com.zatiaras.pos.feature.pos.di
 
 import com.zatiaras.pos.core.data.local.dao.CashRecordDao
 import com.zatiaras.pos.core.data.local.dao.TransactionDao
+import com.zatiaras.pos.core.data.sync.CashRecordSyncer
 import com.zatiaras.pos.feature.pos.data.repository.CashRecordRepositoryImpl
 import com.zatiaras.pos.feature.pos.data.repository.TransactionRepositoryImpl
 import com.zatiaras.pos.feature.pos.domain.repository.CashRecordRepository
@@ -29,5 +30,6 @@ object PosModule {
     @Singleton
     fun provideCashRecordRepository(
         cashRecordDao: CashRecordDao,
-    ): CashRecordRepository = CashRecordRepositoryImpl(cashRecordDao)
+        cashRecordSyncer: CashRecordSyncer,
+    ): CashRecordRepository = CashRecordRepositoryImpl(cashRecordDao, cashRecordSyncer)
 }

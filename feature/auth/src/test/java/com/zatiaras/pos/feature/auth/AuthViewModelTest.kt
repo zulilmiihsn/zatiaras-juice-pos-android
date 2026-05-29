@@ -1,12 +1,14 @@
 package com.zatiaras.pos.feature.auth
 
 import com.zatiaras.pos.core.data.repository.LocalAuthRepository
+import com.zatiaras.pos.core.data.session.SessionPreferences
 import com.zatiaras.pos.core.domain.Result
 import com.zatiaras.pos.core.domain.usecase.LoginUseCase
 import com.zatiaras.pos.core.ui.util.UiText
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -36,6 +38,7 @@ class AuthViewModelTest {
     private val testDispatcher = StandardTestDispatcher()
     private lateinit var loginUseCase: LoginUseCase
     private lateinit var localAuthRepository: LocalAuthRepository
+    private lateinit var sessionPreferences: SessionPreferences
     private lateinit var viewModel: AuthViewModel
 
     @Before
@@ -43,12 +46,13 @@ class AuthViewModelTest {
         Dispatchers.setMain(testDispatcher)
         loginUseCase = mockk()
         localAuthRepository = mockk(relaxed = true)
+        sessionPreferences = mockk(relaxed = true)
 
         // Mock sync-related methods
         coEvery { localAuthRepository.syncUsersWithResult() } returns Result.Success(1)
         coEvery { localAuthRepository.getAllUsers() } returns emptyList()
 
-        viewModel = AuthViewModel(loginUseCase, localAuthRepository)
+        viewModel = AuthViewModel(loginUseCase, localAuthRepository, sessionPreferences)
     }
 
     @After
@@ -86,6 +90,7 @@ class AuthViewModelTest {
         // Then
         assertEquals(AuthUiState.Success, viewModel.uiState.value)
         coVerify(exactly = 1) { loginUseCase("test@test.com", "password") }
+        verify(exactly = 1) { sessionPreferences.saveBranchId("branch-1") }
     }
 
     @Test

@@ -16,7 +16,7 @@ import javax.inject.Singleton
  *
  * Design principles:
  * - Separate Read DTOs (with timestamps) and Write DTOs (without timestamps)
- * - Write DTOs exclude created_at/updated_at — Supabase handles via trigger/default
+ * - Write DTOs exclude created_at/updated_at because Supabase handles them via trigger/default
  * - All operations use @Serializable DTOs (not Map<String, Any?>) for type safety
  * - Soft delete for both products and categories (is_active = false)
  */
@@ -56,7 +56,7 @@ class InventoryRemoteDataSource @Inject constructor(
     suspend fun fetchProducts(lastSyncTimestamp: Long = 0): Result<List<ProductEntity>> = withContext(Dispatchers.IO) {
         try {
             if (lastSyncTimestamp > 0L) {
-                Timber.d("Delta product sync is not implemented yet, running full pull")
+                Timber.d("Delta product sync is unavailable; running full pull")
             }
             val response = postgrest.from(TABLE_PRODUK)
                 .select()
@@ -83,7 +83,7 @@ class InventoryRemoteDataSource @Inject constructor(
             Timber.d("Upserted product: ${product.id} (${product.name})")
             Result.success(Unit)
         } catch (e: Exception) {
-            Timber.e(e, "Failed to upsert product: ${product.id} — ${e.message}")
+            Timber.e(e, "Failed to upsert product: ${product.id} - ${e.message}")
             Result.failure(e)
         }
     }
@@ -98,7 +98,7 @@ class InventoryRemoteDataSource @Inject constructor(
             Timber.d("Upserted ${products.size} products (batch)")
             Result.success(Unit)
         } catch (e: Exception) {
-            Timber.e(e, "Failed to upsert batch products — ${e.message}")
+            Timber.e(e, "Failed to upsert batch products - ${e.message}")
             Result.failure(e)
         }
     }
@@ -132,7 +132,7 @@ class InventoryRemoteDataSource @Inject constructor(
             Timber.d("Upserted category: ${category.id} (${category.name}, active=${category.isActive})")
             Result.success(Unit)
         } catch (e: Exception) {
-            Timber.e(e, "Failed to upsert category: ${category.id} — ${e.message}")
+            Timber.e(e, "Failed to upsert category: ${category.id} - ${e.message}")
             Result.failure(e)
         }
     }
@@ -147,7 +147,7 @@ class InventoryRemoteDataSource @Inject constructor(
             Timber.d("Upserted ${categories.size} categories (batch)")
             Result.success(Unit)
         } catch (e: Exception) {
-            Timber.e(e, "Failed to upsert batch categories — ${e.message}")
+            Timber.e(e, "Failed to upsert batch categories - ${e.message}")
             Result.failure(e)
         }
     }
@@ -171,7 +171,7 @@ class InventoryRemoteDataSource @Inject constructor(
 }
 
 // =====================================================================
-// READ DTOs — For pulling from Supabase (include ALL columns)
+// READ DTOs: for pulling from Supabase (include all columns).
 // =====================================================================
 
 /**
@@ -247,7 +247,7 @@ data class ProdukReadDto(
 }
 
 // =====================================================================
-// WRITE DTOs — For pushing to Supabase (EXCLUDE timestamps)
+// WRITE DTOs: for pushing to Supabase (exclude timestamps).
 // Timestamps are handled by Supabase trigger/default.
 // =====================================================================
 
@@ -299,7 +299,7 @@ data class ProdukSoftDeleteDto(
 )
 
 // =====================================================================
-// Entity → Write DTO conversions
+// Entity to write DTO conversions.
 // =====================================================================
 
 /**
@@ -351,7 +351,7 @@ private fun parseTimestamp(isoString: String?): Long {
     if (isoString.isNullOrBlank()) return 0L
     return try {
         val cleanStr = isoString.replace(" ", "T")
-        // Try OffsetDateTime first — handles +00:00 offsets and Z suffix
+        // Try OffsetDateTime first; it handles +00:00 offsets and Z suffix.
         java.time.OffsetDateTime.parse(cleanStr).toInstant().toEpochMilli()
     } catch (e: Exception) {
         try {

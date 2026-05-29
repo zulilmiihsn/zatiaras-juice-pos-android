@@ -1,6 +1,7 @@
 package com.zatiaras.pos.feature.pos.data.repository
 
 import com.zatiaras.pos.core.data.local.dao.CashRecordDao
+import com.zatiaras.pos.core.data.sync.CashRecordSyncer
 import com.zatiaras.pos.core.domain.util.DateUtils
 import com.zatiaras.pos.feature.pos.data.mapper.toDomain
 import com.zatiaras.pos.feature.pos.data.mapper.toDomainList
@@ -24,6 +25,7 @@ import javax.inject.Singleton
 @Singleton
 class CashRecordRepositoryImpl @Inject constructor(
     private val cashRecordDao: CashRecordDao,
+    private val cashRecordSyncer: CashRecordSyncer,
 ) : CashRecordRepository {
 
     override suspend fun createRecord(
@@ -91,10 +93,15 @@ class CashRecordRepositoryImpl @Inject constructor(
         Result.failure(e)
     }
 
-    override suspend fun syncToRemote(): Result<Unit> {
-        // TODO(P1): Implement sinkronisasi buku kas ke remote via sync engine (lihat pola ProductSyncer).
-        val unsynced = cashRecordDao.getUnsynced()
-        Timber.d("Found ${unsynced.size} unsynced cash records (sync not yet implemented)")
-        return Result.success(Unit)
+    override suspend fun syncToRemote(): Result<Unit> = try {
+        val result = cashRecordSyncer.sync()
+        if (result.failed > 0) {
+            Result.failure(IllegalStateException("Cash record sync failed for ${result.failed} item(s)"))
+        } else {
+            Result.success(Unit)
+        }
+    } catch (e: Exception) {
+        Timber.e(e, "Failed to sync cash records")
+        Result.failure(e)
     }
 }

@@ -49,6 +49,15 @@ class SessionPreferences @Inject constructor(
     }
 
     /**
+     * Save the branch selected on the login screen.
+     * Branch authorization is still enforced by backend policy when available;
+     * this value only preserves local UI/session context.
+     */
+    fun saveBranchId(branchId: String) {
+        prefs.edit().putString(KEY_BRANCH_ID, branchId).apply()
+    }
+
+    /**
      * Check if user has an active session.
      */
     fun isLoggedIn(): Boolean = prefs.getBoolean(KEY_IS_LOGGED_IN, false)
@@ -98,6 +107,11 @@ class SessionPreferences @Inject constructor(
     fun getRole(): String? = prefs.getString(KEY_ROLE, null)
 
     /**
+     * Get the branch selected during login, if available.
+     */
+    fun getBranchId(): String? = prefs.getString(KEY_BRANCH_ID, null)
+
+    /**
      * Get login timestamp.
      */
     fun getLoginTime(): Long = prefs.getLong(KEY_LOGIN_TIME, 0)
@@ -126,6 +140,7 @@ class SessionPreferences @Inject constructor(
         private const val KEY_USERNAME = "username"
         private const val KEY_DISPLAY_NAME = "display_name"
         private const val KEY_ROLE = "role"
+        private const val KEY_BRANCH_ID = "branch_id"
         private const val KEY_LOGIN_TIME = "login_time"
         private const val KEY_IS_LOGGED_IN = "is_logged_in"
 

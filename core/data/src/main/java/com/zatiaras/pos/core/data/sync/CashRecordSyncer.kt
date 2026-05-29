@@ -28,9 +28,8 @@ class CashRecordSyncer @Inject constructor(
         var downloaded = 0
         var failed = 0
 
-        // ──────────────────────────────────────────────
-        // 1. PUSH: Upload unsynced local cash records
-        // ──────────────────────────────────────────────
+        // Push local changes first so operator-entered cash records are not
+        // overwritten by the following remote pull.
         val unsyncedRecords = cashRecordDao.getUnsynced()
 
         if (unsyncedRecords.isNotEmpty()) {
@@ -51,11 +50,9 @@ class CashRecordSyncer @Inject constructor(
             )
         }
 
-        // ──────────────────────────────────────────────
-        // 2. PULL: Fetch remote cash records
-        //    Apply Last-Write-Wins conflict resolution
-        // ──────────────────────────────────────────────
-        cashRecordRemoteDataSource.fetchCashRecords().fold(
+        // Pull remote records after push and apply Last-Write-Wins by updatedAt.
+        val lastSyncTimestamp = syncPreferences.getLastCashRecordsSyncTimestamp()
+        cashRecordRemoteDataSource.fetchCashRecords(lastSyncTimestamp).fold(
             onSuccess = { remoteRecords ->
                 if (remoteRecords.isNotEmpty()) {
                     Timber.d("CashRecordSyncer: Fetched ${remoteRecords.size} cash records from remote")
@@ -66,13 +63,13 @@ class CashRecordSyncer @Inject constructor(
                         val localRecord = cashRecordDao.getById(remoteRecord.id)
 
                         if (localRecord == null) {
-                            // New from remote → insert
+                            // New remote record; insert locally.
                             recordsToInsert.add(remoteRecord.copy(isSynced = true))
                         } else if (remoteRecord.updatedAt > localRecord.updatedAt) {
-                            // Remote is newer → overwrite local
+                            // Remote changed later; overwrite local.
                             recordsToInsert.add(remoteRecord.copy(isSynced = true))
                         } else {
-                            // Local is newer → keep local
+                            // Local changed later; keep local.
                             Timber.d("CashRecordSyncer: Keeping local version for ${remoteRecord.id}")
                         }
                     }
@@ -92,7 +89,7 @@ class CashRecordSyncer @Inject constructor(
             },
         )
 
-        Timber.d("CashRecordSyncer: Completed — uploaded=$uploaded, downloaded=$downloaded, failed=$failed")
+        Timber.d("CashRecordSyncer: Completed - uploaded=$uploaded, downloaded=$downloaded, failed=$failed")
 
         return SyncResult(
             type = SyncType.CASH_RECORDS,
