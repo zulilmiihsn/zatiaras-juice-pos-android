@@ -90,6 +90,16 @@ class AuthViewModelTest {
         // Then
         assertEquals(AuthUiState.Success, viewModel.uiState.value)
         coVerify(exactly = 1) { loginUseCase("test@test.com", "password") }
+    }
+
+    @Test
+    fun `login success persists selected branch`() = runTest {
+        advanceUntilIdle()
+        coEvery { loginUseCase(any(), any()) } returns Result.Success(Unit)
+
+        viewModel.login("test@test.com", "password", "branch-1")
+        advanceUntilIdle()
+
         verify(exactly = 1) { sessionPreferences.saveBranchId("branch-1") }
     }
 
@@ -112,6 +122,7 @@ class AuthViewModelTest {
         val errorState = state as AuthUiState.Error
         assertTrue(errorState.message is UiText.DynamicString)
         assertEquals(errorMessage, (errorState.message as UiText.DynamicString).value)
+        verify(exactly = 0) { sessionPreferences.saveBranchId(any()) }
     }
 
     @Test
