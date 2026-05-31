@@ -28,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -37,6 +38,7 @@ import com.zatiaras.pos.core.ui.theme.AppShapes
 import com.zatiaras.pos.core.ui.theme.Brand500
 import com.zatiaras.pos.core.ui.theme.LocalDimensions
 import com.zatiaras.pos.core.ui.theme.Slate200
+import com.zatiaras.pos.feature.pos.R
 import compose.icons.EvaIcons
 import compose.icons.evaicons.Outline
 import compose.icons.evaicons.outline.Close
@@ -92,7 +94,7 @@ internal fun ProductSearchBar(
                     Box(contentAlignment = Alignment.CenterStart) {
                         if (query.isEmpty()) {
                             Text(
-                                text = "Cari produk...",
+                                text = stringResource(R.string.pos_search_placeholder),
                                 style = MaterialTheme.typography.bodyLarge,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                             )
@@ -109,7 +111,7 @@ internal fun ProductSearchBar(
                 ) {
                     Icon(
                         imageVector = EvaIcons.Outline.Close,
-                        contentDescription = "Hapus",
+                        contentDescription = stringResource(R.string.pos_clear_search),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(20.dp),
                     )
@@ -133,7 +135,7 @@ internal fun CategoryList(
     ) {
         item {
             CategoryChip(
-                name = "All",
+                name = stringResource(R.string.pos_category_all),
                 isSelected = selectedCategory == null,
                 onClick = { onCategorySelected(null) },
             )

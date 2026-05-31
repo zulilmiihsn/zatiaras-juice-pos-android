@@ -96,7 +96,7 @@ private fun CustomItemDialogContent(
     OutlinedTextField(
         value = name,
         onValueChange = onNameChange,
-        label = { Text("Nama menu") },
+        label = { Text(stringResource(R.string.pos_custom_item_name)) },
         modifier = Modifier.fillMaxWidth(),
         shape = AppShapes.M,
         colors = OutlinedTextFieldDefaults.colors(
@@ -110,7 +110,7 @@ private fun CustomItemDialogContent(
     CurrencyTextField(
         value = price,
         onValueChange = onPriceChange,
-        label = { Text("Harga") },
+        label = { Text(stringResource(R.string.pos_custom_item_price)) },
         showPrefix = true,
         singleLine = true,
         modifier = Modifier.fillMaxWidth(),
@@ -133,7 +133,7 @@ private fun CustomItemDialogContent(
             shape = AppShapes.M,
             border = BorderStroke(1.dp, Slate200),
         ) {
-            Text("Batal", color = Slate500)
+            Text(stringResource(R.string.dialog_cancel), color = Slate500)
         }
 
         Button(
@@ -146,7 +146,7 @@ private fun CustomItemDialogContent(
                 disabledContainerColor = Slate200,
             ),
         ) {
-            Text("Tambah", fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.pos_add), fontWeight = FontWeight.Bold)
         }
     }
 }

@@ -37,6 +37,8 @@
     <string name="export_csv">Ekspor CSV</string>
     <string name="export_success">Laporan berhasil diekspor</string>
     <string name="export_error">Gagal mengekspor laporan</string>
+    <string name="export_permission_granted_retry">Izin diberikan, silakan tekan Export sekali lagi</string>
+    <string name="export_permission_denied_manual_share">Izin ditolak, file tidak otomatis tersimpan. Silakan simpan manual dari menu Share</string>
     
     <!-- Chart -->
     <string name="chart_revenue">Pendapatan</string>

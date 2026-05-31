@@ -118,7 +118,7 @@ fun OwnerPinDialog(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Lock,
-                            contentDescription = "Locked",
+                            contentDescription = stringResource(R.string.core_menu_terkunci),
                             tint = MaterialTheme.colorScheme.onPrimaryContainer,
                             modifier = Modifier.size(32.dp),
                         )
@@ -266,7 +266,7 @@ private fun PinKeypad(
                             ) {
                                 Icon(
                                     imageVector = Icons.AutoMirrored.Filled.Backspace,
-                                    contentDescription = "Delete",
+                                    contentDescription = stringResource(R.string.btn_delete),
                                     modifier = Modifier.size(24.dp),
                                 )
                             }

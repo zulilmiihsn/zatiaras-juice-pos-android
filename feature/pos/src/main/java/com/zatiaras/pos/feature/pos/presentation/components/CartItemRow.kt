@@ -37,6 +37,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -53,6 +54,7 @@ import com.zatiaras.pos.core.ui.theme.Slate50
 import com.zatiaras.pos.core.ui.theme.Slate600
 import com.zatiaras.pos.core.ui.theme.Slate800
 import com.zatiaras.pos.core.ui.util.CurrencyFormatter
+import com.zatiaras.pos.feature.pos.R
 import com.zatiaras.pos.feature.pos.domain.model.CartItem
 
 @Composable
@@ -181,7 +183,13 @@ fun CartItemRow(
                         ) {
                             Icon(
                                 imageVector = if (cartItem.quantity == 1) Icons.Outlined.Delete else Icons.Filled.Remove,
-                                contentDescription = "Kurangi",
+                                contentDescription = stringResource(
+                                    if (cartItem.quantity == 1) {
+                                        R.string.cart_item_remove
+                                    } else {
+                                        R.string.cart_item_decrease
+                                    },
+                                ),
                                 modifier = Modifier.size(16.dp),
                             )
                         }
@@ -223,7 +231,7 @@ fun CartItemRow(
                         ) {
                             Icon(
                                 imageVector = Icons.Filled.Add,
-                                contentDescription = "Tambah",
+                                contentDescription = stringResource(R.string.cart_item_increase),
                                 modifier = Modifier.size(16.dp),
                             )
                         }
@@ -231,7 +239,10 @@ fun CartItemRow(
 
                     // Optional: Unit price or other info
                     Text(
-                        text = "${CurrencyFormatter.formatCurrency(cartItem.product.price)}/unit",
+                        text = stringResource(
+                            R.string.cart_unit_price,
+                            CurrencyFormatter.formatCurrency(cartItem.product.price),
+                        ),
                         style = MaterialTheme.typography.bodySmall,
                         color = Slate400,
                     )

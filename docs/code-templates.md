@@ -1,4 +1,4 @@
-# 📝 Code Templates for AI Agents
+# Code Templates for AI Agents
 
 > **Purpose**: Copy-paste boilerplates for common file types
 > **Usage**: AI should use these as starting points when generating new files
@@ -101,7 +101,10 @@ private fun [Feature]Content(
                 title = { Text(stringResource(R.string.[feature]_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.btn_back)
+                        )
                     }
                 }
             )

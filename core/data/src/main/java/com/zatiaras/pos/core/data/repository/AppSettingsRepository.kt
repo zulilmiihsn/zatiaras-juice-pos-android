@@ -85,7 +85,7 @@ class AppSettingsRepository @Inject constructor(
         settingsDao.updateOwnerPin(hashedPin)
 
         // Sync to remote
-        syncSettingsToRemote()
+        syncSettingsToRemote(settingsDao, remoteDataSource)
 
         Timber.d("Owner PIN set successfully")
         Result.success(Unit)
@@ -103,7 +103,7 @@ class AppSettingsRepository @Inject constructor(
         if (isValid && PasswordHasher.needsRehash(storedHash)) {
             val upgradedHash = PasswordHasher.hashPin(pin)
             settingsDao.updateOwnerPin(upgradedHash)
-            syncSettingsToRemote()
+            syncSettingsToRemote(settingsDao, remoteDataSource)
             Timber.d("Owner PIN hash upgraded from legacy SHA-256 to PBKDF2")
         }
         return isValid
@@ -114,7 +114,7 @@ class AppSettingsRepository @Inject constructor(
      */
     suspend fun clearOwnerPin(): Result<Unit> = try {
         settingsDao.updateOwnerPin(null)
-        syncSettingsToRemote()
+        syncSettingsToRemote(settingsDao, remoteDataSource)
         Timber.d("Owner PIN cleared")
         Result.success(Unit)
     } catch (e: Exception) {
@@ -143,7 +143,7 @@ class AppSettingsRepository @Inject constructor(
     suspend fun setLockedRoutes(routes: List<String>): Result<Unit> = try {
         val routesString = routes.joinToString(",")
         settingsDao.updateLockedRoutesRaw(routesString)
-        syncSettingsToRemote()
+        syncSettingsToRemote(settingsDao, remoteDataSource)
         Timber.d("Locked routes updated: $routes")
         Result.success(Unit)
     } catch (e: Exception) {
@@ -191,7 +191,7 @@ class AppSettingsRepository @Inject constructor(
         phone: String?,
     ): Result<Unit> = try {
         settingsDao.updateStoreInfo(name, address, phone)
-        syncSettingsToRemote()
+        syncSettingsToRemote(settingsDao, remoteDataSource)
         Timber.d("Store info updated: $name")
         Result.success(Unit)
     } catch (e: Exception) {
@@ -204,7 +204,7 @@ class AppSettingsRepository @Inject constructor(
      */
     suspend fun updateDefaultPaperWidth(width: Int): Result<Unit> = try {
         settingsDao.updateDefaultPaperWidth(width)
-        syncSettingsToRemote()
+        syncSettingsToRemote(settingsDao, remoteDataSource)
         Timber.d("Paper width updated: $width mm")
         Result.success(Unit)
     } catch (e: Exception) {
@@ -217,7 +217,7 @@ class AppSettingsRepository @Inject constructor(
      */
     suspend fun updateReceiptSettings(footer: String?, showLogo: Boolean): Result<Unit> = try {
         settingsDao.updateReceiptSettings(footer, showLogo)
-        syncSettingsToRemote()
+        syncSettingsToRemote(settingsDao, remoteDataSource)
         Timber.d("Receipt settings updated")
         Result.success(Unit)
     } catch (e: Exception) {
@@ -237,7 +237,7 @@ class AppSettingsRepository @Inject constructor(
      */
     suspend fun updateDefaultTaxPercentage(percentage: Double): Result<Unit> = try {
         settingsDao.updateDefaultTaxPercentage(percentage)
-        syncSettingsToRemote()
+        syncSettingsToRemote(settingsDao, remoteDataSource)
         Timber.d("Tax percentage updated: $percentage%")
         Result.success(Unit)
     } catch (e: Exception) {
@@ -250,7 +250,7 @@ class AppSettingsRepository @Inject constructor(
      */
     suspend fun updateLowPerformanceMode(enabled: Boolean): Result<Unit> = try {
         settingsDao.updateLowPerformanceMode(enabled)
-        syncSettingsToRemote()
+        syncSettingsToRemote(settingsDao, remoteDataSource)
         Timber.d("Low performance mode updated: $enabled")
         Result.success(Unit)
     } catch (e: Exception) {
@@ -274,14 +274,14 @@ class AppSettingsRepository @Inject constructor(
                 Timber.d("Settings synced from remote (remote is newer)")
             } else if (localSettings.updatedAt > remoteSettings.updatedAt && !localSettings.isSynced) {
                 // Local is newer and needs to be pushed
-                syncSettingsToRemote()
+                syncSettingsToRemote(settingsDao, remoteDataSource)
                 Timber.d("Settings pushed to remote (local is newer)")
             }
         } else {
             // No remote settings, push local if exists
             val localSettings = settingsDao.getSettings()
             if (localSettings != null && !localSettings.isSynced) {
-                syncSettingsToRemote()
+                syncSettingsToRemote(settingsDao, remoteDataSource)
             }
         }
 
@@ -289,20 +289,6 @@ class AppSettingsRepository @Inject constructor(
     } catch (e: Exception) {
         Timber.e(e, "Failed to sync settings from remote")
         Result.failure(e)
-    }
-
-    /**
-     * Push local settings to remote.
-     */
-    private suspend fun syncSettingsToRemote() {
-        try {
-            val settings = settingsDao.getSettings() ?: return
-            remoteDataSource.uploadSettings(settings).onSuccess {
-                settingsDao.markAsSynced()
-            }
-        } catch (e: Exception) {
-            Timber.e(e, "Failed to sync settings to remote")
-        }
     }
 
     /**
@@ -319,5 +305,19 @@ class AppSettingsRepository @Inject constructor(
     } catch (e: Exception) {
         Timber.e(e, "Failed to force sync settings")
         Result.failure(e)
+    }
+}
+
+private suspend fun syncSettingsToRemote(
+    settingsDao: AppSettingsDao,
+    remoteDataSource: SettingsRemoteDataSource,
+) {
+    try {
+        val settings = settingsDao.getSettings() ?: return
+        remoteDataSource.uploadSettings(settings).onSuccess {
+            settingsDao.markAsSynced()
+        }
+    } catch (e: Exception) {
+        Timber.e(e, "Failed to sync settings to remote")
     }
 }

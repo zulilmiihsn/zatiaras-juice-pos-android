@@ -157,7 +157,9 @@ private fun ViewModeButton(
     ) {
         Icon(
             imageVector = if (isGridView) Icons.Default.ViewList else Icons.Default.GridView,
-            contentDescription = if (isGridView) "Tampilan daftar" else "Tampilan grid",
+            contentDescription = stringResource(
+                if (isGridView) R.string.pos_to_list_view else R.string.pos_to_grid_view,
+            ),
             tint = MaterialTheme.colorScheme.onSurface,
         )
     }

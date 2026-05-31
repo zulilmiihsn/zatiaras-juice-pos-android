@@ -89,7 +89,7 @@ fun ProductOptionsBottomSheet(
                 IconButton(onClick = onDismiss) {
                     Icon(
                         imageVector = Icons.Default.Close,
-                        contentDescription = "Tutup",
+                        contentDescription = stringResource(R.string.pos_close),
                         tint = Slate600,
                     )
                 }
@@ -154,7 +154,7 @@ fun ProductOptionsBottomSheet(
                 value = notes,
                 onValueChange = { notes = it },
                 modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("Tambahkan catatan khusus...", color = Slate500) },
+                placeholder = { Text(stringResource(R.string.pos_custom_notes_hint), color = Slate500) },
                 shape = AppShapes.M,
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = Brand500,
@@ -187,7 +187,7 @@ fun ProductOptionsBottomSheet(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Remove,
-                                contentDescription = "Kurangi",
+                                contentDescription = stringResource(R.string.pos_decrease),
                                 tint = if (quantity > 1) Slate700 else Slate500,
                             )
                         }
@@ -202,7 +202,7 @@ fun ProductOptionsBottomSheet(
                         IconButton(onClick = { quantity++ }) {
                             Icon(
                                 imageVector = Icons.Default.Add,
-                                contentDescription = "Tambah",
+                                contentDescription = stringResource(R.string.pos_increase),
                                 tint = Brand500,
                             )
                         }

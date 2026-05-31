@@ -74,15 +74,6 @@ class AddOnRepositoryImpl @Inject constructor(
         }
     }
 
-    // ==================== ENTITY CONVERSION ====================
-
-    private fun AddOnEntity.toDomain(): AddOn = AddOn(
-        id = id,
-        name = name,
-        price = price,
-        isActive = isActive,
-    )
-
     // ==================== LEGACY READ (for backward compatibility) ====================
 
     /**
@@ -377,3 +368,10 @@ class AddOnRepositoryImpl @Inject constructor(
         addOnDao.cleanupDeletedAddOns()
     }
 }
+
+private fun AddOnEntity.toDomain(): AddOn = AddOn(
+    id = id,
+    name = name,
+    price = price,
+    isActive = isActive,
+)

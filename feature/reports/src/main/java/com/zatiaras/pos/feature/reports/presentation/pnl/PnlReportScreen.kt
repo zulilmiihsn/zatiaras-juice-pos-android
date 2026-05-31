@@ -146,9 +146,9 @@ private fun PnlReportContent(
         ActivityResultContracts.RequestPermission(),
     ) { isGranted ->
         if (isGranted) {
-            Toast.makeText(context, "Izin diberikan, silakan tekan Export sekali lagi", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, context.getString(R.string.export_permission_granted_retry), Toast.LENGTH_SHORT).show()
         } else {
-            Toast.makeText(context, "Izin ditolak, file tidak otomatis tersimpan. Silakan simpan manual dari menu Share", Toast.LENGTH_LONG).show()
+            Toast.makeText(context, context.getString(R.string.export_permission_denied_manual_share), Toast.LENGTH_LONG).show()
         }
     }
 

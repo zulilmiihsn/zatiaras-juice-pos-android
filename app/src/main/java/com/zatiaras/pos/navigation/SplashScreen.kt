@@ -11,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.zatiaras.pos.core.ui.R as CoreUiR
 
@@ -49,7 +50,7 @@ fun SplashScreen(
         ) {
             Image(
                 painter = painterResource(id = CoreUiR.drawable.zatiaras_logo),
-                contentDescription = "Zatiaras Juice Logo",
+                contentDescription = stringResource(CoreUiR.string.brand_logo_content_description),
                 modifier = Modifier
                     .size(180.dp)
                     .scale(scale),

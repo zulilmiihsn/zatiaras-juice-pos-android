@@ -17,15 +17,15 @@
     <string name="btn_add">Tambah</string>
     <string name="btn_search">Cari</string>
     <string name="btn_clear">Hapus</string>
-    
+
     <!-- Common Labels -->
-    <string name="label_loading">Memuat…</string>
-    <string name="label_refreshing">Memperbarui…</string>
-    <string name="label_processing">Memproses…</string>
-    <string name="label_search">Cari…</string>
+    <string name="label_loading">Memuat...</string>
+    <string name="label_refreshing">Memperbarui...</string>
+    <string name="label_processing">Memproses...</string>
+    <string name="label_search">Cari...</string>
     <string name="label_empty">Tidak ada data</string>
     <string name="label_no_results">Tidak ditemukan</string>
-    
+
     <!-- Common Errors -->
     <string name="error_generic">Terjadi kesalahan</string>
     <string name="error_connection">Tidak ada koneksi internet</string>
@@ -33,14 +33,14 @@
     <string name="error_unknown">Kesalahan tidak diketahui</string>
     <string name="error_load_failed">Gagal memuat data</string>
     <string name="error_save_failed">Gagal menyimpan</string>
-    
+
     <!-- Form Validation -->
     <string name="validation_required">Wajib diisi</string>
     <string name="validation_invalid_email">Email tidak valid</string>
     <string name="validation_min_length">Minimal %d karakter</string>
     <string name="validation_max_length">Maksimal %d karakter</string>
     <string name="validation_invalid_number">Angka tidak valid</string>
-    
+
     <!-- Time/Date -->
     <string name="time_just_now">Baru saja</string>
     <string name="time_minutes_ago">%d menit lalu</string>
@@ -48,19 +48,19 @@
     <string name="time_days_ago">%d hari lalu</string>
     <string name="time_today">Hari ini</string>
     <string name="time_yesterday">Kemarin</string>
-    
+
     <!-- Currency -->
     <string name="currency_format">Rp %s</string>
-    
+
     <!-- Sync Status -->
     <string name="sync_pending">Menunggu sinkronisasi</string>
     <string name="sync_synced">Tersinkronisasi</string>
     <string name="sync_failed">Gagal sinkronisasi</string>
-    
+
     <!-- Empty States -->
     <string name="empty_state_title">Tidak ada data</string>
     <string name="empty_state_subtitle">Data akan muncul di sini</string>
-    
+
     <!-- Confirmation -->
     <string name="confirm_delete_title">Konfirmasi Hapus</string>
     <string name="confirm_delete_message">Yakin ingin menghapus item ini?</string>
@@ -85,4 +85,5 @@
     <string name="core_pin_salah">PIN salah, coba lagi</string>
     <string name="core_pengaturan">Pengaturan</string>
     <string name="core_halaman_ini">halaman ini</string>
+    <string name="brand_logo_content_description">Logo Zatiaras Juice</string>
 </resources>

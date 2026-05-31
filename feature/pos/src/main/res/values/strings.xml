@@ -2,7 +2,7 @@
 <resources>
     <!-- POS Screen -->
     <string name="pos_title">Kasir</string>
-    <string name="pos_search_placeholder">Cari produk…</string>
+    <string name="pos_search_placeholder">Cari produk...</string>
     <string name="pos_category_all">Semua</string>
     <string name="pos_add_to_cart">Tambah</string>
     <string name="pos_empty_products">Tidak ada produk</string>
@@ -16,7 +16,7 @@
     <string name="pos_custom_item_name">Nama Produk</string>
     <string name="pos_custom_item_price">Harga</string>
     <string name="pos_add">Tambah</string>
-    
+
     <!-- Cart -->
     <string name="cart_title">Keranjang</string>
     <string name="cart_empty">Keranjang kosong</string>
@@ -25,6 +25,7 @@
     <string name="cart_item_remove">Hapus</string>
     <string name="cart_item_decrease">Kurangi</string>
     <string name="cart_item_increase">Tambah</string>
+    <string name="cart_unit_price">%1$s/unit</string>
     <string name="cart_total">Total</string>
     <string name="cart_item_count">%d produk</string>
     <plurals name="cart_item_count_plural">
@@ -32,7 +33,7 @@
         <item quantity="other">%d item</item>
     </plurals>
     <string name="pos_view_cart">Lihat Keranjang</string>
-    
+
     <!-- Checkout -->
     <string name="checkout_title">Pembayaran</string>
     <string name="checkout_button">Bayar</string>
@@ -57,28 +58,30 @@
     <string name="checkout_quick_amount_plus">+ %1$s</string>
     <string name="checkout_item_customization">+ %1$s</string>
     <string name="checkout_item_qty_price">%1$d x %2$s</string>
-    
+    <string name="checkout_zero_placeholder">0</string>
+
     <!-- Validation -->
     <string name="checkout_error_payment_required">Pilih metode pembayaran</string>
     <string name="checkout_error_cash_insufficient">Pembayaran kurang dari total</string>
     <string name="checkout_error_empty_cart">Keranjang kosong</string>
-    
+
     <!-- Transaction -->
     <string name="transaction_id">No. Transaksi: %s</string>
     <string name="transaction_date">Tanggal: %s</string>
     <string name="transaction_cashier">Kasir: %s</string>
-    
+
     <!-- Errors -->
     <string name="pos_error_load_products">Gagal memuat produk</string>
     <string name="pos_error_checkout">Gagal memproses transaksi</string>
     <string name="pos_error_generic">Terjadi kesalahan</string>
     <string name="pos_retry">Coba Lagi</string>
-    
+
     <!-- Confirmation Dialogs -->
     <string name="dialog_clear_cart_title">Hapus Keranjang?</string>
     <string name="dialog_clear_cart_message">Semua produk akan dihapus dari keranjang.</string>
     <string name="dialog_confirm">Ya</string>
     <string name="dialog_cancel">Batal</string>
+    <string name="dialog_ok">OK</string>
 
     <!-- Store Session -->
     <string name="pos_store_closed_title">Toko Sedang Tutup</string>
@@ -111,19 +114,18 @@
     <string name="cash_record_delete_title">Hapus Catatan</string>
     <string name="cash_record_delete_message">Apakah Anda yakin ingin menghapus catatan ini?</string>
     <string name="cash_record_delete">Hapus</string>
-        <string name="cash_record_pick_date">Pilih Tanggal</string>
-        <string name="dialog_ok">OK</string>
-        <string name="cash_record_category_placeholder">Pilih kategori</string>
-        <string name="cash_flow_sales">Penjualan</string>
-        <string name="cash_flow_item_count"> • %1$d item</string>
-        <string name="cash_flow_category"> • %1$s</string>
-        <string name="cash_flow_amount_signed">%1$s%2$s</string>
-        <string name="cash_record_detail_income_title">Detail Pemasukan</string>
-        <string name="cash_record_detail_expense_title">Detail Pengeluaran</string>
-        <string name="cash_record_detail_description_label">Keterangan</string>
-        <string name="cash_record_detail_category_label">Kategori</string>
-        <string name="cash_record_detail_time_label">Waktu</string>
-        <string name="cash_record_close">Tutup</string>
+    <string name="cash_record_pick_date">Pilih Tanggal</string>
+    <string name="cash_record_category_placeholder">Pilih kategori</string>
+    <string name="cash_flow_sales">Penjualan</string>
+    <string name="cash_flow_item_count"> - %1$d item</string>
+    <string name="cash_flow_category"> - %1$s</string>
+    <string name="cash_flow_amount_signed">%1$s%2$s</string>
+    <string name="cash_record_detail_income_title">Detail Pemasukan</string>
+    <string name="cash_record_detail_expense_title">Detail Pengeluaran</string>
+    <string name="cash_record_detail_description_label">Keterangan</string>
+    <string name="cash_record_detail_category_label">Kategori</string>
+    <string name="cash_record_detail_time_label">Waktu</string>
+    <string name="cash_record_close">Tutup</string>
 
     <!-- Added for Checkout Screen translation -->
     <string name="checkout_customer_name_hint">Nama Pelanggan (opsional)</string>
@@ -149,8 +151,11 @@
     <string name="pos_addons">Tambahan</string>
     <string name="pos_notes">Catatan</string>
     <string name="pos_notes_hint">Contoh: Tanpa sedotan, cup besar...</string>
+    <string name="pos_custom_notes_hint">Tambahkan catatan khusus...</string>
     <string name="pos_quantity">Jumlah</string>
     <string name="pos_close">Tutup</string>
+    <string name="pos_decrease">Kurangi</string>
+    <string name="pos_increase">Tambah</string>
     <string name="pos_back">Kembali</string>
     <string name="pos_custom_item_add_hint">Tambahkan item yang tidak ada di menu</string>
     <string name="pos_custom_item_name_placeholder">Contoh: Es Jeruk Spesial</string>
